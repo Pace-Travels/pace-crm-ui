@@ -1,0 +1,481 @@
+$sidebar-width: 250px;
+$sidebar-mini: 72px;
+
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+
+    width: $sidebar-width;
+    height: 100vh;
+
+    background: #0a474c;
+    color: #fff;
+
+    display: flex;
+    flex-direction: column;
+
+    overflow: hidden;
+
+    border-right: 1px solid rgba(255, 255, 255, .08);
+
+    transition: all .3s ease;
+
+    z-index: 1000;
+}
+
+.sidebar.collapsed {
+    width: $sidebar-mini;
+}
+
+.logo {
+
+    height: 72px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 14px;
+
+    padding: 0 20px;
+
+    border-bottom: 1px solid rgba(255, 255, 255, .08);
+
+    flex-shrink: 0;
+
+}
+
+.logo-icon {
+
+    width: 42px;
+
+    height: 42px;
+
+    border-radius: 12px;
+
+    background: #ffffff;
+
+    color: #0A474C;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    font-size: 18px;
+
+    font-weight: 700;
+
+    flex-shrink: 0;
+
+}
+
+.logo-text {
+
+    display: flex;
+
+    flex-direction: column;
+
+    line-height: 1.1;
+
+}
+
+.logo-text h2 {
+
+    margin: 0;
+
+    color: #fff;
+
+    font-size: 17px;
+
+    font-weight: 700;
+
+}
+
+.logo-text span {
+
+    color: rgba(255, 255, 255, .70);
+
+    font-size: 11px;
+
+    letter-spacing: 2px;
+
+    text-transform: uppercase;
+
+}
+
+
+.sidebar-menu {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 18px 12px 20px;
+}
+
+.sidebar-menu ul {
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-menu li {
+    list-style: none;
+}
+
+.sidebar li {
+    margin-bottom: 8px;
+}
+
+.sidebar a {
+    height: 46px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 0 16px;
+    border-radius: 10px;
+    color: rgba(255, 255, 255, .92);
+    transition: all .25s ease;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.sidebar a i {
+
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    font-size: 16px;
+
+    transition: .3s ease;
+
+}
+
+.sidebar a span {
+    white-space: nowrap;
+}
+
+/* Hover */
+
+.sidebar a:hover {
+    background: #6b1a1a;
+    color: #fff;
+}
+
+/* Active */
+
+.sidebar a.active {
+    background: #ffffff;
+    color: #4c1010;
+    font-weight: 600;
+}
+
+.sidebar a.active i {
+    color: #4c1010;
+}
+
+/* Scroll */
+
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, .20);
+    border-radius: 10px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* Mobile */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .45);
+    z-index: 999;
+}
+
+/* ======================================
+   COLLAPSED SIDEBAR
+====================================== */
+
+.sidebar.collapsed .logo {
+    justify-content: center;
+    padding: 0;
+}
+
+.sidebar.collapsed .logo h2 {
+    display: none;
+}
+
+.sidebar.collapsed .logo-icon {
+    margin: 0;
+}
+
+.sidebar.collapsed ul {
+    padding: 18px 8px;
+}
+
+.sidebar.collapsed a {
+    justify-content: center;
+    padding: 0;
+    gap: 0;
+}
+
+.sidebar.collapsed a span {
+    display: none;
+}
+
+.sidebar.collapsed a i {
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    transition: all .3s ease;
+
+    font-size: 18px;
+}
+
+/* Hover Icon */
+
+.sidebar.collapsed a:hover i {
+    background: rgba(255, 255, 255, .15);
+}
+
+/* Active Icon */
+
+.sidebar.collapsed a.active {
+    background: transparent;
+}
+
+.sidebar.collapsed a.active i {
+    background: #ffffff;
+    color: #0a474c;
+}
+
+/* ======================================
+   EXPANDED SIDEBAR ICONS
+====================================== */
+
+.sidebar a i {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 50%;
+
+    transition: all .3s ease;
+}
+
+.sidebar a:hover i {
+    background: rgba(255, 255, 255, .15);
+}
+
+.sidebar a.active i {
+    background: #ffffff;
+    color: #0a474c;
+}
+
+/* ======================================
+   ACTIVE LEFT BORDER
+====================================== */
+
+.sidebar a {
+    position: relative;
+}
+
+.sidebar a.active::before {
+    content: "";
+
+    position: absolute;
+
+    left: -12px;
+    top: 8px;
+
+    width: 4px;
+    height: 32px;
+
+    border-radius: 20px;
+
+    background: #ffffff;
+}
+
+/* ======================================
+   SCROLLBAR
+====================================== */
+
+.sidebar::-webkit-scrollbar {
+    width: 5px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, .25);
+    border-radius: 20px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, .45);
+}
+
+/* ======================================
+   ANIMATION
+====================================== */
+
+.sidebar,
+.main-wrapper,
+.sidebar a,
+.sidebar i,
+.sidebar span,
+.logo,
+.logo h2 {
+    transition: all .3s ease;
+}
+
+.sidebar-menu {
+
+    flex: 1;
+
+    overflow-y: auto;
+
+    overflow-x: hidden;
+
+    padding: 18px 12px;
+
+}
+
+.sidebar-menu ul {
+
+    margin: 0;
+    padding: 0;
+
+}
+
+.sidebar-menu li {
+
+    list-style: none;
+
+}
+
+.sidebar-menu::-webkit-scrollbar {
+    width: 5px;
+}
+
+.sidebar-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, .25);
+    border-radius: 20px;
+}
+
+.sidebar-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.sidebar.collapsed .logo {
+
+    justify-content: center;
+
+    padding: 0;
+
+}
+
+.sidebar.collapsed .logo-text {
+
+    display: none;
+
+}
+
+.sidebar.collapsed .logo-icon {
+
+    margin: 0;
+
+}
+
+/* ===============================
+   MOBILE
+================================ */
+
+@media (max-width:991px) {
+
+    .sidebar {
+
+        width: 260px;
+
+        transform: translateX(-100%);
+
+        transition: transform .3s ease;
+
+    }
+
+    .sidebar.mobile-open {
+
+        transform: translateX(0);
+
+    }
+
+    .logo {
+
+        height: 70px;
+
+        padding: 0 20px;
+
+    }
+
+    .logo-icon {
+
+        width: 42px;
+        height: 42px;
+        font-size: 18px;
+
+    }
+
+    .sidebar a {
+
+        height: 46px;
+        font-size: 14px;
+
+    }
+
+    .sidebar a i {
+
+        width: 20px;
+        min-width: 20px;
+        font-size: 16px;
+
+    }
+
+}
+
+/* Hide menu button on Mobile & Tablet */
+
+@media (max-width: 991px) {
+
+    .menu-btn {
+        display: none !important;
+    }
+
+}
+
+@media (max-width: 767px) {
+
+    .menu-btn {
+        display: none !important;
+    }
+
+}

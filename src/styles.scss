@@ -1,1 +1,34 @@
 /* You can add global styles to this file, and also import other style files */
+html,
+body{
+    margin:0;
+    padding:0;
+    width:100%;
+    height:100%;
+    font-family:Inter,sans-serif;
+    background:#f6f8fb;
+}
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    overflow:auto;
+}
+
+app-root{
+    display:block;
+    min-height:100vh;
+}
+
+a{
+    text-decoration:none;
+    color:inherit;
+}
+
+ul{
+    list-style:none;
+}

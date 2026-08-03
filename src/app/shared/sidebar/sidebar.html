@@ -1,0 +1,56 @@
+<div class="overlay" *ngIf="mobileOpen()" (click)="toggleSidebar()">
+</div>
+
+<aside class="sidebar" [class.collapsed]="collapsed()" [class.mobile-open]="mobileOpen()">
+
+    <!-- Logo -->
+
+    <div class="logo">
+
+        <div class="logo-icon">
+            P
+        </div>
+
+        @if(!collapsed()){
+
+        <div class="logo-text">
+
+            <h2>Pace</h2>
+
+            <span>CRM</span>
+
+        </div>
+
+        }
+
+    </div>
+
+    <!-- Scrollable Menu -->
+
+    <div class="sidebar-menu">
+
+        <ul>
+
+            @for(item of menu;track item.title){
+
+            <li>
+
+                <a [routerLink]="item.route" routerLinkActive="active">
+
+                    <i [class]="item.icon"></i>
+
+                    @if(!collapsed()){
+                    <span>{{item.title}}</span>
+                    }
+
+                </a>
+
+            </li>
+
+            }
+
+        </ul>
+
+    </div>
+
+</aside>
