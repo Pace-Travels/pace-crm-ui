@@ -37,11 +37,10 @@
 
                 <a [routerLink]="item.route" routerLinkActive="active">
 
-                    <i [class]="item.icon"></i>
-
-                    @if(!collapsed()){
-                    <span>{{item.title}}</span>
-                    }
+                    <div class="menu-item-content">
+                        <i [class]="item.icon"></i>
+                        <span>{{item.title}}</span>
+                    </div>
 
                 </a>
 
@@ -51,6 +50,20 @@
 
         </ul>
 
+    </div>
+
+    <!-- Account section at the bottom -->
+    <div class="sidebar-bottom">
+        <ul>
+            <li>
+                <a routerLink="/account" routerLinkActive="active">
+                    <div class="menu-item-content">
+                        <i class="fa-solid fa-circle-user"></i>
+                        <span>Account</span>
+                    </div>
+                </a>
+            </li>
+        </ul>
     </div>
 
 </aside>

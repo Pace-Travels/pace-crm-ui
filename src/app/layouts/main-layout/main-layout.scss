@@ -9,22 +9,15 @@
 
 .main-wrapper {
     flex: 1;
-    margin-left: 250px;
-    width: calc(100% - 250px);
+    margin-left: 80px; /* Match new sidebar width */
+    width: calc(100% - 80px);
 
     display: flex;
     flex-direction: column;
 
     min-width: 0;
     transition: all .3s ease;
-}
-
-
-/* When sidebar collapsed */
-
-.layout.sidebar-collapsed .main-wrapper {
-    margin-left: 72px;
-    width: calc(100% - 72px);
+    background-color: #f7f9fa; /* Light grey background typical for these dashboards */
 }
 
 
@@ -41,8 +34,10 @@ app-header {
 .page-content {
     flex: 1;
     width: 100%;
-    padding: 24px;
+    /* We handle inner padding inside the components depending on layout (e.g. Chat has no padding, Dashboard has padding) */
     box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 
@@ -51,8 +46,8 @@ app-header {
 @media(max-width:991px){
 
     .main-wrapper {
-        margin-left: 72px;
-        width: calc(100% - 72px);
+        margin-left: 0;
+        width: 100%;
     }
 
 }

@@ -1,0 +1,177 @@
+.sidebar {
+    width: 80px; /* Fixed narrow width matching Pace Messenger */
+    background-color: #0b494d; /* Dark teal */
+    color: white;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    transition: all 0.3s ease;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    /* Custom scrollbar for dark theme */
+    &::-webkit-scrollbar {
+        width: 4px;
+    }
+    &::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+    }
+
+    .logo {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 10px 0;
+
+        .logo-icon {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4cd964; /* A green color similar to Pace Messenger logo */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+
+        .logo-text {
+            display: none; /* Hide text in narrow mode */
+        }
+    }
+
+    .sidebar-menu {
+        flex: 1;
+        padding-top: 10px;
+        
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            li {
+                margin-bottom: 5px;
+
+                a {
+                    display: block;
+                    text-decoration: none;
+                    color: rgba(255, 255, 255, 0.7);
+                    padding: 12px 5px;
+                    transition: all 0.2s ease;
+                    border-left: 3px solid transparent;
+
+                    .menu-item-content {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+
+                        i {
+                            font-size: 18px;
+                        }
+
+                        span {
+                            font-size: 9px;
+                            text-align: center;
+                            line-height: 1.1;
+                            white-space: normal;
+                        }
+                    }
+
+                    &:hover {
+                        background-color: rgba(255, 255, 255, 0.1);
+                        color: white;
+                    }
+
+                    &.active {
+                        background-color: rgba(255, 255, 255, 0.1);
+                        color: white;
+                        border-left-color: #4cd964; /* Green indicator */
+                    }
+                }
+            }
+        }
+    }
+    .sidebar-bottom {
+        margin-top: auto;
+        padding-bottom: 24px;
+        
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            li {
+                margin-bottom: 5px;
+
+                a {
+                    display: block;
+                    text-decoration: none;
+                    color: rgba(255, 255, 255, 0.7);
+                    padding: 12px 5px;
+                    transition: all 0.2s ease;
+                    border-left: 3px solid transparent;
+
+                    .menu-item-content {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        gap: 6px;
+
+                        i {
+                            font-size: 24px;
+                        }
+
+                        span {
+                            font-size: 9px;
+                            text-align: center;
+                            line-height: 1.1;
+                            white-space: normal;
+                        }
+                    }
+
+                    &:hover {
+                        background-color: rgba(255, 255, 255, 0.1);
+                        color: white;
+                    }
+
+                    &.active {
+                        background-color: rgba(255, 255, 255, 0.1);
+                        color: white;
+                        border-left-color: #4cd964; /* Green indicator */
+                    }
+                }
+            }
+        }
+    }
+}
+
+/* Mobile Overlay */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+}
+
+@media (max-width: 992px) {
+    .sidebar {
+        transform: translateX(-100%);
+        &.mobile-open {
+            transform: translateX(0);
+        }
+    }
+}

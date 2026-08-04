@@ -1,17 +1,12 @@
 <div class="layout" [class.sidebar-collapsed]="sidebarCollapsed">
-
+    <!-- Left Sidebar -->
     <app-sidebar></app-sidebar>
 
-    <div class="main-wrapper">
-
-        <app-header 
-            (toggleSidebar)="toggleSidebar()">
-        </app-header>
-
-        <main class="page-content">
+    <!-- Main Content wrapper -->
+    <main class="main-wrapper">
+        <!-- Page specific content -->
+        <div class="page-content">
             <router-outlet></router-outlet>
-        </main>
-
-    </div>
-
+        </div>
+    </main>
 </div>

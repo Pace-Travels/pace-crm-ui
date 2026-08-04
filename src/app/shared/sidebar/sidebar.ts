@@ -18,13 +18,19 @@ export class Sidebar implements OnInit {
   isMobile = window.innerWidth < 992;
 
   menu = [
-    { icon: 'fa-solid fa-house', title: 'Dashboard', route: '/' },
-    { icon: 'fa-solid fa-comments', title: 'Live Chat', route: '/chat' },
-    { icon: 'fa-solid fa-address-book', title: 'Contacts', route: '/contacts' },
+    { icon: 'fa-solid fa-table-cells-large', title: 'Dashboard', route: '/' },
+    { icon: 'fa-regular fa-comment-dots', title: 'Live Chat', route: '/chat' },
+    { icon: 'fa-solid fa-clock-rotate-left', title: 'History', route: '/history' },
+    { icon: 'fa-regular fa-address-book', title: 'Contacts', route: '/contacts' },
     { icon: 'fa-solid fa-bullhorn', title: 'Campaigns', route: '/campaigns' },
-    { icon: 'fa-solid fa-robot', title: 'AI Manager', route: '/ai' },
-    { icon: 'fa-solid fa-chart-column', title: 'Analytics', route: '/analytics' },
-    { icon: 'fa-solid fa-gear', title: 'Settings', route: '/settings' }
+    { icon: 'fa-solid fa-rectangle-ad', title: 'Ads Manager', route: '/ads' },
+    { icon: 'fa-solid fa-share-nodes', title: 'Flows', route: '/flows' },
+    { icon: 'fa-solid fa-indian-rupee-sign', title: 'WA Payments', route: '/payments' },
+    { icon: 'fa-solid fa-gear', title: 'Manage', route: '/manage' },
+    { icon: 'fa-solid fa-plug', title: 'Integrations', route: '/integrations' },
+    { icon: 'fa-solid fa-users', title: 'Agents', route: '/agents' },
+    { icon: 'fa-solid fa-code', title: 'Developer', route: '/developer' },
+    { icon: 'fa-solid fa-folder-open', title: 'All Projects', route: '/projects' }
   ];
 
   ngOnInit(): void {
