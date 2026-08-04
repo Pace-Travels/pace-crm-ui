@@ -1,0 +1,120 @@
+<div class="templates-header">
+    <h2>Template Messages</h2>
+    <button class="btn btn-dark"><i class="fa-solid fa-plus"></i> Create Template</button>
+</div>
+
+<!-- Quick Guide & Action Cards -->
+<div class="quick-launch-section mb-24">
+    <div class="quick-guide">
+        <h5>TEMPLATE MESSAGE QUICK GUIDE</h5>
+        <h4>Quick Guide</h4>
+        <p>You can initiate a Conversation with users on WhatsApp using these template messages.</p>
+        <div class="guide-links">
+            <a href="#">How to Create WhatsApp Template Message? <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            <a href="#">Use chatbot parameters for leads <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            <a href="#">Add Quick Reply to WhatsApp Template Message <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            <a href="#">Message formatting guideline (Bold, Italic & more) <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+        </div>
+    </div>
+
+    <div class="launch-actions">
+        <h4>What would you like to launch?</h4>
+        <div class="cards-grid">
+            <div class="action-card">
+                <i class="fa-solid fa-wand-magic-sparkles text-purple"></i>
+                <div class="card-info">
+                    <h6>Create AI Templates <span class="badge ai">AI</span></h6>
+                    <p>Generate powerful WhatsApp templates in seconds with AI.</p>
+                </div>
+            </div>
+            <div class="action-card">
+                <i class="fa-brands fa-whatsapp text-green"></i>
+                <div class="card-info">
+                    <h6>Launch WhatsApp Status Ad <span class="badge new">NEW</span></h6>
+                    <p>Publish scroll-stopping offers directly to WhatsApp Status.</p>
+                </div>
+            </div>
+            <div class="action-card">
+                <i class="fa-solid fa-user-plus text-orange"></i>
+                <div class="card-info">
+                    <h6>Launch Lead Form Ads</h6>
+                    <p>Capture high-intent leads and follow up instantly on WhatsApp.</p>
+                </div>
+            </div>
+            <div class="action-card">
+                <i class="fa-solid fa-robot text-purple"></i>
+                <div class="card-info">
+                    <h6>Create AI Agent <span class="badge ai">AI</span></h6>
+                    <p>Qualify leads, answer questions and close sales automatically.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters & Tabs -->
+<div class="table-controls mb-24">
+    <div class="search-box">
+        <input type="text" placeholder="Search templates (status, name etc.)">
+        <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </div>
+    <button class="btn btn-dark"><i class="fa-solid fa-rotate"></i> Sync Status</button>
+</div>
+
+<div class="main-tabs">
+    <button class="tab" [class.active]="activeTab === 'Explore'" (click)="activeTab = 'Explore'">
+        <i class="fa-regular fa-compass"></i> Explore
+    </button>
+    <button class="tab" [class.active]="activeTab === 'All'" (click)="activeTab = 'All'">All</button>
+    <button class="tab" [class.active]="activeTab === 'Draft'" (click)="activeTab = 'Draft'">Draft</button>
+    <button class="tab" [class.active]="activeTab === 'Pending'" (click)="activeTab = 'Pending'">Pending</button>
+    <button class="tab" [class.active]="activeTab === 'Approved'" (click)="activeTab = 'Approved'">Approved</button>
+    <button class="tab" [class.active]="activeTab === 'Action Required'" (click)="activeTab = 'Action Required'">Action Required</button>
+</div>
+
+<!-- Explore View -->
+@if (activeTab === 'Explore') {
+    <div class="explore-layout">
+        <!-- Sidebar -->
+        <div class="explore-sidebar">
+            <ul class="nav-list">
+                <li [class.active]="activeCategory === 'Trending'" (click)="activeCategory = 'Trending'"><i class="fa-solid fa-fire-flame-curved text-orange"></i> Trending</li>
+                <li [class.active]="activeCategory === 'General'" (click)="activeCategory = 'General'"><i class="fa-solid fa-cloud"></i> General</li>
+                <li [class.active]="activeCategory === 'Top Rated'" (click)="activeCategory = 'Top Rated'"><i class="fa-regular fa-star"></i> Top Rated</li>
+            </ul>
+
+            <div class="nav-section">
+                <h6>Industry <i class="fa-solid fa-chevron-up float-right"></i></h6>
+                <ul class="nav-list">
+                    <li><i class="fa-solid fa-cart-shopping"></i> Ecommerce</li>
+                    <li><i class="fa-solid fa-graduation-cap"></i> Education</li>
+                    <li><i class="fa-solid fa-building-columns"></i> Banking</li>
+                    <li><i class="fa-regular fa-calendar"></i> Webinar</li>
+                </ul>
+                <button class="btn-more">MORE</button>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="explore-grid">
+            @for(tpl of templates; track tpl.title) {
+                <div class="template-card">
+                    <div class="card-img-wrapper">
+                        <img [src]="tpl.img" alt="">
+                    </div>
+                    <div class="card-content">
+                        <h5>{{ tpl.title }}</h5>
+                        <span class="type-badge" [class.text]="tpl.type === 'TEXT'" [class.image]="tpl.type === 'IMAGE'">
+                            {{ tpl.type }} <i class="fa-solid fa-arrow-up-right-from-square ml-4"></i>
+                        </span>
+                        <p class="msg-preview">{{ tpl.text }}</p>
+                    </div>
+                    <div class="card-actions">
+                        <button class="btn btn-outline">Preview</button>
+                        <button class="btn btn-dark">Submit</button>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
