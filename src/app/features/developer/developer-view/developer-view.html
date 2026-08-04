@@ -1,0 +1,55 @@
+<div class="developer-container">
+    <div class="header-section">
+        <h1 class="page-title">Developer Hub</h1>
+    </div>
+
+    <div class="quick-guide-card">
+        <h3>Quick Guide</h3>
+        <p>Manage your API credentials, configure webhooks, access your Project API key, and explore documentation.</p>
+        
+        <div class="links">
+            <a href="#"><i class="fa-solid fa-book text-green"></i> API Campaign Key Documentation</a>
+            <a href="#"><i class="fa-solid fa-book text-green"></i> Project API Key Documentation</a>
+            <a href="#"><i class="fa-solid fa-book text-green"></i> Webhook Documentation</a>
+        </div>
+    </div>
+
+    <div class="tabs-container">
+        <div class="tabs">
+            <button class="tab-btn" [class.active]="activeTab === 'api-campaign-key'" (click)="activeTab = 'api-campaign-key'">
+                <i class="fa-solid fa-key"></i> API Campaign Key
+            </button>
+            <button class="tab-btn" [class.active]="activeTab === 'project-api-keys'" (click)="activeTab = 'project-api-keys'">
+                <i class="fa-solid fa-key"></i> Project API Keys
+            </button>
+            <button class="tab-btn" [class.active]="activeTab === 'project-webhooks'" (click)="activeTab = 'project-webhooks'">
+                <i class="fa-solid fa-code-branch"></i> Project Webhooks
+            </button>
+            <button class="tab-btn" [class.active]="activeTab === 'documentation'" (click)="activeTab = 'documentation'">
+                <i class="fa-solid fa-book-open"></i> Documentation
+            </button>
+        </div>
+
+        <div class="tab-content" *ngIf="activeTab === 'api-campaign-key'">
+            <div class="api-key-section">
+                <h3>API Campaign Key</h3>
+                
+                <div class="key-box">
+                    <code>{{ apiKey }}</code>
+                </div>
+                
+                <div class="actions">
+                    <button class="btn btn-primary">Copy Key</button>
+                    <button class="btn btn-primary">Regenerate Key</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Placeholders for other tabs -->
+        <div class="tab-content" *ngIf="activeTab !== 'api-campaign-key'">
+            <div class="placeholder-section">
+                <p>Content for {{ activeTab }} will be displayed here.</p>
+            </div>
+        </div>
+    </div>
+</div>

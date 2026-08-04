@@ -1,0 +1,18 @@
+.integrations-layout {
+    display: flex;
+    height: 100vh;
+    background: #f0f2f5;
+
+    .integrations-sidebar {
+        width: 250px;
+        background: white;
+        border-right: 1px solid #d1d7db;
+        flex-shrink: 0;
+    }
+
+    .integrations-content {
+        flex: 1;
+        padding: 32px;
+        overflow-y: auto;
+    }
+}

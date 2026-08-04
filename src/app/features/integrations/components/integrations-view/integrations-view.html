@@ -1,0 +1,25 @@
+<div class="integrations-header">
+    <h2>App Store</h2>
+    <button class="btn btn-dark">List your App</button>
+</div>
+
+<div class="integrations-content">
+    <div class="app-grid">
+        @for(app of apps; track app.name) {
+            <div class="app-card">
+                <div class="app-icon">
+                    <i [class]="app.icon"></i>
+                </div>
+                <div class="app-info">
+                    <h4>
+                        {{ app.name }} 
+                        @if (app.isNew) {
+                            <span class="badge new">New</span>
+                        }
+                    </h4>
+                    <p>{{ app.desc }}</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>

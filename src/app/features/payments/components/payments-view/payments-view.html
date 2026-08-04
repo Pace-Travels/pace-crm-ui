@@ -1,0 +1,120 @@
+<div class="payments-header">
+    <h2>Payments</h2>
+</div>
+
+<div class="payments-content-area">
+    <!-- Zero Fee Banner -->
+    <div class="promo-banner success-light mb-24">
+        <div class="banner-icon">
+            <span class="rupee-coin">₹0</span>
+        </div>
+        <div class="banner-text">
+            <strong>Zero Transaction Fee</strong> on WhatsApp Payments for you!
+            <p>Enable WhatsApp Payments and accept payments without any extra cost — you pay nothing per transaction.</p>
+        </div>
+    </div>
+
+    <!-- Quick Guide & Action Cards -->
+    <div class="quick-launch-section mb-24">
+        <div class="quick-guide">
+            <h5>WHATSAPP PAY SETTINGS QUICK GUIDE</h5>
+            <h4>Quick Guide</h4>
+            <p>View detailed analytics of your payment order messages based on different sources.</p>
+            <div class="guide-links">
+                <a href="#">Read User Guide <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                <a href="#">WhatsApp Payment Journey <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                <a href="#">WhatsApp Payment Setup Video <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                <a href="#">How to use WhatsApp Payment <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            </div>
+        </div>
+
+        <div class="launch-actions">
+            <h4>What would you like to launch?</h4>
+            <div class="cards-grid">
+                <div class="action-card">
+                    <i class="fa-regular fa-paper-plane text-green"></i>
+                    <div class="card-info">
+                        <h6>Launch Broadcast Campaign</h6>
+                        <p>Reach your WhatsApp audience with offers, updates and alerts.</p>
+                    </div>
+                </div>
+                <div class="action-card">
+                    <i class="fa-brands fa-whatsapp text-green"></i>
+                    <div class="card-info">
+                        <h6>Launch WhatsApp Status Ad <span class="badge new">NEW</span></h6>
+                        <p>Publish scroll-stopping offers directly to WhatsApp Status.</p>
+                    </div>
+                </div>
+                <div class="action-card">
+                    <i class="fa-solid fa-user-plus text-orange"></i>
+                    <div class="card-info">
+                        <h6>Launch Lead Form Ads</h6>
+                        <p>Capture high-intent leads and follow up instantly on WhatsApp.</p>
+                    </div>
+                </div>
+                <div class="action-card">
+                    <i class="fa-solid fa-robot text-purple"></i>
+                    <div class="card-info">
+                        <h6>Create AI Agent <span class="badge ai">AI</span></h6>
+                        <p>Qualify leads, answer questions and close sales automatically.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payments Data -->
+    <div class="payments-data-section">
+        <div class="tabs">
+            <button class="tab" [class.active]="activeTab === 'All'" (click)="activeTab = 'All'">All</button>
+            <button class="tab" [class.active]="activeTab === 'Campaigns'" (click)="activeTab = 'Campaigns'">Campaigns</button>
+            <button class="tab" [class.active]="activeTab === 'Flows'" (click)="activeTab = 'Flows'">Flows</button>
+            <button class="tab" [class.active]="activeTab === 'Inbox'" (click)="activeTab = 'Inbox'">Inbox</button>
+        </div>
+
+        <div class="table-controls">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" placeholder="Search by Order Id">
+            </div>
+            
+            <div class="filter-actions">
+                <select class="form-control">
+                    <option>Select Status</option>
+                </select>
+                <button class="btn btn-light" disabled><i class="fa-regular fa-paper-plane"></i> BROADCAST</button>
+                <button class="btn btn-dark"><i class="fa-solid fa-download"></i> Download</button>
+            </div>
+        </div>
+
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th><input type="checkbox"></th>
+                    <th>Order Id</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>User Number</th>
+                    <th>Created At</th>
+                    <th>Updated At</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="7" class="empty-state-cell">
+                        <p>No Payments yet !</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="pagination">
+            <span class="rows-per-page">Rows per page: 10 <i class="fa-solid fa-angle-down"></i></span>
+            <span class="range">0-0 of 0</span>
+            <div class="nav-arrows">
+                <button disabled><i class="fa-solid fa-angle-left"></i></button>
+                <button disabled><i class="fa-solid fa-angle-right"></i></button>
+            </div>
+        </div>
+    </div>
+</div>
