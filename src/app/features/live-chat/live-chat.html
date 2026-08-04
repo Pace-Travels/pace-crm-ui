@@ -1,0 +1,18 @@
+<div class="live-chat-layout">
+    <!-- Left Panel: Chat List -->
+    <div class="panel-left">
+        <app-chat-list></app-chat-list>
+    </div>
+
+    <!-- Middle Panel: Chat Window -->
+    <div class="panel-middle">
+        <app-chat-window></app-chat-window>
+    </div>
+
+    <!-- Right Panel: Chat Profile (Only show if conversation selected) -->
+    @if(chatService.selectedConversation()) {
+        <div class="panel-right">
+            <app-chat-profile></app-chat-profile>
+        </div>
+    }
+</div>

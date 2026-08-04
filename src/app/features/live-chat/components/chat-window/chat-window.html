@@ -1,0 +1,30 @@
+<div class="chat-window-container">
+    @if(!chatService.selectedConversation()) {
+        <!-- Empty State -->
+        <div class="empty-state">
+            <p>Select a chat to continue!</p>
+            
+            <div class="quick-actions">
+                <button class="action-btn"><i class="fa-solid fa-address-book"></i> Add user attributes manually</button>
+                <button class="action-btn"><i class="fa-solid fa-tags"></i> Add/Remove Tag & update attribute</button>
+                <button class="action-btn"><i class="fa-solid fa-link"></i> Send & Generate media link</button>
+            </div>
+        </div>
+    } @else {
+        <!-- Chat State -->
+        <!-- Chat Header inside the window if needed, or we rely on the Profile panel -->
+        <div class="messages-area">
+            @for(msg of chatService.messages$ | async; track msg.id) {
+                <div class="message-bubble" [class.inbound]="msg.direction === 'INBOUND'" [class.outbound]="msg.direction === 'OUTBOUND'">
+                    {{ msg.textContent }}
+                </div>
+            }
+        </div>
+
+        <div class="input-area">
+            <button class="icon-btn"><i class="fa-solid fa-paperclip"></i></button>
+            <input type="text" placeholder="Type a message">
+            <button class="icon-btn"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    }
+</div>

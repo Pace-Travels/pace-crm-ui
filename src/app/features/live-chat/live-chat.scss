@@ -1,0 +1,33 @@
+.live-chat-layout {
+    display: flex;
+    height: 100vh;
+    width: 100%;
+    overflow: hidden;
+    background-color: #f0f2f5; /* Standard WhatsApp web background */
+
+    .panel-left {
+        width: 350px;
+        background: white;
+        border-right: 1px solid #d1d7db;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+    }
+
+    .panel-middle {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        /* background pattern goes in the child component */
+    }
+
+    .panel-right {
+        width: 350px;
+        background: white;
+        border-left: 1px solid #d1d7db;
+        display: flex;
+        flex-direction: column;
+        flex-shrink: 0;
+    }
+}

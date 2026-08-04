@@ -1,0 +1,47 @@
+<div class="chat-list-container">
+    
+    <!-- Top Search Bar -->
+    <div class="search-header">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" placeholder="Search name or mobile number">
+        </div>
+        <button class="filter-btn"><i class="fa-solid fa-filter"></i></button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab" [class.active]="activeTab === 'ACTIVE'" (click)="activeTab = 'ACTIVE'">
+            ACTIVE ({{chatService.activeConversations().length}})
+        </button>
+        <button class="tab" [class.active]="activeTab === 'REQUESTING'" (click)="activeTab = 'REQUESTING'">
+            REQUESTING (0)
+        </button>
+        <button class="tab" [class.active]="activeTab === 'INTERVENED'" (click)="activeTab = 'INTERVENED'">
+            INTERVENED (0)
+        </button>
+    </div>
+
+    <!-- List -->
+    <div class="list-scroll">
+        @for(conv of chatService.activeConversations(); track conv.id) {
+            <div class="chat-item" 
+                 [class.selected]="chatService.selectedConversation()?.id === conv.id"
+                 (click)="selectChat(conv)">
+                
+                <div class="avatar">
+                    {{ getAvatarInitial(conv.Contact?.firstName) }}
+                </div>
+                
+                <div class="chat-info">
+                    <div class="chat-name">
+                        {{ conv.Contact?.firstName || 'UNKNOWN' }} {{ conv.Contact?.lastName || '' }}
+                    </div>
+                    <div class="chat-preview">
+                        {{ conv.Messages?.[0]?.textContent || 'No messages' }}
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>
