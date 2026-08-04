@@ -1,0 +1,59 @@
+.launch-section {
+    margin-bottom: 24px;
+
+    .launch-header h4 {
+        margin: 0 0 16px 0;
+        font-size: 16px;
+        color: #333;
+    }
+
+    .cards-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+
+        .action-card {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            display: flex;
+            gap: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+
+            .card-icon {
+                font-size: 24px;
+                .text-purple { color: #8e24aa; }
+                .text-blue { color: #1e88e5; }
+                .text-green { color: #43a047; }
+                .text-orange { color: #fb8c00; }
+            }
+
+            .card-content {
+                display: flex;
+                flex-direction: column;
+
+                h5 { margin: 0 0 4px 0; font-size: 14px; color: #333; }
+                p { margin: 0 0 12px 0; font-size: 12px; color: #666; flex: 1; }
+
+                .btn-outline {
+                    align-self: flex-start;
+                    background: transparent;
+                    border: 1px solid #0b494d;
+                    color: #0b494d;
+                    border-radius: 4px;
+                    padding: 4px 12px;
+                    font-size: 12px;
+                    cursor: pointer;
+                    font-weight: 500;
+                    transition: 0.2s;
+
+                    &:hover {
+                        background: #0b494d;
+                        color: white;
+                    }
+                }
+            }
+        }
+    }
+}

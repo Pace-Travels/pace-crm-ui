@@ -1,0 +1,95 @@
+<div class="page-container padding-24">
+    <!-- Top Bar for Campaigns -->
+    <div class="page-topbar">
+        <div class="topbar-left">
+            <h2>Campaigns</h2>
+        </div>
+        <div class="topbar-stats">
+            <div class="stat-item">
+                <span class="stat-label">Quality Rating <i class="fa-solid fa-circle-info"></i></span>
+                <span class="stat-badge success">High</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Template Messaging Tier <i class="fa-solid fa-circle-info"></i></span>
+                <span class="stat-value">Tier 1</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Remaining Quota <i class="fa-solid fa-circle-info"></i></span>
+                <span class="stat-value">1885</span>
+            </div>
+        </div>
+        <div class="topbar-right">
+            <button class="btn btn-dark" (click)="openModal()"><i class="fa-solid fa-plus"></i> Launch</button>
+        </div>
+    </div>
+
+    <!-- Quick Guide Banner -->
+    <div class="quick-guide-banner mb-24">
+        <div class="icon-wrap">
+            <i class="fa-regular fa-lightbulb"></i>
+        </div>
+        <div class="guide-content">
+            <h4>Quick Guide</h4>
+            <p>Create WhatsApp campaigns using templates. Track their delivery, read & reply metrics in real-time.</p>
+        </div>
+        <button class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- Action Cards -->
+    <app-action-cards></app-action-cards>
+
+    <!-- Table -->
+    <app-campaign-table></app-campaign-table>
+</div>
+
+<!-- Select Campaign Type Modal -->
+@if (showCampaignTypeModal) {
+    <div class="modal-backdrop">
+        <div class="modal-content campaign-type-modal">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-paper-plane text-teal"></i> Select Campaign Type</h3>
+                <button class="close-btn" (click)="closeModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="modal-body">
+                <div class="campaign-options-grid">
+                    
+                    <div class="campaign-option-card">
+                        <div class="card-title">
+                            <h4>Broadcast Campaign</h4>
+                        </div>
+                        <p>Select and filter among your existing audience & Broadcast customized Template or Regular messages.</p>
+                        <button class="btn-next" (click)="startBroadcastCampaign()">Next <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+
+                    <div class="campaign-option-card">
+                        <div class="card-title">
+                            <h4>API Campaign</h4>
+                        </div>
+                        <p>Select a template and connect your existing systems with our API to automate messages.</p>
+                        <button class="btn-next">Next <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+
+                    <div class="campaign-option-card">
+                        <div class="card-title">
+                            <h4>CSV Broadcast</h4>
+                            <span class="badge-new">NEW</span>
+                        </div>
+                        <p>Upload your audience from CSV & Broadcast customized Template or Regular messages simultaneously.</p>
+                        <button class="btn-next">Next <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+
+                    <div class="campaign-option-card">
+                        <div class="card-title">
+                            <h4>Meta Ads</h4>
+                            <span class="badge-new">NEW</span>
+                        </div>
+                        <p>Target Click To WhatsApp Ads to your Facebook and Instagram audience to generate leads for retargeting.</p>
+                        <button class="btn-next">Next <i class="fa-solid fa-arrow-right"></i></button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+}

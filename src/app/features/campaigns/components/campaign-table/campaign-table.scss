@@ -1,0 +1,120 @@
+.table-container {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border: 1px solid #e0e0e0;
+    overflow: hidden;
+}
+
+.table-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 24px;
+    border-bottom: 1px solid #e0e0e0;
+
+    .search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+        background: #f5f6f6;
+        border-radius: 4px;
+        padding: 0 12px;
+        width: 300px;
+        border: 1px solid #e0e0e0;
+
+        .search-icon {
+            color: #888;
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            padding: 10px 10px;
+            font-size: 13px;
+            outline: none;
+            color: #333;
+        }
+    }
+
+    .tabs {
+        display: flex;
+        background: #f5f6f6;
+        border-radius: 6px;
+        padding: 4px;
+
+        .tab {
+            background: transparent;
+            border: none;
+            padding: 6px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            color: #555;
+            font-weight: 500;
+
+            &.active {
+                background: white;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+                color: #0b494d;
+            }
+        }
+    }
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th {
+        text-align: left;
+        padding: 12px 24px;
+        font-size: 12px;
+        color: #888;
+        font-weight: 600;
+        border-bottom: 1px solid #e0e0e0;
+        background: #fafafa;
+    }
+
+    td {
+        padding: 16px 24px;
+        font-size: 13px;
+        color: #333;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+
+        .type-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            
+            &.broadcast { background: #e8f0fe; color: #1a73e8; }
+            &.api { background: #fce8e6; color: #d93025; }
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: #888;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            
+            &:hover {
+                background: #f0f0f0;
+            }
+        }
+    }
+
+    .empty-state-cell {
+        text-align: center;
+        padding: 48px;
+
+        img { width: 120px; margin-bottom: 16px; opacity: 0.5; }
+        p { margin: 0 0 8px 0; font-size: 15px; color: #333; font-weight: 500; }
+        .subtext { font-size: 13px; color: #888; font-weight: normal; }
+    }
+}

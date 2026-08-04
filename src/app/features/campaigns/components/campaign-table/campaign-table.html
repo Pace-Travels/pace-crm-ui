@@ -1,0 +1,58 @@
+<div class="table-container">
+    <div class="table-controls">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" placeholder="Search campaign">
+        </div>
+        
+        <div class="tabs">
+            <button class="tab" [class.active]="activeTab === 'All'" (click)="activeTab = 'All'">All</button>
+            <button class="tab" [class.active]="activeTab === 'Broadcast'" (click)="activeTab = 'Broadcast'">Broadcast</button>
+            <button class="tab" [class.active]="activeTab === 'API'" (click)="activeTab = 'API'">API</button>
+            <button class="tab" [class.active]="activeTab === 'Scheduled'" (click)="activeTab = 'Scheduled'">Scheduled</button>
+        </div>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>CAMPAIGN NAME</th>
+                <th>TYPE</th>
+                <th>CREATED AT</th>
+                <th>STATUS</th>
+                <th>AUDIENCE</th>
+                <th>ACTION</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (campaignService.isLoading()) {
+                <tr><td colspan="6" class="text-center">Loading...</td></tr>
+            } @else if (campaignService.campaigns().length === 0) {
+                <tr>
+                    <td colspan="6" class="empty-state-cell">
+                        <img src="https://via.placeholder.com/150?text=No+Campaigns" alt="No Campaigns">
+                        <p>No campaign running currently!</p>
+                        <p class="subtext">You'll be able to see the list of your campaigns here.</p>
+                    </td>
+                </tr>
+            } @else {
+                @for(campaign of campaignService.campaigns(); track campaign.id) {
+                    <tr>
+                        <td>{{ campaign.campaignName }}</td>
+                        <td>
+                            <span class="type-badge" [class.broadcast]="campaign.type === 'BROADCAST'" [class.api]="campaign.type === 'API'">
+                                {{ campaign.type }}
+                            </span>
+                        </td>
+                        <td>{{ campaign.createdAt }}</td>
+                        <td>{{ campaign.status }}</td>
+                        <td>{{ campaign.audience }}</td>
+                        <td>
+                            <button class="icon-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

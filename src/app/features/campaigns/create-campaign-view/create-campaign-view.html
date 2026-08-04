@@ -1,0 +1,231 @@
+<div class="create-campaign-layout">
+    <!-- Header -->
+    <div class="campaign-header">
+        <div class="header-left">
+            <button class="btn-back" (click)="goBack()"><i class="fa-solid fa-arrow-left"></i> Create Campaign</button>
+        </div>
+        <div class="header-right">
+            <div class="metric">
+                <span>Quality Rating <i class="fa-solid fa-circle-info"></i></span>
+                <span class="badge badge-high">High</span>
+            </div>
+            <div class="metric">
+                <span>Template Messaging Tier <i class="fa-solid fa-circle-info"></i></span>
+                <span class="value">Tier 1</span>
+            </div>
+            <div class="metric">
+                <span>Remaining Quota <i class="fa-solid fa-circle-info"></i></span>
+                <span class="value fw-bold">1896</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar-container">
+        <div class="step" [class.active]="currentStep >= 1">
+            <div class="step-text">Campaign Details</div>
+            <div class="step-line"></div>
+        </div>
+        <div class="step" [class.active]="currentStep >= 2">
+            <div class="step-text">Create Message</div>
+            <div class="step-line"></div>
+        </div>
+        <div class="step" [class.active]="currentStep >= 3">
+            <div class="step-text">Test & Preview</div>
+        </div>
+    </div>
+
+    <!-- Step 1: Campaign Details -->
+    @if (currentStep === 1) {
+        <div class="step-content">
+            <div class="step-actions top-right">
+                <button class="btn btn-dark" (click)="nextStep()">Next</button>
+            </div>
+            
+            <div class="form-group mb-24">
+                <label>Campaign Name</label>
+                <p class="help-text">Pick something that describes your audience & goals.</p>
+                <input type="text" class="form-control" [(ngModel)]="campaignName" placeholder="Enter campaign name">
+            </div>
+
+            <div class="form-group mb-24 filter-group">
+                <label>Search filters...</label>
+                <p class="help-text">Pick something that describes your audience.</p>
+                <div class="filter-dropdown-container">
+                    <input type="text" class="form-control" placeholder="Search filters..." (click)="toggleFilters()">
+                    @if (showQuickFilters) {
+                        <div class="filter-dropdown">
+                            <div class="filter-section">
+                                <h5>QUICK FILTERS</h5>
+                                <ul>
+                                    <li><i class="fa-regular fa-square"></i> Tags</li>
+                                    <li><i class="fa-regular fa-calendar"></i> Created Date</li>
+                                    <li><i class="fa-regular fa-clock"></i> Last Seen</li>
+                                    <li><i class="fa-regular fa-circle-check"></i> Opted In</li>
+                                    <li><i class="fa-solid fa-ban"></i> Blocked</li>
+                                    <li><i class="fa-solid fa-chart-pie"></i> Segment</li>
+                                </ul>
+                            </div>
+                            <div class="filter-section">
+                                <h5>ATTRIBUTES</h5>
+                                <ul>
+                                    <li><i class="fa-solid fa-arrow-up-a-z"></i> Name</li>
+                                </ul>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="audience-grid">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Mobile Number</th>
+                            <th>Tags</th>
+                            <th>Source</th>
+                            <th>Lead Stage</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (contactService.isLoading()) {
+                            <tr><td colspan="5" class="text-center">Loading...</td></tr>
+                        } @else if (contactService.contacts().length === 0) {
+                            <tr><td colspan="5" class="text-center empty-state">No contacts found.</td></tr>
+                         @else {
+                            @for(contact of contactService.contacts(); track contact.id) {
+                                <tr (click)="openProfilePanel(contact)" style="cursor: pointer;">
+                                    <td class="font-bold">{{ contact.name || 'UNKNOWN' }}</td>
+                                    <td>{{ contact.phone }}</td>
+                                    <td>
+                                        @if (contact.tags && contact.tags.length > 0) {
+                                            @for(tag of contact.tags; track tag) {
+                                                <span class="tag-badge">{{ tag }}</span>
+                                            }
+                                        }
+                                    </td>
+                                    <td>{{ contact.source }}</td>
+                                    <td>
+                                        <span class="stage-dot"></span> {{ contact.leadStage }}
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+                <div class="pagination-footer">
+                    <div class="rows-per-page">Rows per page: <span>25 <i class="fa-solid fa-chevron-down"></i></span></div>
+                    <div class="page-controls">
+                        <span>1-{{contactService.contacts().length}} of {{contactService.contacts().length}}</span>
+                        <button class="btn-icon"><i class="fa-solid fa-chevron-left"></i></button>
+                        <button class="btn-icon"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Step 2: Create Message -->
+    @if (currentStep === 2) {
+        <div class="step-content">
+            <div class="step-actions split">
+                <button class="btn btn-outline" (click)="prevStep()">Prev</button>
+                <button class="btn btn-dark" (click)="nextStep()">Next</button>
+            </div>
+            
+            <div class="create-message-layout">
+                <!-- Left Side: Message Configuration -->
+                <div class="message-config">
+                    <div class="form-group mb-24">
+                        <label>Template Name</label>
+                        <p class="help-text">Search and select an approved template.</p>
+                        <div class="template-select-container">
+                            <input type="text" class="form-control" placeholder="marketing_english_1">
+                            <i class="fa-solid fa-chevron-down select-icon"></i>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h4>Parameters <span class="badge">1 Parameter</span></h4>
+                        <div class="parameter-row">
+                            <div class="param-label">&#123;&#123;1&#125;&#125;</div>
+                            <div class="param-inputs">
+                                <input type="text" class="form-control" placeholder="$FirstName" value="$FirstName">
+                                <input type="text" class="form-control" placeholder="Fallback value">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h4>Header Media</h4>
+                        <div class="form-group">
+                            <label>Media Url</label>
+                            <input type="text" class="form-control" placeholder="Enter image URL">
+                        </div>
+                        <div class="or-divider"><span>OR</span></div>
+                        <button class="btn btn-outline btn-full"><i class="fa-solid fa-cloud-arrow-up"></i> Upload from Media Library</button>
+                    </div>
+                </div>
+
+                <!-- Right Side: Live Preview -->
+                <div class="message-preview">
+                    <div class="whatsapp-mockup">
+                        <div class="wa-header">
+                            <div class="wa-contact">
+                                <div class="wa-avatar"><i class="fa-solid fa-user"></i></div>
+                                <span>Pace Messenger</span>
+                            </div>
+                        </div>
+                        <div class="wa-body">
+                            <div class="wa-message-bubble">
+                                <div class="wa-image-placeholder">
+                                    <i class="fa-regular fa-image"></i>
+                                </div>
+                                <div class="wa-text">
+                                    Hey <strong>[FirstName]</strong>,<br><br>
+                                    Welcome to Pace Messenger. Let's supercharge your WhatsApp marketing!
+                                </div>
+                                <div class="wa-footer">10:42 AM</div>
+                                <div class="wa-buttons">
+                                    <button><i class="fa-solid fa-arrow-up-right-from-square"></i> Visit Website</button>
+                                    <button><i class="fa-solid fa-phone"></i> Call Now</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Step 3: Test & Preview -->
+    @if (currentStep === 3) {
+        <div class="step-content">
+            <div class="step-actions split">
+                <button class="btn btn-outline" (click)="prevStep()">Prev</button>
+                <button class="btn btn-dark">Launch Campaign</button>
+            </div>
+            
+            <div class="test-preview-section">
+                <h3>Ready to Launch?</h3>
+                <p>You can send a test message to a specific number before launching to your entire audience.</p>
+                
+                <div class="form-group mt-24">
+                    <label>Test Number (with country code)</label>
+                    <div class="test-input-group">
+                        <input type="text" class="form-control" placeholder="+91 9876543210">
+                        <button class="btn btn-dark">Send Test</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Contact Profile Sidebar Overlay -->
+<app-contact-profile-panel 
+    [isOpen]="isProfilePanelOpen" 
+    [contact]="selectedProfileContact"
+    (closePanel)="closeProfilePanel()">
+</app-contact-profile-panel>
