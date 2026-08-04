@@ -1,0 +1,131 @@
+<div class="flows-header">
+    <h2>Flow Builder</h2>
+</div>
+
+<div class="flows-dashboard-cards mb-24">
+    <!-- Card 1: Quick Guide -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h4>Quick Guide</h4>
+        </div>
+        <p class="card-desc">You can connect with facebook to fetch catalogue and manage it from our platform.</p>
+        
+        <div class="article-item">
+            <div class="article-icon"><i class="fa-solid fa-file-lines"></i></div>
+            <div class="article-info">
+                <h5>How to create a catalogue in Commerce Manager?</h5>
+                <span>Article • 4 mins read</span>
+            </div>
+        </div>
+        
+        <div class="article-item">
+            <div class="article-icon"><i class="fa-solid fa-file-lines"></i></div>
+            <div class="article-info">
+                <h5>How to manage your Meta catalogue with Shopify?</h5>
+                <span>Article • 4 mins read</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: Active Flows -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h4>Active Flows</h4>
+        </div>
+        
+        <div class="chart-container">
+            <!-- Pure CSS Donut Chart -->
+            <div class="donut-chart" [style.--percentage]="(flowService.activeFlowsCount() / flowService.totalFlowsQuota()) * 100">
+                <div class="inner-circle">
+                    <span class="value">{{ flowService.activeFlowsCount() }}%</span>
+                </div>
+            </div>
+            
+            <div class="chart-stats">
+                <div class="stat-main">
+                    <span class="count">{{ flowService.activeFlowsCount() }}</span>
+                    <span class="total">/{{ flowService.totalFlowsQuota() }}</span>
+                </div>
+                <div class="stat-label">FLOWS ACTIVE</div>
+            </div>
+        </div>
+
+        <div class="stats-list">
+            <div class="stat-row">
+                <span class="dot text-primary"></span> Total Quota: {{ flowService.totalFlowsQuota() }} Flows
+            </div>
+            <div class="stat-row">
+                <span class="dot text-warning"></span> AI Enabled Flows: {{ flowService.aiEnabledFlows() }}
+            </div>
+        </div>
+
+        <button class="btn btn-dark w-100">Purchase More Flows</button>
+    </div>
+
+    <!-- Card 3: AI Messages -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <h4>AI Messages</h4>
+        </div>
+        <div class="ai-content">
+            <h5>Purchase AI Messages for Bot Builder</h5>
+            <p>Boost your flows with advanced intelligence. Only ₹3,500 per 3,500 messages.</p>
+        </div>
+        <button class="btn btn-dark w-100 mt-auto">Purchase Messages</button>
+    </div>
+</div>
+
+<div class="flows-list-section">
+    <div class="table-controls">
+        <div class="search-box">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" placeholder="Search by flow name">
+        </div>
+        
+        <button class="btn btn-dark"><i class="fa-solid fa-plus"></i> Create Flow</button>
+    </div>
+
+    <div class="tabs">
+        <button class="tab" [class.active]="activeTab === 'Your Flows'" (click)="activeTab = 'Your Flows'">
+            <i class="fa-regular fa-circle"></i> Your Flows
+        </button>
+        <button class="tab" [class.active]="activeTab === 'Templates'" (click)="activeTab = 'Templates'">
+            <i class="fa-regular fa-compass"></i> Templates <span class="badge new">NEW</span>
+        </button>
+        <button class="tab" [class.active]="activeTab === 'Test Numbers'" (click)="activeTab = 'Test Numbers'">
+            <i class="fa-solid fa-mobile-screen"></i> Test Numbers
+        </button>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Flow Name</th>
+                <th>Created By</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for(flow of flowService.flows(); track flow.id) {
+                <tr>
+                    <td class="font-bold">{{ flow.flowName }}</td>
+                    <td>{{ flow.createdBy }}</td>
+                    <td>
+                        <label class="toggle-switch">
+                            <input type="checkbox" [checked]="flow.status">
+                            <span class="slider round"></span>
+                        </label>
+                    </td>
+                    <td>
+                        <div class="action-icons">
+                            <button><i class="fa-regular fa-copy"></i></button>
+                            <button><i class="fa-solid fa-pen"></i></button>
+                            <button><i class="fa-regular fa-trash-can"></i></button>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

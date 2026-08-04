@@ -1,0 +1,18 @@
+.flows-layout {
+    display: flex;
+    height: 100vh;
+    background: #f0f2f5;
+
+    .flows-sidebar {
+        width: 250px;
+        background: white;
+        border-right: 1px solid #d1d7db;
+        flex-shrink: 0;
+    }
+
+    .flows-content {
+        flex: 1;
+        padding: 24px;
+        overflow-y: auto;
+    }
+}
