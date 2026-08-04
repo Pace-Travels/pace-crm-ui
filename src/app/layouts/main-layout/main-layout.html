@@ -1,15 +1,15 @@
-<div class="layout">
+<div class="layout" [class.sidebar-collapsed]="sidebarCollapsed">
 
     <app-sidebar></app-sidebar>
 
     <div class="main-wrapper">
 
-        <app-header></app-header>
+        <app-header 
+            (toggleSidebar)="toggleSidebar()">
+        </app-header>
 
         <main class="page-content">
-
             <router-outlet></router-outlet>
-
         </main>
 
     </div>

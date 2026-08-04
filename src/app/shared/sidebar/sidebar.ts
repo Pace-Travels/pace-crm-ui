@@ -35,6 +35,8 @@ export class Sidebar implements OnInit {
       this.collapsed.set(JSON.parse(state));
     }
 
+    this.onResize();
+
   }
 
   @HostListener('window:resize')
@@ -42,8 +44,18 @@ export class Sidebar implements OnInit {
 
     this.isMobile = window.innerWidth < 992;
 
-    if (!this.isMobile) {
+    if (this.isMobile) {
+
+      this.collapsed.set(true);
+
+    } else {
+
+      const state = localStorage.getItem('sidebar-collapsed');
+
+      this.collapsed.set(state ? JSON.parse(state) : false);
+
       this.mobileOpen.set(false);
+
     }
 
   }

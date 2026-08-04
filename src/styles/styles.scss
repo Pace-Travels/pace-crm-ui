@@ -1,0 +1,7 @@
+@use "./web/header" as webHeader;
+@use "./web/sidebar" as webSidebar;
+@use "./web/layout" as webLayout;
+
+@use "./mobile/header" as mobileHeader;
+@use "./mobile/sidebar" as mobileSidebar;
+@use "./mobile/layout" as mobileLayout;

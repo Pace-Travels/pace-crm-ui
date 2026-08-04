@@ -1,0 +1,145 @@
+/* ======================================
+        MOBILE SIDEBAR
+====================================== */
+
+@media (max-width:991px){
+
+    /* Sidebar */
+
+    .sidebar{
+
+        width:72px;
+
+        transform:translateX(0);
+
+        overflow:hidden;
+
+    }
+
+    .sidebar.collapsed{
+
+        width:72px;
+
+    }
+
+    /* Logo */
+
+    .logo{
+
+        justify-content:center;
+
+        padding:0;
+
+        height:70px;
+
+    }
+
+    .logo-text{
+
+        display:none;
+
+    }
+
+    .logo-icon{
+
+        margin:0;
+
+    }
+
+    /* Menu */
+
+    .sidebar-menu{
+
+        padding:18px 8px;
+
+    }
+
+    .sidebar-menu ul{
+
+        margin:0;
+
+        padding:0;
+
+    }
+
+    .sidebar-menu li{
+
+        margin-bottom:8px;
+
+    }
+
+    .sidebar a{
+
+        justify-content:center;
+
+        padding:0;
+
+        gap:0;
+
+        height:48px;
+
+    }
+
+    .sidebar a span{
+
+        display:none;
+
+    }
+
+    .sidebar a i{
+
+        width:42px;
+
+        height:42px;
+
+        min-width:42px;
+
+        font-size:18px;
+
+        border-radius:50%;
+
+        display:flex;
+
+        align-items:center;
+
+        justify-content:center;
+
+    }
+
+    /* Hover */
+
+    .sidebar a:hover{
+
+        background:transparent;
+
+    }
+
+    .sidebar a:hover i{
+
+        background:rgba(255,255,255,.15);
+
+    }
+
+    /* Active */
+
+    .sidebar a.active{
+
+        background:transparent;
+
+    }
+
+    .sidebar a.active::before{
+
+        display:none;
+
+    }
+
+    .sidebar a.active i{
+
+        background:#fff;
+
+        color:#0A474C;
+
+    }
+
+}
