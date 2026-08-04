@@ -1,0 +1,176 @@
+<div class="contacts-wrapper" (click)="closeDropdowns()">
+    
+    <!-- Top Header Bar -->
+    <div class="top-bar">
+        <div class="search-filter-group">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" placeholder="Search name or mobile number">
+            </div>
+            <button class="btn btn-icon-text"><i class="fa-solid fa-sliders"></i> Filter</button>
+        </div>
+
+        <div class="action-group">
+            <button class="btn btn-secondary" [disabled]="!isBroadcastActive()">BROADCAST</button>
+            
+            <div class="dropdown-container" (click)="$event.stopPropagation()">
+                <button class="btn btn-outline" (click)="toggleRunAdDropdown()">Run Ad <i class="fa-solid fa-chevron-down ms-1"></i></button>
+                @if (showRunAdDropdown()) {
+                    <div class="dropdown-menu">
+                        <a href="#"><i class="fa-brands fa-whatsapp text-green"></i> Click to WhatsApp Ad</a>
+                        <a href="#"><i class="fa-solid fa-circle-notch text-green"></i> WhatsApp Status Ad</a>
+                        <a href="#"><i class="fa-solid fa-globe text-green"></i> Website to WhatsApp Ad</a>
+                        <a href="#"><i class="fa-solid fa-globe text-blue"></i> Website Ad</a>
+                        <a href="#"><i class="fa-solid fa-table-list text-purple"></i> Lead Form Ads</a>
+                    </div>
+                }
+            </div>
+
+            <button class="btn btn-outline" (click)="openAddContact()">+ Add Contact</button>
+
+            <div class="dropdown-container" (click)="$event.stopPropagation()">
+                <button class="btn btn-outline" (click)="toggleImportDropdown()">Import <i class="fa-solid fa-chevron-down ms-1"></i></button>
+                @if (showImportDropdown()) {
+                    <div class="dropdown-menu">
+                        <a href="javascript:void(0)" (click)="openImportModal()">Import Contacts</a>
+                        <a href="#">Import and Broadcast <span class="badge new-badge">NEW</span></a>
+                    </div>
+                }
+            </div>
+
+            <div class="dropdown-container" (click)="$event.stopPropagation()">
+                <button class="btn btn-outline" (click)="toggleActionsDropdown()">Actions <i class="fa-solid fa-chevron-down ms-1"></i></button>
+                @if (showActionsDropdown()) {
+                    <div class="dropdown-menu">
+                        <a href="#">Export</a>
+                        <a href="#">Export History</a>
+                        <a href="#">Import History</a>
+                        <a href="#">Manage Tags</a>
+                        <a href="#">Block & Opt</a>
+                        <a href="#">Edit Contact</a>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th class="checkbox-cell"><input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($event)"></th>
+                    <th>Name</th>
+                    <th>Mobile Number</th>
+                    <th>Tags</th>
+                    <th>Source</th>
+                    <th>Lead Stage</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (contactService.isLoading()) {
+                    <tr><td colspan="6" class="text-center">Loading...</td></tr>
+                } @else if (contactService.contacts().length === 0) {
+                    <tr><td colspan="6" class="text-center empty-state">No contacts found.</td></tr>
+                } @else {
+                    @for(contact of contactService.contacts(); track contact.id) {
+                        <tr [class.selected]="isSelected(contact.id)">
+                            <td class="checkbox-cell">
+                                <input type="checkbox" [checked]="isSelected(contact.id)" (change)="toggleSelect(contact.id)">
+                            </td>
+                            <td class="font-bold">{{ contact.name || 'UNKNOWN' }}</td>
+                            <td>{{ contact.phone }}</td>
+                            <td>
+                                @if (contact.tags && contact.tags.length > 0) {
+                                    @for(tag of contact.tags; track tag) {
+                                        <span class="tag-badge">{{ tag }}</span>
+                                    }
+                                }
+                            </td>
+                            <td>{{ contact.source }}</td>
+                            <td>
+                                <span class="stage-dot"></span> {{ contact.leadStage }}
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Contact Modal -->
+@if (showAddContactModal()) {
+    <div class="modal-backdrop">
+        <div class="modal-content add-contact-modal">
+            <div class="modal-header">
+                <h3>Create Contact</h3>
+                <button class="close-btn" (click)="closeAddContact()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form [formGroup]="contactForm" (ngSubmit)="onAddContactSubmit()">
+                    <div class="form-row">
+                        <label>Name <span class="text-red">*</span></label>
+                        <div class="input-wrapper">
+                            <input type="text" formControlName="name" placeholder="User Name">
+                            <span class="char-count">0/100 characters</span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Mobile Number <span class="text-red">*</span></label>
+                        <div class="phone-inputs">
+                            <select class="country-select">
+                                <option>India</option>
+                            </select>
+                            <div class="number-input-wrap">
+                                <span class="prefix">+91</span>
+                                <input type="text" formControlName="phone" placeholder="WhatsApp Number">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Tags</label>
+                        <select class="full-select" formControlName="tags">
+                            <option value="">Select Tags</option>
+                            <option value="vip">VIP</option>
+                            <option value="new">New</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <label>Source</label>
+                        <input type="text" formControlName="source" placeholder="Source">
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary" [disabled]="!contactForm.valid">Add Contact</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Import CSV Modal -->
+@if (showImportModal()) {
+    <div class="modal-backdrop">
+        <div class="modal-content import-modal text-center">
+            <div class="video-placeholder">
+                <img src="https://developers.google.com/static/workspace/images/sheets/hero.png" alt="Spreadsheet">
+                <div class="play-btn"><i class="fa-solid fa-play"></i></div>
+            </div>
+            
+            <p class="import-text">Upload your contacts file in .csv format.<br>Upto 50MB file size(~2lakhs contacts) is allowed.</p>
+            
+            <a href="#" class="download-link"><i class="fa-solid fa-download"></i> Download Sample CSV</a>
+            
+            <div class="modal-actions">
+                <button class="btn btn-outline" (click)="closeImportModal()">Cancel</button>
+                <button class="btn btn-primary" (click)="fileInput.click()">Upload File</button>
+                <input type="file" #fileInput accept=".csv" (change)="onFileSelected($event)" style="display: none;">
+            </div>
+        </div>
+    </div>
+}

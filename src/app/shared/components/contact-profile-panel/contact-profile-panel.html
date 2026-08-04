@@ -1,0 +1,124 @@
+<div class="panel-overlay" [class.open]="isOpen" (click)="closePanel.emit()">
+    <div class="panel-content" (click)="$event.stopPropagation()">
+        
+        <div class="panel-header">
+            <div class="header-left">
+                <button class="btn-close" (click)="closePanel.emit()"><i class="fa-solid fa-xmark"></i></button>
+                <div class="avatar bg-orange">{{ getInitials(contact?.name) }}</div>
+                <h3 class="name">{{ contact?.name || 'UNKNOWN' }}</h3>
+            </div>
+            <div class="header-right">
+                <span class="subtitle">Chat Profile</span>
+            </div>
+        </div>
+
+        <div class="panel-body">
+            <!-- Basic Info Area -->
+            <div class="profile-summary">
+                <div class="avatar-large bg-orange">{{ getInitials(contact?.name) }}</div>
+                <h2 class="name">{{ contact?.name || 'UNKNOWN' }}</h2>
+                <div class="phone">{{ contact?.phone || 'No Phone' }}</div>
+            </div>
+
+            <div class="details-grid">
+                <div class="detail-row">
+                    <span class="label">Status</span>
+                    <span class="value">Active</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Last Active</span>
+                    <span class="value">8/4/2026, 10:16 AM</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Template Messages</span>
+                    <span class="value">0</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Session Messages</span>
+                    <span class="value">0</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Unresolved Queries</span>
+                    <span class="value">0</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Source</span>
+                    <span class="value">{{ contact?.source || 'ORGANIC' }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">First Message</span>
+                    <span class="value">----</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">WA Conversation</span>
+                    <span class="value">Inactive</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">MAU Status</span>
+                    <span class="value">Inactive</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Incoming</span>
+                    <span class="value">Allowed</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Opted In</span>
+                    <span class="value"><div class="toggle-switch on"></div></span>
+                </div>
+            </div>
+
+            <!-- Accordions -->
+            <div class="accordion-group">
+                <div class="accordion-item">
+                    <div class="accordion-header" (click)="toggleSection('payments')">
+                        <span>Payments</span>
+                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'payments'"></i>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header" (click)="toggleSection('leads')">
+                        <span>Leads</span>
+                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'leads'"></i>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header" (click)="toggleSection('campaigns')">
+                        <span>Campaigns</span>
+                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'campaigns'"></i>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header" (click)="toggleSection('attributes')">
+                        <span>Attributes</span>
+                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'attributes'"></i>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header" (click)="toggleSection('tags')">
+                        <span>Tags</span>
+                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'tags'"></i>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header" (click)="toggleSection('notes')">
+                        <span>Notes</span>
+                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'notes'"></i>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header" (click)="toggleSection('leadStage')">
+                        <span>Lead Stage</span>
+                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'leadStage'"></i>
+                    </div>
+                </div>
+                <div class="accordion-item">
+                    <div class="accordion-header" (click)="toggleSection('customerJourney')">
+                        <span>Customer Journey</span>
+                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'customerJourney'"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
