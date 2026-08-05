@@ -44,14 +44,21 @@ export class ContactService {
     return this.api.delete(`/whatsappcontacts/delete/${id}`);
   }
 
+  // importCsv(file: File) {
+  //   const formData = new FormData();
+  //   formData.append('file', file);
+  //   // Overriding the default content-type header because formData requires browser to set multipart/form-data boundary
+  //   return this.api.post('/whatsappcontacts/import', formData, {
+  //     headers: {
+  //       // null or undefined trick to let browser auto-set the correct header
+  //     }
+  //   });
+  // }
+
   importCsv(file: File) {
     const formData = new FormData();
     formData.append('file', file);
-    // Overriding the default content-type header because formData requires browser to set multipart/form-data boundary
-    return this.api.post('/whatsappcontacts/import', formData, {
-      headers: {
-        // null or undefined trick to let browser auto-set the correct header
-      }
-    });
+
+    return this.api.post('/whatsappcontacts/import', formData);
   }
 }

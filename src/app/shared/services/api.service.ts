@@ -23,9 +23,15 @@ export class ApiService {
     return this.http.get<T>(`${this.baseUrl}/${endpoint}`, { headers: this.getHeaders() });
   }
 
-  post<T>(endpoint: string, body: any, options?: any): Observable<T> {
-    const finalOptions = options || { headers: this.getHeaders() };
-    return this.http.post<T>(`${this.baseUrl}/${endpoint}`, body, finalOptions);
+  post<T>(endpoint: string, body: any, options?: { headers?: HttpHeaders;}): Observable<T> {
+
+    return this.http.post<T>(
+      `${this.baseUrl}/${endpoint}`, body,
+      {
+        headers: this.getHeaders(),
+        ...options
+      }
+    );
   }
 
   put<T>(endpoint: string, body: any): Observable<T> {
