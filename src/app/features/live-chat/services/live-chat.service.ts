@@ -1,6 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { ApiService } from '../../../shared/services/api.service';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { io, Socket } from 'socket.io-client';
 
 export interface Conversation {
   id: number;
@@ -33,10 +34,40 @@ export class LiveChatService {
   chatInputMessage = signal('');
 
   // BehaviorSubject for messages so chat window can subscribe
-  private messagesSubject = new BehaviorSubject<any[]>([]);
+  messagesSubject = new BehaviorSubject<any[]>([]);
   messages$ = this.messagesSubject.asObservable();
 
-  constructor(private api: ApiService) {}
+  private socket!: Socket;
+
+  constructor(private api: ApiService) {
+    this.initSocket();
+  }
+
+  private initSocket() {
+    // Establish connection to backend WebSocket server
+    this.socket = io('https://messengerapi.quotedesks.com');
+
+    this.socket.on('new_message', (data: any) => {
+      const active = this.selectedConversation();
+      if (active && data.conversationId === active.id) {
+        const current = this.messagesSubject.value;
+        if (!current.find((m: any) => m.id === data.id)) {
+          this.messagesSubject.next([...current, data]);
+        }
+      }
+    });
+
+    this.socket.on('message_status_update', (data: any) => {
+      // data format: { messageId, status }
+      const current = this.messagesSubject.value.map((m: any) => {
+        if (m.id === data.messageId) {
+          return { ...m, status: data.status };
+        }
+        return m;
+      });
+      this.messagesSubject.next(current);
+    });
+  }
 
   fetchConversations() {
     this.api.get<any>('conversations/list').subscribe({
@@ -70,7 +101,13 @@ export class LiveChatService {
   }
 
   selectConversation(conv: Conversation) {
+    const prev = this.selectedConversation();
+    if (prev) {
+      this.socket.emit('leave_conversation', prev.id);
+    }
+
     this.selectedConversation.set(conv);
+    this.socket.emit('join_conversation', conv.id);
     
     // Fetch live messages
     this.api.get<any>('messages/list').subscribe({
