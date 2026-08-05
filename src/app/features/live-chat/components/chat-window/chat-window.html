@@ -52,10 +52,46 @@
             }
         </div>
 
-        <div class="input-area">
-            <button class="icon-btn"><i class="fa-solid fa-paperclip"></i></button>
+        <div class="input-area" style="position: relative;">
+            <button class="icon-btn" (click)="toggleInteractiveModal()" title="Send Quick Reply Buttons"><i class="fa-solid fa-list-check"></i></button>
             <input type="text" placeholder="Type a message" [ngModel]="chatService.chatInputMessage()" (ngModelChange)="chatService.chatInputMessage.set($event)" (keyup.enter)="sendMessage()">
             <button class="icon-btn" (click)="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+
+            <!-- Quick Reply Buttons Composer Popover -->
+            @if (showInteractiveModal()) {
+                <div style="position: absolute; bottom: 54px; left: 16px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; width: 300px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 100; font-family: 'Inter', sans-serif;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="margin: 0; font-size: 13px; color: #0b494d;"><i class="fa-solid fa-layer-group"></i> Attach Quick Replies</h4>
+                        <span (click)="toggleInteractiveModal()" style="cursor: pointer; font-size: 16px; font-weight: bold;">&times;</span>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div>
+                            <label style="font-size: 11px; font-weight: 700; color: #475569;">Message Text *</label>
+                            <input type="text" class="form-control" [(ngModel)]="interactiveBody" placeholder="Select your option below:" style="width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px 10px;">
+                        </div>
+
+                        <div>
+                            <label style="font-size: 11px; font-weight: 700; color: #475569;">Button 1 Title *</label>
+                            <input type="text" class="form-control" [(ngModel)]="btn1" placeholder="e.g. Talk to Agent" style="width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px 10px;">
+                        </div>
+
+                        <div>
+                            <label style="font-size: 11px; font-weight: 700; color: #475569;">Button 2 Title (Optional)</label>
+                            <input type="text" class="form-control" [(ngModel)]="btn2" placeholder="e.g. View Packages" style="width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px 10px;">
+                        </div>
+
+                        <div>
+                            <label style="font-size: 11px; font-weight: 700; color: #475569;">Button 3 Title (Optional)</label>
+                            <input type="text" class="form-control" [(ngModel)]="btn3" placeholder="e.g. Pricing Details" style="width: 100%; box-sizing: border-box; font-size: 12px; padding: 6px 10px;">
+                        </div>
+
+                        <button class="btn btn-primary" (click)="sendInteractiveButtons()" style="margin-top: 6px; padding: 8px; font-size: 12px; font-weight: 600;">
+                            Send Interactive Buttons
+                        </button>
+                    </div>
+                </div>
+            }
         </div>
     }
 </div>
