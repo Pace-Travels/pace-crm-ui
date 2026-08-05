@@ -93,7 +93,7 @@
                             <tr><td colspan="5" class="text-center">Loading...</td></tr>
                         } @else if (contactService.contacts().length === 0) {
                             <tr><td colspan="5" class="text-center empty-state">No contacts found.</td></tr>
-                         @else {
+                        } @else {
                             @for(contact of contactService.contacts(); track contact.id) {
                                 <tr (click)="openProfilePanel(contact)" style="cursor: pointer;">
                                     <td class="font-bold">{{ contact.name || 'UNKNOWN' }}</td>
