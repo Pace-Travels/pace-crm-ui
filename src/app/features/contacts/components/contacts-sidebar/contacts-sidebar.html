@@ -1,23 +1,33 @@
 <div class="sidebar-inner">
     <div class="sidebar-section">
-        <h3>Contacts</h3>
+        <h3>Contact Types</h3>
         <ul>
-            <li class="active"><i class="fa-solid fa-users"></i> Users</li>
-            <li><i class="fa-solid fa-robot"></i> Chatbots</li>
-            <li><i class="fa-solid fa-headset"></i> Agents</li>
-            <li><i class="fa-solid fa-layer-group"></i> Groups</li>
+            <li [class.active]="contactService.activeType() === 'B2C'" (click)="selectType('B2C')">
+                <i class="fa-solid fa-user"></i> B2C (Pace Travels)
+            </li>
+            <li [class.active]="contactService.activeType() === 'B2B'" (click)="selectType('B2B')">
+                <i class="fa-solid fa-building"></i> B2B (Pace Tourism)
+            </li>
         </ul>
     </div>
 
     <div class="sidebar-section">
         <div class="section-header">
-            <h3>Segments</h3>
-            <button class="icon-btn"><i class="fa-solid fa-plus"></i></button>
+            <h3>Groups</h3>
         </div>
         <ul>
-            <li>All Contacts <span class="count">1151</span></li>
-            <li>Test <span class="count">4</span></li>
-            <li>Default Segment <span class="count">1</span></li>
+            @if (contactService.groups().length === 0) {
+                <li class="empty-text">No groups created</li>
+            } @else {
+                @for(group of contactService.groups(); track group.id) {
+                    @if (group.contactType === contactService.activeType()) {
+                        <li class="group-item">
+                            <span class="group-name"><i class="fa-solid fa-layer-group"></i> {{ group.name }}</span>
+                            <button class="delete-btn" (click)="deleteGroup(group.id, $event)"><i class="fa-solid fa-trash"></i></button>
+                        </li>
+                    }
+                }
+            }
         </ul>
     </div>
 </div>

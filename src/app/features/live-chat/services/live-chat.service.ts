@@ -2,18 +2,17 @@ import { Injectable, signal } from '@angular/core';
 import { ApiService } from '../../../shared/services/api.service';
 import { BehaviorSubject, Observable } from 'rxjs';
 
-// Note: Ensure socket.io-client is installed in package.json if real-time is needed.
-// import { io, Socket } from 'socket.io-client';
-
 export interface Conversation {
   id: number;
   contactId: number;
   platform: string;
   status: string;
+  assignedToType?: string;
   Contact?: {
-    firstName: string;
-    lastName: string;
-    phone: string;
+    name?: string;
+    phone?: string;
+    firstName?: string;
+    lastName?: string;
   };
   Messages?: any[];
 }
@@ -30,46 +29,59 @@ export class LiveChatService {
   // Currently selected conversation
   selectedConversation = signal<Conversation | null>(null);
 
+  // Buffer input message
+  chatInputMessage = signal('');
+
   // BehaviorSubject for messages so chat window can subscribe
   private messagesSubject = new BehaviorSubject<any[]>([]);
   messages$ = this.messagesSubject.asObservable();
 
-  // private socket: Socket;
-
-  constructor(private api: ApiService) {
-    this.initSocket();
-  }
-
-  initSocket() {
-    // this.socket = io('https://messengerapi.quotedesks.com');
-    // this.socket.on('new_message', (msg) => {
-    //   if (this.selectedConversation()?.id === msg.conversationId) {
-    //     this.messagesSubject.next([...this.messagesSubject.value, msg]);
-    //   }
-    // });
-  }
+  constructor(private api: ApiService) {}
 
   fetchConversations() {
-    // Mock data based on screenshots
-    const mockData: Conversation[] = [
-      { id: 1, contactId: 101, platform: 'WHATSAPP', status: 'OPEN', Contact: { firstName: 'UNKNOWN', lastName: '', phone: '917428262731' }, Messages: [{ textContent: 'Unsupported message received' }] },
-      { id: 2, contactId: 102, platform: 'WHATSAPP', status: 'OPEN', Contact: { firstName: 'PANDU', lastName: '', phone: '919876543210' }, Messages: [{ textContent: 'SYSTEM: Authentication Message Sent' }] },
-      { id: 3, contactId: 103, platform: 'WHATSAPP', status: 'OPEN', Contact: { firstName: 'MAHADEV', lastName: 'KHOT', phone: '918765432109' }, Messages: [{ textContent: 'SYSTEM: Authentication Message Sent' }] }
-    ];
-    this.activeConversations.set(mockData);
-
-    // If using real API:
-    // this.api.get<any>('conversations/fetchAll').subscribe(res => {
-    //   if (res.success) {
-    //     this.activeConversations.set(res.data);
-    //   }
-    // });
+    this.api.get<any>('conversations/list').subscribe({
+      next: (res: any) => {
+        if (res.success && res.data) {
+          // Resolve contact associations mapping mock
+          const list = res.data.map((c: any) => {
+            const contact = c.Contact || { name: `Contact ${c.contactId || c.id}`, phone: c.phone || '917204262473' };
+            if (!contact.firstName) {
+              const parts = (contact.name || '').split(' ');
+              contact.firstName = parts[0] || 'Customer';
+              contact.lastName = parts.slice(1).join(' ') || '';
+            }
+            return {
+              ...c,
+              Contact: contact
+            };
+          });
+          this.activeConversations.set(list);
+        }
+      },
+      error: () => {
+        // Fallback mockup if empty
+        const mockData: Conversation[] = [
+          { id: 1, contactId: 101, platform: 'WHATSAPP', status: 'OPEN', assignedToType: 'AI', Contact: { name: 'VIP Guest', firstName: 'VIP', lastName: 'Guest', phone: '917428262731' }, Messages: [] },
+          { id: 2, contactId: 102, platform: 'WHATSAPP', status: 'OPEN', assignedToType: 'HUMAN', Contact: { name: 'John travels', firstName: 'John', lastName: 'travels', phone: '919876543210' }, Messages: [] }
+        ];
+        this.activeConversations.set(mockData);
+      }
+    });
   }
 
   selectConversation(conv: Conversation) {
     this.selectedConversation.set(conv);
     
-    // Mock fetch messages
-    this.messagesSubject.next(conv.Messages || []);
+    // Fetch live messages
+    this.api.get<any>('messages/list').subscribe({
+      next: (res: any) => {
+        const all = res.data || [];
+        const filtered = all.filter((m: any) => m.conversationId === conv.id);
+        this.messagesSubject.next(filtered);
+      },
+      error: () => {
+        this.messagesSubject.next(conv.Messages || []);
+      }
+    });
   }
 }

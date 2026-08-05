@@ -1,14 +1,28 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { ApiService } from '../../../shared/services/api.service';
+import { Observable } from 'rxjs';
 
 export interface Contact {
   id?: number;
+  type?: 'B2B' | 'B2C';
+  agencyName?: string;
   name: string;
-  userName?: string;
+  location?: string;
   phone: string;
+  phone2?: string;
+  email?: string;
+  email2?: string;
+  userName?: string;
   tags?: string[];
   source?: string;
   leadStage?: string;
+}
+
+export interface ContactGroup {
+  id?: number;
+  name: string;
+  description?: string;
+  contactType: 'B2B' | 'B2C';
 }
 
 @Injectable({
@@ -17,7 +31,13 @@ export interface Contact {
 export class ContactService {
 
   contacts = signal<Contact[]>([]);
+  groups = signal<ContactGroup[]>([]);
+  activeType = signal<'B2B' | 'B2C'>('B2C');
   isLoading = signal<boolean>(false);
+
+  filteredContacts = computed(() => {
+    return this.contacts().filter(c => c.type === this.activeType());
+  });
 
   constructor(private api: ApiService) { }
 
@@ -44,21 +64,30 @@ export class ContactService {
     return this.api.delete(`/whatsappcontacts/delete/${id}`);
   }
 
-  // importCsv(file: File) {
-  //   const formData = new FormData();
-  //   formData.append('file', file);
-  //   // Overriding the default content-type header because formData requires browser to set multipart/form-data boundary
-  //   return this.api.post('/whatsappcontacts/import', formData, {
-  //     headers: {
-  //       // null or undefined trick to let browser auto-set the correct header
-  //     }
-  //   });
-  // }
-
-  importCsv(file: File) {
+  importCsv(file: File, type: 'B2B' | 'B2C'): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
-
+    formData.append('type', type);
     return this.api.post('/whatsappcontacts/import', formData);
+  }
+
+  bulkSaveContacts(contacts: Contact[]): Observable<any> {
+    return this.api.post('/whatsappcontacts/bulk-save', { contacts });
+  }
+
+  fetchGroups() {
+    this.api.get('/whatsappcontacts/groups').subscribe({
+      next: (res: any) => {
+        this.groups.set(res.data || []);
+      }
+    });
+  }
+
+  createGroup(name: string, description: string, contactType: 'B2B' | 'B2C', contactIds: number[]) {
+    return this.api.post('/whatsappcontacts/groups', { name, description, contactType, contactIds });
+  }
+
+  deleteGroup(id: number) {
+    return this.api.delete(`/whatsappcontacts/groups/${id}`);
   }
 }

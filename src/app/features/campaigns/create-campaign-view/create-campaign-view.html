@@ -13,10 +13,6 @@
                 <span>Template Messaging Tier <i class="fa-solid fa-circle-info"></i></span>
                 <span class="value">Tier 1</span>
             </div>
-            <div class="metric">
-                <span>Remaining Quota <i class="fa-solid fa-circle-info"></i></span>
-                <span class="value fw-bold">1896</span>
-            </div>
         </div>
     </div>
 
@@ -39,89 +35,78 @@
     @if (currentStep === 1) {
         <div class="step-content">
             <div class="step-actions top-right">
-                <button class="btn btn-dark" (click)="nextStep()">Next</button>
+                <button class="btn btn-dark" [disabled]="!campaignName" (click)="nextStep()">Next</button>
             </div>
             
             <div class="form-group mb-24">
-                <label>Campaign Name</label>
+                <label>Campaign Name <span class="text-red">*</span></label>
                 <p class="help-text">Pick something that describes your audience & goals.</p>
                 <input type="text" class="form-control" [(ngModel)]="campaignName" placeholder="Enter campaign name">
             </div>
 
-            <div class="form-group mb-24 filter-group">
-                <label>Search filters...</label>
-                <p class="help-text">Pick something that describes your audience.</p>
-                <div class="filter-dropdown-container">
-                    <input type="text" class="form-control" placeholder="Search filters..." (click)="toggleFilters()">
-                    @if (showQuickFilters) {
-                        <div class="filter-dropdown">
-                            <div class="filter-section">
-                                <h5>QUICK FILTERS</h5>
-                                <ul>
-                                    <li><i class="fa-regular fa-square"></i> Tags</li>
-                                    <li><i class="fa-regular fa-calendar"></i> Created Date</li>
-                                    <li><i class="fa-regular fa-clock"></i> Last Seen</li>
-                                    <li><i class="fa-regular fa-circle-check"></i> Opted In</li>
-                                    <li><i class="fa-solid fa-ban"></i> Blocked</li>
-                                    <li><i class="fa-solid fa-chart-pie"></i> Segment</li>
-                                </ul>
-                            </div>
-                            <div class="filter-section">
-                                <h5>ATTRIBUTES</h5>
-                                <ul>
-                                    <li><i class="fa-solid fa-arrow-up-a-z"></i> Name</li>
-                                </ul>
-                            </div>
-                        </div>
-                    }
+            <div class="form-group mb-24">
+                <label>Target Audience <span class="text-red">*</span></label>
+                <p class="help-text">Choose who will receive this campaign message.</p>
+                <div class="audience-options" style="display: flex; gap: 16px; margin-top: 8px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="radio" name="audience" value="ALL" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> All Contacts
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="radio" name="audience" value="B2C" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> All B2C (Pace Travels)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="radio" name="audience" value="B2B" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> All B2B (Pace Tourism)
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="radio" name="audience" value="GROUP" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> Contact Group
+                    </label>
                 </div>
+
+                @if (audienceType() === 'GROUP') {
+                    <div style="margin-top: 16px; max-width: 300px;">
+                        <label>Select Group</label>
+                        <select class="form-control" [ngModel]="selectedGroupId()" (ngModelChange)="selectedGroupId.set($event)">
+                            <option [value]="null">-- Select Group --</option>
+                            @for (group of contactService.groups(); track group.id) {
+                                <option [value]="group.id">{{ group.name }} ({{ group.contactType }})</option>
+                            }
+                        </select>
+                    </div>
+                }
             </div>
 
             <div class="audience-grid">
+                <h4>Targeted Contacts ({{ getAudienceContacts().length }})</h4>
                 <table class="data-table">
                     <thead>
                         <tr>
                             <th>Name</th>
                             <th>Mobile Number</th>
-                            <th>Tags</th>
+                            <th>Type</th>
                             <th>Source</th>
-                            <th>Lead Stage</th>
+                            <th>Location</th>
                         </tr>
                     </thead>
                     <tbody>
                         @if (contactService.isLoading()) {
                             <tr><td colspan="5" class="text-center">Loading...</td></tr>
-                        } @else if (contactService.contacts().length === 0) {
-                            <tr><td colspan="5" class="text-center empty-state">No contacts found.</td></tr>
+                        } @else if (getAudienceContacts().length === 0) {
+                            <tr><td colspan="5" class="text-center empty-state">No contacts match the criteria.</td></tr>
                         } @else {
-                            @for(contact of contactService.contacts(); track contact.id) {
+                            @for(contact of getAudienceContacts(); track contact.id) {
                                 <tr (click)="openProfilePanel(contact)" style="cursor: pointer;">
                                     <td class="font-bold">{{ contact.name || 'UNKNOWN' }}</td>
                                     <td>{{ contact.phone }}</td>
                                     <td>
-                                        @if (contact.tags && contact.tags.length > 0) {
-                                            @for(tag of contact.tags; track tag) {
-                                                <span class="tag-badge">{{ tag }}</span>
-                                            }
-                                        }
+                                        <span class="tag-badge">{{ contact.type }}</span>
                                     </td>
                                     <td>{{ contact.source }}</td>
-                                    <td>
-                                        <span class="stage-dot"></span> {{ contact.leadStage }}
-                                    </td>
+                                    <td>{{ contact.location || '-' }}</td>
                                 </tr>
                             }
                         }
                     </tbody>
                 </table>
-                <div class="pagination-footer">
-                    <div class="rows-per-page">Rows per page: <span>25 <i class="fa-solid fa-chevron-down"></i></span></div>
-                    <div class="page-controls">
-                        <span>1-{{contactService.contacts().length}} of {{contactService.contacts().length}}</span>
-                        <button class="btn-icon"><i class="fa-solid fa-chevron-left"></i></button>
-                        <button class="btn-icon"><i class="fa-solid fa-chevron-right"></i></button>
-                    </div>
-                </div>
             </div>
         </div>
     }
@@ -131,41 +116,45 @@
         <div class="step-content">
             <div class="step-actions split">
                 <button class="btn btn-outline" (click)="prevStep()">Prev</button>
-                <button class="btn btn-dark" (click)="nextStep()">Next</button>
+                <button class="btn btn-dark" [disabled]="!selectedTemplate()" (click)="nextStep()">Next</button>
             </div>
             
             <div class="create-message-layout">
                 <!-- Left Side: Message Configuration -->
                 <div class="message-config">
                     <div class="form-group mb-24">
-                        <label>Template Name</label>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <label style="margin-bottom: 0;">Template Name <span class="text-red">*</span></label>
+                            <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;" (click)="syncTemplates()"><i class="fa-solid fa-rotate"></i> Sync Templates</button>
+                        </div>
                         <p class="help-text">Search and select an approved template.</p>
-                        <div class="template-select-container">
-                            <input type="text" class="form-control" placeholder="marketing_english_1">
-                            <i class="fa-solid fa-chevron-down select-icon"></i>
-                        </div>
+                        <select class="form-control" [ngModel]="selectedTemplate()" (ngModelChange)="selectTemplate($event)">
+                            @if (templates().length === 0) {
+                                <option [value]="null">No templates found. Click sync templates.</option>
+                            }
+                            @for(tpl of templates(); track tpl.id) {
+                                <option [ngValue]="tpl">{{ tpl.templateName }} ({{ tpl.language }})</option>
+                            }
+                        </select>
                     </div>
 
-                    <div class="config-section">
-                        <h4>Parameters <span class="badge">1 Parameter</span></h4>
-                        <div class="parameter-row">
-                            <div class="param-label">&#123;&#123;1&#125;&#125;</div>
-                            <div class="param-inputs">
-                                <input type="text" class="form-control" placeholder="$FirstName" value="$FirstName">
-                                <input type="text" class="form-control" placeholder="Fallback value">
-                            </div>
+                    @if (selectedTemplate()) {
+                        <div class="config-section">
+                            <h4>Parameters ({{ getTemplateParamKeys().length }} parameters)</h4>
+                            @if (getTemplateParamKeys().length === 0) {
+                                <p class="help-text">This template has no variable parameters.</p>
+                            } @else {
+                                @for(key of getTemplateParamKeys(); track key) {
+                                    <div class="parameter-row" style="margin-bottom: 12px;">
+                                        <div class="param-label">{{ '{{' + key + '}}' }}</div>
+                                        <div class="param-inputs">
+                                            <input type="text" class="form-control" placeholder="Fallback value" [value]="templateParams()[key]" (input)="onParamChange(key, $event)">
+                                        </div>
+                                    </div>
+                                }
+                            }
                         </div>
-                    </div>
-
-                    <div class="config-section">
-                        <h4>Header Media</h4>
-                        <div class="form-group">
-                            <label>Media Url</label>
-                            <input type="text" class="form-control" placeholder="Enter image URL">
-                        </div>
-                        <div class="or-divider"><span>OR</span></div>
-                        <button class="btn btn-outline btn-full"><i class="fa-solid fa-cloud-arrow-up"></i> Upload from Media Library</button>
-                    </div>
+                    }
                 </div>
 
                 <!-- Right Side: Live Preview -->
@@ -179,18 +168,10 @@
                         </div>
                         <div class="wa-body">
                             <div class="wa-message-bubble">
-                                <div class="wa-image-placeholder">
-                                    <i class="fa-regular fa-image"></i>
-                                </div>
                                 <div class="wa-text">
-                                    Hey <strong>[FirstName]</strong>,<br><br>
-                                    Welcome to Pace Messenger. Let's supercharge your WhatsApp marketing!
+                                    {{ getPreviewText() }}
                                 </div>
-                                <div class="wa-footer">10:42 AM</div>
-                                <div class="wa-buttons">
-                                    <button><i class="fa-solid fa-arrow-up-right-from-square"></i> Visit Website</button>
-                                    <button><i class="fa-solid fa-phone"></i> Call Now</button>
-                                </div>
+                                <div class="wa-footer">Live Mockup</div>
                             </div>
                         </div>
                     </div>
@@ -204,18 +185,18 @@
         <div class="step-content">
             <div class="step-actions split">
                 <button class="btn btn-outline" (click)="prevStep()">Prev</button>
-                <button class="btn btn-dark">Launch Campaign</button>
+                <button class="btn btn-dark" (click)="launchCampaign()"><i class="fa-solid fa-paper-plane"></i> Launch Campaign</button>
             </div>
             
             <div class="test-preview-section">
                 <h3>Ready to Launch?</h3>
-                <p>You can send a test message to a specific number before launching to your entire audience.</p>
+                <p>You can send a test template message to a specific number before launching to your entire audience.</p>
                 
                 <div class="form-group mt-24">
-                    <label>Test Number (with country code)</label>
-                    <div class="test-input-group">
-                        <input type="text" class="form-control" placeholder="+91 9876543210">
-                        <button class="btn btn-dark">Send Test</button>
+                    <label>Test Number (with country code, e.g. 919876543210)</label>
+                    <div class="test-input-group" style="display: flex; gap: 12px; margin-top: 8px;">
+                        <input type="text" class="form-control" style="max-width: 300px;" [(ngModel)]="testPhoneNumber" placeholder="e.g. 919876543210">
+                        <button class="btn btn-dark" (click)="sendTestMessage()">Send Test</button>
                     </div>
                 </div>
             </div>

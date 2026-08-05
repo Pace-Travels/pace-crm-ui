@@ -23,8 +23,8 @@
 
         <div class="input-area">
             <button class="icon-btn"><i class="fa-solid fa-paperclip"></i></button>
-            <input type="text" placeholder="Type a message">
-            <button class="icon-btn"><i class="fa-solid fa-paper-plane"></i></button>
+            <input type="text" placeholder="Type a message" [ngModel]="chatService.chatInputMessage()" (ngModelChange)="chatService.chatInputMessage.set($event)" (keyup.enter)="sendMessage()">
+            <button class="icon-btn" (click)="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
         </div>
     }
 </div>

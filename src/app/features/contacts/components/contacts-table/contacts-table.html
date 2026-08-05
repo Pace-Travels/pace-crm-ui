@@ -2,100 +2,171 @@
     
     <!-- Top Header Bar -->
     <div class="top-bar">
-        <div class="search-filter-group">
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" placeholder="Search name or mobile number">
+        @if (isPreviewMode()) {
+            <div class="preview-header-bar">
+                <span class="preview-title"><i class="fa-solid fa-file-excel"></i> Review Uploaded Contacts ({{ contactService.activeType() }})</span>
+                <span class="preview-subtitle">{{ previewContacts().length }} rows parsed</span>
+                <div class="preview-actions">
+                    <button class="btn btn-outline" (click)="cancelPreview()">Cancel Import</button>
+                    <button class="btn btn-primary" (click)="approveImport()"><i class="fa-solid fa-circle-check"></i> Approve & Save</button>
+                </div>
             </div>
-            <button class="btn btn-icon-text"><i class="fa-solid fa-sliders"></i> Filter</button>
-        </div>
+        } @else {
+            <div class="search-filter-group">
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" placeholder="Search name or mobile number">
+                </div>
+                <button class="btn btn-icon-text"><i class="fa-solid fa-sliders"></i> Filter</button>
+            </div>
 
-        <div class="action-group">
-            <button class="btn btn-secondary" [disabled]="!isBroadcastActive()">BROADCAST</button>
-            
-            <div class="dropdown-container" (click)="$event.stopPropagation()">
-                <button class="btn btn-outline" (click)="toggleRunAdDropdown()">Run Ad <i class="fa-solid fa-chevron-down ms-1"></i></button>
-                @if (showRunAdDropdown()) {
-                    <div class="dropdown-menu">
-                        <a href="#"><i class="fa-brands fa-whatsapp text-green"></i> Click to WhatsApp Ad</a>
-                        <a href="#"><i class="fa-solid fa-circle-notch text-green"></i> WhatsApp Status Ad</a>
-                        <a href="#"><i class="fa-solid fa-globe text-green"></i> Website to WhatsApp Ad</a>
-                        <a href="#"><i class="fa-solid fa-globe text-blue"></i> Website Ad</a>
-                        <a href="#"><i class="fa-solid fa-table-list text-purple"></i> Lead Form Ads</a>
-                    </div>
+            <div class="action-group">
+                @if (selectedIds().length > 0) {
+                    <button class="btn btn-dark" (click)="openCreateGroup()"><i class="fa-solid fa-layer-group"></i> Create Group ({{ selectedIds().length }})</button>
                 }
-            </div>
+                
+                <button class="btn btn-outline" (click)="downloadSample()"><i class="fa-solid fa-download"></i> Sample Sheet</button>
+                <button class="btn btn-outline" (click)="openAddContact()">+ Add Contact</button>
 
-            <button class="btn btn-outline" (click)="openAddContact()">+ Add Contact</button>
-
-            <div class="dropdown-container" (click)="$event.stopPropagation()">
-                <button class="btn btn-outline" (click)="toggleImportDropdown()">Import <i class="fa-solid fa-chevron-down ms-1"></i></button>
-                @if (showImportDropdown()) {
-                    <div class="dropdown-menu">
-                        <a href="javascript:void(0)" (click)="openImportModal()">Import Contacts</a>
-                        <a href="#">Import and Broadcast <span class="badge new-badge">NEW</span></a>
-                    </div>
-                }
+                <div class="dropdown-container" (click)="$event.stopPropagation()">
+                    <button class="btn btn-outline" (click)="toggleImportDropdown()">Import <i class="fa-solid fa-chevron-down ms-1"></i></button>
+                    @if (showImportDropdown()) {
+                        <div class="dropdown-menu">
+                            <a href="javascript:void(0)" (click)="openImportModal()">Import B2B / B2C Sheet</a>
+                        </div>
+                    }
+                </div>
             </div>
-
-            <div class="dropdown-container" (click)="$event.stopPropagation()">
-                <button class="btn btn-outline" (click)="toggleActionsDropdown()">Actions <i class="fa-solid fa-chevron-down ms-1"></i></button>
-                @if (showActionsDropdown()) {
-                    <div class="dropdown-menu">
-                        <a href="#">Export</a>
-                        <a href="#">Export History</a>
-                        <a href="#">Import History</a>
-                        <a href="#">Manage Tags</a>
-                        <a href="#">Block & Opt</a>
-                        <a href="#">Edit Contact</a>
-                    </div>
-                }
-            </div>
-        </div>
+        }
     </div>
 
     <!-- Data Table -->
     <div class="table-container">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th class="checkbox-cell"><input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($event)"></th>
-                    <th>Name</th>
-                    <th>Mobile Number</th>
-                    <th>Tags</th>
-                    <th>Source</th>
-                    <th>Lead Stage</th>
-                </tr>
-            </thead>
-            <tbody>
-                @if (contactService.isLoading()) {
-                    <tr><td colspan="6" class="text-center">Loading...</td></tr>
-                } @else if (contactService.contacts().length === 0) {
-                    <tr><td colspan="6" class="text-center empty-state">No contacts found.</td></tr>
-                } @else {
-                    @for(contact of contactService.contacts(); track contact.id) {
-                        <tr [class.selected]="isSelected(contact.id)">
-                            <td class="checkbox-cell">
-                                <input type="checkbox" [checked]="isSelected(contact.id)" (change)="toggleSelect(contact.id)">
-                            </td>
-                            <td class="font-bold">{{ contact.name || 'UNKNOWN' }}</td>
-                            <td>{{ contact.phone }}</td>
+        @if (isPreviewMode()) {
+            <!-- Preview Datatable -->
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>S.No</th>
+                        @if (contactService.activeType() === 'B2B') {
+                            <th>Agency Name</th>
+                            <th>Agent Name</th>
+                            <th>Location</th>
+                            <th>Phone 1</th>
+                            <th>Phone 2</th>
+                            <th>Mail 1</th>
+                            <th>Mail 2</th>
+                        } @else {
+                            <th>Customer Name</th>
+                            <th>Location</th>
+                            <th>Number 1</th>
+                            <th>Number 2</th>
+                            <th>Mail 1</th>
+                            <th>Mail 2</th>
+                        }
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for(row of previewContacts(); track row.serialNumber) {
+                        <tr [class.row-invalid]="!row.isValid">
+                            <td>{{ row.serialNumber }}</td>
+                            @if (contactService.activeType() === 'B2B') {
+                                <td>{{ row.agencyName }}</td>
+                                <td class="font-bold">{{ row.name }}</td>
+                                <td>{{ row.location }}</td>
+                                <td>{{ row.phone }}</td>
+                                <td>{{ row.phone2 }}</td>
+                                <td>{{ row.email }}</td>
+                                <td>{{ row.email2 }}</td>
+                            } @else {
+                                <td class="font-bold">{{ row.name }}</td>
+                                <td>{{ row.location }}</td>
+                                <td>{{ row.phone }}</td>
+                                <td>{{ row.phone2 }}</td>
+                                <td>{{ row.email }}</td>
+                                <td>{{ row.email2 }}</td>
+                            }
                             <td>
-                                @if (contact.tags && contact.tags.length > 0) {
-                                    @for(tag of contact.tags; track tag) {
-                                        <span class="tag-badge">{{ tag }}</span>
-                                    }
+                                @if (row.isValid) {
+                                    <span class="badge badge-high">Ready</span>
+                                } @else {
+                                    <span class="badge badge-low" [title]="row.validationError">Error</span>
                                 }
-                            </td>
-                            <td>{{ contact.source }}</td>
-                            <td>
-                                <span class="stage-dot"></span> {{ contact.leadStage }}
                             </td>
                         </tr>
                     }
-                }
-            </tbody>
-        </table>
+                </tbody>
+            </table>
+        } @else {
+            <!-- Main Live Datatable -->
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th class="checkbox-cell">
+                            <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($event)">
+                        </th>
+                        <th>S.No</th>
+                        @if (contactService.activeType() === 'B2B') {
+                            <th>Agency Name</th>
+                            <th>Agent Name</th>
+                            <th>Location</th>
+                            <th>Phone Number 1</th>
+                            <th>Phone Number 2</th>
+                            <th>Mail id 1</th>
+                            <th>Mail id 2</th>
+                        } @else {
+                            <th>Customer Name</th>
+                            <th>Location</th>
+                            <th>Number 1</th>
+                            <th>Number 2</th>
+                            <th>Mail 1</th>
+                            <th>Mail 2</th>
+                        }
+                        <th>Source</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (contactService.isLoading()) {
+                        <tr><td [attr.colspan]="contactService.activeType() === 'B2B' ? 11 : 10" class="text-center">Loading...</td></tr>
+                    } @else if (contactService.filteredContacts().length === 0) {
+                        <tr><td [attr.colspan]="contactService.activeType() === 'B2B' ? 11 : 10" class="text-center empty-state">No contacts found for {{ contactService.activeType() }}.</td></tr>
+                    } @else {
+                        @for(contact of contactService.filteredContacts(); track contact.id; let idx = $index) {
+                            <tr [class.selected]="isSelected(contact.id)">
+                                <td class="checkbox-cell">
+                                    <input type="checkbox" [checked]="isSelected(contact.id)" (change)="toggleSelect(contact.id)">
+                                </td>
+                                <td>{{ idx + 1 }}</td>
+                                @if (contactService.activeType() === 'B2B') {
+                                    <td>{{ contact.agencyName || '-' }}</td>
+                                    <td class="font-bold">{{ contact.name || 'UNKNOWN' }}</td>
+                                    <td>{{ contact.location || '-' }}</td>
+                                    <td>{{ contact.phone }}</td>
+                                    <td>{{ contact.phone2 || '-' }}</td>
+                                    <td>{{ contact.email || '-' }}</td>
+                                    <td>{{ contact.email2 || '-' }}</td>
+                                } @else {
+                                    <td class="font-bold">{{ contact.name || 'UNKNOWN' }}</td>
+                                    <td>{{ contact.location || '-' }}</td>
+                                    <td>{{ contact.phone }}</td>
+                                    <td>{{ contact.phone2 || '-' }}</td>
+                                    <td>{{ contact.email || '-' }}</td>
+                                    <td>{{ contact.email2 || '-' }}</td>
+                                }
+                                <td>{{ contact.source }}</td>
+                                <td>
+                                    <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px; display: flex; align-items: center; gap: 4px;" (click)="openSendMessage(contact, $event)">
+                                        <i class="fa-regular fa-comment-dots"></i> Send
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        }
     </div>
 </div>
 
@@ -104,44 +175,55 @@
     <div class="modal-backdrop">
         <div class="modal-content add-contact-modal">
             <div class="modal-header">
-                <h3>Create Contact</h3>
+                <h3>Create {{ contactService.activeType() }} Contact</h3>
                 <button class="close-btn" (click)="closeAddContact()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="modal-body">
                 <form [formGroup]="contactForm" (ngSubmit)="onAddContactSubmit()">
-                    <div class="form-row">
-                        <label>Name <span class="text-red">*</span></label>
-                        <div class="input-wrapper">
-                            <input type="text" formControlName="name" placeholder="User Name">
-                            <span class="char-count">0/100 characters</span>
+                    @if (contactService.activeType() === 'B2B') {
+                        <div class="form-row">
+                            <label>Agency Name</label>
+                            <input type="text" formControlName="agencyName" placeholder="Agency Name" class="form-control">
                         </div>
+                        <div class="form-row">
+                            <label>Agent Name <span class="text-red">*</span></label>
+                            <input type="text" formControlName="name" placeholder="Agent Name" class="form-control">
+                        </div>
+                    } @else {
+                        <div class="form-row">
+                            <label>Customer Name <span class="text-red">*</span></label>
+                            <input type="text" formControlName="name" placeholder="Customer Name" class="form-control">
+                        </div>
+                    }
+
+                    <div class="form-row">
+                        <label>Location</label>
+                        <input type="text" formControlName="location" placeholder="City / Location" class="form-control">
                     </div>
 
                     <div class="form-row">
-                        <label>Mobile Number <span class="text-red">*</span></label>
-                        <div class="phone-inputs">
-                            <select class="country-select">
-                                <option>India</option>
-                            </select>
-                            <div class="number-input-wrap">
-                                <span class="prefix">+91</span>
-                                <input type="text" formControlName="phone" placeholder="WhatsApp Number">
-                            </div>
-                        </div>
+                        <label>Phone Number 1 (Primary) <span class="text-red">*</span></label>
+                        <input type="text" formControlName="phone" placeholder="Phone Number 1" class="form-control">
+                    </div>
+
+                    <div class="form-row">
+                        <label>Phone Number 2 (Secondary)</label>
+                        <input type="text" formControlName="phone2" placeholder="Phone Number 2" class="form-control">
+                    </div>
+
+                    <div class="form-row">
+                        <label>Mail id 1 / Mail 1</label>
+                        <input type="email" formControlName="email" placeholder="Email Address 1" class="form-control">
+                    </div>
+
+                    <div class="form-row">
+                        <label>Mail id 2 / Mail 2</label>
+                        <input type="email" formControlName="email2" placeholder="Email Address 2" class="form-control">
                     </div>
 
                     <div class="form-row">
                         <label>Tags</label>
-                        <select class="full-select" formControlName="tags">
-                            <option value="">Select Tags</option>
-                            <option value="vip">VIP</option>
-                            <option value="new">New</option>
-                        </select>
-                    </div>
-
-                    <div class="form-row">
-                        <label>Source</label>
-                        <input type="text" formControlName="source" placeholder="Source">
+                        <input type="text" formControlName="tags" placeholder="VIP, lead, etc." class="form-control">
                     </div>
 
                     <div class="modal-footer">
@@ -153,23 +235,153 @@
     </div>
 }
 
-<!-- Import CSV Modal -->
+<!-- Import Sheet Modal -->
 @if (showImportModal()) {
     <div class="modal-backdrop">
         <div class="modal-content import-modal text-center">
-            <div class="video-placeholder">
-                <img src="https://developers.google.com/static/workspace/images/sheets/hero.png" alt="Spreadsheet">
-                <div class="play-btn"><i class="fa-solid fa-play"></i></div>
-            </div>
+            <h3>Import {{ contactService.activeType() }} Contacts</h3>
+            <p class="import-text">Upload your contacts spreadsheet in .csv, .xlsx, or .xls format.</p>
             
-            <p class="import-text">Upload your contacts file in .csv format.<br>Upto 50MB file size(~2lakhs contacts) is allowed.</p>
-            
-            <a href="#" class="download-link"><i class="fa-solid fa-download"></i> Download Sample CSV</a>
+            <button class="btn btn-outline mb-16" (click)="downloadSample()">
+                <i class="fa-solid fa-download"></i> Download Sample {{ contactService.activeType() }} Sheet
+            </button>
             
             <div class="modal-actions">
                 <button class="btn btn-outline" (click)="closeImportModal()">Cancel</button>
-                <button class="btn btn-primary" (click)="fileInput.click()">Upload File</button>
-                <input type="file" #fileInput accept=".csv" (change)="onFileSelected($event)" style="display: none;">
+                <button class="btn btn-primary" (click)="fileInput.click()">Select File</button>
+                <input type="file" #fileInput accept=".csv,.xlsx,.xls" (change)="onFileSelected($event)" style="display: none;">
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Create Group Modal -->
+@if (showCreateGroupModal()) {
+    <div class="modal-backdrop">
+        <div class="modal-content add-contact-modal">
+            <div class="modal-header">
+                <h3>Create New Contact Group</h3>
+                <button class="close-btn" (click)="closeCreateGroup()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <label>Group Name <span class="text-red">*</span></label>
+                    <input type="text" [(ngModel)]="groupName" placeholder="Group Name" class="form-control">
+                </div>
+                <div class="form-row">
+                    <label>Description</label>
+                    <textarea [(ngModel)]="groupDescription" placeholder="Description of this group..." class="form-control" rows="3"></textarea>
+                </div>
+                <p class="info-text">This group will contain the {{ selectedIds().length }} selected {{ contactService.activeType() }} contacts.</p>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" (click)="submitCreateGroup()" [disabled]="!groupName()">Create Group</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Send Message Modal -->
+@if (showSendMessageModal() && selectedContactForMessage()) {
+    <div class="modal-backdrop">
+        <div class="modal-content" style="max-width: 780px; width: 90%;">
+            <div class="modal-header">
+                <h3>Send Message to: {{ selectedContactForMessage().name || 'UNKNOWN' }} ({{ selectedContactForMessage().phone }})</h3>
+                <button class="close-btn" (click)="closeSendMessage()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="display: flex; gap: 24px;">
+                
+                <!-- Editor Panel (Left) -->
+                <div style="flex: 1.2; display: flex; flex-direction: column; gap: 16px;">
+                    <!-- Visual Demarcation selector -->
+                    <div style="display: flex; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
+                        <button style="flex: 1; padding: 10px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+                                [style.background]="activeSendMode() === 'TEXT' ? '#0b494d' : 'white'"
+                                [style.color]="activeSendMode() === 'TEXT' ? 'white' : '#475569'"
+                                (click)="activeSendMode.set('TEXT')">
+                            💬 Free-Text (Session)
+                        </button>
+                        <button style="flex: 1; padding: 10px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: background 0.2s;"
+                                [style.background]="activeSendMode() === 'TEMPLATE' ? '#0b494d' : 'white'"
+                                [style.color]="activeSendMode() === 'TEMPLATE' ? 'white' : '#475569'"
+                                (click)="activeSendMode.set('TEMPLATE')">
+                            ✅ Approved Template
+                        </button>
+                    </div>
+
+                    @if (activeSendMode() === 'TEXT') {
+                        <!-- Free Text Mode -->
+                        <div class="info-text" style="border-left-color: #3b82f6; background: #eff6ff; color: #1e3a8a; margin: 0;">
+                            <strong>Session Message rule:</strong> Can only be delivered if the contact has interacted with your business phone number in the last 24 hours.
+                        </div>
+                        <div class="form-row-vert">
+                            <label>Message Content</label>
+                            <textarea [(ngModel)]="messageText" rows="5" placeholder="Type your free-text message here..." class="form-control"></textarea>
+                        </div>
+                    } @else {
+                        <!-- Template Message Mode -->
+                        <div class="info-text" style="border-left-color: #10b981; background: #ecfdf5; color: #064e3b; margin: 0;">
+                            <strong>Template Message rule:</strong> Template messages bypass the 24-hour window and are delivered instantly.
+                        </div>
+
+                        <div class="form-row-vert">
+                            <label>Select Template</label>
+                            <select class="form-control" [ngModel]="selectedMessageTemplate()" (ngModelChange)="selectMessageTemplate($event)">
+                                <option [ngValue]="null">-- Select Approved Template --</option>
+                                @for (tpl of approvedTemplates(); track tpl.id) {
+                                    <option [ngValue]="tpl">{{ tpl.templateName }} ({{ tpl.language }})</option>
+                                }
+                            </select>
+                        </div>
+
+                        @if (selectedMessageTemplate()) {
+                            <div class="config-section" style="margin-top: 12px;">
+                                <h5>Template Variables</h5>
+                                @if (getMsgTemplateParamKeys().length === 0) {
+                                    <p class="help-text" style="font-size: 11px; color: #64748b;">This template has no variable parameters.</p>
+                                } @else {
+                                    @for(key of getMsgTemplateParamKeys(); track key) {
+                                        <div class="parameter-row" style="margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+                                            <div style="font-size: 12px; font-weight: 600; background: #e2e8f0; color: #475569; padding: 4px 8px; border-radius: 4px;">{{ '{{' + key + '}}' }}</div>
+                                            <input type="text" class="form-control" placeholder="Enter variable value" [value]="messageTemplateParams()[key]" (input)="onMsgParamChange(key, $event)">
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+
+                <!-- Preview Panel (Right) -->
+                <div style="flex: 0.8; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 12px; background: #e5ddd5; border-radius: 8px;">
+                    <h5 style="margin-bottom: 12px; color: #475569; font-weight: 600;">LIVE MESSAGE PREVIEW</h5>
+                    
+                    <div class="whatsapp-mockup" style="width: 100%; max-width: 250px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                        <div class="wa-header">
+                            <div class="wa-contact">
+                                <div class="wa-avatar"><i class="fa-solid fa-user"></i></div>
+                                <span>Live Send</span>
+                            </div>
+                        </div>
+                        <div class="wa-body" style="padding: 12px; background: #e5ddd5; min-height: 180px;">
+                            <div class="wa-message-bubble" style="background: white; padding: 8px 10px; border-radius: 8px; font-size: 13px; box-shadow: 0 1px 1px rgba(0,0,0,0.1);">
+                                <div class="wa-text" style="white-space: pre-wrap;">
+                                    @if (activeSendMode() === 'TEXT') {
+                                        {{ messageText() || '[Drafting message...]' }}
+                                    } @else {
+                                        {{ getMsgPreviewText() || '[Select template...]' }}
+                                    }
+                                </div>
+                                <div class="wa-footer" style="text-align: right; font-size: 9px; color: #888; margin-top: 4px;">12:00 PM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #f1f5f9;">
+                <button class="btn btn-outline" (click)="closeSendMessage()">Cancel</button>
+                <button class="btn btn-primary" (click)="dispatchSingleMessage()"><i class="fa-solid fa-paper-plane"></i> Send Message</button>
             </div>
         </div>
     </div>

@@ -1,13 +1,189 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ManageSidebar } from './components/manage-sidebar/manage-sidebar';
+import { FormsModule } from '@angular/forms';
 import { TemplatesView } from './components/templates-view/templates-view';
+import { ApiService } from '../../shared/services/api.service';
+
+interface Widget {
+  id?: number;
+  widgetApiKey?: string;
+  name: string;
+  type: string; // 'WEB_CLIENT' | 'WHATSAPP_LINK'
+  themeColor: string;
+  welcomeText: string;
+  preChatFields: string[];
+  whatsappNumber?: string;
+  predefinedText?: string;
+  callPhoneNumber?: string;
+  isAgentEnabled: boolean;
+}
 
 @Component({
   selector: 'app-manage',
   standalone: true,
-  imports: [CommonModule, ManageSidebar, TemplatesView],
+  imports: [CommonModule, FormsModule, TemplatesView],
   templateUrl: './manage.html',
   styleUrl: './manage.scss',
 })
-export class Manage {}
+export class Manage implements OnInit {
+  activeTab = signal('templates');
+
+  // AI Chatbot Settings
+  isAgentEnabled = signal(false);
+  modelName = signal('gemini-1.5-pro');
+  geminiApiKey = signal('');
+  systemPrompt = signal('');
+
+  // Web Widgets List
+  widgets = signal<Widget[]>([]);
+  showAddWidgetForm = signal(false);
+  editingWidget = signal<Widget | null>(null);
+
+  // Widget Form Fields
+  wName = '';
+  wType = 'WEB_CLIENT';
+  wThemeColor = '#0b494d';
+  wWelcomeText = 'Hello! How can we help you today?';
+  wPreChatFieldsText = ''; // Comma-separated
+  wWhatsappNumber = '';
+  wPredefinedText = '';
+  wCallPhoneNumber = '';
+  wIsAgentEnabled = false;
+
+  constructor(private api: ApiService) {}
+
+  ngOnInit() {
+    this.fetchAISettings();
+    this.fetchWidgets();
+  }
+
+  fetchAISettings() {
+    this.api.get('/aipersonas/settings').subscribe({
+      next: (res: any) => {
+        if (res.success && res.data) {
+          this.isAgentEnabled.set(res.data.isAgentEnabled);
+          this.modelName.set(res.data.modelName || 'gemini-1.5-pro');
+          this.geminiApiKey.set(res.data.geminiApiKey || '');
+          this.systemPrompt.set(res.data.systemPrompt || '');
+        }
+      }
+    });
+  }
+
+  saveAISettings() {
+    const payload = {
+      isAgentEnabled: this.isAgentEnabled(),
+      modelName: this.modelName(),
+      geminiApiKey: this.geminiApiKey(),
+      systemPrompt: this.systemPrompt()
+    };
+
+    this.api.post('/aipersonas/settings', payload).subscribe({
+      next: () => {
+        alert("Gemini AI agent settings saved successfully!");
+      },
+      error: (err: any) => {
+        alert("Failed to save AI settings: " + err.message);
+      }
+    });
+  }
+
+  // --- Widgets Configuration Section ---
+
+  fetchWidgets() {
+    this.api.get<any>('widget/list').subscribe({
+      next: (res: any) => {
+        if (res.success && res.data) {
+          this.widgets.set(res.data);
+        }
+      }
+    });
+  }
+
+  openNewWidgetForm() {
+    this.editingWidget.set(null);
+    this.wName = '';
+    this.wType = 'WEB_CLIENT';
+    this.wThemeColor = '#0b494d';
+    this.wWelcomeText = 'Hello! How can we help you today?';
+    this.wPreChatFieldsText = '';
+    this.wWhatsappNumber = '';
+    this.wPredefinedText = '';
+    this.wCallPhoneNumber = '';
+    this.wIsAgentEnabled = false;
+    this.showAddWidgetForm.set(true);
+  }
+
+  openEditWidgetForm(w: Widget) {
+    this.editingWidget.set(w);
+    this.wName = w.name;
+    this.wType = w.type;
+    this.wThemeColor = w.themeColor;
+    this.wWelcomeText = w.welcomeText;
+    this.wPreChatFieldsText = (w.preChatFields || []).join(', ');
+    this.wWhatsappNumber = w.whatsappNumber || '';
+    this.wPredefinedText = w.predefinedText || '';
+    this.wCallPhoneNumber = w.callPhoneNumber || '';
+    this.wIsAgentEnabled = w.isAgentEnabled;
+    this.showAddWidgetForm.set(true);
+  }
+
+  saveWidget() {
+    if (!this.wName) {
+      alert("Widget name is required!");
+      return;
+    }
+
+    const preChatFields = this.wPreChatFieldsText
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    const payload = {
+      name: this.wName,
+      type: this.wType,
+      themeColor: this.wThemeColor,
+      welcomeText: this.wWelcomeText,
+      preChatFields,
+      whatsappNumber: this.wWhatsappNumber || null,
+      predefinedText: this.wPredefinedText || null,
+      callPhoneNumber: this.wCallPhoneNumber || null,
+      isAgentEnabled: this.wIsAgentEnabled
+    };
+
+    const edit = this.editingWidget();
+    if (edit && edit.id) {
+      this.api.put(`widget/update/${edit.id}`, payload).subscribe({
+        next: () => {
+          this.showAddWidgetForm.set(false);
+          this.fetchWidgets();
+          alert("Widget configurations updated!");
+        },
+        error: (err: any) => alert("Failed to update widget: " + err.message)
+      });
+    } else {
+      this.api.post('widget/add', payload).subscribe({
+        next: () => {
+          this.showAddWidgetForm.set(false);
+          this.fetchWidgets();
+          alert("New Web Widget created successfully!");
+        },
+        error: (err: any) => alert("Failed to create widget: " + err.message)
+      });
+    }
+  }
+
+  deleteWidget(id?: number) {
+    if (!id || !confirm("Are you sure you want to delete this widget integration?")) return;
+    this.api.delete(`widget/delete/${id}`).subscribe({
+      next: () => {
+        this.fetchWidgets();
+        alert("Widget integration removed.");
+      }
+    });
+  }
+
+  getEmbedCode(apiKey?: string): string {
+    return `<script src="https://messengerapi.quotedesks.com/sdk/widget.js" data-api-key="${apiKey || 'YOUR_KEY'}"></script>`;
+  }
+}
