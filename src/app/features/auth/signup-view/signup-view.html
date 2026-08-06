@@ -81,8 +81,22 @@
                 
                 <div class="form-group password-group">
                     <div class="input-wrapper">
-                        <input type="password" formControlName="password" placeholder="Enter Password">
-                        <i class="fa-regular fa-eye-slash toggle-pw"></i>
+                        <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="Enter Password">
+                        <i class="fa-regular toggle-pw" 
+                           [ngClass]="showPassword ? 'fa-eye' : 'fa-eye-slash'" 
+                           (click)="togglePassword()"></i>
+                    </div>
+                </div>
+
+                <div class="form-group password-group">
+                    <div class="input-wrapper">
+                        <input [type]="showConfirmPassword ? 'text' : 'password'" formControlName="confirmPassword" placeholder="Confirm Password">
+                        <i class="fa-regular toggle-pw" 
+                           [ngClass]="showConfirmPassword ? 'fa-eye' : 'fa-eye-slash'" 
+                           (click)="toggleConfirmPassword()"></i>
+                    </div>
+                    <div class="error-msg" *ngIf="signupForm.get('confirmPassword')?.hasError('passwordMismatch') && signupForm.get('confirmPassword')?.touched">
+                        Passwords do not match
                     </div>
                 </div>
 

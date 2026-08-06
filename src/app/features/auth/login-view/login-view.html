@@ -67,8 +67,10 @@
                 <div class="form-group password-group">
                     <label>Password</label>
                     <div class="input-wrapper">
-                        <input type="password" formControlName="password" placeholder="Enter your password">
-                        <i class="fa-regular fa-eye-slash toggle-pw"></i>
+                        <input [type]="showPassword ? 'text' : 'password'" formControlName="password" placeholder="Enter your password">
+                        <i class="fa-regular toggle-pw" 
+                           [ngClass]="showPassword ? 'fa-eye' : 'fa-eye-slash'" 
+                           (click)="togglePassword()"></i>
                     </div>
                 </div>
 
@@ -78,7 +80,7 @@
             </form>
 
             <div class="form-footer">
-                <a href="#">Forgot Password?</a>
+                <a href="#" (click)="forgotPassword($event)">Forgot Password?</a>
             </div>
         </div>
     </div>

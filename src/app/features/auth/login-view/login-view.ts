@@ -15,6 +15,7 @@ import Swal from 'sweetalert2';
 export class LoginView implements OnInit {
   loginForm!: FormGroup;
   isSubmitting = false;
+  showPassword = false;
 
   constructor(
     private fb: FormBuilder,
@@ -26,6 +27,26 @@ export class LoginView implements OnInit {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       password: ['', Validators.required]
+    });
+  }
+
+  togglePassword() {
+    this.showPassword = !this.showPassword;
+  }
+
+  forgotPassword(event: Event) {
+    event.preventDefault();
+    Swal.fire({
+      title: 'Forgot Password',
+      text: 'Enter your email address to reset your password.',
+      input: 'email',
+      inputPlaceholder: 'Enter your email',
+      showCancelButton: true,
+      confirmButtonText: 'Reset Password'
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        Swal.fire('Success', 'If an account with that email exists, a reset link has been sent.', 'success');
+      }
     });
   }
 
