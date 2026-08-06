@@ -4,7 +4,9 @@ import { ApiService } from '../../../shared/services/api.service';
 export interface Flow {
   id: number;
   name: string;
-  status: string;
+  flowName?: string;
+  createdBy?: string;
+  status: string | boolean;
   createdAt: string;
 }
 

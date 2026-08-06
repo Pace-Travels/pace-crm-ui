@@ -25,9 +25,12 @@
     "@foblex/utils": "^1.1.1",
     "@fortawesome/fontawesome-free": "^7.3.1",
     "@primeuix/themes": "^3.0.0",
+    "@types/nprogress": "^0.2.3",
+    "nprogress": "^0.2.0",
     "primeicons": "^8.0.0",
     "primeng": "^21.1.9",
     "rxjs": "~7.8.0",
+    "sweetalert2": "^11.26.25",
     "tslib": "^2.3.0"
   },
   "devDependencies": {
