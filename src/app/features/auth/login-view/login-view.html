@@ -41,7 +41,7 @@
 
     <div class="login-right">
         <div class="top-nav">
-            Not a member yet? <a href="#">Sign up</a>
+            Not a member yet? <a routerLink="/signup">Sign up</a>
         </div>
         
         <div class="login-form-wrapper">
@@ -50,7 +50,7 @@
                 <h2>Log in to Pace Messenger</h2>
             </div>
 
-            <button class="btn btn-google">
+            <button class="btn btn-google" (click)="googleLogin()" [disabled]="isSubmitting">
                 <i class="fa-brands fa-google"></i> Continue with Google
             </button>
 
@@ -58,21 +58,23 @@
                 <span>OR</span>
             </div>
 
-            <form class="form">
+            <form class="form" [formGroup]="loginForm" (ngSubmit)="submitLogin()">
                 <div class="form-group">
                     <label>Username / Email</label>
-                    <input type="text" value="ismail@pacetravels.in">
+                    <input type="text" formControlName="email" placeholder="Enter your email">
                 </div>
                 
                 <div class="form-group password-group">
                     <label>Password</label>
                     <div class="input-wrapper">
-                        <input type="password" value="password123">
+                        <input type="password" formControlName="password" placeholder="Enter your password">
                         <i class="fa-regular fa-eye-slash toggle-pw"></i>
                     </div>
                 </div>
 
-                <button type="button" class="btn btn-primary">Continue</button>
+                <button type="submit" class="btn btn-primary" [disabled]="loginForm.invalid || isSubmitting">
+                    {{ isSubmitting ? 'Logging in...' : 'Continue' }}
+                </button>
             </form>
 
             <div class="form-footer">

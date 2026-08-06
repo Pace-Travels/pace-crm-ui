@@ -53,7 +53,7 @@
 
     <div class="signup-right">
         <div class="top-nav">
-            Already a member ? <a href="#">Log in</a>
+            Already a member ? <a routerLink="/login">Log in</a>
         </div>
         
         <div class="signup-form-wrapper">
@@ -62,7 +62,7 @@
                 <span class="subtitle">Fill in the details below to get started with your FREE FOREVER plan.</span>
             </div>
 
-            <button class="btn btn-google">
+            <button class="btn btn-google" (click)="googleLogin()" [disabled]="isSubmitting">
                 <i class="fa-brands fa-google"></i> Signup with Google
             </button>
 
@@ -70,38 +70,25 @@
                 <span>OR</span>
             </div>
 
-            <form class="form">
+            <form class="form" [formGroup]="signupForm" (ngSubmit)="submitSignup()">
                 <div class="form-group">
-                    <input type="text" placeholder="Full Name">
+                    <input type="text" formControlName="name" placeholder="Full Name">
                 </div>
                 
                 <div class="form-group">
-                    <input type="email" placeholder="Email">
-                </div>
-
-                <div class="form-group phone-group">
-                    <div class="country-code">
-                        <span>IN +91</span> <i class="fa-solid fa-caret-down"></i>
-                    </div>
-                    <input type="text" placeholder="Personal WhatsApp Number">
-                    <i class="fa-solid fa-circle-info info-icon"></i>
+                    <input type="email" formControlName="email" placeholder="Email">
                 </div>
                 
                 <div class="form-group password-group">
                     <div class="input-wrapper">
-                        <input type="password" placeholder="Enter Password">
+                        <input type="password" formControlName="password" placeholder="Enter Password">
                         <i class="fa-regular fa-eye-slash toggle-pw"></i>
                     </div>
                 </div>
 
-                <div class="form-group password-group">
-                    <div class="input-wrapper">
-                        <input type="password" placeholder="Confirm Password">
-                        <i class="fa-regular fa-eye-slash toggle-pw"></i>
-                    </div>
-                </div>
-
-                <button type="button" class="btn btn-primary disabled">Start Your FREE FOREVER Plan</button>
+                <button type="submit" class="btn btn-primary" [disabled]="signupForm.invalid || isSubmitting">
+                    {{ isSubmitting ? 'Signing up...' : 'Start Your FREE FOREVER Plan' }}
+                </button>
             </form>
 
             <div class="form-footer">
