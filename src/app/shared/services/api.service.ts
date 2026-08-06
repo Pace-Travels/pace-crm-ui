@@ -26,20 +26,26 @@ export class ApiService {
     return new HttpHeaders(headersConfig);
   }
 
+  private getUrl(endpoint: string): string {
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+    const cleanBaseUrl = this.baseUrl.endsWith('/') ? this.baseUrl.substring(0, this.baseUrl.length - 1) : this.baseUrl;
+    return `${cleanBaseUrl}/${cleanEndpoint}`;
+  }
+
   get<T>(endpoint: string): Observable<T> {
-    return this.http.get<T>(`${this.baseUrl}/${endpoint}`, { headers: this.getHeaders() });
+    return this.http.get<T>(this.getUrl(endpoint), { headers: this.getHeaders() });
   }
 
   post<T>(endpoint: string, body: any, options?: any): Observable<T> {
     const finalOptions = options || { headers: this.getHeaders() };
-    return this.http.post<T>(`${this.baseUrl}/${endpoint}`, body, finalOptions) as Observable<T>;
+    return this.http.post<T>(this.getUrl(endpoint), body, finalOptions) as Observable<T>;
   }
 
   put<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.put<T>(`${this.baseUrl}/${endpoint}`, body, { headers: this.getHeaders() });
+    return this.http.put<T>(this.getUrl(endpoint), body, { headers: this.getHeaders() });
   }
 
   delete<T>(endpoint: string): Observable<T> {
-    return this.http.delete<T>(`${this.baseUrl}/${endpoint}`, { headers: this.getHeaders() });
+    return this.http.delete<T>(this.getUrl(endpoint), { headers: this.getHeaders() });
   }
 }
