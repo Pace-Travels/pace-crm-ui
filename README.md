@@ -1,59 +1,88 @@
-# PaceCrmui
+# Pace CRM UI
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 21.2.19.
+Pace CRM UI is the robust, high-performance Angular frontend for the Pace Messenger platform. It provides a beautiful, modern interface for managing WhatsApp marketing campaigns, live chat interactions, automation flows, and contacts.
 
-## Development server
+## 🚀 System Readiness
 
-To start a local development server, run:
+Before you can run the UI locally, ensure your machine meets the following prerequisites:
+- **Node.js**: v18.x or higher (v20+ recommended)
+- **npm**: v9.x or higher
+- **Angular CLI**: Installed globally (`npm install -g @angular/cli`)
 
+### Core Technologies Used
+- **Framework**: Angular v21 (Standalone Components)
+- **UI Library**: PrimeNG 21 & Custom Vanilla CSS
+- **Animations**: GSAP (GreenSock)
+- **Visual Node Editor**: Foblex Flow
+- **Alerts/Modals**: SweetAlert2
+
+---
+
+## 🛠 Project Configuration (Environment)
+
+If your backend is running locally, you must ensure the Angular application points to the correct local endpoint instead of the remote production endpoint.
+
+By default, the `ApiService` (`src/app/shared/services/api.service.ts`) routes requests to your backend. 
+- **Production URL**: `https://messengerapi.quotedesks.com/api/v1`
+- **Local URL**: `http://localhost:3000/api/v1` (Update this inside `api.service.ts` or an `environment.ts` file if you are developing locally).
+
+---
+
+## 🏃 Running the UI Locally
+
+Follow these steps to get the project up and running on your local machine:
+
+### 1. Install Dependencies
+Clone the repository, navigate into the `pace-crm-ui` directory, and install all required Node modules:
 ```bash
+npm install
+```
+
+### 2. Start the Development Server
+Use the Angular CLI to compile the application and spin up the local development server:
+```bash
+npm start
+# or alternatively
 ng serve
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
+### 3. View in Browser
+Once compilation completes, open your browser and navigate to:
+```text
+http://localhost:4200/
 ```
+*(Note: If you have configured a custom port in your `angular.json`, navigate to that port instead).*
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+The app will automatically reload if you change any of the source files.
+
+---
+
+## 📦 Building for Production
+
+When you are ready to deploy the UI to a production environment (like AWS S3, Vercel, or a standard web server), build the optimized production artifacts:
 
 ```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
+npm run build
+# or
 ng build
 ```
 
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+This will output the compiled, minified, and tree-shaken files into the `dist/pace-crmui/` directory. You can then serve those static files using Nginx, Apache, or upload them directly to your CDN.
 
-## Running unit tests
+---
 
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
+## 🏗 Project Structure
 
+- `src/app/features/` - Core routing modules and views (Auth, Dashboard, Campaigns, etc.)
+- `src/app/layouts/` - Reusable wrapper components (Main Layout, Auth Layout)
+- `src/app/shared/` - Shared services (`ApiService`, `AuthService`), interceptors, and common components (Sidebar, Header).
+- `src/styles/` - Global SCSS variables and generic styles.
+
+---
+
+## 🧪 Testing
+
+To execute unit tests via Karma:
 ```bash
-ng test
+npm run test
 ```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
