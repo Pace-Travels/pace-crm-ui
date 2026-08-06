@@ -9,8 +9,8 @@
 
 .main-wrapper {
     flex: 1;
-    margin-left: 80px; /* Match new sidebar width */
-    width: calc(100% - 80px);
+    margin-left: 250px; /* Expanded sidebar width */
+    width: calc(100% - 250px);
 
     display: flex;
     flex-direction: column;
@@ -18,6 +18,11 @@
     min-width: 0;
     transition: all .3s ease;
     background-color: #f7f9fa; /* Light grey background typical for these dashboards */
+}
+
+.layout.sidebar-collapsed .main-wrapper {
+    margin-left: 80px; /* Collapsed sidebar width */
+    width: calc(100% - 80px);
 }
 
 

@@ -4,25 +4,19 @@
 <aside class="sidebar" [class.collapsed]="collapsed()" [class.mobile-open]="mobileOpen()">
 
     <!-- Logo -->
-
     <div class="logo">
-
-        <div class="logo-icon">
-            P
-        </div>
+        <div class="logo-icon">P</div>
 
         @if(!collapsed()){
-
         <div class="logo-text">
-
             <h2>Pace</h2>
-
             <span>CRM</span>
-
         </div>
-
         }
 
+        <button class="menu-toggle-btn" (click)="toggleSidebar()" [class.collapsed]="collapsed()">
+            <i class="fa-solid fa-bars"></i>
+        </button>
     </div>
 
     <!-- Project Selector Dropdown -->

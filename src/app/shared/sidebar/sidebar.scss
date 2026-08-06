@@ -1,5 +1,5 @@
 .sidebar {
-    width: 80px; /* Fixed narrow width matching Pace Messenger */
+    width: 250px; /* Default expanded width */
     background-color: #0b494d; /* Dark teal */
     color: white;
     height: 100vh;
@@ -22,29 +22,110 @@
         border-radius: 4px;
     }
 
+    &.collapsed {
+        width: 80px;
+        
+        .logo {
+            justify-content: center;
+            padding: 10px 0;
+            
+            .menu-toggle-btn {
+                position: static;
+                margin-top: 12px;
+                display: none; /* Hide in completely collapsed logo if we want, or show it below icon. Let's just center it or keep it top right? Let's show it below the logo icon. */
+            }
+        }
+
+        .project-selector-wrapper {
+            display: none;
+        }
+
+        .sidebar-menu ul li a .menu-item-content,
+        .sidebar-bottom ul li a .menu-item-content {
+            justify-content: center;
+            padding: 12px 0;
+            
+            span {
+                display: none; /* Hide text in narrow mode */
+            }
+            
+            i {
+                font-size: 20px;
+                margin: 0;
+            }
+        }
+    }
+
     .logo {
         height: 60px;
         display: flex;
         align-items: center;
-        justify-content: center;
+        justify-content: flex-start;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        padding: 10px 0;
+        padding: 10px 20px;
+        gap: 12px;
+        position: relative;
 
         .logo-icon {
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             color: #4cd964; /* A green color similar to Pace Messenger logo */
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 8px;
+            flex-shrink: 0;
         }
 
         .logo-text {
-            display: none; /* Hide text in narrow mode */
+            display: flex;
+            flex-direction: column;
+            line-height: 1.1;
+            
+            h2 {
+                margin: 0;
+                color: #fff;
+                font-size: 16px;
+                font-weight: 700;
+            }
+            
+            span {
+                color: rgba(255, 255, 255, 0.7);
+                font-size: 10px;
+                letter-spacing: 1px;
+                text-transform: uppercase;
+            }
+        }
+
+        .menu-toggle-btn {
+            position: absolute;
+            right: 12px;
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: 0.2s;
+            
+            &:hover {
+                color: white;
+                background: rgba(255, 255, 255, 0.1);
+            }
+        }
+        
+        /* If collapsed, show menu toggle below logo */
+        .menu-toggle-btn.collapsed {
+            position: absolute;
+            top: 65px;
+            right: auto;
+            left: 50%;
+            transform: translateX(-50%);
+            display: block;
         }
     }
 
@@ -70,20 +151,24 @@
 
                     .menu-item-content {
                         display: flex;
-                        flex-direction: column;
+                        flex-direction: row;
                         align-items: center;
-                        justify-content: center;
-                        gap: 4px; /* Reduced from 6px */
+                        justify-content: flex-start;
+                        gap: 14px;
+                        padding: 2px 12px;
 
                         i {
-                            font-size: 16px; /* Slightly smaller icons to fit better */
+                            font-size: 18px;
+                            width: 24px;
+                            text-align: center;
                         }
 
                         span {
-                            font-size: 9px;
-                            text-align: center;
-                            line-height: 1; /* Tighter line height */
-                            white-space: normal;
+                            font-size: 13px;
+                            text-align: left;
+                            line-height: 1.2;
+                            white-space: nowrap;
+                            font-weight: 500;
                         }
                     }
 
@@ -123,20 +208,24 @@
 
                     .menu-item-content {
                         display: flex;
-                        flex-direction: column;
+                        flex-direction: row;
                         align-items: center;
-                        justify-content: center;
-                        gap: 4px;
+                        justify-content: flex-start;
+                        gap: 14px;
+                        padding: 2px 12px;
 
                         i {
-                            font-size: 16px;
+                            font-size: 20px;
+                            width: 24px;
+                            text-align: center;
                         }
 
                         span {
-                            font-size: 9px;
-                            text-align: center;
-                            line-height: 1;
-                            white-space: normal;
+                            font-size: 13px;
+                            text-align: left;
+                            line-height: 1.2;
+                            white-space: nowrap;
+                            font-weight: 500;
                         }
                     }
 

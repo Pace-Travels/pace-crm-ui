@@ -1,7 +1,7 @@
 import { Routes } from '@angular/router';
 import { MainLayout } from './layouts/main-layout/main-layout';
 import { AuthLayout } from './layouts/auth-layout/auth-layout';
-import { ProjectsLayout } from './layouts/projects-layout/projects-layout';
+
 import { Dashboard } from './features/dashboard/dashboard';
 import { LiveChat } from './features/live-chat/live-chat';
 import { Campaigns } from './features/campaigns/campaigns';
@@ -43,16 +43,14 @@ export const routes: Routes = [
         ]
     },
     {
-        path: 'projects',
-        component: ProjectsLayout,
-        children: [
-            { path: '', component: ProjectsView, title: 'Projects - Pace Messenger' }
-        ]
-    },
-    {
         path: '',
         component: MainLayout,
         children: [
+            {
+                path: 'projects',
+                component: ProjectsView,
+                title: 'Projects - Pace Messenger'
+            },
             {
                 path: 'dashboard',
                 component: Dashboard,

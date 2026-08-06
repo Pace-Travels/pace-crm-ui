@@ -1,6 +1,6 @@
 <div class="layout" [class.sidebar-collapsed]="sidebarCollapsed">
     <!-- Left Sidebar -->
-    <app-sidebar></app-sidebar>
+    <app-sidebar (collapsedChange)="sidebarCollapsed = $event"></app-sidebar>
 
     <!-- Main Content wrapper -->
     <main class="main-wrapper">

@@ -9,5 +9,17 @@
 </head>
 <body>
   <app-root></app-root>
+  <!-- Facebook SDK for Meta Embedded Signup -->
+  <script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId            : '1234567890123456', // Replace with your actual Meta App ID
+        autoLogAppEvents : true,
+        xfbml            : true,
+        version          : 'v19.0'
+      });
+    };
+  </script>
+  <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
 </body>
 </html>

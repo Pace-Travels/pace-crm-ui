@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnInit, signal, Output, EventEmitter } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProjectService } from '../../features/projects/services/project.service';
@@ -13,6 +13,8 @@ import Swal from 'sweetalert2';
   styleUrl: './sidebar.scss',
 })
 export class Sidebar implements OnInit {
+
+  @Output() collapsedChange = new EventEmitter<boolean>();
 
   collapsed = signal(false);
 
@@ -51,7 +53,9 @@ export class Sidebar implements OnInit {
     const state = localStorage.getItem('sidebar-collapsed');
 
     if (state) {
-      this.collapsed.set(JSON.parse(state));
+      const isCollapsed = JSON.parse(state);
+      this.collapsed.set(isCollapsed);
+      this.collapsedChange.emit(isCollapsed);
     }
 
     this.onResize();
@@ -71,7 +75,9 @@ export class Sidebar implements OnInit {
 
       const state = localStorage.getItem('sidebar-collapsed');
 
-      this.collapsed.set(state ? JSON.parse(state) : false);
+      const isCollapsed = state ? JSON.parse(state) : false;
+      this.collapsed.set(isCollapsed);
+      this.collapsedChange.emit(isCollapsed);
 
       this.mobileOpen.set(false);
 
@@ -95,6 +101,8 @@ export class Sidebar implements OnInit {
         'sidebar-collapsed',
         JSON.stringify(!v)
       );
+      
+      this.collapsedChange.emit(!v);
 
       return !v;
 

@@ -62,4 +62,12 @@ export class ProjectService {
   createProject(payload: any) {
     return this.api.post<any>('projects/add', payload);
   }
+
+  metaAuth(accessToken: string) {
+    return this.api.post<any>('projects/meta-auth', { accessToken });
+  }
+
+  detachConfig(projectId: number) {
+    return this.api.post<any>('projects/detach', { projectId });
+  }
 }

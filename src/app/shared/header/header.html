@@ -25,11 +25,11 @@
 
         <div class="profile desktop-only">
 
-            <div class="avatar">A</div>
+            <div class="avatar">{{ userInitial }}</div>
 
             <div class="user-info">
-                <span class="name">Admin</span>
-                <span class="role">Administrator</span>
+                <span class="name">{{ userName }}</span>
+                <span class="role">{{ userRole }}</span>
             </div>
 
             <i class="fa-solid fa-angle-down"></i>
@@ -54,7 +54,7 @@
 
         <button class="mobile-profile" (click)="profileMenu.toggle($event)">
 
-            <div class="avatar">A</div>
+            <div class="avatar">{{ userInitial }}</div>
 
         </button>
 

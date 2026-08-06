@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit } from '@angular/core';
 import { Menu } from 'primeng/menu';
 
 @Component({
@@ -9,9 +9,28 @@ import { Menu } from 'primeng/menu';
   templateUrl: './header.html',
   styleUrl: './header.scss',
 })
-export class Header {
+export class Header implements OnInit {
 
   @Output() toggleSidebar = new EventEmitter<void>();
+
+  userName = 'User';
+  userRole = 'Administrator';
+  userInitial = 'U';
+
+  ngOnInit() {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        if (user && user.name) {
+          this.userName = user.name;
+          this.userInitial = user.name.charAt(0).toUpperCase();
+        }
+      } catch (e) {
+        console.error('Error parsing user data', e);
+      }
+    }
+  }
 
   onToggleSidebar() {
     this.toggleSidebar.emit();
