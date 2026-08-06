@@ -1,0 +1,38 @@
+<div class="flow-header">
+    <div style="display: flex; align-items: center; gap: 16px;">
+        <a routerLink="/flows" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Back</a>
+        <h2 style="margin: 0; font-size: 20px;">Flow Builder Canvas</h2>
+    </div>
+    <div style="display: flex; gap: 12px;">
+        <button class="btn btn-dark">Save Flow</button>
+    </div>
+</div>
+
+<div class="canvas-wrapper">
+    <f-flow fDraggable>
+        <f-canvas fZoom>
+            <ng-container ngProjectAs="[fConnections]">
+                @for (c of connections; track c.id) {
+                    <f-connection [fSourceId]="c.source" [fTargetId]="c.target"></f-connection>
+                }
+            </ng-container>
+
+            <ng-container ngProjectAs="[fNodes]">
+                @for (node of nodes; track node.id) {
+                    <div fNode fDragHandle [fNodePosition]="node.position" class="custom-node">
+                        <div class="node-header">
+                            <i class="fa-solid fa-robot"></i> {{ node.label }}
+                        </div>
+                        <div class="node-body">
+                            Configure node settings here.
+                        </div>
+                        
+                        <!-- Connectors -->
+                        <div fConnector fConnectorType="source" [fConnectorId]="node.id + '_out'" class="connector source"></div>
+                        <div fConnector fConnectorType="target" [fConnectorId]="node.id + '_in'" class="connector target"></div>
+                    </div>
+                }
+            </ng-container>
+        </f-canvas>
+    </f-flow>
+</div>

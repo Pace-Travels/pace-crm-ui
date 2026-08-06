@@ -1,8 +1,9 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProjectService } from '../services/project.service';
 import Swal from 'sweetalert2';
+import { Router } from '@angular/router';
 
 declare var FB: any;
 
@@ -16,6 +17,7 @@ declare var FB: any;
 export class ProjectsView implements OnInit {
   projectForm: FormGroup;
   userName = 'User';
+  private router = inject(Router);
 
   constructor(
     public projectService: ProjectService,
@@ -78,24 +80,7 @@ export class ProjectsView implements OnInit {
   }
 
   openDeveloperDocs() {
-    Swal.fire({
-      title: 'Developer Documentation',
-      html: `
-        <div style="text-align: left; font-size: 13px;">
-          <p>To manually configure your WhatsApp Business API, you will need three keys from the 
-             <a href="https://developers.facebook.com/apps" target="_blank" style="color: #1877F2; text-decoration: underline;">Meta Developer Portal</a>.</p>
-          <hr style="margin: 12px 0;">
-          <h4 style="margin: 8px 0;">1. Phone Number ID</h4>
-          <p style="color: #475569;">Found in your App Dashboard &gt; WhatsApp &gt; API Setup.</p>
-          <h4 style="margin: 16px 0 8px 0;">2. WABA Account ID</h4>
-          <p style="color: #475569;">Found in the same API Setup page, right under the Phone Number ID.</p>
-          <h4 style="margin: 16px 0 8px 0;">3. Meta Access Token</h4>
-          <p style="color: #475569;">For production, you must generate a <strong>System User Access Token</strong> with <code>whatsapp_business_management</code> and <code>whatsapp_business_messaging</code> permissions in your Facebook Business Manager.</p>
-        </div>
-      `,
-      icon: 'info',
-      confirmButtonText: 'Got it'
-    });
+    this.router.navigate(['/docs']);
   }
 
   connectWithFacebook() {

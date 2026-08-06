@@ -9,6 +9,8 @@ import { CreateCampaignView } from './features/campaigns/create-campaign-view/cr
 import { LandingView } from './features/landing/landing-view/landing-view';
 import { Contacts } from './features/contacts/contacts';
 import { Flows } from './features/flows/flows';
+import { FlowCanvasView } from './features/flows/components/flow-canvas-view/flow-canvas-view';
+import { DocsViewer } from './features/docs/docs-viewer/docs-viewer';
 import { AdsManager } from './features/ads-manager/ads-manager';
 import { Payments } from './features/payments/payments';
 import { Integrations } from './features/integrations/integrations';
@@ -92,8 +94,10 @@ export const routes: Routes = [
             },
             {
                 path: 'flows',
-                component: Flows,
-                title: 'Flows - Pace Messenger'
+                children: [
+                    { path: '', component: Flows, title: 'Flows - Pace Messenger' },
+                    { path: 'builder', component: FlowCanvasView, title: 'Flow Builder - Pace Messenger' }
+                ]
             },
             {
                 path: 'ads',
@@ -114,6 +118,11 @@ export const routes: Routes = [
                 path: 'manage',
                 component: Manage,
                 title: 'Manage - Pace Messenger'
+            },
+            {
+                path: 'docs',
+                component: DocsViewer,
+                title: 'Documentation - Pace Messenger'
             }
         ]
     }

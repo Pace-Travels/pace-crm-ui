@@ -82,7 +82,7 @@
             <input type="text" placeholder="Search by flow name">
         </div>
         
-        <button class="btn btn-dark"><i class="fa-solid fa-plus"></i> Create Flow</button>
+        <button class="btn btn-dark" routerLink="/flows/builder"><i class="fa-solid fa-plus"></i> Create Flow</button>
     </div>
 
     <div class="tabs">
@@ -118,10 +118,10 @@
                         </label>
                     </td>
                     <td>
-                        <div class="action-icons">
-                            <button><i class="fa-regular fa-copy"></i></button>
-                            <button><i class="fa-solid fa-pen"></i></button>
-                            <button><i class="fa-regular fa-trash-can"></i></button>
+                        <div class="action-icons" style="display: flex; gap: 8px;">
+                            <button class="btn btn-outline" style="padding: 4px 8px;"><i class="fa-regular fa-copy"></i></button>
+                            <button class="btn btn-outline" style="padding: 4px 8px;"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn btn-outline" style="padding: 4px 8px; color: #ef4444;"><i class="fa-regular fa-trash-can"></i></button>
                         </div>
                     </td>
                 </tr>

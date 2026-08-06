@@ -26,13 +26,16 @@
         width: 80px;
         
         .logo {
+            flex-direction: column;
             justify-content: center;
-            padding: 10px 0;
+            height: auto;
+            padding: 16px 0;
             
             .menu-toggle-btn {
                 position: static;
-                margin-top: 12px;
-                display: none; /* Hide in completely collapsed logo if we want, or show it below icon. Let's just center it or keep it top right? Let's show it below the logo icon. */
+                margin-top: 16px;
+                display: block;
+                transform: none;
             }
         }
 
@@ -118,15 +121,7 @@
             }
         }
         
-        /* If collapsed, show menu toggle below logo */
-        .menu-toggle-btn.collapsed {
-            position: absolute;
-            top: 65px;
-            right: auto;
-            left: 50%;
-            transform: translateX(-50%);
-            display: block;
-        }
+        /* Let's remove the .collapsed selector here as it is handled above inside &.collapsed .logo */
     }
 
     .sidebar-menu {
