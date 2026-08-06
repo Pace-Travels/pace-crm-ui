@@ -25,27 +25,28 @@ export const routes: Routes = [
     {
         path: '',
         component: LandingView,
-        pathMatch: 'full'
+        pathMatch: 'full',
+        title: 'Pace Messenger - AI Enabled Multi Messenger Platform'
     },
     {
         path: 'login',
         component: AuthLayout,
         children: [
-            { path: '', component: LoginView }
+            { path: '', component: LoginView, title: 'Login - Pace Messenger' }
         ]
     },
     {
         path: 'signup',
         component: AuthLayout,
         children: [
-            { path: '', component: SignupView }
+            { path: '', component: SignupView, title: 'Sign Up - Pace Messenger' }
         ]
     },
     {
         path: 'projects',
         component: ProjectsLayout,
         children: [
-            { path: '', component: ProjectsView }
+            { path: '', component: ProjectsView, title: 'Projects - Pace Messenger' }
         ]
     },
     {
@@ -54,60 +55,68 @@ export const routes: Routes = [
         children: [
             {
                 path: 'dashboard',
-                component: Dashboard
+                component: Dashboard,
+                title: 'Dashboard - Pace Messenger'
             },
             {
                 path: 'account',
                 component: AccountLayout,
                 children: [
-                    { path: '', component: ProfileView }
+                    { path: '', component: ProfileView, title: 'Profile - Pace Messenger' }
                 ]
             },
             {
                 path: 'agents',
-                component: AgentsView
+                component: AgentsView,
+                title: 'Agents - Pace Messenger'
             },
             {
                 path: 'developer',
-                component: DeveloperView
+                component: DeveloperView,
+                title: 'Developer - Pace Messenger'
             },
             {
                 path: 'chat',
-                component: LiveChat
+                component: LiveChat,
+                title: 'Live Chat - Pace Messenger'
             },
             {
                 path: 'campaigns',
-                component: Campaigns
-            },
-            {
-                path: 'campaigns/create',
-                component: CreateCampaignView
+                children: [
+                    { path: '', component: Campaigns, title: 'Campaigns - Pace Messenger' },
+                    { path: 'create', component: CreateCampaignView, title: 'Create Campaign - Pace Messenger' }
+                ]
             },
             {
                 path: 'contacts',
-                component: Contacts
+                component: Contacts,
+                title: 'Contacts - Pace Messenger'
             },
             {
                 path: 'flows',
-                component: Flows
+                component: Flows,
+                title: 'Flows - Pace Messenger'
             },
             {
                 path: 'ads',
-                component: AdsManager
+                component: AdsManager,
+                title: 'Ads Manager - Pace Messenger'
             },
             {
                 path: 'payments',
-                component: Payments
+                component: Payments,
+                title: 'Payments - Pace Messenger'
             },
             {
                 path: 'integrations',
-                component: Integrations
+                component: Integrations,
+                title: 'Integrations - Pace Messenger'
             },
             {
                 path: 'manage',
-                component: Manage
+                component: Manage,
+                title: 'Manage - Pace Messenger'
             }
         ]
     }
-
 ];
