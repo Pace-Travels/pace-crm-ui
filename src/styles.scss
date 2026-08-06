@@ -94,3 +94,50 @@ textarea {
     border-top-color: #0d6efd !important;
     border-left-color: #0d6efd !important;
 }
+
+/* Global Inner Sidebar Styles for Features (Manage, Contacts, Ads, etc.) */
+.sidebar-inner {
+    height: 100%;
+    padding: 16px 12px;
+    overflow-y: auto;
+
+    .sidebar-section {
+        ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+
+            li {
+                padding: 10px 12px;
+                border-radius: 6px;
+                cursor: pointer;
+                font-size: 13px;
+                color: #333;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 2px;
+                transition: all 0.2s ease;
+
+                i {
+                    font-size: 15px;
+                    color: #555;
+                    width: 20px;
+                    text-align: center;
+                }
+
+                &:hover {
+                    background: #f5f6f6;
+                }
+
+                &.active {
+                    background: #e8f4f4;
+                    color: #0b494d;
+                    font-weight: 500;
+                    
+                    i { color: #0b494d; }
+                }
+            }
+        }
+    }
+}

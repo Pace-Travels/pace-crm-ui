@@ -1,6 +1,6 @@
 .manage-layout {
     display: flex;
-    height: 100vh;
+    height: calc(100vh - 60px); /* Adjust based on top header height if present, or 100% */
     background: #f0f2f5;
 
     .manage-sidebar {
