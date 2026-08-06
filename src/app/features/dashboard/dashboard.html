@@ -2,11 +2,12 @@
     <!-- Dashboard Top Bar -->
     <div class="dashboard-topbar">
         <div class="topbar-left">
-            <h2>Pace Travels</h2>
+            <h2>Dashboard</h2>
+            <p class="text-muted" style="margin: 4px 0 0; font-size: 13px;">Overview of your active WhatsApp projects and operations.</p>
         </div>
         <div class="topbar-stats">
             <div class="stat-item">
-                <span class="stat-label">WhatsApp Business API Status <i class="fa-solid fa-circle-info"></i></span>
+                <span class="stat-label">WhatsApp API <i class="fa-solid fa-circle-info"></i></span>
                 <span class="stat-badge success">LIVE</span>
             </div>
             <div class="stat-item">
@@ -20,140 +21,144 @@
         </div>
         <div class="topbar-right">
             <span class="plan-info">Current Plan: <b>BASIC</b> (monthly)</span>
-            <button class="btn btn-outline-success">Explore Plans</button>
+            <button class="btn btn-outline-success">Upgrade</button>
         </div>
     </div>
 
     <!-- Content Area -->
     <div class="dashboard-content">
-        <!-- Offer Banner -->
-        <div class="offer-banner">
-            <div class="offer-icon">
-                <i class="fa-solid fa-gift"></i>
-            </div>
-            <div class="offer-text">
-                <h3>Got any offer access code?</h3>
-                <p>Activate your special discounted offer now!</p>
-            </div>
-            <div class="offer-action">
-                <input type="text" placeholder="Enter access code">
-                <button class="btn btn-primary">Activate <i class="fa-solid fa-arrow-right"></i></button>
-            </div>
+
+        <!-- Quick Actions Row -->
+        <div class="quick-actions-row">
+            <a routerLink="/campaigns" class="quick-action-card">
+                <div class="icon bg-blue-light"><i class="fa-solid fa-bullhorn text-blue"></i></div>
+                <div class="details">
+                    <h4>Create Campaign</h4>
+                    <p>Broadcast messages to your audience</p>
+                </div>
+            </a>
+            
+            <a routerLink="/flows/builder" class="quick-action-card">
+                <div class="icon bg-green-light"><i class="fa-solid fa-robot text-green"></i></div>
+                <div class="details">
+                    <h4>Build AI Flow</h4>
+                    <p>Create interactive chat agents</p>
+                </div>
+            </a>
+            
+            <a routerLink="/templates" class="quick-action-card">
+                <div class="icon bg-orange-light"><i class="fa-solid fa-message text-orange"></i></div>
+                <div class="details">
+                    <h4>Message Templates</h4>
+                    <p>Design and submit WhatsApp templates</p>
+                </div>
+            </a>
+            
+            <a routerLink="/manage" class="quick-action-card">
+                <div class="icon bg-pink-light"><i class="fa-solid fa-code text-pink"></i></div>
+                <div class="details">
+                    <h4>Web Widget SDK</h4>
+                    <p>Embed chat widget on your website</p>
+                </div>
+            </a>
         </div>
 
-        <!-- Setup Card -->
-        <div class="card setup-card">
-            <div class="card-header">
-                <h3><i class="fa-brands fa-whatsapp"></i> Setup FREE WhatsApp Business Account</h3>
-                <span class="status">All Done</span>
-            </div>
-            <div class="card-body setup-split">
-                <div class="setup-steps">
-                    <!-- Step 1 -->
-                    <div class="step completed">
-                        <div class="step-icon"><i class="fa-solid fa-check"></i></div>
-                        <div class="step-content">
-                            <h4>Apply for WhatsApp Business API</h4>
-                            <p>Click on Continue With Facebook to apply for WhatsApp Business API.</p>
-                            <span class="badge">Applied for WABA</span>
-                        </div>
-                    </div>
-                    <!-- Step 2 -->
-                    <div class="step completed">
-                        <div class="step-icon"><i class="fa-solid fa-check"></i></div>
-                        <div class="step-content">
-                            <h4>Setup Your Profile</h4>
-                            <p>Customize your WhatsApp profile to help understand your customers well.</p>
-                            <button class="btn btn-sm btn-outline">Edit Profile</button>
-                            <span class="badge">WhatsApp Profile Customized</span>
-                        </div>
-                    </div>
-                    <!-- Step 3 -->
-                    <div class="step completed">
-                        <div class="step-icon"><i class="fa-solid fa-check"></i></div>
-                        <div class="step-content">
-                            <h4>Apply for Blue Tick</h4>
-                            <p>Get Verified Blue Tick on your WhatsApp.</p>
-                            <div class="checklist">
-                                <div><i class="fa-solid fa-check text-success"></i> Facebook Manager Verified</div>
-                                <div><i class="fa-regular fa-square"></i> WhatsApp Blue Tick</div>
-                            </div>
-                            <button class="btn btn-sm btn-outline">Apply for Blue Tick</button>
-                        </div>
-                    </div>
+        <!-- Key Metrics -->
+        <div class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="title">Total Sent</span>
+                    <i class="fa-regular fa-paper-plane text-blue"></i>
                 </div>
-                <div class="setup-video">
-                    <div class="video-thumbnail">
-                        <img src="https://via.placeholder.com/400x250?text=WhatsApp+Setup+Video" alt="Video Thumbnail">
-                        <button class="play-btn"><i class="fa-solid fa-play"></i></button>
-                    </div>
+                <div class="metric-body">
+                    <h2>12,450</h2>
+                    <span class="trend up"><i class="fa-solid fa-arrow-up"></i> 12% vs last month</span>
                 </div>
             </div>
-        </div>
+            
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="title">Delivered</span>
+                    <i class="fa-solid fa-check-double text-green"></i>
+                </div>
+                <div class="metric-body">
+                    <h2>11,920</h2>
+                    <span class="trend up"><i class="fa-solid fa-arrow-up"></i> 95.7% delivery rate</span>
+                </div>
+            </div>
 
-        <!-- Ads Setup -->
-        <div class="card setup-card">
-            <div class="card-header">
-                <h3><i class="fa-solid fa-arrow-trend-up"></i> Setup account to run Ads</h3>
-                <button class="btn btn-sm btn-dark">Setup</button>
-            </div>
-            <div class="card-body">
-                <p>Setup your Meta ad account to run ads and reach customer.</p>
-            </div>
-        </div>
-
-        <!-- Action Cards Grid -->
-        <div class="action-grid">
-            <div class="action-card bg-blue-light">
-                <h4>Pace Messenger Training Call</h4>
-                <p>Schedule your platform onboarding call with our team</p>
-                <a href="#">Schedule Call Now <i class="fa-solid fa-arrow-right"></i></a>
-            </div>
-            <div class="action-card bg-green-light">
-                <h4>Refer & Earn</h4>
-                <p>Share your referral with your friends to earn ₹2000</p>
-                <div class="referral-box">
-                    <input type="text" value="wa.pacemessenger.com/re/ref_id" readonly>
-                    <button class="btn btn-sm btn-success">Copy</button>
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="title">Read</span>
+                    <i class="fa-solid fa-check-double text-blue"></i>
                 </div>
-                <div class="social-share">
-                    <span>Share via Social Media</span>
-                    <i class="fa-brands fa-whatsapp"></i>
-                    <i class="fa-brands fa-twitter"></i>
-                    <i class="fa-brands fa-facebook"></i>
+                <div class="metric-body">
+                    <h2>8,400</h2>
+                    <span class="trend up"><i class="fa-solid fa-arrow-up"></i> 70.4% read rate</span>
                 </div>
             </div>
-            <div class="action-card bg-pink-light">
-                <h4>Share Feedback & Earn WhatsApp Credits</h4>
-                <p>Share your feedback about Pace Messenger platform & earn WCC instantly.</p>
-                <a href="#">Share Now <i class="fa-solid fa-arrow-right"></i></a>
-            </div>
-            <div class="action-card bg-orange-light">
-                <h4>Join Our Affiliate Program</h4>
-                <p>Preferred by Agencies and Freelancers. Earn 20% Recurring Commission on all Unlimited Plans.</p>
-                <a href="#">Become an Affiliate <i class="fa-solid fa-arrow-right"></i></a>
-            </div>
-        </div>
-
-        <!-- Tutorials Section -->
-        <div class="tutorials-section">
-            <h3>Platform Walkthrough & Tutorials</h3>
-            <div class="video-grid">
-                <!-- Mock Videos -->
-                <div class="video-card">
-                    <div class="video-thumbnail">
-                        <img src="https://via.placeholder.com/300x180?text=Basic+Platform+Guide" alt="Guide">
-                        <button class="play-btn-small"><i class="fa-solid fa-play"></i></button>
-                    </div>
+            
+            <div class="metric-card">
+                <div class="metric-header">
+                    <span class="title">Active AI Sessions</span>
+                    <i class="fa-solid fa-robot text-orange"></i>
                 </div>
-                <div class="video-card">
-                    <div class="video-thumbnail">
-                        <img src="https://via.placeholder.com/300x180?text=Advanced+Guide" alt="Guide">
-                        <button class="play-btn-small"><i class="fa-solid fa-play"></i></button>
-                    </div>
+                <div class="metric-body">
+                    <h2>142</h2>
+                    <span class="trend neutral"><i class="fa-solid fa-minus"></i> Real-time active</span>
                 </div>
             </div>
         </div>
 
+        <!-- Template Agents Gallery -->
+        <div class="templates-section">
+            <div class="section-header">
+                <h3>Readymade Agent Templates</h3>
+                <a href="#" class="view-all">View All Templates</a>
+            </div>
+            
+            <div class="templates-grid">
+                <!-- Template 1 -->
+                <div class="agent-template-card">
+                    <div class="template-icon bg-blue-light">
+                        <i class="fa-solid fa-headset text-blue"></i>
+                    </div>
+                    <h4>Customer Support Bot</h4>
+                    <p>Automatically handle FAQs, triage tickets, and connect users to human agents.</p>
+                    <button class="btn btn-outline btn-sm">Use Template</button>
+                </div>
+                
+                <!-- Template 2 -->
+                <div class="agent-template-card">
+                    <div class="template-icon bg-green-light">
+                        <i class="fa-solid fa-magnet text-green"></i>
+                    </div>
+                    <h4>Lead Generation Bot</h4>
+                    <p>Qualify leads interactively, collect emails, and schedule calls.</p>
+                    <button class="btn btn-outline btn-sm">Use Template</button>
+                </div>
+                
+                <!-- Template 3 -->
+                <div class="agent-template-card">
+                    <div class="template-icon bg-orange-light">
+                        <i class="fa-regular fa-calendar-check text-orange"></i>
+                    </div>
+                    <h4>Appointment Booking</h4>
+                    <p>Check availability and book appointments directly through WhatsApp.</p>
+                    <button class="btn btn-outline btn-sm">Use Template</button>
+                </div>
+                
+                <!-- Template 4 -->
+                <div class="agent-template-card">
+                    <div class="template-icon bg-pink-light">
+                        <i class="fa-solid fa-cart-shopping text-pink"></i>
+                    </div>
+                    <h4>E-commerce Cart Recovery</h4>
+                    <p>Send automated reminders and discount offers for abandoned carts.</p>
+                    <button class="btn btn-outline btn-sm">Use Template</button>
+                </div>
+            </div>
+        </div>
+        
     </div>
 </div>

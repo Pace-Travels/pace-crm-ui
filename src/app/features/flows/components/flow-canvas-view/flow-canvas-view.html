@@ -8,31 +8,76 @@
     </div>
 </div>
 
-<div class="canvas-wrapper">
-    <f-flow fDraggable>
-        <f-canvas fZoom>
-            <ng-container ngProjectAs="[fConnections]">
-                @for (c of connections; track c.id) {
-                    <f-connection [fSourceId]="c.source" [fTargetId]="c.target"></f-connection>
-                }
-            </ng-container>
+<div class="canvas-workspace">
+    <!-- Node Palette Sidebar -->
+    <div class="node-palette">
+        <h3>Add Node</h3>
+        
+        <button class="palette-item" (click)="addNode('message')">
+            <i class="fa-solid fa-message text-blue"></i> Send Message
+        </button>
+        
+        <button class="palette-item" (click)="addNode('condition')">
+            <i class="fa-solid fa-code-branch text-orange"></i> Condition
+        </button>
+        
+        <button class="palette-item" (click)="addNode('wait')">
+            <i class="fa-regular fa-clock text-green"></i> Wait
+        </button>
+        
+        <button class="palette-item" (click)="addNode('tag')">
+            <i class="fa-solid fa-tag text-pink"></i> Add Tag
+        </button>
+        
+        <button class="palette-item" (click)="addNode('agent')">
+            <i class="fa-solid fa-user-tie text-teal"></i> Assign Agent
+        </button>
+    </div>
 
-            <ng-container ngProjectAs="[fNodes]">
-                @for (node of nodes; track node.id) {
-                    <div fNode fDragHandle [fNodePosition]="node.position" class="custom-node">
-                        <div class="node-header">
-                            <i class="fa-solid fa-robot"></i> {{ node.label }}
+    <!-- Canvas Area -->
+    <div class="canvas-wrapper">
+        <f-flow fDraggable 
+            (fCreateConnection)="onConnectionCreated($event)"
+            (fReassignConnection)="onConnectionReassigned($event)">
+            
+            <f-canvas fZoom>
+                <ng-container ngProjectAs="[fConnections]">
+                    @for (c of connections; track c.id) {
+                        <f-connection [fSourceId]="c.source" [fTargetId]="c.target"></f-connection>
+                    }
+                </ng-container>
+
+                <ng-container ngProjectAs="[fNodes]">
+                    @for (node of nodes; track node.id) {
+                        <div fNode fDragHandle [fNodePosition]="node.position" class="custom-node" [ngClass]="'node-' + node.type">
+                            <div class="node-header">
+                                <div class="header-title">
+                                    <i class="fa-solid fa-robot" *ngIf="node.type === 'trigger'"></i>
+                                    <i class="fa-solid fa-message" *ngIf="node.type === 'message'"></i>
+                                    <i class="fa-solid fa-code-branch" *ngIf="node.type === 'condition'"></i>
+                                    <i class="fa-regular fa-clock" *ngIf="node.type === 'wait'"></i>
+                                    <i class="fa-solid fa-tag" *ngIf="node.type === 'tag'"></i>
+                                    <i class="fa-solid fa-user-tie" *ngIf="node.type === 'agent'"></i>
+                                    {{ node.label }}
+                                </div>
+                                <button *ngIf="node.type !== 'trigger'" class="delete-btn" (click)="deleteNode(node.id)" title="Delete Node">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
+                            <div class="node-body">
+                                <p style="margin:0;">Configure {{ node.type }} logic.</p>
+                            </div>
+                            
+                            <!-- Connectors -->
+                            <!-- Triggers don't need input -->
+                            <div *ngIf="node.type !== 'trigger'" fConnector fConnectorType="target" [fConnectorId]="node.id + '_in'" class="connector target"></div>
+                            
+                            <!-- All nodes can have output -->
+                            <div fConnector fConnectorType="source" [fConnectorId]="node.id + '_out'" class="connector source"></div>
                         </div>
-                        <div class="node-body">
-                            Configure node settings here.
-                        </div>
-                        
-                        <!-- Connectors -->
-                        <div fConnector fConnectorType="source" [fConnectorId]="node.id + '_out'" class="connector source"></div>
-                        <div fConnector fConnectorType="target" [fConnectorId]="node.id + '_in'" class="connector target"></div>
-                    </div>
-                }
-            </ng-container>
-        </f-canvas>
-    </f-flow>
+                    }
+                </ng-container>
+            </f-canvas>
+        </f-flow>
+    </div>
 </div>

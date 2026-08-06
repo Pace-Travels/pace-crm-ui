@@ -12,13 +12,74 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    z-index: 10;
 }
 
+.canvas-workspace {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Node Palette */
+.node-palette {
+    width: 260px;
+    background: white;
+    border-right: 1px solid #e2e8f0;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 10;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.02);
+
+    h3 {
+        margin: 0 0 12px 0;
+        font-size: 14px;
+        color: #475569;
+        text-transform: uppercase;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    .palette-item {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        padding: 12px 16px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        color: #0f172a;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+
+        &:hover {
+            background: white;
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            transform: translateY(-1px);
+        }
+
+        i {
+            font-size: 16px;
+        }
+    }
+}
+
+/* Canvas Area */
 .canvas-wrapper {
     flex: 1;
     position: relative;
-    background: #f8fafc;
-    overflow: hidden;
+    background: #f1f5f9;
+    
+    /* Subtle dot grid pattern */
+    background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+    background-size: 24px 24px;
 }
 
 f-flow {
@@ -27,49 +88,126 @@ f-flow {
     height: 100%;
 }
 
+/* Custom Nodes */
 .custom-node {
     background: white;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    width: 220px;
+    border: 2px solid #cbd5e1;
+    border-radius: 12px;
+    width: 240px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     position: relative;
+    transition: box-shadow 0.2s, border-color 0.2s;
+    
+    /* Foblex Flow adds this class when the node is selected */
+    &.f-selected {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+    }
     
     .node-header {
-        background: #0b494d;
         color: white;
-        padding: 8px 12px;
-        border-radius: 7px 7px 0 0;
+        padding: 12px 16px;
+        border-radius: 10px 10px 0 0;
         font-weight: 600;
-        font-size: 13px;
+        font-size: 14px;
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 8px;
+        
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            padding: 4px;
+            font-size: 14px;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            &:hover {
+                color: white;
+            }
+        }
     }
     
     .node-body {
-        padding: 12px;
-        font-size: 12px;
+        padding: 16px;
+        font-size: 13px;
         color: #475569;
+        min-height: 60px;
     }
     
     .connector {
-        width: 12px;
-        height: 12px;
+        width: 14px;
+        height: 14px;
         background: white;
-        border: 2px solid #0b494d;
+        border: 2px solid #cbd5e1;
         border-radius: 50%;
         position: absolute;
         top: 50%;
         transform: translateY(-50%);
         cursor: crosshair;
+        z-index: 2;
+        transition: border-color 0.2s, transform 0.2s;
         
-        &.source {
-            right: -6px;
+        &:hover {
+            border-color: #3b82f6;
+            transform: translateY(-50%) scale(1.2);
         }
         
-        &.target {
-            left: -6px;
-        }
+        &.source { right: -8px; }
+        &.target { left: -8px; }
+    }
+
+    /* Node type specific colors */
+    &.node-trigger {
+        border-color: #475569;
+        .node-header { background: #475569; }
+        .connector.source { border-color: #475569; }
+    }
+    
+    &.node-message {
+        border-color: #3b82f6;
+        .node-header { background: #3b82f6; }
+        .connector { border-color: #3b82f6; }
+    }
+    
+    &.node-condition {
+        border-color: #f59e0b;
+        .node-header { background: #f59e0b; }
+        .connector { border-color: #f59e0b; }
+    }
+    
+    &.node-wait {
+        border-color: #10b981;
+        .node-header { background: #10b981; }
+        .connector { border-color: #10b981; }
+    }
+    
+    &.node-tag {
+        border-color: #ec4899;
+        .node-header { background: #ec4899; }
+        .connector { border-color: #ec4899; }
+    }
+    
+    &.node-agent {
+        border-color: #14b8a6;
+        .node-header { background: #14b8a6; }
+        .connector { border-color: #14b8a6; }
     }
 }
+
+/* Helpers from global styles if needed */
+.text-blue { color: #3b82f6; }
+.text-green { color: #10b981; }
+.text-orange { color: #f59e0b; }
+.text-pink { color: #ec4899; }
+.text-teal { color: #14b8a6; }
