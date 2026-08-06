@@ -58,13 +58,13 @@
             margin: 0;
 
             li {
-                margin-bottom: 5px;
+                margin-bottom: 2px; /* Reduced from 5px to save vertical space */
 
                 a {
                     display: block;
                     text-decoration: none;
                     color: rgba(255, 255, 255, 0.7);
-                    padding: 12px 5px;
+                    padding: 8px 4px; /* Reduced padding from 12px 5px */
                     transition: all 0.2s ease;
                     border-left: 3px solid transparent;
 
@@ -73,16 +73,16 @@
                         flex-direction: column;
                         align-items: center;
                         justify-content: center;
-                        gap: 6px;
+                        gap: 4px; /* Reduced from 6px */
 
                         i {
-                            font-size: 18px;
+                            font-size: 16px; /* Slightly smaller icons to fit better */
                         }
 
                         span {
                             font-size: 9px;
                             text-align: center;
-                            line-height: 1.1;
+                            line-height: 1; /* Tighter line height */
                             white-space: normal;
                         }
                     }
@@ -111,13 +111,13 @@
             margin: 0;
 
             li {
-                margin-bottom: 5px;
+                margin-bottom: 2px;
 
                 a {
                     display: block;
                     text-decoration: none;
                     color: rgba(255, 255, 255, 0.7);
-                    padding: 12px 5px;
+                    padding: 8px 4px;
                     transition: all 0.2s ease;
                     border-left: 3px solid transparent;
 
@@ -126,16 +126,16 @@
                         flex-direction: column;
                         align-items: center;
                         justify-content: center;
-                        gap: 6px;
+                        gap: 4px;
 
                         i {
-                            font-size: 24px;
+                            font-size: 16px;
                         }
 
                         span {
                             font-size: 9px;
                             text-align: center;
-                            line-height: 1.1;
+                            line-height: 1;
                             white-space: normal;
                         }
                     }
