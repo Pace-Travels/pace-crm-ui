@@ -1,11 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { ProjectService } from '../../features/projects/services/project.service';
 
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, FormsModule],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
 })
@@ -16,6 +18,15 @@ export class Sidebar implements OnInit {
   mobileOpen = signal(false);
 
   isMobile = window.innerWidth < 992;
+
+  constructor(public projectService: ProjectService) {}
+
+  onProjectSelectChange(id: any) {
+    const match = this.projectService.projects().find(p => p.id === Number(id));
+    if (match) {
+      this.projectService.setCurrentProject(match);
+    }
+  }
 
   menu = [
     { icon: 'fa-solid fa-table-cells-large', title: 'Dashboard', route: '/' },
@@ -34,6 +45,7 @@ export class Sidebar implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.projectService.fetchProjects();
 
     const state = localStorage.getItem('sidebar-collapsed');
 

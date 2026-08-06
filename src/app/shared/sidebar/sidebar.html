@@ -25,6 +25,23 @@
 
     </div>
 
+    <!-- Project Selector Dropdown -->
+    @if (!collapsed()) {
+        <div class="project-selector-wrapper" style="padding: 12px 24px; border-bottom: 1px solid #eaeaea; width: 100%; box-sizing: border-box;">
+            <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Active Brand Project</div>
+            <select class="form-control" style="padding: 6px 10px; font-size: 12px; font-weight: 600; border-color: #cbd5e1; width: 100%; border-radius: 6px; outline: none; background: white;" 
+                    [ngModel]="projectService.currentProject()?.id" 
+                    (ngModelChange)="onProjectSelectChange($event)">
+                @if (projectService.projects().length === 0) {
+                    <option [value]="0">No projects active</option>
+                }
+                @for(p of projectService.projects(); track p.id) {
+                    <option [value]="p.id">{{ p.name }}</option>
+                }
+            </select>
+        </div>
+    }
+
     <!-- Scrollable Menu -->
 
     <div class="sidebar-menu">

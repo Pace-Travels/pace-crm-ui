@@ -1,16 +1,64 @@
-<div class="profile-container">
-    <div class="profile-header">
-        Chat Profile
+<div class="profile-container" style="font-family: 'Inter', sans-serif;">
+    <div class="profile-header" style="font-weight: 600; padding: 16px; border-bottom: 1px solid #e2e8f0; font-size: 15px; color: #1e293b;">
+        Chat Details
     </div>
     
-    <div class="profile-body">
-        <div class="avatar-large">
-            <i class="fa-solid fa-user"></i>
+    <div class="profile-body" style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+        <!-- Contact card -->
+        <div class="contact-card" style="text-align: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
+            <div class="avatar-large" style="width: 56px; height: 56px; border-radius: 50%; background: #e2e8f0; display: inline-flex; align-items: center; justify-content: center; font-size: 24px; color: #64748b; margin-bottom: 8px;">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <h3 style="margin: 0; font-size: 16px; color: #1e293b;">{{ chatService.selectedConversation()?.Contact?.name || 'Customer' }}</h3>
+            <span style="font-size: 12px; color: #64748b;">{{ chatService.selectedConversation()?.Contact?.phone }}</span>
         </div>
-        
-        <!-- Add more profile details based on CRM data -->
-        <div class="info-section">
-            <button class="btn btn-primary w-100 mt-20">Edit Profile</button>
+
+        <!-- Assignment controller toggle -->
+        <div class="assignment-section" style="background: #f8fafc; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Bot Auto-responder</span>
+                <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 2px;">
+                    Assigned to: {{ chatService.selectedConversation()?.assignedToType || 'AI' }}
+                </div>
+            </div>
+            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 11px; font-weight: 600; background: white; border: 1px solid #cbd5e1; cursor: pointer; border-radius: 4px;" (click)="toggleAssignedType()">
+                Switch to {{ chatService.selectedConversation()?.assignedToType === 'AI' ? 'Human' : 'AI Bot' }}
+            </button>
+        </div>
+
+        <!-- AI Co-pilot Suggestion -->
+        <div class="ai-co-pilot-card" style="border: 1px solid #a7f3d0; background: #f0fdf4; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 11px; font-weight: 700; color: #047857; text-transform: uppercase;"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Co-pilot</span>
+                @if (aiSuggestion()) {
+                    <span style="font-size: 10px; font-weight: 600; background: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 4px;">{{ aiSuggestion()?.confidence }} Confidence</span>
+                }
+            </div>
+
+            @if (isLoadingSuggestion()) {
+                <div style="font-size: 12px; color: #065f46; display: flex; align-items: center; gap: 8px; padding: 12px 0;">
+                    <i class="fa-solid fa-spinner fa-spin"></i> Running Gemini advisor predictions...
+                </div>
+            } @else if (aiSuggestion()) {
+                <div style="font-size: 13px; color: #0f172a; line-height: 1.4;">
+                    <div style="font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 2px;">Anticipated Intent:</div>
+                    <p style="margin: 0 0 10px 0; color: #475569; font-size: 12px;">{{ aiSuggestion()?.intent }}</p>
+
+                    <div style="font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 2px;">Recommended Reply:</div>
+                    <div style="background: white; border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 10px; font-size: 12px; font-family: monospace; white-space: pre-wrap; margin-bottom: 10px; overflow-x: auto;">{{ aiSuggestion()?.recommendedAction }}</div>
+
+                    <div style="font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 2px;">Reasoning:</div>
+                    <p style="margin: 0 0 12px 0; color: #475569; font-size: 12px;">{{ aiSuggestion()?.reasoning }}</p>
+
+                    <button class="btn btn-primary" style="width: 100%; background: #059669; border: 1px solid #059669; color: white; font-size: 12px; padding: 8px; font-weight: 600; cursor: pointer; border-radius: 6px;" (click)="useSuggestedAction()">
+                        Use Suggested Reply
+                    </button>
+                </div>
+            } @else {
+                <div style="font-size: 12px; color: #64748b; text-align: center; padding: 12px 0;">
+                    No suggestion context. Verify Gemini Key setup under brand settings.
+                </div>
+            }
         </div>
     </div>
 </div>

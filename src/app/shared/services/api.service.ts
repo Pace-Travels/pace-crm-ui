@@ -10,13 +10,20 @@ export class ApiService {
 
   constructor(private http: HttpClient) { }
 
-  private getHeaders(): HttpHeaders {
+  private getHeaders(isMultipart = false): HttpHeaders {
     // In a real app, you would retrieve the JWT token from localStorage/sessionStorage
     const token = localStorage.getItem('token') || '';
-    return new HttpHeaders({
-      'Content-Type': 'application/json',
+    const projectId = localStorage.getItem('activeProjectId') || '';
+    const headersConfig: any = {
       'Authorization': `Bearer ${token}`
-    });
+    };
+    if (projectId) {
+      headersConfig['X-Project-Id'] = projectId;
+    }
+    if (!isMultipart) {
+      headersConfig['Content-Type'] = 'application/json';
+    }
+    return new HttpHeaders(headersConfig);
   }
 
   get<T>(endpoint: string): Observable<T> {

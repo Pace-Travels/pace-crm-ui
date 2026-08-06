@@ -1,6 +1,9 @@
 <div class="templates-header">
     <h2>Template Messages</h2>
-    <button class="btn btn-dark"><i class="fa-solid fa-plus"></i> Create Template</button>
+    <div style="display: flex; gap: 12px;">
+        <button class="btn btn-outline" (click)="syncTemplates()"><i class="fa-solid fa-rotate"></i> Sync Meta Status</button>
+        <button class="btn btn-dark" (click)="openCreateTemplate()"><i class="fa-solid fa-plus"></i> Create Template</button>
+    </div>
 </div>
 
 <!-- Quick Guide & Action Cards -->
@@ -55,66 +58,219 @@
 <!-- Filters & Tabs -->
 <div class="table-controls mb-24">
     <div class="search-box">
-        <input type="text" placeholder="Search templates (status, name etc.)">
+        <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Search templates (status, name etc.)...">
         <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
     </div>
-    <button class="btn btn-dark"><i class="fa-solid fa-rotate"></i> Sync Status</button>
 </div>
 
 <div class="main-tabs">
-    <button class="tab" [class.active]="activeTab === 'Explore'" (click)="activeTab = 'Explore'">
-        <i class="fa-regular fa-compass"></i> Explore
-    </button>
-    <button class="tab" [class.active]="activeTab === 'All'" (click)="activeTab = 'All'">All</button>
+    <button class="tab" [class.active]="activeTab === 'All'" (click)="activeTab = 'All'">All ({{ templates().length }})</button>
     <button class="tab" [class.active]="activeTab === 'Draft'" (click)="activeTab = 'Draft'">Draft</button>
-    <button class="tab" [class.active]="activeTab === 'Pending'" (click)="activeTab = 'Pending'">Pending</button>
+    <button class="tab" [class.active]="activeTab === 'Pending'" (click)="activeTab = 'Pending'">Pending / In-Review</button>
     <button class="tab" [class.active]="activeTab === 'Approved'" (click)="activeTab = 'Approved'">Approved</button>
     <button class="tab" [class.active]="activeTab === 'Action Required'" (click)="activeTab = 'Action Required'">Action Required</button>
 </div>
 
-<!-- Explore View -->
-@if (activeTab === 'Explore') {
-    <div class="explore-layout">
-        <!-- Sidebar -->
-        <div class="explore-sidebar">
-            <ul class="nav-list">
-                <li [class.active]="activeCategory === 'Trending'" (click)="activeCategory = 'Trending'"><i class="fa-solid fa-fire-flame-curved text-orange"></i> Trending</li>
-                <li [class.active]="activeCategory === 'General'" (click)="activeCategory = 'General'"><i class="fa-solid fa-cloud"></i> General</li>
-                <li [class.active]="activeCategory === 'Top Rated'" (click)="activeCategory = 'Top Rated'"><i class="fa-regular fa-star"></i> Top Rated</li>
-            </ul>
-
-            <div class="nav-section">
-                <h6>Industry <i class="fa-solid fa-chevron-up float-right"></i></h6>
-                <ul class="nav-list">
-                    <li><i class="fa-solid fa-cart-shopping"></i> Ecommerce</li>
-                    <li><i class="fa-solid fa-graduation-cap"></i> Education</li>
-                    <li><i class="fa-solid fa-building-columns"></i> Banking</li>
-                    <li><i class="fa-regular fa-calendar"></i> Webinar</li>
-                </ul>
-                <button class="btn-more">MORE</button>
-            </div>
+<!-- Content Grid -->
+<div class="explore-layout">
+    @if (isLoading()) {
+        <div class="loading-state" style="padding: 48px; text-align: center; width: 100%;">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px;"></i> Loading template library...
         </div>
-
-        <!-- Content Grid -->
-        <div class="explore-grid">
-            @for(tpl of templates; track tpl.title) {
+    } @else if (filteredTemplates().length === 0) {
+        <div class="empty-state" style="padding: 48px; text-align: center; width: 100%; color: #888;">
+            No templates found matching "{{ activeTab }}" tab filter.
+        </div>
+    } @else {
+        <div class="explore-grid" style="width: 100%;">
+            @for(tpl of filteredTemplates(); track tpl.id) {
                 <div class="template-card">
-                    <div class="card-img-wrapper">
-                        <img [src]="tpl.img" alt="">
-                    </div>
                     <div class="card-content">
-                        <h5>{{ tpl.title }}</h5>
-                        <span class="type-badge" [class.text]="tpl.type === 'TEXT'" [class.image]="tpl.type === 'IMAGE'">
-                            {{ tpl.type }} <i class="fa-solid fa-arrow-up-right-from-square ml-4"></i>
-                        </span>
-                        <p class="msg-preview">{{ tpl.text }}</p>
+                        <h5>{{ tpl.templateName }}</h5>
+                        <div class="card-meta" style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                            <span class="type-badge text">{{ tpl.category }}</span>
+                            <span class="type-badge image">{{ tpl.language }}</span>
+                            
+                            @if (tpl.status === 'APPROVED') {
+                                <span class="badge-status approved">Approved</span>
+                            } @else if (tpl.status === 'DRAFT') {
+                                <span class="badge-status draft">Draft</span>
+                            } @else if (tpl.status === 'PENDING' || tpl.status === 'IN_REVIEW') {
+                                <span class="badge-status pending">Pending Meta Review</span>
+                            } @else {
+                                <span class="badge-status rejected">{{ tpl.status }}</span>
+                            }
+                        </div>
+                        <p class="msg-preview" style="height: 60px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                            {{ tpl.templateBody }}
+                        </p>
                     </div>
-                    <div class="card-actions">
-                        <button class="btn btn-outline">Preview</button>
-                        <button class="btn btn-dark">Submit</button>
+                    <div class="card-actions" style="margin-top: auto;">
+                        <button class="btn btn-outline" (click)="openPreview(tpl)">Preview</button>
+                        @if (tpl.status === 'DRAFT') {
+                            <button class="btn btn-dark" (click)="submitDraft(tpl.id)">Submit</button>
+                        }
                     </div>
                 </div>
             }
+        </div>
+    }
+</div>
+
+<!-- Drafting Creator Modal -->
+@if (showCreateModal()) {
+    <div class="modal-backdrop">
+        <div class="modal-content create-template-modal" style="max-width: 950px; width: 90%;">
+            <div class="modal-header">
+                <h3>Draft WhatsApp Template</h3>
+                <button class="close-btn" (click)="closeCreateTemplate()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="display: flex; gap: 24px; max-height: 80vh; overflow-y: auto;">
+                
+                <!-- Left panel: Form editor -->
+                <div style="flex: 1.2; display: flex; flex-direction: column; gap: 16px;">
+                    <form [formGroup]="templateForm">
+                        <div class="form-row-vert">
+                            <label>Template Name <span class="text-red">*</span></label>
+                            <p class="help-text">Only lowercase letters, numbers, and underscores are allowed (e.g. holiday_promo_2)</p>
+                            <input type="text" formControlName="name" placeholder="e.g. marketing_promo_v1" class="form-control">
+                            @if(templateForm.get('name')?.touched && templateForm.get('name')?.invalid) {
+                                <span class="text-red font-11">Invalid name format. Only a-z, 0-9 and underscores are allowed.</span>
+                            }
+                        </div>
+
+                        <div style="display: flex; gap: 16px; margin-top: 12px;">
+                            <div class="form-row-vert" style="flex: 1;">
+                                <label>Category</label>
+                                <select formControlName="category" class="form-control">
+                                    <option value="MARKETING">Marketing</option>
+                                    <option value="UTILITY">Utility</option>
+                                    <option value="AUTHENTICATION">Authentication</option>
+                                </select>
+                            </div>
+                            <div class="form-row-vert" style="flex: 1;">
+                                <label>Language</label>
+                                <select formControlName="language" class="form-control">
+                                    <option value="en_US">English (US)</option>
+                                    <option value="hi_IN">Hindi (India)</option>
+                                    <option value="en">English</option>
+                                    <option value="es">Spanish</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-row-vert" style="margin-top: 16px;">
+                            <label>Header Format</label>
+                            <select formControlName="headerFormat" class="form-control">
+                                <option value="NONE">None</option>
+                                <option value="TEXT">Text</option>
+                            </select>
+                        </div>
+
+                        @if (templateForm.value.headerFormat === 'TEXT') {
+                            <div class="form-row-vert" style="margin-top: 12px;">
+                                <label>Header Text</label>
+                                <input type="text" formControlName="headerText" placeholder="e.g. Act Fast, VIP!" class="form-control">
+                            </div>
+                        }
+
+                        <div class="form-row-vert" style="margin-top: 16px;">
+                            <label>Body Text <span class="text-red">*</span></label>
+                            <p class="help-text">Insert variables using &#123;&#123;1&#125;&#125;, &#123;&#123;2&#125;&#125; parameters (e.g. Hello &#123;&#123;1&#125;&#125;)</p>
+                            <textarea formControlName="body" rows="4" placeholder="e.g. Hi {{1}}, your order ID is {{2}}." class="form-control"></textarea>
+                        </div>
+
+                        <div class="form-row-vert" style="margin-top: 16px;">
+                            <label>Footer Text</label>
+                            <p class="help-text">Adds a small subtitle text at the bottom.</p>
+                            <input type="text" formControlName="footerText" placeholder="e.g. Reply STOP to opt-out" class="form-control">
+                        </div>
+
+                        <div class="form-row-vert" style="margin-top: 16px;">
+                            <label>Quick Reply Buttons</label>
+                            <p class="help-text">Comma separated button labels (e.g. Visit Website, Contact Support)</p>
+                            <input type="text" formControlName="buttonsText" placeholder="e.g. Unsubscribe, Talk to Agent" class="form-control">
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Right panel: Live WhatsApp Mockup -->
+                <div style="flex: 0.8; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 12px; background: #e5ddd5; border-radius: 8px;">
+                    <h5 style="margin-bottom: 12px; color: #475569; font-weight: 600;">LIVE TEMPLATE PREVIEW</h5>
+                    
+                    <div class="whatsapp-mockup" style="width: 100%; max-width: 320px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <div class="wa-header">
+                            <div class="wa-contact">
+                                <div class="wa-avatar"><i class="fa-solid fa-user"></i></div>
+                                <span>Preview Mockup</span>
+                            </div>
+                        </div>
+                        <div class="wa-body" style="padding: 12px; background: #e5ddd5; min-height: 250px;">
+                            <div class="wa-message-bubble" style="background: white; padding: 8px 10px; border-radius: 8px; font-size: 13px; box-shadow: 0 1px 1px rgba(0,0,0,0.1);">
+                                @if (templateForm.value.headerFormat === 'TEXT' && templateForm.value.headerText) {
+                                    <div class="wa-preview-header" style="font-weight: 600; margin-bottom: 6px; color: #000;">
+                                        {{ templateForm.value.headerText }}
+                                    </div>
+                                }
+                                <div class="wa-preview-body" [innerHTML]="getLivePreviewBody()"></div>
+                                
+                                @if (templateForm.value.footerText) {
+                                    <div class="wa-preview-footer" style="font-size: 11px; color: #888; margin-top: 6px;">
+                                        {{ templateForm.value.footerText }}
+                                    </div>
+                                }
+                                <div class="wa-footer" style="text-align: right; font-size: 10px; color: #888; margin-top: 4px;">12:00 PM</div>
+                            </div>
+
+                            @if (templateForm.value.buttonsText) {
+                                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+                                    @for (btn of templateForm.value.buttonsText.split(','); track btn) {
+                                        @if (btn.trim()) {
+                                            <div style="background: white; border-radius: 6px; padding: 8px; text-align: center; color: #008069; font-size: 13px; font-weight: 600; box-shadow: 0 1px 1px rgba(0,0,0,0.1); cursor: default;">
+                                                {{ btn.trim() }}
+                                            </div>
+                                        }
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #f1f5f9;">
+                <button class="btn btn-outline" (click)="closeCreateTemplate()">Cancel</button>
+                <button class="btn btn-outline" (click)="saveAsDraft()">Save as Draft</button>
+                <button class="btn btn-primary" (click)="submitForApproval()" [disabled]="templateForm.invalid">Submit for Approval</button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Preview Popup Modal -->
+@if (showPreviewModal() && selectedPreviewTemplate()) {
+    <div class="modal-backdrop">
+        <div class="modal-content add-contact-modal" style="max-width: 420px;">
+            <div class="modal-header">
+                <h3>Template Preview</h3>
+                <button class="close-btn" (click)="closePreview()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="background: #f0f2f5; padding: 24px; display: flex; justify-content: center;">
+                <div class="whatsapp-mockup" style="width: 100%; max-width: 320px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                    <div class="wa-header">
+                        <div class="wa-contact">
+                            <div class="wa-avatar"><i class="fa-solid fa-user"></i></div>
+                            <span>{{ selectedPreviewTemplate()?.templateName }}</span>
+                        </div>
+                    </div>
+                    <div class="wa-body" style="padding: 12px; background: #e5ddd5; min-height: 180px;">
+                        <div class="wa-message-bubble" style="background: white; padding: 8px 10px; border-radius: 8px; font-size: 13px; box-shadow: 0 1px 1px rgba(0,0,0,0.1);">
+                            <div class="wa-text" style="white-space: pre-wrap;">
+                                {{ selectedPreviewTemplate()?.templateBody }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 }
