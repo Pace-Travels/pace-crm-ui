@@ -6,6 +6,7 @@ import { Dashboard } from './features/dashboard/dashboard';
 import { LiveChat } from './features/live-chat/live-chat';
 import { Campaigns } from './features/campaigns/campaigns';
 import { CreateCampaignView } from './features/campaigns/create-campaign-view/create-campaign-view';
+import { LandingView } from './features/landing/landing-view/landing-view';
 import { Contacts } from './features/contacts/contacts';
 import { Flows } from './features/flows/flows';
 import { AdsManager } from './features/ads-manager/ads-manager';
@@ -21,6 +22,11 @@ import { AccountLayout } from './features/account/account-layout/account-layout'
 import { ProfileView } from './features/account/profile-view/profile-view';
 
 export const routes: Routes = [
+    {
+        path: '',
+        component: LandingView,
+        pathMatch: 'full'
+    },
     {
         path: 'login',
         component: AuthLayout,
@@ -47,7 +53,7 @@ export const routes: Routes = [
         component: MainLayout,
         children: [
             {
-                path: '',
+                path: 'dashboard',
                 component: Dashboard
             },
             {
