@@ -8,8 +8,6 @@ export interface Flow {
   createdBy?: string;
   status: string | boolean;
   createdAt: string;
-  flowName?: string;
-  createdBy?: string;
 }
 
 @Injectable({
