@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { LiveChatService, Conversation } from '../../services/live-chat.service';
 import { ApiService } from '../../../../shared/services/api.service';
 
+declare var Swal: any;
+
 interface AISuggestion {
   intent: string;
   recommendedAction: string;
@@ -67,7 +69,17 @@ export class ChatProfile implements OnInit {
         this.chatService.selectedConversation.set(updated);
         // Refresh conversations list
         this.chatService.fetchConversations();
-        alert(`Conversation assignment switched to ${nextType}!`);
+        if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
+          Swal.fire({
+            title: 'Assignment Switched',
+            text: `Conversation assigned to ${nextType}!`,
+            icon: 'success',
+            toast: true,
+            position: 'top-end',
+            timer: 3000,
+            showConfirmButton: false
+          });
+        }
       }
     });
   }

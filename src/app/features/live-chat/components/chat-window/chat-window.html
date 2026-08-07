@@ -1,18 +1,54 @@
 <div class="chat-window-container">
     @if(!chatService.selectedConversation()) {
         <!-- Empty State -->
-        <div class="empty-state">
-            <p>Select a chat to continue!</p>
+        <div class="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 32px; text-align: center; background: #ffffff;">
+            <div style="width: 72px; height: 72px; background: #e0f2fe; color: #0284c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 16px;">
+                💬
+            </div>
+            <h3 style="margin: 0 0 8px 0; color: #0f172a; font-size: 18px;">Pace Messenger Live Desk</h3>
+            <p style="color: #64748b; font-size: 14px; max-width: 420px; margin-bottom: 24px;">Select a conversation from the left panel to reply, or launch one of the quick agent tools below.</p>
             
-            <div class="quick-actions">
-                <button class="action-btn"><i class="fa-solid fa-address-book"></i> Add user attributes manually</button>
-                <button class="action-btn"><i class="fa-solid fa-tags"></i> Add/Remove Tag & update attribute</button>
-                <button class="action-btn"><i class="fa-solid fa-link"></i> Send & Generate media link</button>
+            <div class="quick-actions" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+                <button class="action-btn" (click)="onAddUserAttribute()" style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                    <i class="fa-solid fa-address-book" style="color: #3b82f6;"></i> Add Contact Attribute
+                </button>
+                <button class="action-btn" (click)="onAddRemoveTag()" style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                    <i class="fa-solid fa-tags" style="color: #10b981;"></i> Update Tags
+                </button>
+                <button class="action-btn" (click)="onSendMediaLink()" style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;">
+                    <i class="fa-solid fa-link" style="color: #f59e0b;"></i> Share Media Link
+                </button>
             </div>
         </div>
     } @else {
-        <!-- Chat State -->
-        <!-- Chat Header inside the window if needed, or we rely on the Profile panel -->
+        <!-- Chat Header Bar -->
+        <div class="chat-header-bar" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 20px; background: white; border-bottom: 1px solid #e2e8f0;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 50%; background: #0b494d; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px;">
+                    {{ (chatService.selectedConversation()?.Contact?.firstName || 'C').charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 15px; color: #0f172a; font-weight: 700;">
+                        {{ chatService.selectedConversation()?.Contact?.firstName || 'Customer' }} {{ chatService.selectedConversation()?.Contact?.lastName || '' }}
+                    </h4>
+                    <div style="font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 6px;">
+                        <span>{{ chatService.selectedConversation()?.Contact?.phone }}</span>
+                        <span style="background: #dcfce7; color: #15803d; padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 9px;">ACTIVE</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-outline" (click)="onAddRemoveTag()" title="Tags" style="background: white; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                    <i class="fa-solid fa-tag"></i> Tag
+                </button>
+                <button type="button" class="btn btn-outline" (click)="onSendMediaLink()" title="Attach File" style="background: white; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                    <i class="fa-solid fa-paperclip"></i> Media
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Messages Area -->
         <div class="messages-area" style="display: flex; flex-direction: column; gap: 12px; padding: 20px; overflow-y: auto; background: #f8fafc; flex: 1;">
             @for(msg of chatService.messages$ | async; track msg.id) {
                 <div class="message-wrapper" style="display: flex; flex-direction: column; width: 100%;" [style.align-items]="msg.direction === 'INBOUND' ? 'flex-start' : 'flex-end'">
