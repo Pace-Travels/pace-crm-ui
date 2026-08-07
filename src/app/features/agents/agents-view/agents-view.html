@@ -1,52 +1,191 @@
-<div class="agents-container">
-    <div class="setup-modal">
-        <div class="modal-header">
-            <div class="icon-square">
-                <i class="fa-solid fa-robot"></i>
+<div class="agents-container" style="padding: 24px; font-family: 'Inter', sans-serif;">
+
+    <!-- Top Command Center Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+        <div>
+            <h2 style="margin: 0; font-size: 20px; color: #0f172a; display: flex; align-items: center; gap: 10px;">
+                <span>🤖 Agentic AI Command Center & Campaign Autopilot</span>
+                <span *ngIf="agenticApi.autopilotStatus()?.enabled" style="background: #dcfce7; color: #15803d; padding: 3px 10px; border-radius: 12px; font-weight: 700; font-size: 11px;">AUTOPILOT ON</span>
+            </h2>
+            <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">Autonomous travel marketing engine: scans high-surge events, segments contacts via RFM AI, generates copy, and triggers broadcasts.</p>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="display: flex; background: #f1f5f9; border-radius: 8px; padding: 3px;">
+                <button type="button" (click)="toggleAutopilotState(true)" [style.background]="agenticApi.autopilotStatus()?.enabled ? '#10b981' : 'transparent'" [style.color]="agenticApi.autopilotStatus()?.enabled ? 'white' : '#64748b'" style="border: none; padding: 7px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s;">
+                    ⚡ Enable Autopilot
+                </button>
+                <button type="button" (click)="toggleAutopilotState(false)" [style.background]="!agenticApi.autopilotStatus()?.enabled ? '#ef4444' : 'transparent'" [style.color]="!agenticApi.autopilotStatus()?.enabled ? 'white' : '#64748b'" style="border: none; padding: 7px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s;">
+                    ⏸️ Pause
+                </button>
             </div>
-            <h2>Set up your AI Agent</h2>
-        </div>
 
-        <div class="modal-body">
-            <div class="intro-section">
-                <div class="globe-icon">
-                    <i class="fa-solid fa-globe"></i>
+            <button type="button" class="btn btn-primary" (click)="showCrawlerModal.set(true)" style="background: #0f172a; color: white; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">
+                <i class="fa-solid fa-spider"></i> Train AI on Website
+            </button>
+        </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div style="display: flex; gap: 8px; border-bottom: 2px solid #e2e8f0; margin-bottom: 24px;">
+        <button type="button" [style.border-bottom-color]="activeTab === 'autopilot' ? '#3b82f6' : 'transparent'" [style.color]="activeTab === 'autopilot' ? '#3b82f6' : '#64748b'" (click)="activeTab = 'autopilot'" style="padding: 12px 20px; border: none; border-bottom: 3px solid; background: transparent; font-weight: 700; font-size: 14px; cursor: pointer;">
+            ⚡ Autonomous Campaign Autopilot
+        </button>
+
+        <button type="button" [style.border-bottom-color]="activeTab === 'rfm' ? '#3b82f6' : 'transparent'" [style.color]="activeTab === 'rfm' ? '#3b82f6' : '#64748b'" (click)="activeTab = 'rfm'" style="padding: 12px 20px; border: none; border-bottom: 3px solid; background: transparent; font-weight: 700; font-size: 14px; cursor: pointer;">
+            🎯 Netcore RFM Smart Cohorts
+        </button>
+
+        <button type="button" [style.border-bottom-color]="activeTab === 'concierge' ? '#3b82f6' : 'transparent'" [style.color]="activeTab === 'concierge' ? '#3b82f6' : '#64748b'" (click)="activeTab = 'concierge'" style="padding: 12px 20px; border: none; border-bottom: 3px solid; background: transparent; font-weight: 700; font-size: 14px; cursor: pointer;">
+            💬 24/7 AI Travel Concierge
+        </button>
+    </div>
+
+    <!-- TAB 1: AUTONOMOUS CAMPAIGN AUTOPILOT -->
+    <div *ngIf="activeTab === 'autopilot'" style="display: flex; flex-direction: column; gap: 24px;">
+        
+        <!-- Autopilot Controls & Manual Scan Trigger Bar -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Execution Mode</span>
+                <div style="display: flex; gap: 12px; margin-top: 6px;">
+                    <label style="font-size: 13px; font-weight: 600; color: #0f172a; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        <input type="radio" name="autoMode" value="AUTONOMOUS_CONFIRM" [checked]="agenticApi.autopilotStatus()?.mode === 'AUTONOMOUS_CONFIRM'" (change)="changeAutopilotMode('AUTONOMOUS_CONFIRM')">
+                        Auto-Draft & Human Approval (Recommended)
+                    </label>
+                    <label style="font-size: 13px; font-weight: 600; color: #0f172a; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        <input type="radio" name="autoMode" value="AUTONOMOUS_EXECUTE" [checked]="agenticApi.autopilotStatus()?.mode === 'AUTONOMOUS_EXECUTE'" (change)="changeAutopilotMode('AUTONOMOUS_EXECUTE')">
+                        Full Autopilot (100% Autonomous Broadcast Execution)
+                    </label>
                 </div>
-                <h3>Let's build your agent from your website</h3>
-                <p>Tell us about your business — we'll read your pages in the background and have your agent ready to test.</p>
             </div>
 
-            <form class="setup-form">
-                <div class="form-group">
-                    <label>Website <span class="required">*</span></label>
-                    <input type="text" placeholder="https://yourstore.com">
-                    <small>We'll crawl this to build your agent's knowledge.</small>
-                </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <select [(ngModel)]="selectedScanCity" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600;">
+                    <option value="Dubai">Dubai Region</option>
+                    <option value="Mumbai">Mumbai Region</option>
+                    <option value="Delhi">Delhi Region</option>
+                    <option value="Bengaluru">Bengaluru Region</option>
+                    <option value="London">London Region</option>
+                    <option value="Tokyo">Tokyo Region</option>
+                </select>
 
-                <div class="form-group">
-                    <label>Anything special it should know?</label>
-                    <textarea placeholder="Optional ground rules — e.g. Never promise same-day delivery. Always mention the festive 15% off above ₹1,000." rows="3"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Business context</label>
-                    <textarea placeholder="Describe what the business does. Leave blank to draft it from your website." rows="3"></textarea>
-                </div>
-
-                <div class="form-group">
-                    <label>Agent / business name</label>
-                    <input type="text" placeholder="How the agent introduces itself">
-                </div>
-
-                <div class="form-group">
-                    <label>Greeting message</label>
-                    <input type="text" placeholder="Sent word-for-word as the first message (optional)">
-                </div>
-            </form>
+                <button type="button" class="btn btn-success" (click)="triggerManualScan()" style="background: #10b981; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">
+                    <i class="fa-solid fa-bolt"></i> Run AI Event Radar Scan Now
+                </button>
+            </div>
         </div>
 
-        <div class="modal-footer">
-            <button class="btn btn-primary"><i class="fa-solid fa-wand-magic-sparkles"></i> Create agent</button>
+        <!-- Live AI Decision Feed & Execution Logs -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+            <h3 style="margin: 0 0 16px 0; font-size: 16px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <span>📜 Autonomous AI Decision Feed & Campaign Logs</span>
+                <span style="background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 12px; font-size: 11px;">{{ agenticApi.autopilotStatus()?.totalLogsCount || 0 }} Logged Actions</span>
+            </h3>
+
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div *ngFor="let log of agenticApi.autopilotStatus()?.recentLogs || []" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="max-width: 75%;">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                            <span style="background: #dcfce7; color: #15803d; font-weight: 700; font-size: 10.5px; padding: 2px 8px; border-radius: 4px;">🎯 AI Confidence: {{ log.confidenceScore }}%</span>
+                            <span style="background: #e0f2fe; color: #0284c7; font-weight: 700; font-size: 10.5px; padding: 2px 8px; border-radius: 4px;">📍 {{ log.city }}</span>
+                            <span style="font-size: 11px; color: #64748b;">{{ log.timestamp | date:'short' }}</span>
+                        </div>
+
+                        <h4 style="margin: 0; font-size: 14px; color: #0f172a; font-weight: 700;">{{ log.eventTitle }}</h4>
+                        <div style="font-size: 12.5px; color: #334155; margin-top: 6px; background: white; padding: 8px 12px; border-radius: 6px; border: 1px solid #e2e8f0; font-family: sans-serif;">
+                            "{{ log.aiCopy }}"
+                        </div>
+                        <div style="font-size: 11px; color: #64748b; margin-top: 6px;">
+                            Target Cohort: <strong style="color: #0f172a;">{{ log.targetSegment }}</strong>
+                        </div>
+                    </div>
+
+                    <div style="text-align: right;">
+                        <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">ESTIMATED REVENUE</span>
+                        <div style="font-size: 16px; font-weight: 800; color: #059669; margin: 2px 0 8px 0;">₹ {{ log.estimatedRevenue | number }}</div>
+
+                        <button type="button" (click)="triggerCohortBroadcast(log.targetSegment)" style="background: #0f172a; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 11.5px; font-weight: 600; cursor: pointer;">
+                            <i class="fa-solid fa-paper-plane"></i> Launch Broadcast
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
+    </div>
+
+    <!-- TAB 2: NETCORE RFM SMART COHORTS -->
+    <div *ngIf="activeTab === 'rfm'" style="display: flex; flex-direction: column; gap: 20px;">
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+            <h3 style="margin: 0 0 8px 0; color: #0f172a;">⚡ Netcore-Grade RFM Smart Customer Cohorts</h3>
+            <p style="margin: 0 0 16px 0; font-size: 13px; color: #64748b;">Customer database automatically segmented by Recency (days since trip), Frequency (trip count), and Monetary spend.</p>
+
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                <div *ngFor="let cohort of agenticApi.rfmSegments()" style="background: #f8fafc; border: 1px solid #e2e8f0; border-top: 4px solid; border-radius: 10px; padding: 16px;" [style.border-top-color]="cohort.color">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <h4 style="margin: 0; font-size: 15px; color: #0f172a; font-weight: 700;">{{ cohort.name }}</h4>
+                            <p style="margin: 4px 0 12px 0; font-size: 12px; color: #64748b;">{{ cohort.description }}</p>
+                        </div>
+                        <span style="background: #e2e8f0; color: #0f172a; font-weight: 800; font-size: 14px; padding: 4px 10px; border-radius: 12px;">{{ cohort.count }}</span>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #e2e8f0; padding-top: 12px; margin-top: 8px;">
+                        <span style="font-size: 11px; color: #10b981; font-weight: 600;">100% WhatsApp Verified</span>
+                        <button type="button" (click)="triggerCohortBroadcast(cohort.name)" style="background: #10b981; color: white; border: none; padding: 5px 12px; border-radius: 6px; font-weight: 600; font-size: 11px; cursor: pointer;">
+                            Broadcast Campaign
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: 24/7 AI TRAVEL CONCIERGE -->
+    <div *ngIf="activeTab === 'concierge'">
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 12px;">💬</div>
+            <h3 style="margin: 0 0 8px 0; color: #0f172a;">24/7 AI Travel Booking Agent</h3>
+            <p style="color: #64748b; font-size: 13px; max-width: 500px; margin: 0 auto 16px auto;">Handles incoming WhatsApp customer inquiries, quotes flight & hotel packages, and collects payments 24 hours a day autonomously.</p>
+
+            <button type="button" class="btn btn-primary" (click)="showCrawlerModal.set(true)" style="background: #0f172a; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Configure AI Agent Ground Rules
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- Modal for Training AI on Website -->
+<div class="modal-overlay" *ngIf="showCrawlerModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="modal-card" style="background: white; border-radius: 12px; padding: 24px; max-width: 500px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 18px; color: #0f172a;">🕷️ Train AI Agent on Website</h3>
+            <button type="button" style="background: transparent; border: none; font-size: 18px; cursor: pointer;" (click)="showCrawlerModal.set(false)">✕</button>
+        </div>
+
+        <form [formGroup]="crawlerForm" style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">Agency Website URL *</label>
+                <input type="text" formControlName="websiteUrl" placeholder="https://pacetravels.com" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">Agent Name</label>
+                <input type="text" formControlName="agentName" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">Greeting Message</label>
+                <input type="text" formControlName="greetingMessage" style="padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
+                <button type="button" class="btn btn-outline" (click)="showCrawlerModal.set(false)" style="background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Cancel</button>
+                <button type="button" class="btn btn-primary" (click)="showCrawlerModal.set(false)" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                    Start Crawling & Train AI
+                </button>
+            </div>
+        </form>
     </div>
 </div>

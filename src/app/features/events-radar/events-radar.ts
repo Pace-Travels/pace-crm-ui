@@ -2,6 +2,7 @@ import { Component, OnInit, AfterViewInit, signal, inject } from '@angular/core'
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EventsService, EventItem } from './services/events.service';
+import { ProjectService } from '../projects/services/project.service';
 
 declare var L: any;
 declare var Swal: any;
@@ -26,6 +27,7 @@ const CITY_COORDINATES: { [key: string]: { lat: number; lng: number; zoom: numbe
 })
 export class EventsRadar implements OnInit, AfterViewInit {
   eventsService = inject(EventsService);
+  projectService = inject(ProjectService);
   fb = inject(FormBuilder);
 
   activeTab = 'radar';
@@ -37,6 +39,23 @@ export class EventsRadar implements OnInit, AfterViewInit {
 
   private map: any = null;
   private markersGroup: any = null;
+  private eventMarkersMap = new Map<number, any>();
+
+  // WhatsApp Numbers for searchable select
+  whatsappNumbers = signal<any[]>([
+    { id: '+919876543210', label: '+91 98765 43210 (Pace Travels Official)' },
+    { id: '+971501234567', label: '+971 50 123 4567 (Dubai Concierge Desk)' },
+    { id: '+442079460912', label: '+44 20 7946 0912 (UK Travel Desk)' }
+  ]);
+
+  // Contact Groups / Segments
+  contactGroups = signal<any[]>([
+    { id: 'ALL_CONTACTS', name: 'All Registered Contacts' },
+    { id: 'MUMBAI_VIPS', name: 'Mumbai High-Spenders' },
+    { id: 'DUBAI_TRAVELERS', name: 'Dubai Long Weekend Travelers' },
+    { id: 'HOT_LEADS', name: 'Hot Tour Package Leads' },
+    { id: 'CORPORATE_CLIENTS', name: 'Corporate & MICE Clients' }
+  ]);
 
   // Trigger Creator Modal
   showTriggerModal = signal(false);
@@ -47,6 +66,9 @@ export class EventsRadar implements OnInit, AfterViewInit {
     {
       id: 1,
       ruleName: 'Dubai Tech Surge Hotel Deals',
+      projectName: 'Pace Travels Official',
+      senderNumber: '+971 50 123 4567 (Dubai Concierge Desk)',
+      contactGroupName: 'Dubai Long Weekend Travelers',
       city: 'Dubai',
       category: 'EXPO_CONFERENCE',
       minSpend: 5000000,
@@ -56,8 +78,11 @@ export class EventsRadar implements OnInit, AfterViewInit {
     },
     {
       id: 2,
-      city: 'Mumbai',
       ruleName: 'Mumbai Sports Surge Cab Pass',
+      projectName: 'Pace Travels Official',
+      senderNumber: '+91 98765 43210 (Pace Travels Official)',
+      contactGroupName: 'Mumbai High-Spenders',
+      city: 'Mumbai',
       category: 'SPORTS',
       minSpend: 2000000,
       daysBefore: 7,
@@ -69,6 +94,9 @@ export class EventsRadar implements OnInit, AfterViewInit {
   constructor() {
     this.triggerForm = this.fb.group({
       ruleName: ['', Validators.required],
+      projectId: [1, Validators.required],
+      senderNumber: ['+919876543210', Validators.required],
+      contactGroup: ['ALL_CONTACTS', Validators.required],
       city: ['Dubai', Validators.required],
       category: ['EXPO_CONFERENCE', Validators.required],
       minSpend: [1000000, [Validators.required, Validators.min(100000)]],
@@ -158,6 +186,7 @@ export class EventsRadar implements OnInit, AfterViewInit {
   updateMapMarkers() {
     if (!this.markersGroup || !this.map) return;
     this.markersGroup.clearLayers();
+    this.eventMarkersMap.clear();
 
     const eventsList = this.eventsService.events();
     const cityCoords = this.getCoordsForCity(this.selectedCity);
@@ -185,6 +214,7 @@ export class EventsRadar implements OnInit, AfterViewInit {
       });
 
       const marker = L.marker([lat, lng], { icon: customIcon }).addTo(this.markersGroup);
+      this.eventMarkersMap.set(ev.id, marker);
 
       const popupHtml = `
         <div style="font-family: sans-serif; padding: 4px;">
@@ -211,11 +241,24 @@ export class EventsRadar implements OnInit, AfterViewInit {
 
   focusEventOnMap(event: EventItem) {
     this.highlightedEventId.set(event.id);
-    if (!this.map) return;
-    const cityCoords = CITY_COORDINATES[event.city] || CITY_COORDINATES['Dubai'];
+    if (!this.map) {
+      this.initMap();
+    }
+
+    const cityCoords = this.getCoordsForCity(event.city || this.selectedCity);
     const lat = parseFloat((event as any).latitude) || cityCoords.lat;
     const lng = parseFloat((event as any).longitude) || cityCoords.lng;
-    this.map.flyTo([lat, lng], 14, { animate: true, duration: 1 });
+
+    if (this.map) {
+      this.map.flyTo([lat, lng], 14, { animate: true, duration: 1.2 });
+      const marker = this.eventMarkersMap.get(event.id);
+      if (marker) {
+        marker.openPopup();
+      }
+      setTimeout(() => {
+        if (this.map) this.map.invalidateSize();
+      }, 300);
+    }
   }
 
   onCategoryFilterChange(cat: string) {
@@ -255,9 +298,17 @@ export class EventsRadar implements OnInit, AfterViewInit {
       return;
     }
 
+    const formVal = this.triggerForm.value;
+    const project = this.projectService.projects().find(p => p.id === Number(formVal.projectId));
+    const sender = this.whatsappNumbers().find(n => n.id === formVal.senderNumber);
+    const group = this.contactGroups().find(g => g.id === formVal.contactGroup);
+
     const newRule = {
       id: Date.now(),
-      ...this.triggerForm.value,
+      ...formVal,
+      projectName: project ? project.name : 'Pace Travels Official',
+      senderNumber: sender ? sender.label : formVal.senderNumber,
+      contactGroupName: group ? group.name : formVal.contactGroup,
       status: 'ACTIVE'
     };
 
