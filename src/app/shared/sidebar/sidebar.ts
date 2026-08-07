@@ -33,6 +33,7 @@ export class Sidebar implements OnInit {
 
   menu = [
     { icon: 'fa-solid fa-table-cells-large', title: 'Dashboard', route: '/dashboard' },
+    { icon: 'fa-solid fa-radar', title: 'Event Radar', route: '/events-radar' },
     { icon: 'fa-regular fa-comment-dots', title: 'Live Chat', route: '/chat' },
     { icon: 'fa-solid fa-clock-rotate-left', title: 'History', route: '/history' },
     { icon: 'fa-regular fa-address-book', title: 'Contacts', route: '/contacts' },

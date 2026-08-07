@@ -23,6 +23,8 @@ import { AgentsView } from './features/agents/agents-view/agents-view';
 import { AccountLayout } from './features/account/account-layout/account-layout';
 import { ProfileView } from './features/account/profile-view/profile-view';
 
+import { EventsRadar } from './features/events-radar/events-radar';
+
 export const routes: Routes = [
     {
         path: '',
@@ -52,6 +54,11 @@ export const routes: Routes = [
                 path: 'projects',
                 component: ProjectsView,
                 title: 'Projects - Pace Messenger'
+            },
+            {
+                path: 'events-radar',
+                component: EventsRadar,
+                title: 'Event Intelligence Radar - Pace Messenger'
             },
             {
                 path: 'dashboard',
