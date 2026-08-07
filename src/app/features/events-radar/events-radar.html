@@ -1,140 +1,152 @@
 <div class="events-radar-container" style="padding: 24px; font-family: 'Inter', sans-serif;">
     
-    <!-- Top Header Bar -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <!-- Top Header Bar with City Search -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
         <div>
-            <h2 style="margin: 0; font-size: 22px; color: #0f172a;">📍 Event Intelligence & Demand Radar</h2>
-            <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">PredictHQ-style event demand aggregation, category spend modeling, and automated WhatsApp trigger campaigns.</p>
+            <h2 style="margin: 0; font-size: 20px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <span>📍 PredictHQ Event Radar & Map</span>
+            </h2>
+            <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">Search any city worldwide to auto-zoom the interactive map and explore live event demand surges & category spend.</p>
         </div>
 
+        <!-- City Search Bar & Live Sync -->
         <div style="display: flex; align-items: center; gap: 12px;">
-            <select class="form-control" [ngModel]="selectedCity" (change)="onCityFilterChange($event)" style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 16px; font-weight: 700; color: #0f172a; font-size: 14px;">
-                <option value="Mumbai">📍 Mumbai, India</option>
-                <option value="Delhi">📍 Delhi, India</option>
-                <option value="Bengaluru">📍 Bengaluru, India</option>
-                <option value="Dubai">📍 Dubai, UAE</option>
-                <option value="London">📍 London, UK</option>
-            </select>
+            <div style="position: relative; display: flex; align-items: center;">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; color: #94a3b8; font-size: 14px;"></i>
+                <input type="text" [(ngModel)]="searchCityQuery" (keyup.enter)="onCitySearchSubmit()" placeholder="Search city (e.g. Dubai, Mumbai, London)..." style="padding: 9px 12px 9px 36px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; width: 260px; outline: none; font-weight: 600;">
+            </div>
 
-            <button type="button" class="btn btn-outline" (click)="syncCityEvents()" style="background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">
-                <i class="fa-solid fa-rotate" style="color: #3b82f6;"></i> Sync Live Events
+            <button type="button" class="btn btn-primary" (click)="onCitySearchSubmit()" style="background: #0f172a; color: white; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 600; font-size: 13px; cursor: pointer;">
+                Search City
+            </button>
+
+            <button type="button" class="btn btn-outline" (click)="syncCityEvents()" style="background: white; border: 1px solid #cbd5e1; padding: 9px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                <i class="fa-solid fa-rotate" style="color: #3b82f6;"></i> Live Sync
             </button>
         </div>
+    </div>
+
+    <!-- Quick City Pills -->
+    <div style="display: flex; gap: 8px; margin-bottom: 20px; align-items: center;">
+        <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Quick Cities:</span>
+        <button type="button" *ngFor="let c of ['Dubai', 'Mumbai', 'Delhi', 'Bengaluru', 'London', 'New York', 'Tokyo', 'Paris']" [style.background]="selectedCity === c ? '#3b82f6' : 'white'" [style.color]="selectedCity === c ? 'white' : '#334155'" (click)="onCitySelectChange(c)" style="padding: 5px 12px; border: 1px solid #cbd5e1; border-radius: 16px; font-weight: 600; font-size: 12px; cursor: pointer; transition: all 0.2s;">
+            📍 {{ c }}
+        </button>
     </div>
 
     <!-- Summary Stats Bar -->
     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
-            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Active City Events</span>
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Active City Events</span>
             <h3 style="margin: 8px 0 0 0; font-size: 24px; color: #0f172a;">{{ eventsService.summary().totalEvents }}</h3>
-            <span style="font-size: 11px; color: #10b981; font-weight: 600;">{{ eventsService.summary().selectedCity }} Region</span>
+            <span style="font-size: 11px; color: #10b981; font-weight: 600;">📍 {{ selectedCity }} Region</span>
         </div>
 
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
-            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Demand Surges (Rank > 75)</span>
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Demand Surges (Rank > 75)</span>
             <h3 style="margin: 8px 0 0 0; font-size: 24px; color: #ef4444;">🔥 {{ eventsService.summary().highSurgeCount }} High Surges</h3>
             <span style="font-size: 11px; color: #64748b;">Major Attendance Drives</span>
         </div>
 
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
-            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Predicted Out-of-Town Travelers</span>
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Predicted Out-of-Town Travelers</span>
             <h3 style="margin: 8px 0 0 0; font-size: 24px; color: #3b82f6;">{{ eventsService.summary().totalTravelers | number }}</h3>
-            <span style="font-size: 11px; color: #64748b;">Hotel & Flight Prospects</span>
+            <span style="font-size: 11px; color: #64748b;">Hotel & Transport Prospects</span>
         </div>
 
         <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; background: #ecfdf5; border-color: #a7f3d0;">
-            <span style="font-size: 12px; font-weight: 700; color: #047857; text-transform: uppercase;">Total Predicted Spend</span>
+            <span style="font-size: 11px; font-weight: 700; color: #047857; text-transform: uppercase;">Total Predicted Spend</span>
             <h3 style="margin: 8px 0 0 0; font-size: 22px; color: #065f46;">
-                {{ selectedCity === 'Dubai' ? 'AED' : (selectedCity === 'London' ? '£' : '₹') }} {{ eventsService.summary().totalPredictedSpend | number:'1.0-0' }}
+                ₹ {{ eventsService.summary().totalPredictedSpend | number:'1.0-0' }}
             </h3>
-            <span style="font-size: 11px; color: #047857; font-weight: 600;">Economic Impact</span>
+            <span style="font-size: 11px; color: #047857; font-weight: 600;">Category Economic Impact</span>
         </div>
     </div>
 
     <!-- Navigation Tabs -->
-    <div style="display: flex; gap: 8px; border-bottom: 2px solid #e2e8f0; margin-bottom: 24px;">
-        <button type="button" [style.border-bottom-color]="activeTab === 'radar' ? '#10b981' : 'transparent'" [style.color]="activeTab === 'radar' ? '#10b981' : '#64748b'" (click)="activeTab = 'radar'" style="padding: 12px 20px; border: none; border-bottom: 3px solid; background: transparent; font-weight: 700; font-size: 14px; cursor: pointer;">
-            🗓️ Event Radar & Spend Breakdown
+    <div style="display: flex; gap: 8px; border-bottom: 2px solid #e2e8f0; margin-bottom: 20px;">
+        <button type="button" [style.border-bottom-color]="activeTab === 'radar' ? '#3b82f6' : 'transparent'" [style.color]="activeTab === 'radar' ? '#3b82f6' : '#64748b'" (click)="activeTab = 'radar'" style="padding: 12px 20px; border: none; border-bottom: 3px solid; background: transparent; font-weight: 700; font-size: 14px; cursor: pointer;">
+            🗺️ Split View Map & Event Radar
         </button>
 
-        <button type="button" [style.border-bottom-color]="activeTab === 'triggers' ? '#10b981' : 'transparent'" [style.color]="activeTab === 'triggers' ? '#10b981' : '#64748b'" (click)="activeTab = 'triggers'" style="padding: 12px 20px; border: none; border-bottom: 3px solid; background: transparent; font-weight: 700; font-size: 14px; cursor: pointer;">
+        <button type="button" [style.border-bottom-color]="activeTab === 'triggers' ? '#3b82f6' : 'transparent'" [style.color]="activeTab === 'triggers' ? '#3b82f6' : '#64748b'" (click)="activeTab = 'triggers'" style="padding: 12px 20px; border: none; border-bottom: 3px solid; background: transparent; font-weight: 700; font-size: 14px; cursor: pointer;">
             ⚡ Automated Event Triggers ({{ triggersList().length }})
         </button>
 
-        <button type="button" [style.border-bottom-color]="activeTab === 'geo' ? '#10b981' : 'transparent'" [style.color]="activeTab === 'geo' ? '#10b981' : '#64748b'" (click)="activeTab = 'geo'" style="padding: 12px 20px; border: none; border-bottom: 3px solid; background: transparent; font-weight: 700; font-size: 14px; cursor: pointer;">
+        <button type="button" [style.border-bottom-color]="activeTab === 'geo' ? '#3b82f6' : 'transparent'" [style.color]="activeTab === 'geo' ? '#3b82f6' : '#64748b'" (click)="activeTab = 'geo'" style="padding: 12px 20px; border: none; border-bottom: 3px solid; background: transparent; font-weight: 700; font-size: 14px; cursor: pointer;">
             👥 Geo-Contact Segments
         </button>
 
-        <button type="button" [style.border-bottom-color]="activeTab === 'roi' ? '#10b981' : 'transparent'" [style.color]="activeTab === 'roi' ? '#10b981' : '#64748b'" (click)="activeTab = 'roi'" style="padding: 12px 20px; border: none; border-bottom: 3px solid; background: transparent; font-weight: 700; font-size: 14px; cursor: pointer;">
+        <button type="button" [style.border-bottom-color]="activeTab === 'roi' ? '#3b82f6' : 'transparent'" [style.color]="activeTab === 'roi' ? '#3b82f6' : '#64748b'" (click)="activeTab = 'roi'" style="padding: 12px 20px; border: none; border-bottom: 3px solid; background: transparent; font-weight: 700; font-size: 14px; cursor: pointer;">
             📊 Event ROI & Yield
         </button>
     </div>
 
-    <!-- TAB 1: Event Radar Feed -->
-    <div *ngIf="activeTab === 'radar'">
-        <!-- Category Filter Pills -->
-        <div style="display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;">
-            <button type="button" *ngFor="let cat of ['ALL', 'SPORTS', 'CONCERT', 'EXPO_CONFERENCE', 'FESTIVAL', 'PUBLIC_HOLIDAY']" [style.background]="selectedCategory === cat ? '#0f172a' : '#f1f5f9'" [style.color]="selectedCategory === cat ? 'white' : '#475569'" (click)="onCategoryFilterChange(cat)" style="padding: 6px 14px; border: none; border-radius: 20px; font-weight: 600; font-size: 12px; cursor: pointer;">
-                {{ cat === 'ALL' ? 'All Categories' : cat }}
-            </button>
-        </div>
+    <!-- TAB 1: PREDICTHQ SPLIT VIEW (LEFT: EVENTS FEED, RIGHT: INTERACTIVE MAP) -->
+    <div *ngIf="activeTab === 'radar'" style="display: flex; gap: 20px;">
+        
+        <!-- LEFT PANEL (50%): Category Filters & Event Cards -->
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 16px;">
+            <!-- Category Filter Pills -->
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button type="button" *ngFor="let cat of ['ALL', 'SPORTS', 'CONCERT', 'EXPO_CONFERENCE', 'FESTIVAL', 'PUBLIC_HOLIDAY']" [style.background]="selectedCategory === cat ? '#0f172a' : '#f1f5f9'" [style.color]="selectedCategory === cat ? 'white' : '#475569'" (click)="onCategoryFilterChange(cat)" style="padding: 6px 12px; border: none; border-radius: 20px; font-weight: 600; font-size: 11.5px; cursor: pointer;">
+                    {{ cat === 'ALL' ? 'All Categories' : cat }}
+                </button>
+            </div>
 
-        <!-- Event Cards List -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            <div *ngFor="let event of eventsService.events()" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                    <div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                            <span *ngIf="event.rankScore >= 75" style="background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">🔥 HIGH SURGE (Rank {{ event.rankScore }})</span>
-                            <span *ngIf="event.rankScore < 75" style="background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">⚡ MODERATE (Rank {{ event.rankScore }})</span>
-                            <span style="background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">{{ event.category }}</span>
+            <!-- Event Cards List -->
+            <div style="display: flex; flex-direction: column; gap: 16px; max-height: 700px; overflow-y: auto; padding-right: 4px;">
+                <div *ngFor="let event of eventsService.events()" [id]="'event-card-' + event.id" [style.border-color]="highlightedEventId() === event.id ? '#3b82f6' : '#e2e8f0'" [style.box-shadow]="highlightedEventId() === event.id ? '0 0 0 2px #3b82f6' : '0 1px 3px rgba(0,0,0,0.05)'" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; transition: all 0.2s;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <span *ngIf="event.rankScore >= 75" style="background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 10px;">🔥 HIGH SURGE (Rank {{ event.rankScore }})</span>
+                                <span *ngIf="event.rankScore < 75" style="background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 10px;">⚡ MODERATE (Rank {{ event.rankScore }})</span>
+                                <span style="background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 10px;">{{ event.category }}</span>
+                            </div>
+                            <h4 style="margin: 4px 0 0 0; font-size: 15px; color: #0f172a; font-weight: 700;">{{ event.title }}</h4>
+                            <div style="font-size: 12px; color: #64748b; margin-top: 4px;">
+                                📍 {{ event.venue }} | 🗓️ {{ event.startDate | date:'mediumDate' }}
+                            </div>
                         </div>
-                        <h3 style="margin: 0; font-size: 18px; color: #0f172a;">{{ event.title }}</h3>
-                        <div style="font-size: 13px; color: #64748b; margin-top: 4px;">
-                            📍 {{ event.venue }} | 🗓️ {{ event.startDate | date:'fullDate' }}
+
+                        <div style="display: flex; gap: 6px;">
+                            <button type="button" (click)="focusEventOnMap(event)" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 10px; border-radius: 6px; font-weight: 600; font-size: 11px; cursor: pointer;">
+                                🗺️ Focus Map
+                            </button>
+                            <button type="button" (click)="openTriggerModal(event)" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 11px; cursor: pointer;">
+                                <i class="fa-solid fa-paper-plane"></i> Trigger
+                            </button>
                         </div>
                     </div>
 
-                    <button type="button" class="btn btn-primary" (click)="openTriggerModal(event)" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">
-                        <i class="fa-solid fa-paper-plane"></i> Create Trigger Campaign
-                    </button>
-                </div>
-
-                <!-- Predicted Category Spend Grid -->
-                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px;">
-                    <div>
-                        <span style="font-size: 11px; color: #64748b; font-weight: 700;">🏨 HOTELS & ACCOMMODATION</span>
-                        <div style="font-size: 15px; font-weight: 700; color: #0284c7; margin-top: 2px;">
-                            ₹ {{ event.accommodationSpend | number:'1.0-0' }}
+                    <!-- Category Spend Grid -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px;">
+                        <div>
+                            <span style="font-size: 10px; color: #64748b; font-weight: 700; display: block;">HOTELS</span>
+                            <div style="font-size: 13px; font-weight: 700; color: #0284c7;">₹ {{ event.accommodationSpend | number:'1.0-0' }}</div>
                         </div>
-                        <span style="font-size: 10px; color: #94a3b8;">{{ event.travelerCount | number }} Travelers</span>
-                    </div>
-
-                    <div>
-                        <span style="font-size: 11px; color: #64748b; font-weight: 700;">🍽️ HOSPITALITY & DINING</span>
-                        <div style="font-size: 15px; font-weight: 700; color: #7e22ce; margin-top: 2px;">
-                            ₹ {{ event.hospitalitySpend | number:'1.0-0' }}
+                        <div>
+                            <span style="font-size: 10px; color: #64748b; font-weight: 700; display: block;">DINING</span>
+                            <div style="font-size: 13px; font-weight: 700; color: #7e22ce;">₹ {{ event.hospitalitySpend | number:'1.0-0' }}</div>
                         </div>
-                        <span style="font-size: 10px; color: #94a3b8;">{{ event.attendanceEstimate | number }} Attendees</span>
-                    </div>
-
-                    <div>
-                        <span style="font-size: 11px; color: #64748b; font-weight: 700;">🚕 CABS & TRANSPORTATION</span>
-                        <div style="font-size: 15px; font-weight: 700; color: #d97706; margin-top: 2px;">
-                            ₹ {{ event.transportSpend | number:'1.0-0' }}
+                        <div>
+                            <span style="font-size: 10px; color: #64748b; font-weight: 700; display: block;">TRANSPORT</span>
+                            <div style="font-size: 13px; font-weight: 700; color: #d97706;">₹ {{ event.transportSpend | number:'1.0-0' }}</div>
                         </div>
-                        <span style="font-size: 10px; color: #94a3b8;">Local & Airport Trips</span>
-                    </div>
-
-                    <div>
-                        <span style="font-size: 11px; color: #047857; font-weight: 700;">💵 TOTAL PREDICTED SPEND</span>
-                        <div style="font-size: 16px; font-weight: 800; color: #059669; margin-top: 2px;">
-                            ₹ {{ event.totalPredictedSpend | number:'1.0-0' }}
+                        <div>
+                            <span style="font-size: 10px; color: #047857; font-weight: 700; display: block;">TOTAL SPEND</span>
+                            <div style="font-size: 13px; font-weight: 800; color: #059669;">₹ {{ event.totalPredictedSpend | number:'1.0-0' }}</div>
                         </div>
-                        <span style="font-size: 10px; color: #047857; font-weight: 600;">Economic Impact</span>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- RIGHT PANEL (50%): Interactive Leaflet Map Radar -->
+        <div style="flex: 1; position: sticky; top: 20px; height: 720px; background: white; border: 1px solid #cbd5e1; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <div id="events-map-radar" style="width: 100%; height: 100%;"></div>
         </div>
     </div>
 
