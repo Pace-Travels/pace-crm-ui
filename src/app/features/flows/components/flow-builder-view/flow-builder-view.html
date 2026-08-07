@@ -97,35 +97,46 @@
         </button>
     </div>
 
-    <table class="data-table">
-        <thead>
-            <tr>
-                <th>Flow Name</th>
-                <th>Created By</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            @for(flow of flowService.flows(); track flow.id) {
+        <table class="data-table">
+            <thead>
                 <tr>
-                    <td class="font-bold">{{ flow.flowName }}</td>
-                    <td>{{ flow.createdBy }}</td>
+                    <th>Flow Name</th>
+                    <th>Trigger Keyword</th>
+                    <th>Nodes</th>
+                    <th>Executions</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngIf="flowService.flows().length === 0">
+                    <td colspan="6" class="empty-state-cell" style="text-align: center; padding: 24px; color: #64748b;">
+                        No automated flows created yet. Click <strong>"Create Flow"</strong> to open the Visual Flow Canvas!
+                    </td>
+                </tr>
+                <tr *ngFor="let flow of flowService.flows()">
+                    <td class="font-bold" style="color: #0f172a; font-weight: 700;">{{ flow.name }}</td>
+                    <td>
+                        <span style="background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">
+                            {{ flow.triggerKeyword || 'HI' }}
+                        </span>
+                    </td>
+                    <td><span class="badge" style="background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 4px; font-weight: 600;">{{ flow.nodeCount || 0 }} Nodes</span></td>
+                    <td style="color: #64748b; font-size: 13px;">{{ flow.executionCount || 0 }} times</td>
                     <td>
                         <label class="toggle-switch">
-                            <input type="checkbox" [checked]="flow.status">
+                            <input type="checkbox" [checked]="flow.status === 'ACTIVE'" (change)="onToggleStatus(flow)">
                             <span class="slider round"></span>
                         </label>
                     </td>
                     <td>
                         <div class="action-icons" style="display: flex; gap: 8px;">
-                            <button class="btn btn-outline" style="padding: 4px 8px;"><i class="fa-regular fa-copy"></i></button>
-                            <button class="btn btn-outline" style="padding: 4px 8px;"><i class="fa-solid fa-pen"></i></button>
-                            <button class="btn btn-outline" style="padding: 4px 8px; color: #ef4444;"><i class="fa-regular fa-trash-can"></i></button>
+                            <button class="btn btn-primary" (click)="editFlow(flow)" style="padding: 6px 12px; font-size: 12px; border-radius: 4px; background: #0f172a; color: white; border: none; cursor: pointer;">
+                                <i class="fa-solid fa-pen-to-square"></i> Edit Canvas
+                            </button>
                         </div>
                     </td>
                 </tr>
-            }
-        </tbody>
-    </table>
-</div>
+            </tbody>
+        </table>
+    </div>

@@ -1,10 +1,22 @@
-<div class="flow-header">
+<div class="flow-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; background: white; border-bottom: 1px solid #e2e8f0;">
     <div style="display: flex; align-items: center; gap: 16px;">
-        <a routerLink="/flows" class="btn btn-outline"><i class="fa-solid fa-arrow-left"></i> Back</a>
-        <h2 style="margin: 0; font-size: 20px;">Flow Builder Canvas</h2>
+        <a routerLink="/flows" class="btn btn-outline" style="background: white; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; text-decoration: none; color: #334155; font-size: 13px;">
+            <i class="fa-solid fa-arrow-left"></i> Back
+        </a>
+        <div>
+            <input type="text" [(ngModel)]="flowName" placeholder="Flow Name..." style="font-size: 16px; font-weight: 700; border: 1px solid transparent; border-radius: 4px; padding: 4px 8px; color: #0f172a;" onfocus="this.style.borderColor='#cbd5e1'" onblur="this.style.borderColor='transparent'">
+            <div style="font-size: 11px; color: #64748b; margin-top: 2px;">
+                Trigger Keyword: <input type="text" [(ngModel)]="triggerKeyword" style="width: 80px; font-size: 11px; font-weight: 700; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 6px;">
+            </div>
+        </div>
     </div>
-    <div style="display: flex; gap: 12px;">
-        <button class="btn btn-dark">Save Flow</button>
+    <div style="display: flex; gap: 12px; align-items: center;">
+        <button type="button" class="btn btn-outline" (click)="openTestModal()" style="background: #f8fafc; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+            <i class="fa-solid fa-vial-circle-check" style="color: #3b82f6;"></i> Test Execution
+        </button>
+        <button type="button" class="btn btn-dark" (click)="saveFlow()" style="background: #0f172a; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+            <i class="fa-solid fa-floppy-disk"></i> Save Flow
+        </button>
     </div>
 </div>
 
@@ -20,17 +32,17 @@
         <button class="palette-item" (click)="addNode('condition')">
             <i class="fa-solid fa-code-branch text-orange"></i> Condition
         </button>
+
+        <button class="palette-item" (click)="addNode('agent')">
+            <i class="fa-solid fa-robot text-teal"></i> Assign AI Agent
+        </button>
         
         <button class="palette-item" (click)="addNode('wait')">
-            <i class="fa-regular fa-clock text-green"></i> Wait
+            <i class="fa-regular fa-clock text-green"></i> Wait Delay
         </button>
         
         <button class="palette-item" (click)="addNode('tag')">
             <i class="fa-solid fa-tag text-pink"></i> Add Tag
-        </button>
-        
-        <button class="palette-item" (click)="addNode('agent')">
-            <i class="fa-solid fa-user-tie text-teal"></i> Assign Agent
         </button>
     </div>
 
@@ -52,12 +64,12 @@
                         <div fNode fDragHandle [fNodePosition]="node.position" class="custom-node" [ngClass]="'node-' + node.type">
                             <div class="node-header">
                                 <div class="header-title">
-                                    <i class="fa-solid fa-robot" *ngIf="node.type === 'trigger'"></i>
+                                    <i class="fa-solid fa-bolt" *ngIf="node.type === 'trigger'" style="color: #eab308;"></i>
                                     <i class="fa-solid fa-message" *ngIf="node.type === 'message'"></i>
                                     <i class="fa-solid fa-code-branch" *ngIf="node.type === 'condition'"></i>
                                     <i class="fa-regular fa-clock" *ngIf="node.type === 'wait'"></i>
                                     <i class="fa-solid fa-tag" *ngIf="node.type === 'tag'"></i>
-                                    <i class="fa-solid fa-user-tie" *ngIf="node.type === 'agent'"></i>
+                                    <i class="fa-solid fa-robot" *ngIf="node.type === 'agent'" style="color: #10b981;"></i>
                                     {{ node.label }}
                                 </div>
                                 <button *ngIf="node.type !== 'trigger'" class="delete-btn" (click)="deleteNode(node.id)" title="Delete Node">
@@ -65,19 +77,47 @@
                                 </button>
                             </div>
                             <div class="node-body">
-                                <p style="margin:0;">Configure {{ node.type }} logic.</p>
+                                <p style="margin:0; font-size:12px; color:#475569;">{{ node.content }}</p>
                             </div>
                             
                             <!-- Connectors -->
-                            <!-- Triggers don't need input -->
                             <div *ngIf="node.type !== 'trigger'" fConnector fConnectorType="target" [fConnectorId]="node.id + '_in'" class="connector target"></div>
-                            
-                            <!-- All nodes can have output -->
                             <div fConnector fConnectorType="source" [fConnectorId]="node.id + '_out'" class="connector source"></div>
                         </div>
                     }
                 </ng-container>
             </f-canvas>
         </f-flow>
+    </div>
+</div>
+
+<!-- Modal for Simulating Flow Execution -->
+<div class="modal-overlay" *ngIf="showTestModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="modal-card" style="background: white; border-radius: 12px; padding: 24px; max-width: 580px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 18px; color: #0f172a;"><i class="fa-solid fa-vial-circle-check" style="color: #3b82f6;"></i> Flow Execution Simulator</h3>
+            <button type="button" style="background: transparent; border: none; font-size: 18px; cursor: pointer;" (click)="closeTestModal()">✕</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" [(ngModel)]="testMessage" placeholder="Type test WhatsApp message..." class="form-control" style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                <button type="button" class="btn btn-primary" (click)="runTestExecution()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">
+                    Run Execution
+                </button>
+            </div>
+
+            <div style="background: #0f172a; color: #38bdf8; border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; max-height: 280px; overflow-y: auto;">
+                <div *ngFor="let log of testLogs()" style="margin-bottom: 8px; border-bottom: 1px dashed #334155; padding-bottom: 4px;">
+                    <span style="color: #94a3b8;">[{{ log.timestamp | date:'HH:mm:ss' }}]</span>
+                    <strong style="color: #f59e0b; margin-left: 6px;">{{ log.step }}</strong>
+                    <div style="color: #f8fafc; margin-top: 2px;">{{ log.details }}</div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end;">
+                <button type="button" class="btn btn-outline" (click)="closeTestModal()" style="background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Done</button>
+            </div>
+        </div>
     </div>
 </div>

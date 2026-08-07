@@ -5,19 +5,15 @@
             <h2>Dashboard</h2>
             <p class="text-muted" style="margin: 4px 0 0; font-size: 13px;">Overview of your active WhatsApp projects and operations.</p>
         </div>
-        <div class="topbar-stats">
-            <div class="stat-item">
-                <span class="stat-label">WhatsApp API <i class="fa-solid fa-circle-info"></i></span>
-                <span class="stat-badge success">LIVE</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Quality Rating <i class="fa-solid fa-circle-info"></i></span>
-                <span class="stat-badge success">High</span>
-            </div>
-            <div class="stat-item">
-                <span class="stat-label">Remaining Quota <i class="fa-solid fa-circle-info"></i></span>
-                <span class="stat-value">1891</span>
-            </div>
+        <div class="topbar-stats" style="display: flex; align-items: center; gap: 12px;">
+            <select class="form-control" [ngModel]="selectedDateRange" (change)="onRangeChange($event)" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; font-size: 13px;">
+                <option value="TODAY">Today</option>
+                <option value="7_DAYS">Last 7 Days</option>
+                <option value="30_DAYS">Last 30 Days</option>
+            </select>
+            <button type="button" class="btn btn-outline" (click)="exportCSV()" style="background: white; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+                <i class="fa-solid fa-file-csv" style="color: #10b981;"></i> Export CSV
+            </button>
         </div>
         <div class="topbar-right">
             <span class="plan-info">Current Plan: <b>BASIC</b> (monthly)</span>

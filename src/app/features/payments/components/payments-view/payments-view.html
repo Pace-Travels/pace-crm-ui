@@ -1,120 +1,204 @@
-<div class="payments-header">
-    <h2>Payments</h2>
+<div class="payments-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="margin: 0; font-size: 20px; color: #0f172a;">Payments & Ad Credit Billing</h2>
+    <div style="display: flex; align-items: center; gap: 16px;">
+        <div class="credit-badge" style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 8px 16px; border-radius: 8px; font-weight: 700; color: #166534; font-size: 14px;">
+            <i class="fa-solid fa-wallet" style="color: #10b981;"></i> Ad Wallet Balance: ₹ {{ paymentService.wallet().balance | number:'1.2-2' }}
+        </div>
+        <button type="button" class="btn btn-primary" (click)="openTopupModal()" style="background: #10b981; color: white; border: none; padding: 10px 20px; font-weight: 600; border-radius: 6px; cursor: pointer;">
+            <i class="fa-solid fa-plus-circle"></i> Add Credits
+        </button>
+    </div>
 </div>
 
 <div class="payments-content-area">
     <!-- Zero Fee Banner -->
-    <div class="promo-banner success-light mb-24">
-        <div class="banner-icon">
-            <span class="rupee-coin">₹0</span>
+    <div class="promo-banner success-light mb-24" style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; display: flex; gap: 16px; align-items: center;">
+        <div class="banner-icon" style="font-size: 28px; background: #e0f2fe; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            💳
         </div>
-        <div class="banner-text">
-            <strong>Zero Transaction Fee</strong> on WhatsApp Payments for you!
-            <p>Enable WhatsApp Payments and accept payments without any extra cost — you pay nothing per transaction.</p>
-        </div>
-    </div>
-
-    <!-- Quick Guide & Action Cards -->
-    <div class="quick-launch-section mb-24">
-        <div class="quick-guide">
-            <h5>WHATSAPP PAY SETTINGS QUICK GUIDE</h5>
-            <h4>Quick Guide</h4>
-            <p>View detailed analytics of your payment order messages based on different sources.</p>
-            <div class="guide-links">
-                <a href="#">Read User Guide <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-                <a href="#">WhatsApp Payment Journey <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-                <a href="#">WhatsApp Payment Setup Video <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-                <a href="#">How to use WhatsApp Payment <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-            </div>
-        </div>
-
-        <div class="launch-actions">
-            <h4>What would you like to launch?</h4>
-            <div class="cards-grid">
-                <div class="action-card">
-                    <i class="fa-regular fa-paper-plane text-green"></i>
-                    <div class="card-info">
-                        <h6>Launch Broadcast Campaign</h6>
-                        <p>Reach your WhatsApp audience with offers, updates and alerts.</p>
-                    </div>
-                </div>
-                <div class="action-card">
-                    <i class="fa-brands fa-whatsapp text-green"></i>
-                    <div class="card-info">
-                        <h6>Launch WhatsApp Status Ad <span class="badge new">NEW</span></h6>
-                        <p>Publish scroll-stopping offers directly to WhatsApp Status.</p>
-                    </div>
-                </div>
-                <div class="action-card">
-                    <i class="fa-solid fa-user-plus text-orange"></i>
-                    <div class="card-info">
-                        <h6>Launch Lead Form Ads</h6>
-                        <p>Capture high-intent leads and follow up instantly on WhatsApp.</p>
-                    </div>
-                </div>
-                <div class="action-card">
-                    <i class="fa-solid fa-robot text-purple"></i>
-                    <div class="card-info">
-                        <h6>Create AI Agent <span class="badge ai">AI</span></h6>
-                        <p>Qualify leads, answer questions and close sales automatically.</p>
-                    </div>
-                </div>
-            </div>
+        <div class="banner-text" style="flex: 1;">
+            <strong style="color: #0f172a; font-size: 15px;">Multi-Gateway Billing Integration Enabled</strong>
+            <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">Instant top-up via <strong>Razorpay (UPI / Net Banking)</strong>, <strong>PhonePe</strong>, or <strong>Stripe (International Cards)</strong> with zero hidden markup.</p>
         </div>
     </div>
 
     <!-- Payments Data -->
     <div class="payments-data-section">
-        <div class="tabs">
-            <button class="tab" [class.active]="activeTab === 'All'" (click)="activeTab = 'All'">All</button>
-            <button class="tab" [class.active]="activeTab === 'Campaigns'" (click)="activeTab = 'Campaigns'">Campaigns</button>
-            <button class="tab" [class.active]="activeTab === 'Flows'" (click)="activeTab = 'Flows'">Flows</button>
-            <button class="tab" [class.active]="activeTab === 'Inbox'" (click)="activeTab = 'Inbox'">Inbox</button>
-        </div>
-
-        <div class="table-controls">
-            <div class="search-box">
-                <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                <input type="text" placeholder="Search by Order Id">
+        <div class="table-controls" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; gap: 16px; flex-wrap: wrap;">
+            <div class="search-box" style="position: relative; flex: 1; min-width: 250px;">
+                <i class="fa-solid fa-magnifying-glass search-icon" style="position: absolute; left: 12px; top: 12px; color: #94a3b8;"></i>
+                <input type="text" placeholder="Search by Order ID or Receipt #..." [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" class="form-control" style="padding-left: 36px; width: 100%; border: 1px solid #cbd5e1; border-radius: 6px; padding-top: 8px; padding-bottom: 8px;">
             </div>
             
-            <div class="filter-actions">
-                <select class="form-control">
-                    <option>Select Status</option>
+            <div class="filter-actions" style="display: flex; gap: 12px; align-items: center;">
+                <select class="form-control" [(ngModel)]="selectedStatusFilter" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px 12px;">
+                    <option value="ALL">All Statuses</option>
+                    <option value="SUCCESS">Success Only</option>
+                    <option value="PENDING">Pending Only</option>
+                    <option value="FAILED">Failed Only</option>
                 </select>
-                <button class="btn btn-light" disabled><i class="fa-regular fa-paper-plane"></i> BROADCAST</button>
-                <button class="btn btn-dark"><i class="fa-solid fa-download"></i> Download</button>
+                <button class="btn btn-outline" (click)="paymentService.fetchHistory()" style="background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+                    <i class="fa-solid fa-rotate"></i> Refresh
+                </button>
             </div>
         </div>
 
-        <table class="data-table">
+        <table class="data-table" style="width: 100%; border-collapse: collapse; margin-top: 8px;">
             <thead>
-                <tr>
-                    <th><input type="checkbox"></th>
-                    <th>Order Id</th>
-                    <th>Amount</th>
-                    <th>Status</th>
-                    <th>User Number</th>
-                    <th>Created At</th>
-                    <th>Updated At</th>
+                <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; text-align: left; font-size: 12px; color: #475569; text-transform: uppercase;">
+                    <th style="padding: 12px;">Receipt #</th>
+                    <th style="padding: 12px;">Transaction ID</th>
+                    <th style="padding: 12px;">Gateway</th>
+                    <th style="padding: 12px;">Amount</th>
+                    <th style="padding: 12px;">Credits</th>
+                    <th style="padding: 12px;">Status</th>
+                    <th style="padding: 12px;">Date</th>
+                    <th style="padding: 12px; text-align: right;">Action</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td colspan="7" class="empty-state-cell">
-                        <p>No Payments yet !</p>
+                <tr *ngIf="filteredHistory().length === 0">
+                    <td colspan="8" class="empty-state-cell" style="text-align: center; padding: 32px; color: #64748b;">
+                        No transactions found. Click <strong>"Add Credits"</strong> to make your first top-up!
+                    </td>
+                </tr>
+                <tr *ngFor="let record of filteredHistory()" style="border-bottom: 1px solid #f1f5f9; font-size: 13px;">
+                    <td style="padding: 12px; font-weight: 600; color: #0f172a;">{{ record.receiptNumber || ('INV-' + record.id) }}</td>
+                    <td style="padding: 12px; color: #3b82f6; font-family: monospace;">{{ record.transactionId }}</td>
+                    <td style="padding: 12px;">
+                        <span *ngIf="record.gateway === 'RAZORPAY'" style="background: #e0f2fe; color: #0284c7; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">RAZORPAY</span>
+                        <span *ngIf="record.gateway === 'PHONEPE'" style="background: #f3e8ff; color: #7e22ce; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">PHONEPE</span>
+                        <span *ngIf="record.gateway === 'STRIPE'" style="background: #e0e7ff; color: #4338ca; padding: 2px 8px; border-radius: 4px; font-weight: 600; font-size: 11px;">STRIPE</span>
+                    </td>
+                    <td style="padding: 12px; font-weight: 700; color: #0f172a;">
+                        {{ record.currency === 'USD' ? '$' : '₹' }} {{ record.amount | number:'1.2-2' }}
+                    </td>
+                    <td style="padding: 12px; color: #10b981; font-weight: 600;">
+                        + ₹ {{ record.adCreditsAdded | number:'1.2-2' }}
+                    </td>
+                    <td style="padding: 12px;">
+                        <span *ngIf="record.status === 'SUCCESS'" style="background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">SUCCESS</span>
+                        <span *ngIf="record.status === 'PENDING'" style="background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">PENDING</span>
+                        <span *ngIf="record.status === 'FAILED'" style="background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 11px;">FAILED</span>
+                    </td>
+                    <td style="padding: 12px; color: #64748b;">{{ record.createdAt | date:'short' }}</td>
+                    <td style="padding: 12px; text-align: right;">
+                        <button type="button" (click)="openInvoiceModal(record)" style="background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 10px; border-radius: 4px; font-size: 12px; cursor: pointer;">
+                            <i class="fa-solid fa-file-invoice"></i> Invoice
+                        </button>
                     </td>
                 </tr>
             </tbody>
         </table>
+    </div>
+</div>
 
-        <div class="pagination">
-            <span class="rows-per-page">Rows per page: 10 <i class="fa-solid fa-angle-down"></i></span>
-            <span class="range">0-0 of 0</span>
-            <div class="nav-arrows">
-                <button disabled><i class="fa-solid fa-angle-left"></i></button>
-                <button disabled><i class="fa-solid fa-angle-right"></i></button>
+<!-- Modal for Custom Gateway Top-Up Checkout -->
+<div class="modal-overlay" *ngIf="showTopupModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="modal-card" style="background: white; border-radius: 12px; padding: 24px; max-width: 520px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 18px; color: #0f172a;"><i class="fa-solid fa-wallet" style="color: #10b981;"></i> Top-Up Ad Credits</h3>
+            <button type="button" style="background: transparent; border: none; font-size: 18px; cursor: pointer;" (click)="closeTopupModal()">✕</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+            <!-- Select Payment Gateway -->
+            <div>
+                <label style="font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 8px;">Select Payment Gateway Provider *</label>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;">
+                    <button type="button" [style.border-color]="selectedGateway === 'RAZORPAY' ? '#0284c7' : '#cbd5e1'" [style.background]="selectedGateway === 'RAZORPAY' ? '#f0f9ff' : 'white'" (click)="selectedGateway = 'RAZORPAY'" style="padding: 12px; border: 2px solid; border-radius: 8px; cursor: pointer; text-align: center;">
+                        <strong style="display: block; font-size: 13px; color: #0284c7;">Razorpay</strong>
+                        <span style="font-size: 10px; color: #64748b;">UPI / Cards (INR)</span>
+                    </button>
+
+                    <button type="button" [style.border-color]="selectedGateway === 'PHONEPE' ? '#7e22ce' : '#cbd5e1'" [style.background]="selectedGateway === 'PHONEPE' ? '#faf5ff' : 'white'" (click)="selectedGateway = 'PHONEPE'" style="padding: 12px; border: 2px solid; border-radius: 8px; cursor: pointer; text-align: center;">
+                        <strong style="display: block; font-size: 13px; color: #7e22ce;">PhonePe</strong>
+                        <span style="font-size: 10px; color: #64748b;">UPI App / QR (INR)</span>
+                    </button>
+
+                    <button type="button" [style.border-color]="selectedGateway === 'STRIPE' ? '#4338ca' : '#cbd5e1'" [style.background]="selectedGateway === 'STRIPE' ? '#eeeafe' : 'white'" (click)="selectedGateway = 'STRIPE'" style="padding: 12px; border: 2px solid; border-radius: 8px; cursor: pointer; text-align: center;">
+                        <strong style="display: block; font-size: 13px; color: #4338ca;">Stripe</strong>
+                        <span style="font-size: 10px; color: #64748b;">Intl. Cards (USD)</span>
+                    </button>
+                </div>
             </div>
+
+            <!-- Predefined Topup Amounts -->
+            <div>
+                <label style="font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 8px;">Select Top-Up Amount</label>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px;">
+                    <button type="button" *ngFor="let amt of [500, 1000, 2500, 5000]" [style.border-color]="selectedAmount === amt && !customAmount ? '#10b981' : '#cbd5e1'" [style.background]="selectedAmount === amt && !customAmount ? '#ecfdf5' : 'white'" (click)="selectPredefinedAmount(amt)" style="padding: 8px; border: 2px solid; border-radius: 6px; cursor: pointer; font-weight: 700; font-size: 13px;">
+                        ₹ {{ amt }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- Custom Amount Field -->
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">Or Enter Custom Amount (₹)</label>
+                <input type="number" [(ngModel)]="customAmount" placeholder="e.g. 1500" class="form-control" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+            </div>
+
+            <!-- Total Checkout Summary -->
+            <div style="background: #f8fafc; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 13px; color: #475569;">Total Payable Amount:</span>
+                <strong style="font-size: 16px; color: #0f172a;">{{ selectedGateway === 'STRIPE' ? '$' : '₹' }} {{ finalAmount | number:'1.2-2' }}</strong>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
+                <button type="button" class="btn btn-outline" (click)="closeTopupModal()" style="background: white; border: 1px solid #cbd5e1; padding: 10px 16px; border-radius: 6px; cursor: pointer;">Cancel</button>
+                <button type="button" class="btn btn-primary" (click)="submitTopup()" style="background: #10b981; color: white; border: none; padding: 10px 20px; font-weight: 600; border-radius: 6px; cursor: pointer;">
+                    Pay via {{ selectedGateway }}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Printable Invoice Receipt -->
+<div class="modal-overlay" *ngIf="showInvoiceModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="modal-card" style="background: white; border-radius: 12px; padding: 24px; max-width: 550px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; margin-bottom: 16px;">
+            <div>
+                <h3 style="margin: 0; font-size: 18px; color: #0f172a;">Tax Invoice Receipt</h3>
+                <span style="font-size: 12px; color: #64748b;">Receipt #: {{ selectedInvoice()?.receiptNumber }}</span>
+            </div>
+            <button type="button" style="background: transparent; border: none; font-size: 18px; cursor: pointer;" (click)="closeInvoiceModal()">✕</button>
+        </div>
+
+        <div style="font-size: 13px; color: #334155; display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between;">
+                <span>Issuer:</span>
+                <strong>{{ selectedInvoice()?.companyName }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Transaction ID:</span>
+                <strong style="font-family: monospace;">{{ selectedInvoice()?.transactionId }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Payment Gateway:</span>
+                <strong>{{ selectedInvoice()?.gateway }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Ad Credits Credited:</span>
+                <strong style="color: #10b981;">₹ {{ selectedInvoice()?.adCreditsAdded | number:'1.2-2' }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span>Tax Details:</span>
+                <span>{{ selectedInvoice()?.taxRate }}</span>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: 700;">
+                <span>Total Amount Paid:</span>
+                <strong style="color: #0f172a;">{{ selectedInvoice()?.currency === 'USD' ? '$' : '₹' }} {{ selectedInvoice()?.amount | number:'1.2-2' }}</strong>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 20px;">
+            <button type="button" class="btn btn-outline" (click)="closeInvoiceModal()" style="background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; cursor: pointer;">Close</button>
+            <button type="button" class="btn btn-primary" (click)="printInvoice()" style="background: #0f172a; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+                <i class="fa-solid fa-print"></i> Print Invoice
+            </button>
         </div>
     </div>
 </div>

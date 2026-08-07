@@ -2,10 +2,9 @@
     <h2>Setup</h2>
     <div class="header-actions">
         <div class="credit-badge">
-            <i class="fa-solid fa-wallet"></i> Ad Credit: ₹ 0.00
+            <i class="fa-solid fa-wallet"></i> Ad Credit: ₹ {{ adsService.analytics().adCreditsBalance | number:'1.2-2' }}
         </div>
-        <button class="btn btn-outline">Buy Credits</button>
-        <button class="btn btn-light" disabled><i class="fa-solid fa-plus"></i> Create Ad</button>
+        <button class="btn btn-primary" (click)="openCreateAdModal()"><i class="fa-solid fa-plus"></i> Create Ad</button>
     </div>
 </div>
 
@@ -15,42 +14,62 @@
         <div class="banner-top">
             <div class="icon-left">💰</div>
             <div class="banner-text">
-                <h3>Setup ✨ AI Ads Manager & Win 1000 Free Ad Credits</h3>
-                <p><strong>Run Ads on FB & Instagram that land on WhatsApp</strong></p>
-                <p class="subtext">We've introduced our new AI Ads Manager. You can run your Ads and manage Ad Credits via Pace Messenger. These Ads are run on facebook & instagram and land on whatsapp</p>
-                <div class="banner-links">
-                    <a href="#"><i class="fa-solid fa-book"></i> How to run Ads</a>
-                    <a href="#"><i class="fa-regular fa-circle-play"></i> Click to WhatsApp Ads setup tutorial</a>
-                </div>
+                <h3>Setup ✨ AI Ads Manager & Win ₹1000 Free Ad Credits</h3>
+                <p><strong>Run Ads on FB & Instagram that land directly on WhatsApp</strong></p>
+                <p class="subtext">Configure your Meta Business Ads Manager to run Click-to-WhatsApp ad campaigns with live lead attribution.</p>
             </div>
             <div class="icon-right">👍</div>
         </div>
 
         <div class="setup-progress">
-            <div class="step pending">
-                <div class="step-icon">!</div>
+            <div class="step" [ngClass]="adsService.currentStep() > 1 ? 'completed' : 'pending'">
+                <div class="step-icon">
+                    <i *ngIf="adsService.currentStep() > 1" class="fa-solid fa-check"></i>
+                    <span *ngIf="adsService.currentStep() <= 1">1</span>
+                </div>
                 <div class="step-info">
-                    <span class="status">Step 1 PENDING</span>
-                    <span class="label">Connect Your FB Account</span>
+                    <span class="status">{{ adsService.currentStep() > 1 ? 'COMPLETED' : 'Step 1' }}</span>
+                    <span class="label">Connect FB Account</span>
                 </div>
             </div>
             <div class="line"></div>
-            <div class="step pending">
-                <div class="step-icon">!</div>
+
+            <div class="step" [ngClass]="adsService.currentStep() > 2 ? 'completed' : (adsService.currentStep() === 2 ? 'active' : 'pending')">
+                <div class="step-icon">
+                    <i *ngIf="adsService.currentStep() > 2" class="fa-solid fa-check"></i>
+                    <span *ngIf="adsService.currentStep() <= 2">2</span>
+                </div>
                 <div class="step-info">
-                    <span class="status">Step 2 PENDING</span>
-                    <span class="label">Select Your Ad Page</span>
+                    <span class="status">{{ adsService.currentStep() > 2 ? 'COMPLETED' : 'Step 2' }}</span>
+                    <span class="label">Select Ad Page</span>
                 </div>
             </div>
             <div class="line"></div>
-            <div class="step pending">
-                <div class="step-icon">!</div>
+
+            <div class="step" [ngClass]="adsService.currentStep() > 3 ? 'completed' : (adsService.currentStep() === 3 ? 'active' : 'pending')">
+                <div class="step-icon">
+                    <i *ngIf="adsService.currentStep() > 3" class="fa-solid fa-check"></i>
+                    <span *ngIf="adsService.currentStep() <= 3">3</span>
+                </div>
                 <div class="step-info">
-                    <span class="status">Step 3 PENDING</span>
-                    <span class="label">Link Whatsapp Number</span>
+                    <span class="status">{{ adsService.currentStep() > 3 ? 'COMPLETED' : 'Step 3' }}</span>
+                    <span class="label">Accept Terms</span>
                 </div>
             </div>
             <div class="line"></div>
+
+            <div class="step" [ngClass]="adsService.currentStep() >= 5 ? 'completed' : 'pending'">
+                <div class="step-icon">
+                    <i *ngIf="adsService.currentStep() >= 5" class="fa-solid fa-check"></i>
+                    <span *ngIf="adsService.currentStep() < 5">4</span>
+                </div>
+                <div class="step-info">
+                    <span class="status">{{ adsService.currentStep() >= 5 ? 'COMPLETED' : 'Step 4' }}</span>
+                    <span class="label">Link WhatsApp</span>
+                </div>
+            </div>
+            <div class="line"></div>
+
             <div class="step win">
                 <div class="step-icon"><i class="fa-solid fa-crown"></i></div>
                 <div class="step-info">
@@ -60,7 +79,7 @@
         </div>
 
         <div class="banner-footer">
-            <span class="dot"></span> Having trouble connecting your Facebook account or running ads? <a href="#">Book a quick demo <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            <span class="dot"></span> Connected FB Page: <strong>{{ adsService.setupState()?.pageName || 'None' }}</strong>
         </div>
     </div>
 
@@ -70,12 +89,13 @@
         <!-- Step 1 -->
         <div class="form-row">
             <div class="row-info">
-                <h4>Connect your Facebook account</h4>
-                <p>Allow Pace Messenger to receive advertisement analytics and events from Facebook</p>
-                <p class="note">*Please select <strong>OPT into all</strong> option for Business and Pages*</p>
+                <h4>1. Connect your Facebook account</h4>
+                <p>Allow Pace Messenger to receive advertisement analytics and Click-to-WhatsApp leads from Meta</p>
             </div>
             <div class="row-action">
-                <button class="btn btn-fb">Continue With Facebook</button>
+                <button class="btn btn-fb" (click)="connectWithFacebook()">
+                    <i class="fa-brands fa-facebook"></i> {{ adsService.setupState()?.isConnectedFB ? 'Re-Connect Facebook' : 'Continue With Facebook' }}
+                </button>
             </div>
         </div>
 
@@ -84,12 +104,15 @@
         <!-- Step 2 -->
         <div class="form-row">
             <div class="row-info">
-                <h4>Choose your Facebook page</h4>
-                <p>Select Facebook page which will be used to ad</p>
+                <h4>2. Choose your Facebook page</h4>
+                <p>Select the Facebook Page which will run the Click-to-WhatsApp advertisement</p>
             </div>
             <div class="row-action">
-                <select class="form-control" disabled>
-                    <option>Choose your page</option>
+                <select class="form-control" [disabled]="!adsService.setupState()?.isConnectedFB" (change)="onPageSelect($event)">
+                    <option value="">Select Facebook Page...</option>
+                    <option *ngFor="let page of adsService.setupState()?.pages" [value]="page.pageId">
+                        {{ page.name }} ({{ page.category || 'Page' }})
+                    </option>
                 </select>
             </div>
         </div>
@@ -99,15 +122,15 @@
         <!-- Step 3 -->
         <div class="form-row">
             <div class="row-info">
-                <h4>Accept Lead Form Terms of Service</h4>
-                <p>You must accept the Terms of Service for Lead Form Ads before creating lead form campaigns</p>
+                <h4>3. Accept Lead Form Terms of Service</h4>
+                <p>Accept Meta Terms of Service for Lead Form Ads before creating campaigns</p>
             </div>
             <div class="row-action col-action">
                 <label class="checkbox-label">
-                    <input type="checkbox" disabled>
-                    I accept the <a href="#">Terms of Service for Lead Form Ads <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                    <input type="checkbox" [(ngModel)]="termsChecked" [disabled]="adsService.currentStep() < 3">
+                    I accept the <a href="https://www.facebook.com/legal/terms/lead_ads" target="_blank">Terms of Service for Lead Form Ads <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                 </label>
-                <button class="btn btn-light" disabled>Accept Terms</button>
+                <button class="btn btn-primary" [disabled]="!termsChecked || adsService.currentStep() < 3" (click)="onAcceptTerms()">Accept Terms</button>
             </div>
         </div>
 
@@ -116,12 +139,12 @@
         <!-- Step 4 -->
         <div class="form-row">
             <div class="row-info">
-                <h4>Link Whatsapp Number</h4>
-                <p>Link your WhatsApp business number with selected Facebook page to receive messages directly over WhatsApp</p>
+                <h4>4. Link WhatsApp Business Number</h4>
+                <p>Link your active WhatsApp business number with the selected Facebook Page</p>
             </div>
             <div class="row-action flex-action">
-                <input type="text" class="form-control w-200" disabled>
-                <button class="btn btn-light" disabled>Verify</button>
+                <input type="text" class="form-control w-200" placeholder="e.g. +91 9876543210" [(ngModel)]="whatsappNumberInput" [disabled]="adsService.currentStep() < 4">
+                <button class="btn btn-primary" [disabled]="adsService.currentStep() < 4" (click)="onVerifyWhatsappNumber()">Link & Verify</button>
             </div>
         </div>
 
@@ -130,13 +153,50 @@
         <!-- Step 5 -->
         <div class="form-row">
             <div class="row-info">
-                <h4>Create Advertisement</h4>
-                <p>Click Create Ad to start receiving leads directly on your WhatsApp.</p>
+                <h4>5. Create Click-to-WhatsApp Advertisement</h4>
+                <p>Publish campaigns and start receiving customer leads directly inside your WhatsApp Live Chat Inbox.</p>
             </div>
             <div class="row-action">
-                <button class="btn btn-light" disabled><i class="fa-solid fa-plus"></i> Create Ad</button>
+                <button class="btn btn-primary" (click)="openCreateAdModal()"><i class="fa-solid fa-rocket"></i> Launch Ad Campaign</button>
             </div>
         </div>
 
+    </div>
+</div>
+
+<!-- Modal for Creating Click-to-WhatsApp Campaign -->
+<div class="modal-overlay" *ngIf="showCreateAdModal()">
+    <div class="modal-card" style="background: white; border-radius: 12px; padding: 24px; max-width: 520px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 18px; color: #0f172a;"><i class="fa-brands fa-whatsapp text-green" style="color: #10b981;"></i> Create Click-to-WhatsApp Ad</h3>
+            <button type="button" style="background: transparent; border: none; font-size: 18px; cursor: pointer;" (click)="closeCreateAdModal()">✕</button>
+        </div>
+
+        <form [formGroup]="adForm" (ngSubmit)="submitCreateAd()" style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">Campaign Name *</label>
+                <input type="text" formControlName="name" class="form-control" placeholder="e.g. Summer Promo WhatsApp Leads" style="padding: 10px; font-size: 13px;">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">Daily Budget (₹) *</label>
+                <input type="number" formControlName="budget" class="form-control" placeholder="500" style="padding: 10px; font-size: 13px;">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">Ad Headline</label>
+                <input type="text" formControlName="headline" class="form-control" style="padding: 10px; font-size: 13px;">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">Ad Body / Primary Text</label>
+                <textarea formControlName="primaryText" class="form-control" rows="3" style="padding: 10px; font-size: 13px;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
+                <button type="button" class="btn btn-light" (click)="closeCreateAdModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" [disabled]="adForm.invalid">Publish Campaign</button>
+            </div>
+        </form>
     </div>
 </div>
