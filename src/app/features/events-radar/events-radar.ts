@@ -96,15 +96,23 @@ export class EventsRadar implements OnInit, AfterViewInit {
     });
   }
 
+  private getCoordsForCity(city: string): { lat: number; lng: number; zoom: number } {
+    const key = Object.keys(CITY_COORDINATES).find(k => k.toLowerCase() === (city || '').toLowerCase());
+    if (key && CITY_COORDINATES[key]) {
+      return CITY_COORDINATES[key];
+    }
+    return { lat: 25.2048, lng: 55.2708, zoom: 12 };
+  }
+
   private initMap() {
     const mapElement = document.getElementById('events-map-radar');
     if (!mapElement) return;
 
     if (this.map) {
-      this.map.remove();
+      try { this.map.remove(); } catch(e) {}
     }
 
-    const coords = CITY_COORDINATES[this.selectedCity] || CITY_COORDINATES['Dubai'];
+    const coords = this.getCoordsForCity(this.selectedCity);
     this.map = L.map('events-map-radar').setView([coords.lat, coords.lng], coords.zoom);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -114,17 +122,17 @@ export class EventsRadar implements OnInit, AfterViewInit {
 
     this.markersGroup = L.layerGroup().addTo(this.map);
     this.updateMapMarkers();
+
+    setTimeout(() => {
+      if (this.map) this.map.invalidateSize();
+    }, 300);
   }
 
   onCitySearchSubmit() {
     const query = this.searchCityQuery.trim();
     if (!query) return;
 
-    // Match known coordinates or default
-    const matchedCityKey = Object.keys(CITY_COORDINATES).find(c => c.toLowerCase() === query.toLowerCase());
-    this.selectedCity = matchedCityKey || (query.charAt(0).toUpperCase() + query.slice(1));
-    this.searchCityQuery = this.selectedCity;
-
+    this.selectedCity = query.charAt(0).toUpperCase() + query.slice(1);
     this.panMapToCity(this.selectedCity);
     this.fetchEventsAndRender();
   }
@@ -138,28 +146,39 @@ export class EventsRadar implements OnInit, AfterViewInit {
 
   panMapToCity(city: string) {
     if (!this.map) return;
-    const coords = CITY_COORDINATES[city] || CITY_COORDINATES['Dubai'];
-    this.map.flyTo([coords.lat, coords.lng], coords.zoom, { animate: true, duration: 1.2 });
+    const coords = this.getCoordsForCity(city);
+    if (!coords || isNaN(coords.lat) || isNaN(coords.lng)) return;
+
+    this.map.flyTo([coords.lat, coords.lng], coords.zoom || 12, { animate: true, duration: 1.2 });
+    setTimeout(() => {
+      if (this.map) this.map.invalidateSize();
+    }, 400);
   }
 
   updateMapMarkers() {
-    if (!this.markersGroup) return;
+    if (!this.markersGroup || !this.map) return;
     this.markersGroup.clearLayers();
 
     const eventsList = this.eventsService.events();
-    const cityCoords = CITY_COORDINATES[this.selectedCity] || CITY_COORDINATES['Dubai'];
+    const cityCoords = this.getCoordsForCity(this.selectedCity);
 
     eventsList.forEach((ev: any, idx: number) => {
-      const lat = parseFloat(ev.latitude) || (cityCoords.lat + (idx * 0.015 - 0.03));
-      const lng = parseFloat(ev.longitude) || (cityCoords.lng + (idx * 0.018 - 0.03));
+      let lat = parseFloat(ev.latitude);
+      let lng = parseFloat(ev.longitude);
+
+      if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) {
+        lat = cityCoords.lat + (idx * 0.012 - 0.02);
+        lng = cityCoords.lng + (idx * 0.015 - 0.02);
+      }
 
       const isHighSurge = ev.rankScore >= 75;
       const markerColor = isHighSurge ? '#ef4444' : '#f59e0b';
+      const spendVal = Math.round((ev.totalPredictedSpend || 500000) / 100000);
 
       const customIcon = L.divIcon({
         className: 'custom-map-pin',
         html: `<div style="background: ${markerColor}; color: white; padding: 6px 10px; border-radius: 20px; font-weight: 800; font-size: 11px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 2px solid white; display: flex; align-items: center; gap: 4px; font-family: sans-serif; cursor: pointer; transform: scale(1); transition: transform 0.2s;">
-                <span>${isHighSurge ? '🔥' : '⚡'}</span> ₹${Math.round(ev.totalPredictedSpend / 100000)}L
+                <span>${isHighSurge ? '🔥' : '⚡'}</span> ₹${spendVal}L
                </div>`,
         iconSize: [80, 30],
         iconAnchor: [40, 15]
@@ -172,7 +191,7 @@ export class EventsRadar implements OnInit, AfterViewInit {
           <strong style="font-size: 13px; color: #0f172a; display: block;">${ev.title}</strong>
           <div style="font-size: 11px; color: #64748b; margin: 4px 0;">📍 ${ev.venue}</div>
           <div style="font-size: 12px; font-weight: 700; color: #059669; background: #ecfdf5; padding: 4px 8px; border-radius: 4px; display: inline-block;">
-            Total Spend: ₹ ${Number(ev.totalPredictedSpend).toLocaleString()}
+            Total Spend: ₹ ${Number(ev.totalPredictedSpend || 0).toLocaleString()}
           </div>
         </div>
       `;
@@ -184,6 +203,10 @@ export class EventsRadar implements OnInit, AfterViewInit {
         if (cardElem) cardElem.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
     });
+
+    setTimeout(() => {
+      if (this.map) this.map.invalidateSize();
+    }, 200);
   }
 
   focusEventOnMap(event: EventItem) {
