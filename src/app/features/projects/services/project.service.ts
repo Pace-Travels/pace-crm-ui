@@ -10,6 +10,9 @@ export interface Project {
   phoneNumberId?: string;
   wabaId?: string;
   testPhoneNumber?: string;
+  testPhoneNumberId?: string;
+  testAccessToken?: string;
+  mode?: 'DEVELOPMENT' | 'PRODUCTION';
 }
 
 @Injectable({ providedIn: 'root' })

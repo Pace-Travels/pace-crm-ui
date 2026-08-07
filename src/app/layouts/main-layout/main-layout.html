@@ -4,6 +4,9 @@
 
     <!-- Main Content wrapper -->
     <main class="main-wrapper">
+        <!-- Sticky Top Header with Environment Dropdown -->
+        <app-header (toggleSidebar)="toggleSidebar()"></app-header>
+
         <!-- Page specific content -->
         <div class="page-content">
             <router-outlet></router-outlet>

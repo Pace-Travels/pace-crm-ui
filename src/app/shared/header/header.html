@@ -1,15 +1,29 @@
 <div class="header">
     <!-- Left -->
     <div class="header-left">
-
         <button class="menu-btn" (click)="onToggleSidebar()">
             <i class="fa-solid fa-bars"></i>
         </button>
-
     </div>
+
+    <!-- Right -->
     <div class="header-right">
 
-        <!-- Desktop -->
+        <!-- Top Right Meta WhatsApp Environment Mode Selector Dropdown -->
+        <div class="environment-switcher desktop-only">
+            <div class="mode-badge" [ngClass]="envModeService.currentMode() === 'DEVELOPMENT' ? 'dev-mode' : 'prod-mode'">
+                <span class="dot"></span>
+                <i class="fa-brands fa-whatsapp"></i>
+                <select class="mode-select" [value]="envModeService.currentMode()" (change)="onModeSwitch($event)">
+                    <option value="DEVELOPMENT">🧪 Development Mode (Test Number)</option>
+                    <option value="PRODUCTION">🚀 Production Mode (Live Number)</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-icon"></i>
+            </div>
+            <span class="active-phone-number" *ngIf="envModeService.activePhoneNumber()">
+                {{ envModeService.activePhoneNumber() }}
+            </span>
+        </div>
 
         <button class="icon-btn desktop-only">
             <i class="fa-solid fa-bell"></i>
@@ -19,43 +33,25 @@
             <i class="fa-solid fa-gear"></i>
         </button>
 
-        <button class="icon-btn desktop-only">
-            <i class="fa-solid fa-globe"></i>
-        </button>
-
         <div class="profile desktop-only">
-
             <div class="avatar">{{ userInitial }}</div>
-
             <div class="user-info">
                 <span class="name">{{ userName }}</span>
                 <span class="role">{{ userRole }}</span>
             </div>
-
             <i class="fa-solid fa-angle-down"></i>
-
         </div>
 
         <!-- MOBILE MORE FIRST -->
-
-        <p-menu #moreMenu [popup]="true" [model]="mobileItems">
-        </p-menu>
-
+        <p-menu #moreMenu [popup]="true" [model]="mobileItems"></p-menu>
         <button class="mobile-more" (click)="moreMenu.toggle($event)">
-
             <i class="fa-solid fa-ellipsis-vertical"></i>
-
         </button>
 
         <!-- MOBILE PROFILE SECOND -->
-
-        <p-menu #profileMenu [popup]="true" [model]="profileItems">
-        </p-menu>
-
+        <p-menu #profileMenu [popup]="true" [model]="profileItems"></p-menu>
         <button class="mobile-profile" (click)="profileMenu.toggle($event)">
-
             <div class="avatar">{{ userInitial }}</div>
-
         </button>
 
     </div>

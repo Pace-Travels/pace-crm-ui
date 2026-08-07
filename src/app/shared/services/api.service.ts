@@ -15,8 +15,11 @@ export class ApiService {
     // In a real app, you would retrieve the JWT token from localStorage/sessionStorage
     const token = localStorage.getItem('token') || '';
     const projectId = localStorage.getItem('activeProjectId') || '';
+    const envMode = localStorage.getItem('whatsapp_environment_mode') || 'DEVELOPMENT';
     const headersConfig: any = {
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${token}`,
+      'X-Environment-Mode': envMode,
+      'X-Whatsapp-Mode': envMode
     };
     if (projectId) {
       headersConfig['X-Project-Id'] = projectId;
