@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
@@ -12,6 +12,9 @@ import { ButtonModule } from 'primeng/button';
   styleUrl: './web-push.scss',
 })
 export class WebPush {
+  // Inject ChangeDetectorRef into the constructor
+  constructor(private cdr: ChangeDetectorRef) {}
+
   user = {
     recipient: 'Alex Rivera (Booking #PT-8832A)',
     name: 'Alex Rivera',
@@ -29,14 +32,13 @@ export class WebPush {
 
   pushData = {
     title: 'Flight Schedule Change ⚠️',
-    message: '',
+    message: 'Your flight GA882 schedule has been updated.',
     iconUrl: '',
     clickUrl: 'https://portal.pacetravels.com/itinerary/PT-8832A'
   };
 
   uploadedFile: { name: string; type: string; url: string } | null = null;
 
-  // Helper getter to check if form is valid
   get isFormValid(): boolean {
     return (
       !!this.user.recipient && this.user.recipient.trim().length > 0 &&
@@ -45,6 +47,7 @@ export class WebPush {
     );
   }
 
+  // FIXED FILE UPLOAD FUNCTION
   handleFileUpload(event: Event): void {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files[0]) {
@@ -57,6 +60,8 @@ export class WebPush {
           type: file.type,
           url: e.target?.result as string
         };
+        // Force Angular to update the DOM immediately!
+        this.cdr.detectChanges(); 
       };
 
       reader.readAsDataURL(file);
