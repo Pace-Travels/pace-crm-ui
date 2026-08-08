@@ -1,8 +1,10 @@
-import { Component, OnInit, AfterViewInit, signal, inject } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { EventsService, EventItem } from './services/events.service';
 import { ProjectService } from '../projects/services/project.service';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
 
 declare var L: any;
 declare var Swal: any;
@@ -26,7 +28,7 @@ const CITY_COORDINATES: { [key: string]: { lat: number; lng: number; zoom: numbe
   templateUrl: './events-radar.html',
   styleUrl: './events-radar.scss',
 })
-export class EventsRadar implements OnInit, AfterViewInit {
+export class EventsRadar implements OnInit, AfterViewInit, OnDestroy {
   eventsService = inject(EventsService);
   projectService = inject(ProjectService);
   fb = inject(FormBuilder);
@@ -38,9 +40,14 @@ export class EventsRadar implements OnInit, AfterViewInit {
   selectedMinSpend = 0;
   highlightedEventId = signal<number | null>(null);
 
+  locationSuggestions = signal<any[]>([]);
+
   private map: any = null;
   private markersGroup: any = null;
   private eventMarkersMap = new Map<number, any>();
+
+  private mapBoundsSubject = new Subject<{ minLat: number; minLng: number; maxLat: number; maxLng: number }>();
+  private boundsSub!: Subscription;
 
   // WhatsApp Numbers for searchable select
   whatsappNumbers = signal<any[]>([
@@ -109,20 +116,53 @@ export class EventsRadar implements OnInit, AfterViewInit {
   ngOnInit() {
     this.fetchEventsAndRender();
     this.eventsService.fetchCities();
+
+    // Debounce map movement stream (300ms) to prevent API hammering
+    this.boundsSub = this.mapBoundsSubject.pipe(debounceTime(300)).subscribe(bounds => {
+      this.fetchEventsAndRender(bounds);
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.boundsSub) {
+      this.boundsSub.unsubscribe();
+    }
   }
 
   ngAfterViewInit() {
     setTimeout(() => this.initMap(), 400);
   }
 
-  fetchEventsAndRender() {
-    this.eventsService.fetchEventRadar(this.selectedCity, this.selectedCategory, this.selectedMinSpend).subscribe({
+  fetchEventsAndRender(bounds?: { minLat: number; minLng: number; maxLat: number; maxLng: number }) {
+    this.eventsService.fetchEventRadar(this.selectedCity, this.selectedCategory, this.selectedMinSpend, bounds).subscribe({
       next: () => {
         if (this.map) {
           this.updateMapMarkers();
         }
       }
     });
+  }
+
+  onSearchInputChange() {
+    if (this.searchCityQuery && this.searchCityQuery.trim().length > 1) {
+      this.eventsService.autocompleteLocations(this.searchCityQuery.trim()).subscribe({
+        next: (res: any) => {
+          if (res.success) {
+            this.locationSuggestions.set(res.suggestions || []);
+          }
+        }
+      });
+    } else {
+      this.locationSuggestions.set([]);
+    }
+  }
+
+  selectSuggestion(item: any) {
+    this.selectedCity = item.city_name;
+    this.searchCityQuery = item.city_name;
+    this.locationSuggestions.set([]);
+    this.panMapToCity(item.city_name);
+    this.fetchEventsAndRender();
   }
 
   private getCoordsForCity(city: string): { lat: number; lng: number; zoom: number } {
@@ -151,6 +191,19 @@ export class EventsRadar implements OnInit, AfterViewInit {
 
     this.markersGroup = L.layerGroup().addTo(this.map);
     this.updateMapMarkers();
+
+    // Map movement bounds stream
+    this.map.on('moveend zoomend', () => {
+      if (this.map) {
+        const bounds = this.map.getBounds();
+        this.mapBoundsSubject.next({
+          minLat: bounds.getSouth(),
+          minLng: bounds.getWest(),
+          maxLat: bounds.getNorth(),
+          maxLng: bounds.getEast()
+        });
+      }
+    });
 
     setTimeout(() => {
       if (this.map) this.map.invalidateSize();
