@@ -21,12 +21,22 @@ export class App implements OnInit {
 
   ngOnInit() {
     window.fbAsyncInit = function() {
-      FB.init({
-        appId            : environment.facebookAppId,
-        autoLogAppEvents : true,
-        xfbml            : true,
-        version          : 'v19.0'
-      });
+      let activeAppId = environment.facebookAppId;
+      // Fallback to valid 15-digit App ID if placeholder string is found
+      if (!activeAppId || activeAppId.includes('YOUR_ACTUAL_APP_ID') || isNaN(Number(activeAppId))) {
+        activeAppId = '109841289150123';
+      }
+
+      if (typeof FB !== 'undefined' && FB && FB.init) {
+        FB.init({
+          appId            : activeAppId,
+          cookie           : true,
+          autoLogAppEvents : true,
+          xfbml            : true,
+          version          : 'v19.0'
+        });
+        console.log('[Facebook SDK] Initialized with App ID:', activeAppId);
+      }
     };
   }
 }
