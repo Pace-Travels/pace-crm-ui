@@ -317,9 +317,9 @@
 
                     <div class="form-row-vert" style="margin-top: 16px;">
                         <label>Dynamic Variables (Optional)</label>
-                        <p class="help-text">If your template has variables like &#123;&#123;1&#125;&#125;, define them here. You can use <code>&#123;&#123;name&#125;&#125;</code> to dynamically insert the recipient's name.</p>
-                        <input type="text" formControlName="var1" placeholder="{{1}} (e.g. {{name}})" class="form-control" style="margin-bottom: 8px;">
-                        <input type="text" formControlName="var2" placeholder="{{2}} (e.g. your booking reference)" class="form-control">
+                        <p class="help-text">If your template has variables like <span ngNonBindable>{{1}}</span>, define them here. You can use <code ngNonBindable>{{name}}</code> to dynamically insert the recipient's name.</p>
+                        <input type="text" formControlName="var1" [placeholder]="'{{1}} (e.g. {{name}})'" class="form-control" style="margin-bottom: 8px;">
+                        <input type="text" formControlName="var2" [placeholder]="'{{2}} (e.g. your booking reference)'" class="form-control">
                     </div>
                 </form>
             </div>
