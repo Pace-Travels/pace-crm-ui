@@ -17,6 +17,7 @@ declare var FB: any;
 export class ProjectsView implements OnInit {
   projectForm: FormGroup;
   userName = 'User';
+  editingProjectId: number | null = null;
   private router = inject(Router);
 
   constructor(
@@ -25,6 +26,7 @@ export class ProjectsView implements OnInit {
   ) {
     this.projectForm = this.fb.group({
       name: ['', Validators.required],
+      iconUrl: [''],
       phoneNumber: [''],
       phoneNumberId: ['', Validators.required],
       wabaId: ['', Validators.required],
@@ -48,6 +50,33 @@ export class ProjectsView implements OnInit {
     }
   }
 
+  editProject(project: any) {
+    this.editingProjectId = project.id;
+    this.projectForm.patchValue({
+      name: project.name,
+      iconUrl: project.iconUrl || '',
+      phoneNumber: project.phoneNumber || '',
+      phoneNumberId: project.phoneNumberId || '',
+      wabaId: project.wabaId || '',
+      accessToken: project.accessToken || '',
+      testPhoneNumber: project.testPhoneNumber || ''
+    });
+    
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
+    // Open details tag if closed
+    const details = document.querySelector('details');
+    if (details && !details.open) {
+      details.open = true;
+    }
+  }
+
+  cancelEdit() {
+    this.editingProjectId = null;
+    this.projectForm.reset();
+  }
+
   onCreateProject() {
     if (this.projectForm.invalid) {
       alert("Please enter the brand name and all required WhatsApp Meta credentials configuration fields.");
@@ -56,6 +85,7 @@ export class ProjectsView implements OnInit {
     const val = this.projectForm.value;
     const payload = {
       name: val.name,
+      iconUrl: val.iconUrl || null,
       phoneNumber: val.phoneNumber || null,
       phoneNumberId: val.phoneNumberId,
       wabaId: val.wabaId,
@@ -63,16 +93,30 @@ export class ProjectsView implements OnInit {
       testPhoneNumber: val.testPhoneNumber || null
     };
 
-    this.projectService.createProject(payload).subscribe({
-      next: () => {
-        this.projectForm.reset();
-        this.projectService.fetchProjects();
-        alert("Brand Project and WhatsApp config registered successfully!");
-      },
-      error: (err: any) => {
-        alert("Failed to create project: " + err.message);
-      }
-    });
+    if (this.editingProjectId) {
+      this.projectService.updateProject(this.editingProjectId, payload).subscribe({
+        next: () => {
+          this.projectForm.reset();
+          this.editingProjectId = null;
+          this.projectService.fetchProjects();
+          alert("Brand Project updated successfully!");
+        },
+        error: (err: any) => {
+          alert("Failed to update project: " + err.message);
+        }
+      });
+    } else {
+      this.projectService.createProject(payload).subscribe({
+        next: () => {
+          this.projectForm.reset();
+          this.projectService.fetchProjects();
+          alert("Brand Project and WhatsApp config registered successfully!");
+        },
+        error: (err: any) => {
+          alert("Failed to create project: " + err.message);
+        }
+      });
+    }
   }
 
   selectProject(proj: any) {

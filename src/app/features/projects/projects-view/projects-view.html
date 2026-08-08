@@ -19,7 +19,7 @@
             <div style="margin-top: 24px;">
                 <details style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
                     <summary style="cursor: pointer; font-size: 14px; font-weight: 600; color: #475569; user-select: none; display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-gear"></i> Manual Configuration (Fallback)
+                        <i class="fa-solid fa-gear"></i> {{ editingProjectId ? 'Edit Configuration' : 'Manual Configuration (Fallback)' }}
                     </summary>
                     
                     <div style="margin-top: 16px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
@@ -34,6 +34,10 @@
                                 <div style="flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 4px;">
                                     <label style="font-size: 11px; font-weight: 700; color: #475569;">Project Name *</label>
                                     <input type="text" formControlName="name" placeholder="e.g. Pace Travels" class="form-control" style="padding: 10px; font-size: 13px;">
+                                </div>
+                                <div style="flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 4px;">
+                                    <label style="font-size: 11px; font-weight: 700; color: #475569;">Project Logo (Icon URL)</label>
+                                    <input type="text" formControlName="iconUrl" placeholder="https://example.com/logo.png" class="form-control" style="padding: 10px; font-size: 13px;">
                                 </div>
                                 <div style="flex: 1; min-width: 140px; display: flex; flex-direction: column; gap: 4px;">
                                     <label style="font-size: 11px; font-weight: 700; color: #475569;">Sender Phone Number</label>
@@ -62,7 +66,14 @@
                                     <label style="font-size: 11px; font-weight: 700; color: #475569;">Sender Test Phone Number</label>
                                     <input type="text" formControlName="testPhoneNumber" placeholder="e.g. 919876543210" class="form-control" style="padding: 10px; font-size: 13px;">
                                 </div>
-                                <button type="submit" class="btn btn-outline" [disabled]="projectForm.invalid" style="padding: 10px 24px; font-weight: 600; font-size: 13px; height: 41px; border-radius: 6px; flex: 1;">Save Manual Config</button>
+                                <div style="display: flex; gap: 8px; flex: 1;">
+                                    @if (editingProjectId) {
+                                        <button type="button" class="btn btn-outline" (click)="cancelEdit()" style="padding: 10px; font-weight: 600; font-size: 13px; height: 41px; border-radius: 6px; flex: 1;">Cancel</button>
+                                    }
+                                    <button type="submit" class="btn btn-outline" [disabled]="projectForm.invalid" style="padding: 10px 24px; font-weight: 600; font-size: 13px; height: 41px; border-radius: 6px; flex: 2;">
+                                        {{ editingProjectId ? 'Update Configuration' : 'Save Manual Config' }}
+                                    </button>
+                                </div>
                             </div>
                         </form>
                     </div>
@@ -97,7 +108,16 @@
                     <span style="position: absolute; top: 12px; right: 12px; font-size: 10px; font-weight: 700; text-transform: uppercase; background: #e0f2f1; color: #00897b; padding: 2px 8px; border-radius: 4px;">Active Context</span>
                 }
                 
-                <h3>{{ project.name }}</h3>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                    <div style="width: 40px; height: 40px; border-radius: 8px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                        @if (project.iconUrl) {
+                            <img [src]="project.iconUrl" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;">
+                        } @else {
+                            <i class="fa-solid fa-briefcase text-muted" style="font-size: 20px;"></i>
+                        }
+                    </div>
+                    <h3 style="margin: 0;">{{ project.name }}</h3>
+                </div>
                 <div class="card-details">
                     <div class="detail">
                         <span class="label">Status</span>
@@ -125,6 +145,9 @@
                 <div style="display: flex; gap: 8px; margin-top: 16px;">
                     <button class="btn btn-outline" style="flex: 1; text-align: center;" (click)="selectProject(project)">
                         {{ projectService.currentProject()?.id === project.id ? 'Active' : 'Switch Context' }}
+                    </button>
+                    <button class="btn btn-outline" style="flex: 0; padding: 8px 12px;" title="Edit Project Configuration" (click)="editProject(project)">
+                        <i class="fa-solid fa-pencil"></i>
                     </button>
                     @if (project.phoneNumber) {
                         <button class="btn btn-outline" style="flex: 0; color: #ef4444; border-color: #fca5a5;" title="Detach WhatsApp Account" (click)="detachConfig(project.id, $event)">

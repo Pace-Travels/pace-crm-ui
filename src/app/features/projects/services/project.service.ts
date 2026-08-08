@@ -4,11 +4,13 @@ import { ApiService } from '../../../shared/services/api.service';
 export interface Project {
   id: number;
   name: string;
+  iconUrl?: string;
   status: string;
   createdAt: string;
   phoneNumber?: string;
   phoneNumberId?: string;
   wabaId?: string;
+  accessToken?: string;
   testPhoneNumber?: string;
   testPhoneNumberId?: string;
   testAccessToken?: string;
@@ -64,6 +66,10 @@ export class ProjectService {
 
   createProject(payload: any) {
     return this.api.post<any>('projects/add', payload);
+  }
+
+  updateProject(id: number, payload: any) {
+    return this.api.put<any>(`projects/${id}`, payload);
   }
 
   metaAuth(accessToken: string) {
