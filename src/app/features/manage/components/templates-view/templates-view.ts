@@ -46,15 +46,26 @@ export class TemplatesView implements OnInit {
   // Create template form
   templateForm: FormGroup;
 
-  // Search filter
+  // Search & Brand Filter
   searchQuery = signal('');
+  selectedBrand = signal('ALL');
 
   // Filtered templates selector
   filteredTemplates = computed(() => {
     let list = this.templates();
     const query = this.searchQuery().toLowerCase().trim();
+    const brand = this.selectedBrand();
+
+    if (brand !== 'ALL') {
+      if (brand === 'PACE_TRAVELS') list = list.filter(t => t.templateName.startsWith('pace_b2c_') || t.templateName.includes('welcome') || t.templateName.includes('booking') || t.templateName.includes('flight'));
+      else if (brand === 'PACE_B2B') list = list.filter(t => t.templateName.startsWith('pace_b2b_'));
+      else if (brand === 'DUBAI_PACE') list = list.filter(t => t.templateName.startsWith('dubai_pace_') || t.templateName.includes('vip_staycation'));
+      else if (brand === 'THAI_PACE') list = list.filter(t => t.templateName.startsWith('thai_pace_'));
+      else if (brand === 'VIETNAM_PACE') list = list.filter(t => t.templateName.startsWith('vietnam_pace_'));
+    }
+
     if (query) {
-      list = list.filter(t => t.templateName.toLowerCase().includes(query) || t.status.toLowerCase().includes(query));
+      list = list.filter(t => t.templateName.toLowerCase().includes(query) || t.status.toLowerCase().includes(query) || t.templateBody.toLowerCase().includes(query));
     }
 
     if (this.activeTab === 'Explore') {

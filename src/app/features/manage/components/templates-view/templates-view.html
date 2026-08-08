@@ -56,9 +56,19 @@
 </div>
 
 <!-- Filters & Tabs -->
-<div class="table-controls mb-24">
-    <div class="search-box">
-        <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Search templates (status, name etc.)...">
+<div class="table-controls mb-24" style="display: flex; flex-direction: column; gap: 12px;">
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-right: 4px;">Brand Unit:</span>
+        <button type="button" class="btn" [style.background]="selectedBrand() === 'ALL' ? '#0f172a' : '#f1f5f9'" [style.color]="selectedBrand() === 'ALL' ? 'white' : '#475569'" (click)="selectedBrand.set('ALL')" style="padding: 4px 12px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">All Brands</button>
+        <button type="button" class="btn" [style.background]="selectedBrand() === 'PACE_TRAVELS' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedBrand() === 'PACE_TRAVELS' ? 'white' : '#475569'" (click)="selectedBrand.set('PACE_TRAVELS')" style="padding: 4px 12px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">✈️ Pace Travels B2C</button>
+        <button type="button" class="btn" [style.background]="selectedBrand() === 'PACE_B2B' ? '#2563eb' : '#f1f5f9'" [style.color]="selectedBrand() === 'PACE_B2B' ? 'white' : '#475569'" (click)="selectedBrand.set('PACE_B2B')" style="padding: 4px 12px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">💼 Pace Tourism B2B</button>
+        <button type="button" class="btn" [style.background]="selectedBrand() === 'DUBAI_PACE' ? '#d97706' : '#f1f5f9'" [style.color]="selectedBrand() === 'DUBAI_PACE' ? 'white' : '#475569'" (click)="selectedBrand.set('DUBAI_PACE')" style="padding: 4px 12px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">🕌 Dubai Pace Tourism</button>
+        <button type="button" class="btn" [style.background]="selectedBrand() === 'THAI_PACE' ? '#059669' : '#f1f5f9'" [style.color]="selectedBrand() === 'THAI_PACE' ? 'white' : '#475569'" (click)="selectedBrand.set('THAI_PACE')" style="padding: 4px 12px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">🏝️ Thai Pace Tourism</button>
+        <button type="button" class="btn" [style.background]="selectedBrand() === 'VIETNAM_PACE' ? '#dc2626' : '#f1f5f9'" [style.color]="selectedBrand() === 'VIETNAM_PACE' ? 'white' : '#475569'" (click)="selectedBrand.set('VIETNAM_PACE')" style="padding: 4px 12px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">⛩️ Pace Tourism Vietnam</button>
+    </div>
+
+    <div class="search-box" style="width: 100%;">
+        <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Search templates (e.g. dubai, b2b, itinerary, approval status)...">
         <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
     </div>
 </div>
