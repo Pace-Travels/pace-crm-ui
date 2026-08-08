@@ -41,12 +41,14 @@ export class ApiService {
   }
 
   post<T>(endpoint: string, body: any, options?: any): Observable<T> {
-    const finalOptions = options || { headers: this.getHeaders() };
+    const isMultipart = body instanceof FormData;
+    const finalOptions = options || { headers: this.getHeaders(isMultipart) };
     return this.http.post<T>(this.getUrl(endpoint), body, finalOptions) as Observable<T>;
   }
 
   put<T>(endpoint: string, body: any): Observable<T> {
-    return this.http.put<T>(this.getUrl(endpoint), body, { headers: this.getHeaders() });
+    const isMultipart = body instanceof FormData;
+    return this.http.put<T>(this.getUrl(endpoint), body, { headers: this.getHeaders(isMultipart) });
   }
 
   delete<T>(endpoint: string): Observable<T> {
