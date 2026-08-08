@@ -54,9 +54,12 @@ export class EventsService {
 
   constructor(private api: ApiService) {}
 
-  fetchEventRadar(city = 'Mumbai', category = 'ALL', minSpend?: number): Observable<any> {
+  fetchEventRadar(city = 'Mumbai', category = 'ALL', minSpend?: number, bounds?: { minLat: number; minLng: number; maxLat: number; maxLng: number }): Observable<any> {
     let url = `events/radar?city=${encodeURIComponent(city)}&category=${encodeURIComponent(category)}`;
     if (minSpend) url += `&minSpend=${minSpend}`;
+    if (bounds) {
+      url += `&minLat=${bounds.minLat}&minLng=${bounds.minLng}&maxLat=${bounds.maxLat}&maxLng=${bounds.maxLng}`;
+    }
 
     const obs = this.api.get<any>(url);
     obs.subscribe({
@@ -69,6 +72,10 @@ export class EventsService {
       error: (err) => console.warn('Fetch event radar error', err)
     });
     return obs;
+  }
+
+  autocompleteLocations(query: string): Observable<any> {
+    return this.api.get<any>(`events/autocomplete?q=${encodeURIComponent(query)}`);
   }
 
   syncEvents(city: string): Observable<any> {
