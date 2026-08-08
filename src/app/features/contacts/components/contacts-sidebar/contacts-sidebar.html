@@ -12,12 +12,15 @@
     </div>
 
     <div class="sidebar-section">
-        <div class="section-header">
-            <h3>Groups</h3>
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <h3>Groups ({{ contactService.activeType() }})</h3>
+            <button type="button" class="btn btn-sm" (click)="openCreateGroupModal()" style="background: #10b981; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer;">
+                <i class="fa-solid fa-plus"></i> New Group
+            </button>
         </div>
         <ul>
             @if (contactService.groups().length === 0) {
-                <li class="empty-text">No groups created</li>
+                <li class="empty-text">No groups created. Click + New Group above.</li>
             } @else {
                 @for(group of contactService.groups(); track group.id) {
                     @if (group.contactType === contactService.activeType()) {
@@ -29,5 +32,42 @@
                 }
             }
         </ul>
+    </div>
+</div>
+
+<!-- Modal for Creating B2B / B2C Contact Groups -->
+<div class="modal-overlay" *ngIf="showGroupModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+    <div class="modal-card" style="background: white; border-radius: 12px; padding: 24px; max-width: 440px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 16px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-folder-plus" style="color: #10b981;"></i> Create {{ groupForm.value.contactType }} Contact Group
+            </h3>
+            <button type="button" style="background: transparent; border: none; font-size: 18px; cursor: pointer;" (click)="closeCreateGroupModal()">✕</button>
+        </div>
+
+        <form [formGroup]="groupForm" (ngSubmit)="submitCreateGroup()" style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">Group Category *</label>
+                <select formControlName="contactType" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                    <option value="B2C">B2C (Pace Travels Customers)</option>
+                    <option value="B2B">B2B (Pace Tourism Agents & Agencies)</option>
+                </select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">Group Name *</label>
+                <input type="text" formControlName="name" placeholder="e.g. Dubai High Spenders 2026" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">Description (Optional)</label>
+                <textarea formControlName="description" rows="2" placeholder="e.g. VIP B2B agents in UAE for luxury packages" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;"></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <button type="button" (click)="closeCreateGroupModal()" style="background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;">Cancel</button>
+                <button type="submit" [disabled]="groupForm.invalid" style="background: #10b981; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px;">Create Group</button>
+            </div>
+        </form>
     </div>
 </div>
