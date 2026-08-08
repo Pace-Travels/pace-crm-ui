@@ -47,21 +47,23 @@
     </div>
 
     <!-- Canvas Area -->
-    <div class="canvas-wrapper">
+    <div class="canvas-wrapper" style="position: relative; flex: 1;">
         <f-flow fDraggable 
             (fCreateConnection)="onConnectionCreated($event)"
             (fReassignConnection)="onConnectionReassigned($event)">
             
             <f-canvas fZoom>
+                <f-connection-for-create></f-connection-for-create>
+
                 <ng-container ngProjectAs="[fConnections]">
                     @for (c of connections; track c.id) {
-                        <f-connection [fSourceId]="c.source" [fTargetId]="c.target"></f-connection>
+                        <f-connection [fConnectionId]="c.id" [fSourceId]="c.source" [fTargetId]="c.target"></f-connection>
                     }
                 </ng-container>
 
                 <ng-container ngProjectAs="[fNodes]">
                     @for (node of nodes; track node.id) {
-                        <div fNode fDragHandle [fNodePosition]="node.position" class="custom-node" [ngClass]="'node-' + node.type">
+                        <div fNode fDragHandle [fNodePosition]="node.position" class="custom-node" [ngClass]="'node-' + node.type" (click)="selectNode(node, $event)" [style.box-shadow]="selectedNode()?.id === node.id ? '0 0 0 3px #3b82f6' : '0 4px 6px -1px rgba(0,0,0,0.1)'">
                             <div class="node-header">
                                 <div class="header-title">
                                     <i class="fa-solid fa-bolt" *ngIf="node.type === 'trigger'" style="color: #eab308;"></i>
@@ -72,22 +74,73 @@
                                     <i class="fa-solid fa-robot" *ngIf="node.type === 'agent'" style="color: #10b981;"></i>
                                     {{ node.label }}
                                 </div>
-                                <button *ngIf="node.type !== 'trigger'" class="delete-btn" (click)="deleteNode(node.id)" title="Delete Node">
+                                <button *ngIf="node.type !== 'trigger'" class="delete-btn" (click)="deleteNode(node.id, $event)" title="Delete Node">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
                             <div class="node-body">
-                                <p style="margin:0; font-size:12px; color:#475569;">{{ node.content }}</p>
+                                <p style="margin:0; font-size:12px; color:#475569; white-space: pre-wrap;">{{ node.content }}</p>
                             </div>
                             
                             <!-- Connectors -->
-                            <div *ngIf="node.type !== 'trigger'" fConnector fConnectorType="target" [fConnectorId]="node.id + '_in'" class="connector target"></div>
-                            <div fConnector fConnectorType="source" [fConnectorId]="node.id + '_out'" class="connector source"></div>
+                            <div *ngIf="node.type !== 'trigger'" fConnector fConnectorType="target" [fConnectorId]="node.id + '_in'" class="connector target" title="Connect Target"></div>
+                            <div fConnector fConnectorType="source" [fConnectorId]="node.id + '_out'" class="connector source" title="Drag to Connect Source"></div>
                         </div>
                     }
                 </ng-container>
             </f-canvas>
         </f-flow>
+    </div>
+
+    <!-- Node Property Inspector / Editor Panel -->
+    <div *ngIf="selectedNode()" class="node-inspector" style="width: 320px; background: white; border-left: 1px solid #e2e8f0; padding: 20px; display: flex; flex-direction: column; gap: 16px; z-index: 20; box-shadow: -4px 0 15px rgba(0,0,0,0.05); overflow-y: auto;">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 12px;">
+            <h3 style="margin: 0; font-size: 15px; color: #0f172a; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-sliders" style="color: #3b82f6;"></i> Node Inspector
+            </h3>
+            <button type="button" style="background: none; border: none; font-size: 16px; cursor: pointer;" (click)="closeNodeEditor()">✕</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div class="form-row-vert">
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">Step Title / Label</label>
+                <input type="text" [(ngModel)]="selectedNode().label" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+            </div>
+
+            <div class="form-row-vert">
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">Step Action Type</label>
+                <select [(ngModel)]="selectedNode().type" class="form-control" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                    <option value="trigger">Trigger Keyword</option>
+                    <option value="message">Send WhatsApp Message</option>
+                    <option value="agent">Assign Agentic AI Bot</option>
+                    <option value="condition">Condition Branching</option>
+                    <option value="wait">Wait Delay</option>
+                    <option value="tag">Add CRM Tag</option>
+                </select>
+            </div>
+
+            <div class="form-row-vert">
+                <label style="font-size: 12px; font-weight: 700; color: #475569;">Message Text / Step Content</label>
+                <textarea rows="5" [(ngModel)]="selectedNode().content" class="form-control" placeholder="Enter message text, condition criteria, or AI persona instructions..." style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-family: sans-serif;"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 12px;">
+                <button type="button" class="btn btn-dark" (click)="updateSelectedNode()" style="flex: 1; background: #0f172a; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                    <i class="fa-solid fa-check"></i> Apply Changes
+                </button>
+            </div>
+        </div>
+
+        <!-- Connections Overview for Selected Node -->
+        <div style="border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 8px;">
+            <h4 style="margin: 0 0 10px 0; font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700;">Connected Lines</h4>
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <div *ngFor="let c of connections" [style.display]="c.source.startsWith(selectedNode().id) || c.target.startsWith(selectedNode().id) ? 'flex' : 'none'" style="justify-content: space-between; align-items: center; background: #f8fafc; padding: 6px 10px; border-radius: 4px; font-size: 11px;">
+                    <span>{{ c.source }} ➔ {{ c.target }}</span>
+                    <button type="button" (click)="deleteConnection(c.id)" style="background: none; border: none; color: #ef4444; cursor: pointer;"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 

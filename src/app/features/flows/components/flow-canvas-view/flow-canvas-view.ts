@@ -29,6 +29,9 @@ export class FlowCanvasView implements OnInit {
   triggerKeyword = 'HI';
   aiEnabled = true;
 
+  // Node Property Editor Panel state
+  selectedNode = signal<any | null>(null);
+
   // Test Runner Modal state
   showTestModal = signal(false);
   testMessage = 'HI';
@@ -44,8 +47,6 @@ export class FlowCanvasView implements OnInit {
     { id: 'c1', source: 'start_out', target: 'node1_in' },
     { id: 'c2', source: 'node1_out', target: 'node2_in' }
   ];
-
-  private idCounter = 3;
 
   ngOnInit() {
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -76,48 +77,84 @@ export class FlowCanvasView implements OnInit {
     });
   }
 
+  // Node Selection & Editing Panel
+  selectNode(node: any, event?: Event) {
+    if (event) event.stopPropagation();
+    // Clone node object for editing
+    this.selectedNode.set({ ...node });
+    this.cdr.markForCheck();
+  }
+
+  closeNodeEditor() {
+    this.selectedNode.set(null);
+    this.cdr.markForCheck();
+  }
+
+  updateSelectedNode() {
+    const sn = this.selectedNode();
+    if (!sn) return;
+
+    const idx = this.nodes.findIndex(n => n.id === sn.id);
+    if (idx !== -1) {
+      this.nodes[idx] = { ...sn };
+      this.nodes = [...this.nodes];
+      this.cdr.markForCheck();
+      this.showAlert('Node Updated', `Saved changes for node: ${sn.label}`, 'success');
+    }
+  }
+
   // Adding nodes
   addNode(type: string) {
     const id = `node_${Date.now()}`;
     let label = 'Action Node';
     let content = 'Configure step details...';
     
-    if (type === 'message') { label = 'Send Message'; content = 'Thank you for contacting us!'; }
-    else if (type === 'condition') { label = 'Condition Branch'; content = 'Check user selection'; }
-    else if (type === 'wait') { label = 'Wait Delay'; content = 'Wait 5 minutes'; }
+    if (type === 'message') { label = 'Send Message'; content = 'Thank you for contacting Pace Travels!'; }
+    else if (type === 'condition') { label = 'Condition Branch'; content = 'If user replies YES'; }
+    else if (type === 'wait') { label = 'Wait Delay'; content = 'Wait 5 minutes before reply'; }
     else if (type === 'tag') { label = 'Add Tag'; content = 'Add tag: VIP Lead'; }
-    else if (type === 'agent') { label = 'Assign AI Agent'; content = 'Hand off to Gemini AI'; }
+    else if (type === 'agent') { label = 'Assign AI Agent'; content = 'Hand off to Gemini 1.5 Pro AI'; }
 
-    this.nodes.push({
+    const newNode = {
       id,
       label,
       type,
       content,
       position: { x: 250 + Math.random() * 80, y: 200 + Math.random() * 80 }
-    });
-    
+    };
+
+    this.nodes.push(newNode);
     this.nodes = [...this.nodes];
+    this.selectNode(newNode);
     this.cdr.markForCheck();
   }
 
-  deleteNode(nodeId: string) {
+  deleteNode(nodeId: string, event?: Event) {
+    if (event) event.stopPropagation();
     this.nodes = this.nodes.filter(n => n.id !== nodeId);
     this.connections = this.connections.filter(c => 
       !c.source.startsWith(nodeId) && !c.target.startsWith(nodeId)
     );
+    if (this.selectedNode()?.id === nodeId) {
+      this.selectedNode.set(null);
+    }
     this.cdr.markForCheck();
   }
 
   onConnectionCreated(event: FCreateConnectionEvent) {
     if (!event.sourceId || !event.targetId) return;
 
-    this.connections.push({
-      id: `conn_${Date.now()}`,
-      source: event.sourceId,
-      target: event.targetId
-    });
-    this.connections = [...this.connections];
-    this.cdr.markForCheck();
+    // Prevent duplicate connections
+    const exists = this.connections.some(c => c.source === event.sourceId && c.target === event.targetId);
+    if (!exists) {
+      this.connections.push({
+        id: `conn_${Date.now()}`,
+        source: event.sourceId,
+        target: event.targetId
+      });
+      this.connections = [...this.connections];
+      this.cdr.markForCheck();
+    }
   }
 
   onConnectionReassigned(event: FReassignConnectionEvent) {
@@ -131,6 +168,11 @@ export class FlowCanvasView implements OnInit {
       this.connections = [...this.connections];
       this.cdr.markForCheck();
     }
+  }
+
+  deleteConnection(connId: string) {
+    this.connections = this.connections.filter(c => c.id !== connId);
+    this.cdr.markForCheck();
   }
 
   // Save Flow Canvas to Backend

@@ -116,7 +116,9 @@ export const routes: Routes = [
                 path: 'flows',
                 children: [
                     { path: '', component: Flows, title: 'Flows - Pace Messenger' },
-                    { path: 'builder', component: FlowCanvasView, title: 'Flow Builder - Pace Messenger' }
+                    { path: 'builder', component: FlowCanvasView, title: 'Flow Builder - Pace Messenger' },
+                    { path: 'canvas', component: FlowCanvasView, title: 'Flow Canvas Builder - Pace Messenger' },
+                    { path: 'canvas/:id', component: FlowCanvasView, title: 'Edit Flow Canvas - Pace Messenger' }
                 ]
             },
             {
