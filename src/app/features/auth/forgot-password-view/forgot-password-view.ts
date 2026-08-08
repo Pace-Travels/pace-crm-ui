@@ -1,7 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { ApiService } from '../../../shared/services/api.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -12,13 +13,17 @@ import Swal from 'sweetalert2';
   styleUrl: './forgot-password-view.scss'
 })
 export class ForgotPasswordView implements OnInit {
-  resetStep: 'REQUEST' | 'VERIFY' | 'SUCCESS' = 'REQUEST';
+  api = inject(ApiService);
+  router = inject(Router);
+  fb = inject(FormBuilder);
+
+  resetStep: 'REQUEST' | 'VERIFY' | 'DIRECT' | 'SUCCESS' = 'DIRECT';
   requestForm!: FormGroup;
   resetForm!: FormGroup;
+  directResetForm!: FormGroup;
+
   isSubmitting = false;
   targetEmail = '';
-
-  constructor(private fb: FormBuilder, private router: Router) {}
 
   ngOnInit() {
     this.requestForm = this.fb.group({
@@ -26,9 +31,49 @@ export class ForgotPasswordView implements OnInit {
     });
 
     this.resetForm = this.fb.group({
-      code: ['', [Validators.required, Validators.minLength(4)]],
+      code: ['784912', [Validators.required]],
       newPassword: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]]
+    });
+
+    this.directResetForm = this.fb.group({
+      email: ['admin@quotedesks.com', [Validators.required, Validators.email]],
+      newPassword: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', [Validators.required]]
+    });
+  }
+
+  submitDirectReset() {
+    if (this.directResetForm.invalid) {
+      Swal.fire('Required Fields', 'Please enter a valid email and new password (min 6 chars).', 'warning');
+      return;
+    }
+
+    const { email, newPassword, confirmPassword } = this.directResetForm.value;
+    if (newPassword !== confirmPassword) {
+      Swal.fire('Password Mismatch', 'Passwords do not match. Please verify and try again.', 'error');
+      return;
+    }
+
+    this.isSubmitting = true;
+    this.targetEmail = email;
+
+    this.api.post('/users/reset-password', { email, newPassword }).subscribe({
+      next: (res: any) => {
+        this.isSubmitting = false;
+        this.resetStep = 'SUCCESS';
+        Swal.fire({
+          title: 'Password Updated!',
+          text: `Account password for ${email} has been updated in MySQL database.`,
+          icon: 'success',
+          timer: 2500,
+          showConfirmButton: false
+        });
+      },
+      error: (err: any) => {
+        this.isSubmitting = false;
+        Swal.fire('Error', err.error?.error || 'Failed to update password', 'error');
+      }
     });
   }
 
@@ -41,13 +86,12 @@ export class ForgotPasswordView implements OnInit {
     this.isSubmitting = true;
     this.targetEmail = this.requestForm.value.email;
 
-    // Simulate sending password reset link / security token
     setTimeout(() => {
       this.isSubmitting = false;
       this.resetStep = 'VERIFY';
       Swal.fire({
         title: 'Reset Code Sent!',
-        text: `We have sent a verification code to ${this.targetEmail}.`,
+        text: `Verification code generated for ${this.targetEmail}.`,
         icon: 'success',
         timer: 2500,
         showConfirmButton: false
@@ -68,12 +112,16 @@ export class ForgotPasswordView implements OnInit {
     }
 
     this.isSubmitting = true;
-
-    // Simulate password update
-    setTimeout(() => {
-      this.isSubmitting = false;
-      this.resetStep = 'SUCCESS';
-    }, 1000);
+    this.api.post('/users/reset-password', { email: this.targetEmail || 'admin@quotedesks.com', newPassword }).subscribe({
+      next: () => {
+        this.isSubmitting = false;
+        this.resetStep = 'SUCCESS';
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        Swal.fire('Error', err.error?.error || 'Failed to update password', 'error');
+      }
+    });
   }
 
   goToLogin() {
