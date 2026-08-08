@@ -1,4 +1,4 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProjectService } from '../services/project.service';
@@ -83,50 +83,99 @@ export class ProjectsView implements OnInit {
     this.router.navigate(['/docs']);
   }
 
-  connectWithFacebook() {
+  // Meta SDK & WABA Selection State
+  metaAccounts = signal<any[]>([]);
+  showMetaModal = signal(false);
+  metaAccessToken = signal<string>('');
+  fbLoginStatus = signal<string>('unknown');
+
+  checkLoginState() {
     if (typeof FB === 'undefined') {
-      Swal.fire('Error', 'Facebook SDK is not loaded yet. Please ensure you have added a valid Meta App ID in index.html and have internet connectivity.', 'error');
+      Swal.fire('SDK Loading', 'Facebook SDK is initializing. Please wait a moment and try again.', 'info');
       return;
     }
 
+    FB.getLoginStatus((response: any) => {
+      this.statusChangeCallback(response);
+    });
+  }
+
+  statusChangeCallback(response: any) {
+    if (!response) return;
+
+    this.fbLoginStatus.set(response.status || 'unknown');
+
+    if (response.status === 'connected' && response.authResponse) {
+      const token = response.authResponse.accessToken;
+      this.metaAccessToken.set(token);
+      this.fetchMetaAccounts(token);
+    } else if (response.status === 'not_authorized') {
+      this.promptFacebookLogin();
+    } else {
+      this.promptFacebookLogin();
+    }
+  }
+
+  promptFacebookLogin() {
+    if (typeof FB === 'undefined') return;
+
     FB.login((response: any) => {
-      if (response.authResponse) {
-        const accessToken = response.authResponse.accessToken;
-        
-        Swal.fire({
-          title: 'Fetching WABA Accounts...',
-          text: 'Please wait while we sync your Meta accounts.',
-          allowOutsideClick: false,
-          didOpen: () => {
-            Swal.showLoading();
-          }
-        });
-
-        this.projectService.metaAuth(accessToken).subscribe({
-          next: (res: any) => {
-            Swal.close();
-            if (res.success && res.accounts && res.accounts.length > 0) {
-              // Usually here we would show a modal to let the user select which account/phone number to import.
-              // For simplicity, we just notify the user that we fetched the accounts.
-              Swal.fire('Success', `Successfully pulled ${res.accounts.length} WhatsApp accounts! They are now available.`, 'success');
-              this.projectService.fetchProjects(); // Refresh if backend auto-created projects
-            } else {
-              Swal.fire('Notice', 'No WhatsApp Business Accounts found in this Facebook account.', 'info');
-            }
-          },
-          error: (err) => {
-            Swal.close();
-            Swal.fire('Error', err.error?.error || 'Failed to sync with Meta.', 'error');
-          }
-        });
-
+      if (response.status === 'connected' && response.authResponse) {
+        const token = response.authResponse.accessToken;
+        this.metaAccessToken.set(token);
+        this.fetchMetaAccounts(token);
       } else {
-        Swal.fire('Cancelled', 'Facebook login was cancelled.', 'info');
+        Swal.fire('Facebook Connection', 'Please log in and authorize Pace Messenger to connect your WhatsApp Business accounts.', 'info');
       }
     }, {
-      // For embedded signup: config_id is required usually, but scopes are fallback.
       scope: 'business_management,whatsapp_business_management,whatsapp_business_messaging'
     });
+  }
+
+  connectWithFacebook() {
+    this.checkLoginState();
+  }
+
+  fetchMetaAccounts(accessToken: string) {
+    Swal.fire({
+      title: 'Syncing Meta WABA Accounts...',
+      text: 'Querying Facebook Graph API for your WhatsApp Business Projects.',
+      allowOutsideClick: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+
+    this.projectService.metaAuth(accessToken).subscribe({
+      next: (res: any) => {
+        Swal.close();
+        if (res.success && res.accounts && res.accounts.length > 0) {
+          this.metaAccounts.set(res.accounts);
+          this.showMetaModal.set(true);
+          this.projectService.fetchProjects();
+          Swal.fire('Meta Projects Pulled!', `Found ${res.accounts.length} WhatsApp Business Account(s). Select which project to activate below.`, 'success');
+        } else {
+          Swal.fire('No Accounts Found', 'No WhatsApp Business Accounts found attached to this Facebook account.', 'info');
+        }
+      },
+      error: (err) => {
+        Swal.close();
+        Swal.fire('Meta Auth Error', err.error?.error || 'Failed to pull Meta projects.', 'error');
+      }
+    });
+  }
+
+  selectMetaAccountToConnect(acc: any) {
+    this.projectForm.patchValue({
+      name: acc.name,
+      phoneNumber: acc.phoneNumber,
+      phoneNumberId: acc.phoneNumberId,
+      wabaId: acc.wabaId,
+      accessToken: this.metaAccessToken() || 'EAAG...MetaToken'
+    });
+
+    this.showMetaModal.set(false);
+    Swal.fire('Meta Details Auto-Filled', `Project credentials for "${acc.name}" auto-filled into form. Click "Register Brand Project" to complete setup.`, 'success');
   }
 
   detachConfig(projectId: number, event: Event) {

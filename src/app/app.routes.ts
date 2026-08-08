@@ -17,6 +17,7 @@ import { Integrations } from './features/integrations/integrations';
 import { Manage } from './features/manage/manage';
 import { LoginView } from './features/auth/login-view/login-view';
 import { SignupView } from './features/auth/signup-view/signup-view';
+import { ForgotPasswordView } from './features/auth/forgot-password-view/forgot-password-view';
 import { ProjectsView } from './features/projects/projects-view/projects-view';
 import { DeveloperView } from './features/developer/developer-view/developer-view';
 import { AgentsView } from './features/agents/agents-view/agents-view';
@@ -44,6 +45,13 @@ export const routes: Routes = [
         component: AuthLayout,
         children: [
             { path: '', component: SignupView, title: 'Sign Up - Pace Messenger' }
+        ]
+    },
+    {
+        path: 'forgot-password',
+        component: AuthLayout,
+        children: [
+            { path: '', component: ForgotPasswordView, title: 'Forgot Password - Pace Messenger' }
         ]
     },
     {
@@ -93,6 +101,11 @@ export const routes: Routes = [
                     { path: '', component: Campaigns, title: 'Campaigns - Pace Messenger' },
                     { path: 'create', component: CreateCampaignView, title: 'Create Campaign - Pace Messenger' }
                 ]
+            },
+            {
+                path: 'templates',
+                redirectTo: 'campaigns/create',
+                pathMatch: 'full'
             },
             {
                 path: 'contacts',

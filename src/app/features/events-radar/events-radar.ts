@@ -15,7 +15,8 @@ const CITY_COORDINATES: { [key: string]: { lat: number; lng: number; zoom: numbe
   'London': { lat: 51.5074, lng: -0.1278, zoom: 11 },
   'New York': { lat: 40.7128, lng: -74.0060, zoom: 11 },
   'Tokyo': { lat: 35.6762, lng: 139.6503, zoom: 11 },
-  'Paris': { lat: 48.8566, lng: 2.3522, zoom: 12 }
+  'Paris': { lat: 48.8566, lng: 2.3522, zoom: 12 },
+  'Belagavi': { lat: 15.8497, lng: 74.4977, zoom: 12 }
 };
 
 @Component({
@@ -172,9 +173,25 @@ export class EventsRadar implements OnInit, AfterViewInit {
     this.fetchEventsAndRender();
   }
 
-  panMapToCity(city: string) {
+  async panMapToCity(city: string) {
     if (!this.map) return;
-    const coords = this.getCoordsForCity(city);
+
+    let coords = this.getCoordsForCity(city);
+    const key = Object.keys(CITY_COORDINATES).find(k => k.toLowerCase() === (city || '').toLowerCase());
+
+    if (!key) {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            coords = { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon), zoom: 12 };
+            CITY_COORDINATES[city] = coords;
+          }
+        }
+      } catch (e) {}
+    }
+
     if (!coords || isNaN(coords.lat) || isNaN(coords.lng)) return;
 
     this.map.flyTo([coords.lat, coords.lng], coords.zoom || 12, { animate: true, duration: 1.2 });
