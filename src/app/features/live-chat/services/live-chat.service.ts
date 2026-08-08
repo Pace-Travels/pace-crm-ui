@@ -58,10 +58,10 @@ export class LiveChatService {
     });
 
     this.socket.on('message_status_update', (data: any) => {
-      // data format: { messageId, status }
+      // data format: { messageId, status, errorMessage? }
       const current = this.messagesSubject.value.map((m: any) => {
         if (m.id === data.messageId) {
-          return { ...m, status: data.status };
+          return { ...m, status: data.status, errorMessage: data.errorMessage };
         }
         return m;
       });

@@ -33,11 +33,14 @@
                     {{ getAvatarInitial(conv.Contact?.firstName) }}
                 </div>
                 
-                <div class="chat-info">
-                    <div class="chat-name">
-                        {{ conv.Contact?.firstName || 'UNKNOWN' }} {{ conv.Contact?.lastName || '' }}
+                <div class="chat-info" style="flex: 1; overflow: hidden;">
+                    <div class="chat-name" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>{{ conv.Contact?.firstName || 'UNKNOWN' }} {{ conv.Contact?.lastName || '' }}</span>
+                        @if (conv.Messages?.[0]?.status === 'FAILED') {
+                            <i class="fa-solid fa-circle-exclamation" style="color: #ef4444; font-size: 12px;" title="Action Required: Message Failed"></i>
+                        }
                     </div>
-                    <div class="chat-preview">
+                    <div class="chat-preview" [style.color]="conv.Messages?.[0]?.status === 'FAILED' ? '#ef4444' : ''" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px;">
                         {{ conv.Messages?.[0]?.textContent || 'No messages' }}
                     </div>
                 </div>

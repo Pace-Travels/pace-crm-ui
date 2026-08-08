@@ -46,6 +46,11 @@ export class TemplatesView implements OnInit {
   // Create template form
   templateForm: FormGroup;
 
+  // Quick Send Modal controls
+  showQuickSendModal = signal(false);
+  selectedQuickSendTemplate = signal<MessageTemplate | null>(null);
+  quickSendForm: FormGroup;
+
   // Search & Brand Filter
   searchQuery = signal('');
   selectedBrand = signal('ALL');
@@ -97,6 +102,13 @@ export class TemplatesView implements OnInit {
       body: ['', Validators.required],
       footerText: [''],
       buttonsText: [''] // Quick reply button texts comma separated
+    });
+
+    this.quickSendForm = this.fb.group({
+      targetType: ['ALL', Validators.required],
+      headerMedia: [''],
+      var1: [''],
+      var2: ['']
     });
   }
 
@@ -329,6 +341,52 @@ Enhance your template text with rich markdown formatting supported by WhatsApp:
   closePreview() {
     this.showPreviewModal.set(false);
     this.selectedPreviewTemplate.set(null);
+  }
+
+  openQuickSend(tpl: MessageTemplate) {
+    this.selectedQuickSendTemplate.set(tpl);
+    this.quickSendForm.reset({
+      targetType: 'ALL',
+      var1: '',
+      var2: ''
+    });
+    this.showQuickSendModal.set(true);
+  }
+
+  closeQuickSend() {
+    this.showQuickSendModal.set(false);
+    this.selectedQuickSendTemplate.set(null);
+  }
+
+  submitQuickSend() {
+    const val = this.quickSendForm.value;
+    const tpl = this.selectedQuickSendTemplate();
+    if (!tpl || this.quickSendForm.invalid) return;
+
+    let parameters: any = {};
+    if (val.headerMedia) parameters['header_image'] = val.headerMedia;
+    if (val.var1) parameters['1'] = val.var1;
+    if (val.var2) parameters['2'] = val.var2;
+
+    const payload = {
+      name: `Quick Broadcast - ${tpl.templateName}`,
+      description: `Quick send initiated from templates for ${tpl.templateName}`,
+      templateId: tpl.id,
+      targetType: val.targetType,
+      status: 'RUNNING', // Instant execution
+      createdBy: 1, // Defaulting to admin/1, typically should pull from auth
+      parameters
+    };
+
+    this.api.post('/campaigns', payload).subscribe({
+      next: () => {
+        this.closeQuickSend();
+        alert('🚀 Quick Broadcast has been queued and is executing!');
+      },
+      error: (err: any) => {
+        alert('Failed to launch Quick Broadcast: ' + (err.error?.error || err.message));
+      }
+    });
   }
 
   navigateTo(path: string) {

@@ -117,6 +117,9 @@
                     </div>
                     <div class="card-actions" style="margin-top: auto;">
                         <button class="btn btn-outline" (click)="openPreview(tpl)">Preview</button>
+                        @if (tpl.status === 'APPROVED') {
+                            <button class="btn btn-primary" (click)="openQuickSend(tpl)"><i class="fa-solid fa-rocket"></i> Quick Send</button>
+                        }
                         @if (tpl.status === 'DRAFT') {
                             <button class="btn btn-dark" (click)="submitDraft(tpl.id)">Submit</button>
                         }
@@ -280,6 +283,51 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Quick Send Modal -->
+@if (showQuickSendModal() && selectedQuickSendTemplate()) {
+    <div class="modal-backdrop">
+        <div class="modal-content quick-send-modal" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>🚀 Quick Send Broadcast</h3>
+                <button class="close-btn" (click)="closeQuickSend()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 24px;">
+                <p style="margin-bottom: 16px; color: #475569;">Sending <strong>{{ selectedQuickSendTemplate()?.templateName }}</strong>. Select an audience to blast this message to.</p>
+                <form [formGroup]="quickSendForm">
+                    <div class="form-row-vert">
+                        <label>Target Audience <span class="text-red">*</span></label>
+                        <select formControlName="targetType" class="form-control">
+                            <option value="ALL">All Contacts</option>
+                            <option value="B2C">B2C Customers</option>
+                            <option value="B2B">B2B Agents</option>
+                            <!-- NOTE: Groups omitted for simplicity in quick send, could be expanded -->
+                        </select>
+                    </div>
+
+                    <div class="form-row-vert" style="margin-top: 16px;">
+                        <label>Media Header URL (Optional)</label>
+                        <p class="help-text">If your template uses a media header (Image/Document), provide a direct public URL here.</p>
+                        <input type="text" formControlName="headerMedia" placeholder="e.g. https://example.com/promo.jpg" class="form-control" style="margin-bottom: 8px;">
+                    </div>
+
+                    <div class="form-row-vert" style="margin-top: 16px;">
+                        <label>Dynamic Variables (Optional)</label>
+                        <p class="help-text">If your template has variables like &#123;&#123;1&#125;&#125;, define them here. You can use <code>&#123;&#123;name&#125;&#125;</code> to dynamically insert the recipient's name.</p>
+                        <input type="text" formControlName="var1" placeholder="{{1}} (e.g. {{name}})" class="form-control" style="margin-bottom: 8px;">
+                        <input type="text" formControlName="var2" placeholder="{{2}} (e.g. your booking reference)" class="form-control">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #f1f5f9;">
+                <button class="btn btn-outline" (click)="closeQuickSend()">Cancel</button>
+                <button class="btn btn-primary" (click)="submitQuickSend()" [disabled]="quickSendForm.invalid">
+                    <i class="fa-solid fa-paper-plane"></i> Send Now
+                </button>
             </div>
         </div>
     </div>
