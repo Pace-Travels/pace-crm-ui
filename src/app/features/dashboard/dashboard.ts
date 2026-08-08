@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../shared/services/api.service';
 
 declare var Swal: any;
@@ -15,6 +15,7 @@ declare var Swal: any;
 })
 export class Dashboard implements OnInit {
   api = inject(ApiService);
+  router = inject(Router);
 
   selectedDateRange = '7_DAYS';
   analytics = signal<any>({
@@ -46,6 +47,13 @@ export class Dashboard implements OnInit {
     const target = event.target as HTMLSelectElement;
     this.selectedDateRange = target.value;
     this.fetchAnalytics();
+  }
+
+  useAgentTemplate(templateName: string) {
+    this.showAlert('Template Activated', `Loading ${templateName} blueprint into Flow Builder...`, 'success');
+    setTimeout(() => {
+      this.router.navigate(['/flows/builder']);
+    }, 1000);
   }
 
   exportCSV() {

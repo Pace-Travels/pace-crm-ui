@@ -13,38 +13,38 @@
         <h4>Quick Guide</h4>
         <p>You can initiate a Conversation with users on WhatsApp using these template messages.</p>
         <div class="guide-links">
-            <a href="#">How to Create WhatsApp Template Message? <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-            <a href="#">Use chatbot parameters for leads <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-            <a href="#">Add Quick Reply to WhatsApp Template Message <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-            <a href="#">Message formatting guideline (Bold, Italic & more) <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            <a href="javascript:void(0)" (click)="openGuide('CREATE')">How to Create WhatsApp Template Message? <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            <a href="javascript:void(0)" (click)="openGuide('PARAMS')">Use chatbot parameters for leads <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            <a href="javascript:void(0)" (click)="openGuide('QUICK_REPLY')">Add Quick Reply to WhatsApp Template Message <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+            <a href="javascript:void(0)" (click)="openGuide('FORMATTING')">Message formatting guideline (Bold, Italic & more) <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
         </div>
     </div>
 
     <div class="launch-actions">
         <h4>What would you like to launch?</h4>
         <div class="cards-grid">
-            <div class="action-card">
+            <div class="action-card" (click)="openCreateTemplate()" style="cursor: pointer;">
                 <i class="fa-solid fa-wand-magic-sparkles text-purple"></i>
                 <div class="card-info">
                     <h6>Create AI Templates <span class="badge ai">AI</span></h6>
                     <p>Generate powerful WhatsApp templates in seconds with AI.</p>
                 </div>
             </div>
-            <div class="action-card">
+            <div class="action-card" (click)="navigateTo('/ads')" style="cursor: pointer;">
                 <i class="fa-brands fa-whatsapp text-green"></i>
                 <div class="card-info">
                     <h6>Launch WhatsApp Status Ad <span class="badge new">NEW</span></h6>
                     <p>Publish scroll-stopping offers directly to WhatsApp Status.</p>
                 </div>
             </div>
-            <div class="action-card">
+            <div class="action-card" (click)="navigateTo('/ads')" style="cursor: pointer;">
                 <i class="fa-solid fa-user-plus text-orange"></i>
                 <div class="card-info">
                     <h6>Launch Lead Form Ads</h6>
                     <p>Capture high-intent leads and follow up instantly on WhatsApp.</p>
                 </div>
             </div>
-            <div class="action-card">
+            <div class="action-card" (click)="navigateTo('/agents')" style="cursor: pointer;">
                 <i class="fa-solid fa-robot text-purple"></i>
                 <div class="card-info">
                     <h6>Create AI Agent <span class="badge ai">AI</span></h6>
@@ -270,6 +270,28 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Interactive ngx-markdown Quick Guide Modal -->
+@if (showGuideModal()) {
+    <div class="modal-backdrop" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div class="modal-content" style="background: white; border-radius: 12px; max-width: 680px; width: 92%; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 85vh; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 16px;">
+                <h3 style="margin: 0; font-size: 18px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-book-open" style="color: #3b82f6;"></i> {{ guideTitle() }}
+                </h3>
+                <button type="button" style="background: transparent; border: none; font-size: 18px; cursor: pointer;" (click)="closeGuide()">✕</button>
+            </div>
+
+            <div style="flex: 1; overflow-y: auto; font-family: 'Inter', sans-serif; font-size: 14px; color: #334155; line-height: 1.6; padding-right: 8px;">
+                <markdown [data]="guideContent()"></markdown>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 16px;">
+                <button type="button" class="btn btn-dark" (click)="closeGuide()" style="background: #0f172a; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; cursor: pointer;">Got It</button>
             </div>
         </div>
     </div>

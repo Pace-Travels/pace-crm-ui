@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output, OnInit, inject } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Menu } from 'primeng/menu';
+import { Router } from '@angular/router';
 import { EnvironmentModeService, EnvironmentMode } from '../services/environment-mode.service';
 
 declare var Swal: any;
@@ -18,10 +19,20 @@ export class Header implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
 
   envModeService = inject(EnvironmentModeService);
+  router = inject(Router);
 
-  userName = 'User';
+  userName = 'Shadab';
   userRole = 'Administrator';
-  userInitial = 'U';
+  userInitial = 'S';
+
+  showNotifications = signal(false);
+  showProfileDropdown = signal(false);
+
+  notificationsList = signal<any[]>([
+    { id: 1, title: 'Meta WABA Connected', desc: 'WhatsApp Business API in Live Production mode.', time: '2m ago', icon: 'fa-brands fa-whatsapp text-green' },
+    { id: 2, title: 'AI Event Radar Active', desc: 'Scanned 12 high-surge events in Dubai & Mumbai.', time: '15m ago', icon: 'fa-solid fa-bolt text-yellow' },
+    { id: 3, title: 'Templates Synced', desc: '4 pre-approved WhatsApp templates synchronized.', time: '1h ago', icon: 'fa-solid fa-circle-check text-blue' }
+  ]);
 
   ngOnInit() {
     const userStr = localStorage.getItem('user');
@@ -41,6 +52,29 @@ export class Header implements OnInit {
 
   onToggleSidebar() {
     this.toggleSidebar.emit();
+  }
+
+  toggleNotifications() {
+    this.showNotifications.set(!this.showNotifications());
+    this.showProfileDropdown.set(false);
+  }
+
+  toggleProfileDropdown() {
+    this.showProfileDropdown.set(!this.showProfileDropdown());
+    this.showNotifications.set(false);
+  }
+
+  navigateTo(path: string) {
+    this.showProfileDropdown.set(false);
+    this.showNotifications.set(false);
+    this.router.navigate([path]);
+  }
+
+  logout() {
+    this.showProfileDropdown.set(false);
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    this.router.navigate(['/login']);
   }
 
   onModeSwitch(event: Event) {

@@ -42,7 +42,7 @@
                 </div>
             </a>
             
-            <a routerLink="/templates" class="quick-action-card">
+            <a routerLink="/manage" class="quick-action-card">
                 <div class="icon bg-orange-light"><i class="fa-solid fa-message text-orange"></i></div>
                 <div class="details">
                     <h4>Message Templates</h4>
@@ -67,7 +67,7 @@
                     <i class="fa-regular fa-paper-plane text-blue"></i>
                 </div>
                 <div class="metric-body">
-                    <h2>12,450</h2>
+                    <h2>{{ analytics().totalMessagesSent | number }}</h2>
                     <span class="trend up"><i class="fa-solid fa-arrow-up"></i> 12% vs last month</span>
                 </div>
             </div>
@@ -78,8 +78,8 @@
                     <i class="fa-solid fa-check-double text-green"></i>
                 </div>
                 <div class="metric-body">
-                    <h2>11,920</h2>
-                    <span class="trend up"><i class="fa-solid fa-arrow-up"></i> 95.7% delivery rate</span>
+                    <h2>{{ analytics().totalDelivered | number }}</h2>
+                    <span class="trend up"><i class="fa-solid fa-arrow-up"></i> {{ analytics().deliverySuccessRate }}% delivery rate</span>
                 </div>
             </div>
 
@@ -89,8 +89,8 @@
                     <i class="fa-solid fa-check-double text-blue"></i>
                 </div>
                 <div class="metric-body">
-                    <h2>8,400</h2>
-                    <span class="trend up"><i class="fa-solid fa-arrow-up"></i> 70.4% read rate</span>
+                    <h2>{{ analytics().totalRead | number }}</h2>
+                    <span class="trend up"><i class="fa-solid fa-arrow-up"></i> {{ analytics().readRate }}% read rate</span>
                 </div>
             </div>
             
@@ -110,7 +110,7 @@
         <div class="templates-section">
             <div class="section-header">
                 <h3>Readymade Agent Templates</h3>
-                <a href="#" class="view-all">View All Templates</a>
+                <a routerLink="/manage" class="view-all">View All Templates</a>
             </div>
             
             <div class="templates-grid">
@@ -121,7 +121,7 @@
                     </div>
                     <h4>Customer Support Bot</h4>
                     <p>Automatically handle FAQs, triage tickets, and connect users to human agents.</p>
-                    <button class="btn btn-outline btn-sm">Use Template</button>
+                    <button type="button" class="btn btn-primary btn-sm" (click)="useAgentTemplate('Customer Support Bot')" style="background: #0f172a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px;">Use Template</button>
                 </div>
                 
                 <!-- Template 2 -->
@@ -131,7 +131,7 @@
                     </div>
                     <h4>Lead Generation Bot</h4>
                     <p>Qualify leads interactively, collect emails, and schedule calls.</p>
-                    <button class="btn btn-outline btn-sm">Use Template</button>
+                    <button type="button" class="btn btn-primary btn-sm" (click)="useAgentTemplate('Lead Generation Bot')" style="background: #0f172a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px;">Use Template</button>
                 </div>
                 
                 <!-- Template 3 -->
@@ -141,7 +141,7 @@
                     </div>
                     <h4>Appointment Booking</h4>
                     <p>Check availability and book appointments directly through WhatsApp.</p>
-                    <button class="btn btn-outline btn-sm">Use Template</button>
+                    <button type="button" class="btn btn-primary btn-sm" (click)="useAgentTemplate('Appointment Booking')" style="background: #0f172a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px;">Use Template</button>
                 </div>
                 
                 <!-- Template 4 -->
@@ -151,7 +151,7 @@
                     </div>
                     <h4>E-commerce Cart Recovery</h4>
                     <p>Send automated reminders and discount offers for abandoned carts.</p>
-                    <button class="btn btn-outline btn-sm">Use Template</button>
+                    <button type="button" class="btn btn-primary btn-sm" (click)="useAgentTemplate('E-commerce Cart Recovery')" style="background: #0f172a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px;">Use Template</button>
                 </div>
             </div>
         </div>

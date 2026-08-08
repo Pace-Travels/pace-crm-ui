@@ -25,21 +25,70 @@
             </span>
         </div>
 
-        <button class="icon-btn desktop-only">
-            <i class="fa-solid fa-bell"></i>
-        </button>
+        <div style="position: relative;">
+            <button class="icon-btn desktop-only" (click)="toggleNotifications()">
+                <i class="fa-solid fa-bell"></i>
+            </button>
 
-        <button class="icon-btn desktop-only">
+            <!-- Notifications Popover -->
+            <div *ngIf="showNotifications()" style="position: absolute; top: 48px; right: 0; width: 320px; background: white; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 12px;">
+                    <h4 style="margin: 0; font-size: 14px; color: #0f172a; font-weight: 700;">System Notifications</h4>
+                    <span style="font-size: 10px; background: #e0f2fe; color: #0284c7; padding: 2px 6px; border-radius: 4px; font-weight: 700;">3 New</span>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto;">
+                    <div *ngFor="let n of notificationsList()" style="display: flex; gap: 10px; align-items: flex-start; background: #f8fafc; padding: 8px 10px; border-radius: 6px; font-size: 12px;">
+                        <i [class]="n.icon" style="font-size: 14px; margin-top: 2px;"></i>
+                        <div style="flex: 1;">
+                            <strong style="color: #0f172a; display: block;">{{ n.title }}</strong>
+                            <span style="color: #64748b; font-size: 11px;">{{ n.desc }}</span>
+                            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">{{ n.time }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button class="icon-btn desktop-only" (click)="navigateTo('/manage')">
             <i class="fa-solid fa-gear"></i>
         </button>
 
-        <div class="profile desktop-only">
-            <div class="avatar">{{ userInitial }}</div>
-            <div class="user-info">
-                <span class="name">{{ userName }}</span>
-                <span class="role">{{ userRole }}</span>
+        <div style="position: relative;">
+            <div class="profile desktop-only" (click)="toggleProfileDropdown()" style="cursor: pointer;">
+                <div class="avatar">{{ userInitial }}</div>
+                <div class="user-info">
+                    <span class="name">{{ userName }}</span>
+                    <span class="role">{{ userRole }}</span>
+                </div>
+                <i class="fa-solid fa-angle-down"></i>
             </div>
-            <i class="fa-solid fa-angle-down"></i>
+
+            <!-- Profile / Administrator User Menu Dropdown -->
+            <div *ngIf="showProfileDropdown()" style="position: absolute; top: 48px; right: 0; width: 220px; background: white; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; padding: 8px 0;">
+                <div style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9;">
+                    <strong style="font-size: 13px; color: #0f172a; display: block;">{{ userName }}</strong>
+                    <span style="font-size: 11px; color: #64748b;">admin&#64;quotedesks.com</span>
+                </div>
+
+                <div style="display: flex; flex-direction: column;">
+                    <button type="button" (click)="navigateTo('/account')" style="background: none; border: none; padding: 10px 16px; text-align: left; font-size: 13px; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">
+                        <i class="fa-solid fa-user-gear" style="color: #3b82f6;"></i> Account Profile
+                    </button>
+                    <button type="button" (click)="navigateTo('/manage')" style="background: none; border: none; padding: 10px 16px; text-align: left; font-size: 13px; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">
+                        <i class="fa-solid fa-sliders" style="color: #10b981;"></i> Platform Settings
+                    </button>
+                    <button type="button" (click)="navigateTo('/projects')" style="background: none; border: none; padding: 10px 16px; text-align: left; font-size: 13px; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">
+                        <i class="fa-solid fa-diagram-project" style="color: #f59e0b;"></i> Brand Projects
+                    </button>
+                    
+                    <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
+
+                    <button type="button" (click)="logout()" style="background: none; border: none; padding: 10px 16px; text-align: left; font-size: 13px; color: #ef4444; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
+                        <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+                    </button>
+                </div>
+            </div>
         </div>
 
         <!-- MOBILE MORE FIRST -->
