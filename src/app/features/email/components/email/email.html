@@ -1,0 +1,219 @@
+<div class="email-container">
+  
+  <!-- LEFT COLUMN: INPUT FORM -->
+  <div class="form-card">
+    
+    <div class="form-body">
+      
+      <!-- Recipient Field -->
+      <div class="form-group">
+        <label for="recipient">To: (Traveler / Audience)</label>
+        <div class="input-pill-editable">
+          <i class="fa-solid fa-user-group"></i>
+          <input 
+            id="recipient"
+            type="text" 
+            pInputText 
+            [(ngModel)]="user.recipient" 
+            placeholder="Enter traveler or audience..." />
+        </div>
+      </div>
+
+      <!-- Subject Field -->
+      <div class="form-group">
+        <label for="email-subject">Subject</label>
+        <input 
+          id="email-subject"
+          type="text" 
+          pInputText
+          [(ngModel)]="emailData.subject" 
+          placeholder="Enter email subject..." />
+      </div>
+
+      <!-- Message Body with Editor & Template Toggle -->
+      <div class="form-group flex-1">
+        <div class="label-row">
+          <label for="email-body">Message Body</label>
+          <button type="button" class="template-btn" (click)="toggleTemplateSelector()">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> 
+            {{ showTemplateSelector ? 'Close Templates' : 'Use Template' }}
+          </button>
+        </div>
+
+        <!-- TEMPLATE SELECTOR BAR (Shows on click) -->
+        <div class="template-dropdown-bar" *ngIf="showTemplateSelector">
+          <span class="template-heading">Select Pre-built Template:</span>
+          <div class="template-chips">
+            <button 
+              type="button" 
+              *ngFor="let t of templates" 
+              class="template-chip" 
+              (click)="applyTemplate(t)">
+              <i class="fa-regular fa-file-lines"></i> {{ t.name }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Editor Container -->
+        <div class="editor-container">
+          <div class="editor-toolbar">
+            <button type="button" class="toolbar-btn"><b>B</b></button>
+            <button type="button" class="toolbar-btn"><i>I</i></button>
+            <button type="button" class="toolbar-btn"><u>U</u></button>
+            <span class="divider"></span>
+            <button type="button" class="toolbar-btn"><i class="fa-solid fa-list-ul"></i></button>
+            <button type="button" class="toolbar-btn"><i class="fa-solid fa-link"></i></button>
+            <button type="button" class="toolbar-btn"><i class="fa-regular fa-image"></i></button>
+          </div>
+
+          <textarea 
+            id="email-body"
+            pTextarea 
+            [(ngModel)]="emailData.body" 
+            placeholder="Compose your email message..."></textarea>
+        </div>
+      </div>
+
+      <!-- Attachment Button -->
+      <div class="attachment-row">
+        <label for="file-upload" class="attach-label">
+          <i class="fa-solid fa-paperclip"></i> Attach Itinerary / Tickets
+        </label>
+        <input 
+          id="file-upload" 
+          type="file" 
+          class="hidden-file-input" 
+          (change)="handleFileUpload($event)" />
+        <span *ngIf="uploadedFile" class="uploaded-filename">({{ uploadedFile.name }})</span>
+      </div>
+
+    </div>
+
+    <!-- Form Footer Buttons -->
+    <div class="form-footer">
+      <button pButton type="button" class="btn-warning">
+        <i class="fa-regular fa-clock"></i>
+        <span>Schedule Send</span>
+      </button>
+      
+      <button 
+        pButton 
+        type="button" 
+        class="btn-ses" 
+        [disabled]="!isFormValid">
+        <span>Send via SES</span>
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN: PREVIEW SIDEBAR -->
+  <div class="preview-sidebar">
+    
+    <!-- Profile & Booking Context Card -->
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="avatar">{{ user.initials }}</div>
+        <div class="user-details">
+          <h3>{{ user.name }}</h3>
+          <p><i class="fa-regular fa-envelope"></i> {{ user.email }}</p>
+          <p><i class="fa-solid fa-phone"></i> {{ user.phone }}</p>
+        </div>
+        <span class="gold-badge">{{ user.tier }}</span>
+      </div>
+
+      <div class="booking-context">
+        <label>ACTIVE BOOKING CONTEXT</label>
+        <div class="booking-box">
+          <div class="booking-title-row">
+            <strong>{{ user.booking.title }}</strong>
+            <span class="booking-id">{{ user.booking.id }}</span>
+          </div>
+          <div class="booking-dates">
+            <i class="fa-regular fa-calendar"></i> {{ user.booking.dates }}
+          </div>
+          <div class="booking-flight">
+            <i class="fa-solid fa-plane"></i> {{ user.booking.flight }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REALISTIC EMAIL CLIENT PREVIEW (No Outer Header) -->
+    <div class="live-preview-panel">
+      
+      <div class="preview-body">
+        
+        <!-- EMAIL CLIENT CONTAINER -->
+        <div class="email-client-card">
+          
+          <!-- Subject Line Header -->
+          <div class="email-subject-header">
+            <h2>{{ emailData.subject || '(No Subject)' }}</h2>
+            <span class="inbox-tag">Inbox</span>
+          </div>
+
+          <!-- Sender / Recipient Header -->
+          <div class="email-meta-row">
+            <div class="sender-avatar">PT</div>
+            <div class="sender-info">
+              <div class="sender-name-line">
+                <strong>Pace Travels Support</strong>
+                <span class="sender-email">&lt;support&#64;pacetravels.com&gt;</span>
+              </div>
+              <div class="recipient-line">
+                to <span>{{ user.name || 'Traveler' }}</span>
+              </div>
+            </div>
+            <div class="email-timestamp">Just now</div>
+          </div>
+
+          <!-- Divider -->
+          <div class="email-divider"></div>
+
+          <!-- Email Content Body -->
+          <div class="email-body-content">
+            <p class="email-text">{{ emailData.body || 'Compose your message on the left to see live preview...' }}</p>
+          </div>
+
+          <!-- Attachment Section (If Uploaded) -->
+          <div class="email-attachments-section" *ngIf="uploadedFile">
+            <div class="attachment-heading">
+              <i class="fa-solid fa-paperclip"></i> 1 Attachment
+            </div>
+
+            <!-- Image File Attachment Preview -->
+            <div *ngIf="uploadedFile.type.includes('image')" class="email-attachment-card image-card">
+              <img [src]="uploadedFile.url" [alt]="uploadedFile.name" />
+              <div class="file-info-overlay">
+                <span>{{ uploadedFile.name }}</span>
+              </div>
+            </div>
+
+            <!-- Document / File Attachment Pill -->
+            <div *ngIf="!uploadedFile.type.includes('image')" class="email-attachment-card file-card">
+              <div class="file-type-icon">
+                <i class="fa-solid" [class.fa-file-pdf]="uploadedFile.type.includes('pdf')" [class.fa-file]="!uploadedFile.type.includes('pdf')"></i>
+              </div>
+              <div class="file-details">
+                <span class="filename">{{ uploadedFile.name }}</span>
+                <span class="download-link"><i class="fa-solid fa-download"></i> Download</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Email Reply Footer Actions -->
+          <div class="email-client-footer">
+            <button type="button" class="reply-btn"><i class="fa-solid fa-reply"></i> Reply</button>
+            <button type="button" class="reply-btn"><i class="fa-solid fa-share"></i> Forward</button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>

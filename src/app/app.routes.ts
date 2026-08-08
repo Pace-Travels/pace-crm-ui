@@ -26,6 +26,7 @@ import { ProfileView } from './features/account/profile-view/profile-view';
 
 import { EventsRadar } from './features/events-radar/events-radar';
 import { WebPush } from './features/webpush/components/web-push/web-push';
+import { Email } from './features/email/components/email/email';
 
 export const routes: Routes = [
     {
@@ -149,6 +150,9 @@ export const routes: Routes = [
             },
             {
                 path:'webpush', component:WebPush, title: 'Web Push'
+            },
+            {
+                path:'email', component:Email, title: 'E-mail'
             }
         ]
     }
