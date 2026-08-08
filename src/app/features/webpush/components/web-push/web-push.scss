@@ -1,0 +1,484 @@
+* {
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+:host {
+  display: block;
+  width: 100%;
+  height: calc(100vh - 65px);
+  padding: 16px;
+  background-color: #f8fafc;
+  overflow: hidden;
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+/* Page Layout */
+.notification-container {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+  height: 100%;
+}
+
+/* --------------------------------------------------
+   LEFT COLUMN: FORM CARD
+-------------------------------------------------- */
+.form-card {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  height: 100%;
+  overflow: hidden;
+}
+
+.form-body {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.label-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.char-count {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Input Pill Wrapper */
+.input-pill-editable {
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  padding: 8px 14px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+}
+
+.input-pill-editable i {
+  font-size: 14px;
+  color: #64748b;
+}
+
+.input-pill-editable input {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+  outline: none;
+  width: 100%;
+  box-shadow: none !important;
+}
+
+/* Info Banner */
+.info-banner {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 12px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.info-icon {
+  font-size: 16px;
+  color: #0284c7;
+  transition: transform 0.3s ease;
+}
+
+.info-banner:hover .info-icon {
+  transform: rotate(15deg) scale(1.1);
+}
+
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+
+.half-width {
+  flex: 1;
+}
+
+/* --------------------------------------------------
+   BUTTONS & FOOTER
+-------------------------------------------------- */
+.form-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #ffffff;
+}
+
+.btn-warning, .btn-light-blue {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease-in-out;
+}
+
+/* WARNING BUTTON (Schedule Send) */
+.btn-warning {
+  background-color: #f59e0b;
+  color: #ffffff;
+}
+
+.btn-warning:hover {
+  background-color: #d97706; /* Darker amber on hover */
+  box-shadow: 0 2px 4px rgba(217, 119, 6, 0.2);
+}
+
+/* LIGHT BLUE BUTTON (Send Notification) */
+.btn-light-blue {
+  background-color: #0284c7; /* Light Blue */
+  color: #ffffff;
+}
+
+.btn-light-blue:hover:not(:disabled) {
+  background-color: #0369a1; /* Slightly darker blue on hover */
+  box-shadow: 0 2px 4px rgba(3, 105, 161, 0.2);
+}
+
+/* DISABLED STATE FOR SEND BUTTON */
+.btn-light-blue:disabled {
+  background-color: #cbd5e1 !important;
+  color: #94a3b8 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  opacity: 0.7;
+}
+
+/* PrimeNG Form Inputs Overrides */
+:host ::ng-deep .p-inputtext,
+:host ::ng-deep .p-textarea {
+  width: 100%;
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  padding: 10px 12px !important;
+}
+
+:host ::ng-deep .p-textarea {
+  resize: vertical;
+}
+
+:host ::ng-deep .p-inputtext:focus,
+:host ::ng-deep .p-textarea:focus {
+  border-color: #94a3b8 !important;
+  background-color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2) !important;
+}
+
+/* --------------------------------------------------
+   RIGHT COLUMN: SIDEBAR & PREVIEW
+-------------------------------------------------- */
+.preview-sidebar {
+  width: 380px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  height: 100%;
+  flex-shrink: 0;
+}
+
+/* Profile Card */
+.profile-card {
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 18px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.user-details h3 {
+  margin: 0;
+  font-size: 14px;
+  color: #0f172a;
+}
+
+.user-details p {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.gold-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #fef08a;
+  color: #854d0e;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  border-radius: 4px;
+}
+
+.booking-context label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.5px;
+}
+
+.booking-box {
+  background: #f8fafc;
+  border-radius: 6px;
+  padding: 12px;
+  margin-top: 6px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid #f1f5f9;
+}
+
+.booking-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.booking-id {
+  background: #e2e8f0;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.booking-dates, .booking-flight {
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Live Preview Box */
+.live-preview-panel {
+  flex: 1;
+  background: #dbebe6;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.preview-header {
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #cbd5e1;
+}
+
+.window-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.dot.red { background: #ef4444; }
+.dot.yellow { background: #f59e0b; }
+.dot.green { background: #22c55e; }
+
+.preview-body {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.push-preview-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  gap: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.icon-box {
+  width: 36px;
+  height: 36px;
+  background: #b45309;
+  color: #ffffff;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.preview-awesome-icon {
+  font-size: 18px;
+  color: #ffffff;
+}
+
+.push-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+.push-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.push-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.push-msg {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Attachment Preview Styling */
+.file-preview-container {
+  margin-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding-top: 8px;
+}
+
+.image-preview-wrapper img {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  border-radius: 6px;
+  display: block;
+}
+
+.file-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  font-size: 11px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.file-pill i {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.pdf-pill i {
+  color: #ef4444;
+}
+
+.generic-pill i {
+  color: #3b82f6;
+}
+
+.file-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* Force icon font family rendering inside this component */
+i[class*="fa-"], 
+.fa-solid, 
+.fa-regular, 
+.fa-brands {
+  font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome" !important;
+  font-weight: 900 !important;
+  display: inline-block !important;
+  font-style: normal !important;
+  font-variant: normal !important;
+  text-rendering: auto !important;
+  -webkit-font-smoothing: antialiased;
+}

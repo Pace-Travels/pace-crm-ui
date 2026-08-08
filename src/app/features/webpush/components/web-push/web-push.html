@@ -1,0 +1,194 @@
+<div class="notification-container">
+  
+  <!-- LEFT COLUMN: INPUT FORM -->
+  <div class="form-card">
+    
+    <div class="form-body">
+      
+      <!-- Recipient Field -->
+      <div class="form-group">
+        <label for="recipient">To: (Traveler / Audience) *</label>
+        <div class="input-pill-editable">
+          <i class="fa-solid fa-user-group"></i>
+          <input 
+            id="recipient"
+            type="text" 
+            pInputText 
+            [(ngModel)]="user.recipient" 
+            placeholder="Enter traveler or audience..." />
+        </div>
+      </div>
+
+      <!-- Info Banner -->
+      <div class="info-banner">
+        <i class="fa-solid fa-web-awesome info-icon"></i>
+        <span>This notification will be delivered instantly to the user's desktop or mobile device if they have subscribed on your travel portal.</span>
+      </div>
+
+      <!-- Notification Title -->
+      <div class="form-group">
+        <div class="label-row">
+          <label for="push-title">Notification Title *</label>
+          <span class="char-count">{{ pushData.title.length }}/50</span>
+        </div>
+        <input 
+          id="push-title"
+          type="text" 
+          pInputText
+          [(ngModel)]="pushData.title" 
+          maxlength="50" 
+          placeholder="Enter notification title..." />
+      </div>
+
+      <!-- Short Message (15 Rows & Unlimited Maxlength) -->
+      <div class="form-group">
+        <label for="push-message">Short Message *</label>
+        <textarea 
+          id="push-message"
+          pTextarea 
+          rows="14" 
+          [(ngModel)]="pushData.message" 
+          placeholder="Notification body text..."></textarea>
+      </div>
+
+      <!-- Attachment File Upload -->
+      <div class="form-group">
+        <label for="attachment">Attachment (Image / PDF / File)</label>
+        <input 
+          id="attachment"
+          type="file" 
+          pInputText
+          (change)="handleFileUpload($event)" />
+      </div>
+
+      <!-- URLs Row -->
+      <div class="form-row">
+        <div class="form-group half-width">
+          <label for="icon-url">Icon URL (Optional)</label>
+          <input 
+            id="icon-url"
+            type="text" 
+            pInputText
+            [(ngModel)]="pushData.iconUrl" 
+            placeholder="https://..." />
+        </div>
+        <div class="form-group half-width">
+          <label for="click-url">Click Action (URL)</label>
+          <input 
+            id="click-url"
+            type="text" 
+            pInputText
+            [(ngModel)]="pushData.clickUrl" />
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Form Footer Buttons -->
+    <div class="form-footer">
+      <button pButton type="button" class="btn-warning">
+        <i class="fa-regular fa-clock"></i>
+        <span>Schedule Send</span>
+      </button>
+      
+      <!-- Send Button stays disabled until form is valid -->
+      <button 
+        pButton 
+        type="button" 
+        class="btn-light-blue" 
+        [disabled]="!isFormValid">
+        <span>Send Notification</span>
+        <i class="fa-solid fa-paper-plane"></i>
+      </button>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN: PREVIEW SIDEBAR -->
+  <div class="preview-sidebar">
+    
+    <!-- Profile & Booking Context Card -->
+    <div class="profile-card">
+      <div class="profile-header">
+        <div class="avatar">{{ user.initials }}</div>
+        <div class="user-details">
+          <h3>{{ user.name }}</h3>
+          <p><i class="fa-regular fa-envelope"></i> {{ user.email }}</p>
+          <p><i class="fa-solid fa-phone"></i> {{ user.phone }}</p>
+        </div>
+        <span class="gold-badge">{{ user.tier }}</span>
+      </div>
+
+      <div class="booking-context">
+        <label>ACTIVE BOOKING CONTEXT</label>
+        <div class="booking-box">
+          <div class="booking-title-row">
+            <strong>{{ user.booking.title }}</strong>
+            <span class="booking-id">{{ user.booking.id }}</span>
+          </div>
+          <div class="booking-dates">
+            <i class="fa-regular fa-calendar"></i> {{ user.booking.dates }}
+          </div>
+          <div class="booking-flight">
+            <i class="fa-solid fa-plane"></i> {{ user.booking.flight }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Preview Panel -->
+    <div class="live-preview-panel">
+      <div class="preview-header">
+        <span>LIVE PREVIEW</span>
+        <div class="window-controls">
+          <span class="dot red"></span>
+          <span class="dot yellow"></span>
+          <span class="dot green"></span>
+        </div>
+      </div>
+
+      <div class="preview-body">
+        
+        <div class="push-preview-card">
+          <div class="icon-box">
+            <i class="fa-solid fa-plane"></i>
+          </div>
+          <div class="push-content">
+            <div class="push-header">
+              <span>Pace Travels</span>
+              <span>now</span>
+            </div>
+            <div class="push-title">{{ pushData.title || 'Notification Title' }}</div>
+            <div class="push-msg">{{ pushData.message || 'Notification body text goes here.' }}</div>
+            
+            <!-- ATTACHMENT PREVIEW CONTAINER -->
+            <div class="file-preview-container" *ngIf="uploadedFile">
+              
+              <!-- Image Files Preview -->
+              <div *ngIf="uploadedFile.type.startsWith('image/')" class="image-preview-wrapper">
+                <img [src]="uploadedFile.url" [alt]="uploadedFile.name" />
+              </div>
+
+              <!-- PDF Files Preview -->
+              <div *ngIf="uploadedFile.type === 'application/pdf'" class="file-pill pdf-pill">
+                <i class="fa-solid fa-file-pdf"></i>
+                <span class="file-name">{{ uploadedFile.name }}</span>
+              </div>
+
+              <!-- Any Other Generic Files Preview -->
+              <div *ngIf="!uploadedFile.type.startsWith('image/') && uploadedFile.type !== 'application/pdf'" class="file-pill generic-pill">
+                <i class="fa-solid fa-file"></i>
+                <span class="file-name">{{ uploadedFile.name }}</span>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>

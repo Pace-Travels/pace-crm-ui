@@ -25,6 +25,7 @@ import { AccountLayout } from './features/account/account-layout/account-layout'
 import { ProfileView } from './features/account/profile-view/profile-view';
 
 import { EventsRadar } from './features/events-radar/events-radar';
+import { WebPush } from './features/webpush/components/web-push/web-push';
 
 export const routes: Routes = [
     {
@@ -145,6 +146,9 @@ export const routes: Routes = [
                 path: 'docs',
                 component: DocsViewer,
                 title: 'Documentation - Pace Messenger'
+            },
+            {
+                path:'webpush', component:WebPush, title: 'Web Push'
             }
         ]
     }
