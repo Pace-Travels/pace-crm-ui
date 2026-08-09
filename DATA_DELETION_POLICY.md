@@ -10,7 +10,7 @@ Users of Pace CRM have the right to request the deletion of their personal data 
 
 ## 2. How to Request Data Deletion
 
-To request the deletion of your data, you must submit a written request via email to our support team at **support@pace-travels.com** with the subject line "Data Deletion Request". 
+To request the deletion of your data, you must submit a written request via email to our support team at **support@pacetravels.com** with the subject line "Data Deletion Request". 
 
 Please include the following information in your request:
 * The email address associated with your account.

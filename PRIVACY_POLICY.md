@@ -32,4 +32,4 @@ We will only keep your personal information for as long as it is necessary for t
 
 ## 5. Contact Us
 
-If you have questions or comments about this notice, you may email us at support@pace-travels.com.
+If you have questions or comments about this notice, you may email us at support@pacetravels.com.

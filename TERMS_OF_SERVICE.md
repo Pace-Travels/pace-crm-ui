@@ -38,4 +38,4 @@ We reserve the right, at our sole discretion, to modify or replace these Terms a
 
 ## 7. Contact Information
 
-For any questions about these Terms, please contact us at support@pace-travels.com.
+For any questions about these Terms, please contact us at support@pacetravels.com.
