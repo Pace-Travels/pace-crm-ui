@@ -1,356 +1,402 @@
-<div class="templates-header">
-    <h2>Template Messages</h2>
+<!-- Missing Meta Credentials Warning Banner -->
+<div *ngIf="hasMissingCredentials()" style="background: #fffbe6; border: 1px solid #ffe58f; padding: 14px 20px; border-radius: 10px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.03); font-family: 'Inter', sans-serif;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="font-size: 22px; color: #d97706;">⚠️</div>
+        <div>
+            <strong style="color: #92400e; font-size: 14px; display: block;">Meta WhatsApp Credentials Unconfigured</strong>
+            <span style="font-size: 12.5px; color: #b45309;">
+                The active brand project (<strong>{{ projectService.currentProject()?.name || 'No Project Selected' }}</strong>) is missing valid Meta WABA ID, Phone Number ID, or Access Token. Live template sync and Meta submissions require configuration.
+            </span>
+        </div>
+    </div>
+    <button type="button" (click)="navigateTo('/projects')" style="background: #d97706; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap;">
+        Configure Project Credentials →
+    </button>
+</div>
+
+<div class="templates-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <h2 style="margin: 0; font-size: 20px; color: #0f172a;">Template Messages</h2>
     <div style="display: flex; gap: 12px;">
-        <button class="btn btn-outline" (click)="syncTemplates()"><i class="fa-solid fa-rotate"></i> Sync Meta Status</button>
-        <button class="btn btn-dark" (click)="openCreateTemplate()"><i class="fa-solid fa-plus"></i> Create Template</button>
+        <button class="btn btn-outline" (click)="syncTemplates()" style="background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+            <i class="fa-solid fa-rotate" style="color: #0284c7;"></i> Sync Meta Status
+        </button>
+        <button class="btn btn-dark" (click)="openCreateTemplate()" style="background: #0b494d; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
+            <i class="fa-solid fa-plus"></i> Create Template
+        </button>
     </div>
 </div>
 
 <!-- Quick Guide & Action Cards -->
-<div class="quick-launch-section mb-24">
-    <div class="quick-guide">
-        <h5>TEMPLATE MESSAGE QUICK GUIDE</h5>
-        <h4>Quick Guide</h4>
-        <p>You can initiate a Conversation with users on WhatsApp using these template messages.</p>
-        <div class="guide-links">
-            <a href="javascript:void(0)" (click)="openGuide('CREATE')">How to Create WhatsApp Template Message? <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-            <a href="javascript:void(0)" (click)="openGuide('PARAMS')">Use chatbot parameters for leads <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-            <a href="javascript:void(0)" (click)="openGuide('QUICK_REPLY')">Add Quick Reply to WhatsApp Template Message <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
-            <a href="javascript:void(0)" (click)="openGuide('FORMATTING')">Message formatting guideline (Bold, Italic & more) <i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+<div class="quick-launch-section mb-24" style="display: grid; grid-template-columns: 300px 1fr; gap: 20px; margin-bottom: 28px;">
+    <div class="quick-guide" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+        <h5 style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin: 0 0 4px 0;">TEMPLATE MESSAGE QUICK GUIDE</h5>
+        <h4 style="font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 10px 0;">Quick Guide</h4>
+        <p style="font-size: 12.5px; color: #64748b; margin: 0 0 14px 0; line-height: 1.5;">Initiate WhatsApp conversations with users at scale using Meta pre-approved message templates.</p>
+        <div class="guide-links" style="display: flex; flex-direction: column; gap: 8px; font-size: 12.5px;">
+            <a href="javascript:void(0)" (click)="openGuide('CREATE')" style="color: #0284c7; text-decoration: none; font-weight: 600;">How to Create WhatsApp Template Message? <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i></a>
+            <a href="javascript:void(0)" (click)="openGuide('PARAMS')" style="color: #0284c7; text-decoration: none; font-weight: 600;">Use chatbot parameters for leads <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i></a>
+            <a href="javascript:void(0)" (click)="openGuide('QUICK_REPLY')" style="color: #0284c7; text-decoration: none; font-weight: 600;">Add Quick Reply to WhatsApp Template <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i></a>
+            <a href="javascript:void(0)" (click)="openGuide('FORMATTING')" style="color: #0284c7; text-decoration: none; font-weight: 600;">Message formatting guidelines <i class="fa-solid fa-arrow-up-right-from-square" style="font-size: 10px;"></i></a>
         </div>
     </div>
 
-    <div class="launch-actions">
-        <h4>What would you like to launch?</h4>
-        <div class="cards-grid">
-            <div class="action-card" (click)="openCreateTemplate()" style="cursor: pointer;">
-                <i class="fa-solid fa-wand-magic-sparkles text-purple"></i>
-                <div class="card-info">
-                    <h6>Create AI Templates <span class="badge ai">AI</span></h6>
-                    <p>Generate powerful WhatsApp templates in seconds with AI.</p>
+    <div class="launch-actions" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+        <h4 style="font-size: 15px; font-weight: 700; color: #0f172a; margin: 0 0 16px 0;">What would you like to launch?</h4>
+        <div class="cards-grid" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+            
+            <div (click)="openAiGenerator()" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; cursor: pointer; background: #fdf4ff; transition: border-color 0.15s ease;" onmouseover="this.style.borderColor='#d946ef'" onmouseout="this.style.borderColor='#e2e8f0'">
+                <div style="font-size: 22px; color: #d946ef;"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div>
+                    <h6 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #0f172a;">Create AI Templates <span style="background: #f0abfc; color: #701a75; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">AI</span></h6>
+                    <p style="margin: 0; font-size: 12px; color: #64748b; line-height: 1.4;">Generate powerful WhatsApp templates in seconds with Gemini AI.</p>
                 </div>
             </div>
-            <div class="action-card" (click)="navigateTo('/ads')" style="cursor: pointer;">
-                <i class="fa-brands fa-whatsapp text-green"></i>
-                <div class="card-info">
-                    <h6>Launch WhatsApp Status Ad <span class="badge new">NEW</span></h6>
-                    <p>Publish scroll-stopping offers directly to WhatsApp Status.</p>
+
+            <div (click)="navigateTo('/ads')" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; cursor: pointer; background: #f0fdf4; transition: border-color 0.15s ease;" onmouseover="this.style.borderColor='#16a34a'" onmouseout="this.style.borderColor='#e2e8f0'">
+                <div style="font-size: 22px; color: #16a34a;"><i class="fa-brands fa-whatsapp"></i></div>
+                <div>
+                    <h6 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #0f172a;">Launch WhatsApp Status Ad <span style="background: #bbf7d0; color: #14532d; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">NEW</span></h6>
+                    <p style="margin: 0; font-size: 12px; color: #64748b; line-height: 1.4;">Publish scroll-stopping offers directly to WhatsApp Status.</p>
                 </div>
             </div>
-            <div class="action-card" (click)="navigateTo('/ads')" style="cursor: pointer;">
-                <i class="fa-solid fa-user-plus text-orange"></i>
-                <div class="card-info">
-                    <h6>Launch Lead Form Ads</h6>
-                    <p>Capture high-intent leads and follow up instantly on WhatsApp.</p>
+
+            <div (click)="navigateTo('/ads')" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; cursor: pointer; background: #fff7ed; transition: border-color 0.15s ease;" onmouseover="this.style.borderColor='#ea580c'" onmouseout="this.style.borderColor='#e2e8f0'">
+                <div style="font-size: 22px; color: #ea580c;"><i class="fa-solid fa-user-plus"></i></div>
+                <div>
+                    <h6 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #0f172a;">Launch Lead Form Ads</h6>
+                    <p style="margin: 0; font-size: 12px; color: #64748b; line-height: 1.4;">Capture high-intent leads and follow up instantly on WhatsApp.</p>
                 </div>
             </div>
-            <div class="action-card" (click)="navigateTo('/agents')" style="cursor: pointer;">
-                <i class="fa-solid fa-robot text-purple"></i>
-                <div class="card-info">
-                    <h6>Create AI Agent <span class="badge ai">AI</span></h6>
-                    <p>Qualify leads, answer questions and close sales automatically.</p>
+
+            <div (click)="navigateTo('/agents')" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; display: flex; gap: 14px; align-items: flex-start; cursor: pointer; background: #f0f9ff; transition: border-color 0.15s ease;" onmouseover="this.style.borderColor='#0284c7'" onmouseout="this.style.borderColor='#e2e8f0'">
+                <div style="font-size: 22px; color: #0284c7;"><i class="fa-solid fa-robot"></i></div>
+                <div>
+                    <h6 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #0f172a;">Create AI Agent <span style="background: #bae6fd; color: #0369a1; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 4px;">AI</span></h6>
+                    <p style="margin: 0; font-size: 12px; color: #64748b; line-height: 1.4;">Qualify leads, answer questions, and close sales automatically.</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Filters & Tabs -->
-<div class="table-controls mb-24" style="display: flex; flex-direction: column; gap: 12px;">
-    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-        <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-right: 4px;">Brand Unit:</span>
-        <button type="button" class="btn" [style.background]="selectedBrand() === 'ALL' ? '#0f172a' : '#f1f5f9'" [style.color]="selectedBrand() === 'ALL' ? 'white' : '#475569'" (click)="selectedBrand.set('ALL')" style="padding: 4px 12px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">All Brands</button>
-        <button type="button" class="btn" [style.background]="selectedBrand() === 'PACE_TRAVELS' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedBrand() === 'PACE_TRAVELS' ? 'white' : '#475569'" (click)="selectedBrand.set('PACE_TRAVELS')" style="padding: 4px 12px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">✈️ Pace Travels B2C</button>
-        <button type="button" class="btn" [style.background]="selectedBrand() === 'PACE_B2B' ? '#2563eb' : '#f1f5f9'" [style.color]="selectedBrand() === 'PACE_B2B' ? 'white' : '#475569'" (click)="selectedBrand.set('PACE_B2B')" style="padding: 4px 12px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">💼 Pace Tourism B2B</button>
-        <button type="button" class="btn" [style.background]="selectedBrand() === 'DUBAI_PACE' ? '#d97706' : '#f1f5f9'" [style.color]="selectedBrand() === 'DUBAI_PACE' ? 'white' : '#475569'" (click)="selectedBrand.set('DUBAI_PACE')" style="padding: 4px 12px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">🕌 Dubai Pace Tourism</button>
-        <button type="button" class="btn" [style.background]="selectedBrand() === 'THAI_PACE' ? '#059669' : '#f1f5f9'" [style.color]="selectedBrand() === 'THAI_PACE' ? 'white' : '#475569'" (click)="selectedBrand.set('THAI_PACE')" style="padding: 4px 12px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">🏝️ Thai Pace Tourism</button>
-        <button type="button" class="btn" [style.background]="selectedBrand() === 'VIETNAM_PACE' ? '#dc2626' : '#f1f5f9'" [style.color]="selectedBrand() === 'VIETNAM_PACE' ? 'white' : '#475569'" (click)="selectedBrand.set('VIETNAM_PACE')" style="padding: 4px 12px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">⛩️ Pace Tourism Vietnam</button>
+<!-- Filters & Search Controls Bar -->
+<div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <!-- Brand Unit Filter Pills -->
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px;">
+        <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-right: 4px;">Brand Unit:</span>
+        <button type="button" [style.background]="selectedBrand() === 'ALL' ? '#0f172a' : '#f1f5f9'" [style.color]="selectedBrand() === 'ALL' ? 'white' : '#475569'" (click)="selectedBrand.set('ALL')" style="padding: 5px 14px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">All Brands</button>
+        <button type="button" [style.background]="selectedBrand() === 'PACE_TRAVELS' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedBrand() === 'PACE_TRAVELS' ? 'white' : '#475569'" (click)="selectedBrand.set('PACE_TRAVELS')" style="padding: 5px 14px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">✈️ Pace Travels B2C</button>
+        <button type="button" [style.background]="selectedBrand() === 'PACE_B2B' ? '#2563eb' : '#f1f5f9'" [style.color]="selectedBrand() === 'PACE_B2B' ? 'white' : '#475569'" (click)="selectedBrand.set('PACE_B2B')" style="padding: 5px 14px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">💼 Pace Tourism B2B</button>
+        <button type="button" [style.background]="selectedBrand() === 'DUBAI_PACE' ? '#d97706' : '#f1f5f9'" [style.color]="selectedBrand() === 'DUBAI_PACE' ? 'white' : '#475569'" (click)="selectedBrand.set('DUBAI_PACE')" style="padding: 5px 14px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">🕌 Dubai Pace Tourism</button>
+        <button type="button" [style.background]="selectedBrand() === 'THAI_PACE' ? '#059669' : '#f1f5f9'" [style.color]="selectedBrand() === 'THAI_PACE' ? 'white' : '#475569'" (click)="selectedBrand.set('THAI_PACE')" style="padding: 5px 14px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">🏝️ Thai Pace Tourism</button>
+        <button type="button" [style.background]="selectedBrand() === 'VIETNAM_PACE' ? '#dc2626' : '#f1f5f9'" [style.color]="selectedBrand() === 'VIETNAM_PACE' ? 'white' : '#475569'" (click)="selectedBrand.set('VIETNAM_PACE')" style="padding: 5px 14px; font-size: 12px; border-radius: 20px; border: none; font-weight: 600; cursor: pointer;">⛩️ Pace Tourism Vietnam</button>
     </div>
 
-    <div class="search-box" style="width: 100%;">
-        <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Search templates (e.g. dubai, b2b, itinerary, approval status)...">
-        <button class="search-btn"><i class="fa-solid fa-magnifying-glass"></i></button>
+    <!-- Search Input Bar -->
+    <div style="position: relative; width: 100%;">
+        <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 14px;"></i>
+        <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Search templates by name, keyword, or approval status..." style="width: 100%; padding: 10px 14px 10px 40px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none; font-weight: 500;">
     </div>
 </div>
 
-<div class="main-tabs">
-    <button class="tab" [class.active]="activeTab === 'All'" (click)="activeTab = 'All'">All ({{ templates().length }})</button>
-    <button class="tab" [class.active]="activeTab === 'Draft'" (click)="activeTab = 'Draft'">Draft</button>
-    <button class="tab" [class.active]="activeTab === 'Pending'" (click)="activeTab = 'Pending'">Pending / In-Review</button>
-    <button class="tab" [class.active]="activeTab === 'Approved'" (click)="activeTab = 'Approved'">Approved</button>
-    <button class="tab" [class.active]="activeTab === 'Action Required'" (click)="activeTab = 'Action Required'">Action Required</button>
+<!-- Signal Tabs Navigation -->
+<div style="display: flex; gap: 8px; border-bottom: 2px solid #e2e8f0; margin-bottom: 24px;">
+    <button (click)="activeTab.set('All')" [style.border-bottom-color]="activeTab() === 'All' ? '#0b494d' : 'transparent'" [style.color]="activeTab() === 'All' ? '#0b494d' : '#64748b'" style="background: none; border: none; border-bottom: 3px solid; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer;">All ({{ templates().length }})</button>
+    <button (click)="activeTab.set('Draft')" [style.border-bottom-color]="activeTab() === 'Draft' ? '#0b494d' : 'transparent'" [style.color]="activeTab() === 'Draft' ? '#0b494d' : '#64748b'" style="background: none; border: none; border-bottom: 3px solid; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer;">Draft</button>
+    <button (click)="activeTab.set('Pending')" [style.border-bottom-color]="activeTab() === 'Pending' ? '#0b494d' : 'transparent'" [style.color]="activeTab() === 'Pending' ? '#0b494d' : '#64748b'" style="background: none; border: none; border-bottom: 3px solid; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer;">Pending / In-Review</button>
+    <button (click)="activeTab.set('Approved')" [style.border-bottom-color]="activeTab() === 'Approved' ? '#0b494d' : 'transparent'" [style.color]="activeTab() === 'Approved' ? '#0b494d' : '#64748b'" style="background: none; border: none; border-bottom: 3px solid; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer;">Approved</button>
+    <button (click)="activeTab.set('Action Required')" [style.border-bottom-color]="activeTab() === 'Action Required' ? '#0b494d' : 'transparent'" [style.color]="activeTab() === 'Action Required' ? '#0b494d' : '#64748b'" style="background: none; border: none; border-bottom: 3px solid; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer;">Action Required</button>
 </div>
 
-<!-- Content Grid -->
-<div class="explore-layout">
-    @if (isLoading()) {
-        <div class="loading-state" style="padding: 48px; text-align: center; width: 100%;">
-            <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px;"></i> Loading template library...
-        </div>
-    } @else if (filteredTemplates().length === 0) {
-        <div class="empty-state" style="padding: 48px; text-align: center; width: 100%; color: #888;">
-            No templates found matching "{{ activeTab }}" tab filter.
-        </div>
-    } @else {
-        <div class="explore-grid" style="width: 100%;">
-            @for(tpl of filteredTemplates(); track tpl.id) {
-                <div class="template-card">
-                    <div class="card-content">
-                        <h5>{{ tpl.templateName }}</h5>
-                        <div class="card-meta" style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
-                            <span class="type-badge text">{{ tpl.category }}</span>
-                            <span class="type-badge image">{{ tpl.language }}</span>
-                            
-                            @if (tpl.status === 'APPROVED') {
-                                <span class="badge-status approved">Approved</span>
-                            } @else if (tpl.status === 'DRAFT') {
-                                <span class="badge-status draft">Draft</span>
-                            } @else if (tpl.status === 'PENDING' || tpl.status === 'IN_REVIEW') {
-                                <span class="badge-status pending">Pending Meta Review</span>
-                            } @else {
-                                <span class="badge-status rejected">{{ tpl.status }}</span>
-                            }
-                        </div>
-                        <p class="msg-preview" style="height: 60px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
-                            {{ tpl.templateBody }}
-                        </p>
-                    </div>
-                    <div class="card-actions" style="margin-top: auto;">
-                        <button class="btn btn-outline" (click)="openPreview(tpl)">Preview</button>
-                        @if (tpl.status === 'APPROVED') {
-                            <button class="btn btn-primary" (click)="openQuickSend(tpl)"><i class="fa-solid fa-rocket"></i> Quick Send</button>
-                        }
-                        @if (tpl.status === 'DRAFT') {
-                            <button class="btn btn-dark" (click)="submitDraft(tpl.id)">Submit</button>
-                        }
-                    </div>
-                </div>
-            }
-        </div>
-    }
-</div>
+<!-- Template Cards Grid -->
+<div>
+    <div *ngIf="isLoading()" style="padding: 48px; text-align: center; color: #64748b;">
+        <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px;"></i> Loading template library...
+    </div>
 
-<!-- Drafting Creator Modal -->
-@if (showCreateModal()) {
-    <div class="modal-backdrop">
-        <div class="modal-content create-template-modal" style="max-width: 950px; width: 90%;">
-            <div class="modal-header">
-                <h3>Draft WhatsApp Template</h3>
-                <button class="close-btn" (click)="closeCreateTemplate()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="modal-body" style="display: flex; gap: 24px; max-height: 80vh; overflow-y: auto;">
+    <div *ngIf="!isLoading() && filteredTemplates().length === 0" style="padding: 48px; text-align: center; color: #64748b; background: white; border: 1px solid #e2e8f0; border-radius: 12px;">
+        <p style="font-weight: 700; color: #0f172a; margin: 0 0 4px 0; font-size: 15px;">No templates found</p>
+        <p style="font-size: 13px; margin: 0;">No templates match status tab "{{ activeTab() }}". Click "+ Create Template" or "Sync Meta Status" to import templates.</p>
+    </div>
+
+    <div *ngIf="!isLoading() && filteredTemplates().length > 0" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">
+        <div *ngFor="let tpl of filteredTemplates()" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: transform 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+            <div>
+                <h5 style="margin: 0 0 10px 0; font-size: 16px; font-weight: 800; color: #0f172a; font-family: monospace;">{{ tpl.templateName }}</h5>
                 
-                <!-- Left panel: Form editor -->
-                <div style="flex: 1.2; display: flex; flex-direction: column; gap: 16px;">
-                    <form [formGroup]="templateForm">
-                        <div class="form-row-vert">
-                            <label>Template Name <span class="text-red">*</span></label>
-                            <p class="help-text">Only lowercase letters, numbers, and underscores are allowed (e.g. holiday_promo_2)</p>
-                            <input type="text" formControlName="name" placeholder="e.g. marketing_promo_v1" class="form-control">
-                            @if(templateForm.get('name')?.touched && templateForm.get('name')?.invalid) {
-                                <span class="text-red font-11">Invalid name format. Only a-z, 0-9 and underscores are allowed.</span>
-                            }
-                        </div>
-
-                        <div style="display: flex; gap: 16px; margin-top: 12px;">
-                            <div class="form-row-vert" style="flex: 1;">
-                                <label>Category</label>
-                                <select formControlName="category" class="form-control">
-                                    <option value="MARKETING">Marketing</option>
-                                    <option value="UTILITY">Utility</option>
-                                    <option value="AUTHENTICATION">Authentication</option>
-                                </select>
-                            </div>
-                            <div class="form-row-vert" style="flex: 1;">
-                                <label>Language</label>
-                                <select formControlName="language" class="form-control">
-                                    <option value="en_US">English (US)</option>
-                                    <option value="hi_IN">Hindi (India)</option>
-                                    <option value="en">English</option>
-                                    <option value="es">Spanish</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="form-row-vert" style="margin-top: 16px;">
-                            <label>Header Format</label>
-                            <select formControlName="headerFormat" class="form-control">
-                                <option value="NONE">None</option>
-                                <option value="TEXT">Text</option>
-                            </select>
-                        </div>
-
-                        @if (templateForm.value.headerFormat === 'TEXT') {
-                            <div class="form-row-vert" style="margin-top: 12px;">
-                                <label>Header Text</label>
-                                <input type="text" formControlName="headerText" placeholder="e.g. Act Fast, VIP!" class="form-control">
-                            </div>
-                        }
-
-                        <div class="form-row-vert" style="margin-top: 16px;">
-                            <label>Body Text <span class="text-red">*</span></label>
-                            <p class="help-text">Insert variables using &#123;&#123;1&#125;&#125;, &#123;&#123;2&#125;&#125; parameters (e.g. Hello &#123;&#123;1&#125;&#125;)</p>
-                            <textarea formControlName="body" rows="4" placeholder="e.g. Hi {{1}}, your order ID is {{2}}." class="form-control"></textarea>
-                        </div>
-
-                        <div class="form-row-vert" style="margin-top: 16px;">
-                            <label>Footer Text</label>
-                            <p class="help-text">Adds a small subtitle text at the bottom.</p>
-                            <input type="text" formControlName="footerText" placeholder="e.g. Reply STOP to opt-out" class="form-control">
-                        </div>
-
-                        <div class="form-row-vert" style="margin-top: 16px;">
-                            <label>Quick Reply Buttons</label>
-                            <p class="help-text">Comma separated button labels (e.g. Visit Website, Contact Support)</p>
-                            <input type="text" formControlName="buttonsText" placeholder="e.g. Unsubscribe, Talk to Agent" class="form-control">
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Right panel: Live WhatsApp Mockup -->
-                <div style="flex: 0.8; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 12px; background: #e5ddd5; border-radius: 8px;">
-                    <h5 style="margin-bottom: 12px; color: #475569; font-weight: 600;">LIVE TEMPLATE PREVIEW</h5>
+                <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
+                    <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px;">{{ tpl.category }}</span>
+                    <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 4px;">{{ tpl.language }}</span>
                     
-                    <div class="whatsapp-mockup" style="width: 100%; max-width: 320px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
-                        <div class="wa-header">
-                            <div class="wa-contact">
-                                <div class="wa-avatar"><i class="fa-solid fa-user"></i></div>
-                                <span>Preview Mockup</span>
-                            </div>
-                        </div>
-                        <div class="wa-body" style="padding: 12px; background: #e5ddd5; min-height: 250px;">
-                            <div class="wa-message-bubble" style="background: white; padding: 8px 10px; border-radius: 8px; font-size: 13px; box-shadow: 0 1px 1px rgba(0,0,0,0.1);">
-                                @if (templateForm.value.headerFormat === 'TEXT' && templateForm.value.headerText) {
-                                    <div class="wa-preview-header" style="font-weight: 600; margin-bottom: 6px; color: #000;">
-                                        {{ templateForm.value.headerText }}
-                                    </div>
-                                }
-                                <div class="wa-preview-body" [innerHTML]="getLivePreviewBody()"></div>
-                                
-                                @if (templateForm.value.footerText) {
-                                    <div class="wa-preview-footer" style="font-size: 11px; color: #888; margin-top: 6px;">
-                                        {{ templateForm.value.footerText }}
-                                    </div>
-                                }
-                                <div class="wa-footer" style="text-align: right; font-size: 10px; color: #888; margin-top: 4px;">12:00 PM</div>
-                            </div>
-
-                            @if (templateForm.value.buttonsText) {
-                                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
-                                    @for (btn of templateForm.value.buttonsText.split(','); track btn) {
-                                        @if (btn.trim()) {
-                                            <div style="background: white; border-radius: 6px; padding: 8px; text-align: center; color: #008069; font-size: 13px; font-weight: 600; box-shadow: 0 1px 1px rgba(0,0,0,0.1); cursor: default;">
-                                                {{ btn.trim() }}
-                                            </div>
-                                        }
-                                    }
-                                </div>
-                            }
-                        </div>
-                    </div>
+                    <span *ngIf="tpl.status === 'APPROVED'" style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px;">Approved</span>
+                    <span *ngIf="tpl.status === 'DRAFT'" style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #f1f5f9; color: #64748b; padding: 2px 8px; border-radius: 4px;">Draft</span>
+                    <span *ngIf="tpl.status === 'PENDING' || tpl.status === 'IN_REVIEW'" style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 4px;">Pending Meta Review</span>
+                    <span *ngIf="tpl.status !== 'APPROVED' && tpl.status !== 'DRAFT' && tpl.status !== 'PENDING' && tpl.status !== 'IN_REVIEW'" style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 4px;">{{ tpl.status }}</span>
                 </div>
-            </div>
-            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #f1f5f9;">
-                <button class="btn btn-outline" (click)="closeCreateTemplate()">Cancel</button>
-                <button class="btn btn-outline" (click)="saveAsDraft()">Save as Draft</button>
-                <button class="btn btn-primary" (click)="submitForApproval()" [disabled]="templateForm.invalid">Submit for Approval</button>
-            </div>
-        </div>
-    </div>
-}
 
-<!-- Preview Popup Modal -->
-@if (showPreviewModal() && selectedPreviewTemplate()) {
-    <div class="modal-backdrop">
-        <div class="modal-content add-contact-modal" style="max-width: 420px;">
-            <div class="modal-header">
-                <h3>Template Preview</h3>
-                <button class="close-btn" (click)="closePreview()"><i class="fa-solid fa-xmark"></i></button>
+                <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.5; height: 60px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                    {{ tpl.templateBody }}
+                </p>
             </div>
-            <div class="modal-body" style="background: #f0f2f5; padding: 24px; display: flex; justify-content: center;">
-                <div class="whatsapp-mockup" style="width: 100%; max-width: 320px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
-                    <div class="wa-header">
-                        <div class="wa-contact">
-                            <div class="wa-avatar"><i class="fa-solid fa-user"></i></div>
-                            <span>{{ selectedPreviewTemplate()?.templateName }}</span>
-                        </div>
-                    </div>
-                    <div class="wa-body" style="padding: 12px; background: #e5ddd5; min-height: 180px;">
-                        <div class="wa-message-bubble" style="background: white; padding: 8px 10px; border-radius: 8px; font-size: 13px; box-shadow: 0 1px 1px rgba(0,0,0,0.1);">
-                            <div class="wa-text" style="white-space: pre-wrap;">
-                                {{ selectedPreviewTemplate()?.templateBody }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-}
 
-<!-- Quick Send Modal -->
-@if (showQuickSendModal() && selectedQuickSendTemplate()) {
-    <div class="modal-backdrop">
-        <div class="modal-content quick-send-modal" style="max-width: 500px;">
-            <div class="modal-header">
-                <h3>🚀 Quick Send Broadcast</h3>
-                <button class="close-btn" (click)="closeQuickSend()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="modal-body" style="padding: 24px;">
-                <p style="margin-bottom: 16px; color: #475569;">Sending <strong>{{ selectedQuickSendTemplate()?.templateName }}</strong>. Select an audience to blast this message to.</p>
-                <form [formGroup]="quickSendForm">
-                    <div class="form-row-vert">
-                        <label>Target Audience <span class="text-red">*</span></label>
-                        <select formControlName="targetType" class="form-control">
-                            <option value="ALL">All Contacts</option>
-                            <option value="B2C">B2C Customers</option>
-                            <option value="B2B">B2B Agents</option>
-                            <!-- NOTE: Groups omitted for simplicity in quick send, could be expanded -->
-                        </select>
-                    </div>
-
-                    <div class="form-row-vert" style="margin-top: 16px;">
-                        <label>Media Header URL (Optional)</label>
-                        <p class="help-text">If your template uses a media header (Image/Document), provide a direct public URL here.</p>
-                        <input type="text" formControlName="headerMedia" placeholder="e.g. https://example.com/promo.jpg" class="form-control" style="margin-bottom: 8px;">
-                    </div>
-
-                    <div class="form-row-vert" style="margin-top: 16px;">
-                        <label>Dynamic Variables (Optional)</label>
-                        <p class="help-text">If your template has variables like <span ngNonBindable>{{1}}</span>, define them here. You can use <code ngNonBindable>{{name}}</code> to dynamically insert the recipient's name.</p>
-                        <input type="text" formControlName="var1" [placeholder]="'{{1}} (e.g. {{name}})'" class="form-control" style="margin-bottom: 8px;">
-                        <input type="text" formControlName="var2" [placeholder]="'{{2}} (e.g. your booking reference)'" class="form-control">
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 12px; padding: 16px 24px; border-top: 1px solid #f1f5f9;">
-                <button class="btn btn-outline" (click)="closeQuickSend()">Cancel</button>
-                <button class="btn btn-primary" (click)="submitQuickSend()" [disabled]="quickSendForm.invalid">
-                    <i class="fa-solid fa-paper-plane"></i> Send Now
+            <div style="display: flex; gap: 8px; margin-top: 18px; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+                <button (click)="openPreview(tpl)" style="flex: 1; background: white; border: 1px solid #cbd5e1; color: #334155; padding: 8px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa-regular fa-eye"></i> Preview
+                </button>
+                
+                <button *ngIf="tpl.status === 'APPROVED'" (click)="openQuickSend(tpl)" style="flex: 1; background: #0b494d; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
+                    <i class="fa-solid fa-paper-plane"></i> Quick Send
+                </button>
+                
+                <button *ngIf="tpl.status === 'DRAFT'" (click)="submitDraft(tpl.id)" style="flex: 1; background: #0f172a; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
+                    Submit
                 </button>
             </div>
         </div>
     </div>
-}
+</div>
 
-<!-- Interactive ngx-markdown Quick Guide Modal -->
-@if (showGuideModal()) {
-    <div class="modal-backdrop" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;">
-        <div class="modal-content" style="background: white; border-radius: 12px; max-width: 680px; width: 92%; padding: 24px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 85vh; display: flex; flex-direction: column;">
-            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px; margin-bottom: 16px;">
-                <h3 style="margin: 0; font-size: 18px; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-book-open" style="color: #3b82f6;"></i> {{ guideTitle() }}
-                </h3>
-                <button type="button" style="background: transparent; border: none; font-size: 18px; cursor: pointer;" (click)="closeGuide()">✕</button>
-            </div>
+<!-- AI Template Prompt Modal -->
+<div *ngIf="showAiGenModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Inter', sans-serif;">
+    <div style="background: white; width: 480px; border-radius: 12px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-wand-magic-sparkles" style="color: #d946ef;"></i> Generate AI Template
+            </h3>
+            <button (click)="closeAiGenerator()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
 
-            <div style="flex: 1; overflow-y: auto; font-family: 'Inter', sans-serif; font-size: 14px; color: #334155; line-height: 1.6; padding-right: 8px;">
-                <markdown [data]="guideContent()"></markdown>
-            </div>
+        <div style="margin-bottom: 20px;">
+            <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">Describe your campaign objective</label>
+            <textarea [ngModel]="aiPrompt()" (ngModelChange)="aiPrompt.set($event)" rows="4" placeholder="e.g. Create a 25% discount promotional template for Dubai luxury desert safari tours with quick reply buttons..." style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none;"></textarea>
+        </div>
 
-            <div style="display: flex; justify-content: flex-end; border-top: 1px solid #e2e8f0; padding-top: 14px; margin-top: 16px;">
-                <button type="button" class="btn btn-dark" (click)="closeGuide()" style="background: #0f172a; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; cursor: pointer;">Got It</button>
-            </div>
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button (click)="closeAiGenerator()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 9px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">Cancel</button>
+            <button (click)="generateAiTemplate()" [disabled]="isGeneratingAi()" style="background: #d946ef; color: white; border: none; padding: 9px 20px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer;">
+                <span *ngIf="!isGeneratingAi()"><i class="fa-solid fa-bolt"></i> Generate Draft</span>
+                <span *ngIf="isGeneratingAi()"><i class="fa-solid fa-spinner fa-spin"></i> Generating...</span>
+            </button>
         </div>
     </div>
-}
+</div>
+
+<!-- Drafting Creator Modal -->
+<div *ngIf="showCreateModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Inter', sans-serif;">
+    <div style="background: white; width: 920px; max-height: 90vh; border-radius: 12px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); display: flex; flex-direction: column; overflow: hidden;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a;">Draft WhatsApp Template</h3>
+            <button (click)="closeCreateTemplate()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+
+        <div style="display: flex; gap: 24px; flex: 1; overflow-y: auto; padding-right: 4px;">
+            <!-- Left panel: Form editor -->
+            <div style="flex: 1.2; display: flex; flex-direction: column; gap: 16px;">
+                <form [formGroup]="templateForm">
+                    <div>
+                        <label style="font-size: 12px; font-weight: 700; color: #334155;">Template Name *</label>
+                        <p style="font-size: 11px; color: #64748b; margin: 2px 0 4px 0;">Only lowercase letters, numbers, and underscores (e.g. promo_offer_v1)</p>
+                        <input type="text" formControlName="name" placeholder="e.g. promo_offer_v1" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none; font-family: monospace;">
+                    </div>
+
+                    <div style="display: flex; gap: 12px; margin-top: 12px;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px; font-weight: 700; color: #334155;">Category</label>
+                            <select formControlName="category" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none;">
+                                <option value="MARKETING">Marketing</option>
+                                <option value="UTILITY">Utility</option>
+                                <option value="AUTHENTICATION">Authentication</option>
+                            </select>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px; font-weight: 700; color: #334155;">Language</label>
+                            <select formControlName="language" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none;">
+                                <option value="en_US">English (US)</option>
+                                <option value="hi_IN">Hindi (India)</option>
+                                <option value="ar">Arabic</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 14px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #334155;">Header Format</label>
+                        <select formControlName="headerFormat" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none;">
+                            <option value="NONE">None</option>
+                            <option value="TEXT">Text</option>
+                        </select>
+                    </div>
+
+                    <div *ngIf="templateForm.value.headerFormat === 'TEXT'" style="margin-top: 12px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #334155;">Header Text</label>
+                        <input type="text" formControlName="headerText" placeholder="e.g. Special Offer!" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                    </div>
+
+                    <div style="margin-top: 14px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #334155;">Body Text *</label>
+                        <p style="font-size: 11px; color: #64748b; margin: 2px 0 4px 0;">Use variables like &#123;&#123;1&#125;&#125;, &#123;&#123;2&#125;&#125;</p>
+                        <textarea formControlName="body" rows="4" placeholder="e.g. Hi {{1}}, thank you for booking with Pace Travels! Your ref is {{2}}." style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none;"></textarea>
+                    </div>
+
+                    <div style="margin-top: 14px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #334155;">Footer Text</label>
+                        <input type="text" formControlName="footerText" placeholder="e.g. Reply STOP to opt-out" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                    </div>
+
+                    <div style="margin-top: 14px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #334155;">Quick Reply Buttons</label>
+                        <p style="font-size: 11px; color: #64748b; margin: 2px 0 4px 0;">Comma separated (e.g. Claim Offer, Ask Agent)</p>
+                        <input type="text" formControlName="buttonsText" placeholder="e.g. Claim Offer, Talk to Agent" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none;">
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right panel: Live WhatsApp Mockup -->
+            <div style="flex: 0.8; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 16px; background: #e5ddd5; border-radius: 12px;">
+                <h5 style="margin: 0 0 12px 0; color: #475569; font-weight: 700; font-size: 12px; text-transform: uppercase;">Live WhatsApp Preview</h5>
+                
+                <div style="width: 100%; max-width: 300px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); overflow: hidden;">
+                    <div style="background: #075e54; color: white; padding: 10px 14px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-circle-user" style="font-size: 18px;"></i>
+                        <span>Pace Business</span>
+                    </div>
+                    <div style="padding: 12px; background: #e5ddd5; min-height: 220px;">
+                        <div style="background: white; padding: 10px 12px; border-radius: 8px; font-size: 13px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                            <div *ngIf="templateForm.value.headerFormat === 'TEXT' && templateForm.value.headerText" style="font-weight: 700; margin-bottom: 6px; color: #000;">
+                                {{ templateForm.value.headerText }}
+                            </div>
+                            
+                            <div [innerHTML]="getLivePreviewBody()" style="line-height: 1.5; color: #1e293b;"></div>
+                            
+                            <div *ngIf="templateForm.value.footerText" style="font-size: 11px; color: #64748b; margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+                                {{ templateForm.value.footerText }}
+                            </div>
+                        </div>
+
+                        <div *ngIf="templateForm.value.buttonsText" style="display: flex; flex-direction: column; gap: 6px; margin-top: 8px;">
+                            <div *ngFor="let btn of templateForm.value.buttonsText.split(',')" style="background: white; border-radius: 6px; padding: 8px; text-align: center; color: #008069; font-size: 13px; font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                                {{ btn.trim() }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+            <button (click)="closeCreateTemplate()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 9px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">Cancel</button>
+            <button (click)="saveAsDraft()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 9px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">Save Draft</button>
+            <button (click)="submitForApproval()" [disabled]="templateForm.invalid" style="background: #0b494d; color: white; border: none; padding: 9px 22px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer;">Submit for Meta Approval</button>
+        </div>
+    </div>
+</div>
+
+<!-- Template Preview Modal -->
+<div *ngIf="showPreviewModal() && selectedPreviewTemplate()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Inter', sans-serif;">
+    <div style="background: white; width: 400px; border-radius: 12px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+            <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #0f172a; font-family: monospace;">{{ selectedPreviewTemplate()?.templateName }}</h3>
+            <button (click)="closePreview()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+
+        <div style="background: #e5ddd5; border-radius: 10px; padding: 16px; min-height: 220px;">
+            <div style="background: white; border-radius: 8px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div *ngIf="selectedPreviewTemplate()?.headerText" style="font-weight: 700; font-size: 13.5px; margin-bottom: 6px; color: #0f172a;">
+                    {{ selectedPreviewTemplate()?.headerText }}
+                </div>
+                
+                <div [innerHTML]="getParsedPreviewBody(selectedPreviewTemplate()?.templateBody || '')" style="font-size: 13px; color: #1e293b; line-height: 1.5; white-space: pre-wrap;"></div>
+
+                <div *ngIf="selectedPreviewTemplate()?.footerText" style="font-size: 11px; color: #64748b; margin-top: 8px; border-top: 1px solid #f1f5f9; padding-top: 4px;">
+                    {{ selectedPreviewTemplate()?.footerText }}
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+            <button (click)="closePreview()" style="background: #0f172a; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">Close Preview</button>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Send Modal (Single Contact & Bulk Target Dispatch) -->
+<div *ngIf="showQuickSendModal() && selectedQuickSendTemplate()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Inter', sans-serif;">
+    <div style="background: white; width: 480px; border-radius: 12px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-paper-plane" style="color: #0b494d;"></i> Quick Send Template
+            </h3>
+            <button (click)="closeQuickSend()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+
+        <div style="margin-bottom: 16px; background: #f8fafc; padding: 10px 14px; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Selected Template:</span>
+            <strong style="display: block; font-size: 14px; color: #0f172a; font-family: monospace;">{{ selectedQuickSendTemplate()?.templateName }}</strong>
+        </div>
+
+        <!-- Mode Toggle: Single Contact vs Bulk Audience -->
+        <div style="display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px; margin-bottom: 18px;">
+            <button type="button" (click)="quickSendMode.set('SINGLE')" [style.background]="quickSendMode() === 'SINGLE' ? 'white' : 'transparent'" [style.color]="quickSendMode() === 'SINGLE' ? '#0f172a' : '#64748b'" style="flex: 1; border: none; padding: 7px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
+                Single Contact
+            </button>
+            <button type="button" (click)="quickSendMode.set('BULK')" [style.background]="quickSendMode() === 'BULK' ? 'white' : 'transparent'" [style.color]="quickSendMode() === 'BULK' ? '#0f172a' : '#64748b'" style="flex: 1; border: none; padding: 7px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
+                Bulk Broadcast
+            </button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px;">
+            <!-- Single Recipient Phone with Country Flag -->
+            <div *ngIf="quickSendMode() === 'SINGLE'">
+                <app-phone-input [ngModel]="singleRecipientPhone()" (ngModelChange)="singleRecipientPhone.set($event)" label="Recipient WhatsApp Phone Number" [required]="true"></app-phone-input>
+            </div>
+
+            <!-- Bulk Target Audience -->
+            <div *ngIf="quickSendMode() === 'BULK'">
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">Target Audience Segment *</label>
+                <form [formGroup]="quickSendForm">
+                    <select formControlName="targetType" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; background: white; font-weight: 600;">
+                        <option value="ALL">All Database Contacts</option>
+                        <option value="B2C">B2C Travelers Only</option>
+                        <option value="B2B">B2B Tourism Agents Only</option>
+                    </select>
+                </form>
+            </div>
+
+            <!-- Template Variables Mapping -->
+            <form [formGroup]="quickSendForm" style="display: flex; flex-direction: column; gap: 10px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Variable &#123;&#123;1&#125;&#125; (e.g. Recipient Name)</label>
+                    <input type="text" formControlName="var1" placeholder="e.g. John Doe" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Variable &#123;&#123;2&#125;&#125; (e.g. Ref / Details)</label>
+                    <input type="text" formControlName="var2" placeholder="e.g. DXB-8947" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none;">
+                </div>
+            </form>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button (click)="closeQuickSend()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 9px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">Cancel</button>
+            <button (click)="submitQuickSend()" style="background: #0b494d; color: white; border: none; padding: 9px 22px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
+                <i class="fa-solid fa-paper-plane"></i> Send Now
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Markdown Guide Modal -->
+<div *ngIf="showGuideModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Inter', sans-serif;">
+    <div style="background: white; width: 600px; border-radius: 12px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); max-height: 80vh; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+            <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #0f172a;">{{ guideTitle() }}</h3>
+            <button (click)="closeGuide()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+
+        <div style="flex: 1; overflow-y: auto; font-size: 13.5px; color: #334155; line-height: 1.6;">
+            <markdown [data]="guideContent()"></markdown>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 16px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
+            <button (click)="closeGuide()" style="background: #0f172a; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">Got It</button>
+        </div>
+    </div>
+</div>

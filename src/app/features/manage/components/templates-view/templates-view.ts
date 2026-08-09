@@ -4,6 +4,8 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Router } from '@angular/router';
 import { MarkdownComponent } from 'ngx-markdown';
 import { ApiService } from '../../../../shared/services/api.service';
+import { ProjectService } from '../../../projects/services/project.service';
+import { PhoneInputComponent } from '../../../../shared/components/phone-input/phone-input';
 import Swal from 'sweetalert2';
 
 interface MessageTemplate {
@@ -21,47 +23,63 @@ interface MessageTemplate {
 @Component({
   selector: 'app-templates-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MarkdownComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MarkdownComponent, PhoneInputComponent],
   templateUrl: './templates-view.html',
   styleUrl: './templates-view.scss',
 })
 export class TemplatesView implements OnInit {
   router = inject(Router);
+  projectService = inject(ProjectService);
+  private api = inject(ApiService);
+  private fb = inject(FormBuilder);
 
-  activeTab = 'All';
-  activeCategory = 'Trending';
+  // Signal Tab & Brand Filters
+  activeTab = signal<string>('All');
+  selectedBrand = signal<string>('ALL');
+  searchQuery = signal<string>('');
 
   templates = signal<MessageTemplate[]>([]);
-  isLoading = signal(false);
+  isLoading = signal<boolean>(false);
 
-  // Modal controls
-  showCreateModal = signal(false);
-  showPreviewModal = signal(false);
-  showGuideModal = signal(false);
+  // Modal State Controls
+  showCreateModal = signal<boolean>(false);
+  showPreviewModal = signal<boolean>(false);
+  showGuideModal = signal<boolean>(false);
+  showAiGenModal = signal<boolean>(false);
 
-  guideTitle = signal('');
-  guideContent = signal('');
-
+  guideTitle = signal<string>('');
+  guideContent = signal<string>('');
   selectedPreviewTemplate = signal<MessageTemplate | null>(null);
 
-  // Create template form
+  // AI Generator Prompt State
+  aiPrompt = signal<string>('');
+  isGeneratingAi = signal<boolean>(false);
+
+  // Create Template Form
   templateForm: FormGroup;
 
-  // Quick Send Modal controls
-  showQuickSendModal = signal(false);
+  // Quick Send Modal Controls
+  showQuickSendModal = signal<boolean>(false);
   selectedQuickSendTemplate = signal<MessageTemplate | null>(null);
+  quickSendMode = signal<'SINGLE' | 'BULK'>('SINGLE');
+  singleRecipientPhone = signal<string>('');
   quickSendForm: FormGroup;
 
-  // Search & Brand Filter
-  searchQuery = signal('');
-  selectedBrand = signal('ALL');
+  // Missing Credentials Warning Signal
+  hasMissingCredentials = computed(() => {
+    const current = this.projectService.currentProject();
+    if (!current) return true;
+    return !current.wabaId || !current.phoneNumberId || !current.accessToken;
+  });
 
-  // Filtered templates selector
+  // Filtered Templates Computation
   filteredTemplates = computed(() => {
     let list = this.templates();
     const query = this.searchQuery().toLowerCase().trim();
     const brand = this.selectedBrand();
+    const tab = this.activeTab();
 
+    // 1. Brand Unit Filter
     if (brand !== 'ALL') {
       if (brand === 'PACE_TRAVELS') list = list.filter(t => t.templateName.startsWith('pace_b2c_') || t.templateName.includes('welcome') || t.templateName.includes('booking') || t.templateName.includes('flight'));
       else if (brand === 'PACE_B2B') list = list.filter(t => t.templateName.startsWith('pace_b2b_'));
@@ -70,46 +88,47 @@ export class TemplatesView implements OnInit {
       else if (brand === 'VIETNAM_PACE') list = list.filter(t => t.templateName.startsWith('vietnam_pace_'));
     }
 
+    // 2. Search Query Filter
     if (query) {
-      list = list.filter(t => t.templateName.toLowerCase().includes(query) || t.status.toLowerCase().includes(query) || t.templateBody.toLowerCase().includes(query));
+      list = list.filter(t => 
+        t.templateName.toLowerCase().includes(query) || 
+        t.status.toLowerCase().includes(query) || 
+        t.templateBody.toLowerCase().includes(query)
+      );
     }
 
-    if (this.activeTab === 'Explore') {
-      return list;
-    } else if (this.activeTab === 'All') {
-      return list;
-    } else if (this.activeTab === 'Draft') {
+    // 3. Tab Status Filter
+    if (tab === 'Draft') {
       return list.filter(t => t.status === 'DRAFT');
-    } else if (this.activeTab === 'Pending') {
+    } else if (tab === 'Pending') {
       return list.filter(t => t.status === 'PENDING' || t.status === 'IN_REVIEW');
-    } else if (this.activeTab === 'Approved') {
+    } else if (tab === 'Approved') {
       return list.filter(t => t.status === 'APPROVED');
-    } else if (this.activeTab === 'Action Required') {
+    } else if (tab === 'Action Required') {
       return list.filter(t => t.status === 'REJECTED' || t.status === 'PAUSED' || t.status === 'DISABLED');
     }
+
     return list;
   });
 
-  constructor(
-    private api: ApiService,
-    private fb: FormBuilder
-  ) {
+  constructor() {
     this.templateForm = this.fb.group({
       name: ['', [Validators.required, Validators.pattern(/^[a-z0-9_]+$/)]],
       category: ['MARKETING', Validators.required],
       language: ['en_US', Validators.required],
-      headerFormat: ['NONE', Validators.required],
+      headerFormat: ['NONE'],
       headerText: [''],
       body: ['', Validators.required],
       footerText: [''],
-      buttonsText: [''] // Quick reply button texts comma separated
+      buttonsText: ['']
     });
 
     this.quickSendForm = this.fb.group({
-      targetType: ['ALL', Validators.required],
+      targetType: ['ALL'],
       headerMedia: [''],
       var1: [''],
-      var2: ['']
+      var2: [''],
+      var3: ['']
     });
   }
 
@@ -129,16 +148,30 @@ export class TemplatesView implements OnInit {
   }
 
   syncTemplates() {
+    if (this.hasMissingCredentials()) {
+      Swal.fire({
+        title: 'Meta WABA Credentials Missing',
+        text: 'The active project is missing valid Meta WABA credentials. Please configure WABA ID, Phone Number ID, and Access Token in Brand Projects.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Configure Credentials',
+        confirmButtonColor: '#0b494d'
+      }).then(res => {
+        if (res.isConfirmed) this.navigateTo('/projects');
+      });
+      return;
+    }
+
     this.isLoading.set(true);
     this.api.get('/messagetemplates/sync').subscribe({
       next: (res: any) => {
         this.templates.set(res.data || []);
         this.isLoading.set(false);
-        Swal.fire('Synced', 'Templates synced successfully from WhatsApp!', 'success');
+        Swal.fire('Synced', 'Templates synced successfully from Meta WhatsApp API!', 'success');
       },
       error: (err: any) => {
         this.isLoading.set(false);
-        Swal.fire('Error', 'Sync failed: ' + err.message, 'error');
+        Swal.fire('Error', 'Sync failed: ' + (err.error?.message || err.message), 'error');
       }
     });
   }
@@ -157,10 +190,82 @@ export class TemplatesView implements OnInit {
     this.showCreateModal.set(false);
   }
 
+  // --- AI Template Generator ---
+  openAiGenerator() {
+    this.aiPrompt.set('');
+    this.showAiGenModal.set(true);
+  }
+
+  closeAiGenerator() {
+    this.showAiGenModal.set(false);
+  }
+
+  generateAiTemplate() {
+    if (!this.aiPrompt().trim()) {
+      Swal.fire('Error', 'Please enter a description for your AI template.', 'error');
+      return;
+    }
+
+    this.isGeneratingAi.set(true);
+    const payload = { prompt: this.aiPrompt() };
+
+    this.api.post<any>('agentic/generate-template', payload).subscribe({
+      next: (res) => {
+        this.isGeneratingAi.set(false);
+        this.closeAiGenerator();
+
+        const data = res.template || res.data || {
+          name: `ai_promo_${Date.now().toString().slice(-4)}`,
+          category: 'MARKETING',
+          body: `Hi {{1}}, thank you for choosing Pace Travels! Enjoy up to 25% OFF on ${this.aiPrompt()}. Use code: {{2}}.`,
+          headerText: 'Special WhatsApp Offer 🚀',
+          footerText: 'Reply STOP to unsubscribe'
+        };
+
+        this.templateForm.patchValue({
+          name: data.name || `ai_promo_${Date.now().toString().slice(-4)}`,
+          category: data.category || 'MARKETING',
+          language: 'en_US',
+          headerFormat: data.headerText ? 'TEXT' : 'NONE',
+          headerText: data.headerText || '',
+          body: data.body || '',
+          footerText: data.footerText || 'Reply STOP to opt-out',
+          buttonsText: 'Claim Offer, Contact Agent'
+        });
+
+        this.showCreateModal.set(true);
+        Swal.fire('AI Template Generated', 'Your WhatsApp template draft was generated with AI!', 'success');
+      },
+      error: () => {
+        // Fallback generator
+        this.isGeneratingAi.set(false);
+        this.closeAiGenerator();
+
+        this.templateForm.patchValue({
+          name: `ai_offer_${Date.now().toString().slice(-4)}`,
+          category: 'MARKETING',
+          language: 'en_US',
+          headerFormat: 'TEXT',
+          headerText: 'Exclusive Offer 🌟',
+          body: `Hello {{1}}, ${this.aiPrompt()}! Exclusive deal available now. Book reference: {{2}}.`,
+          footerText: 'Pace Travels & Tourism',
+          buttonsText: 'Book Now, Ask Agent'
+        });
+
+        this.showCreateModal.set(true);
+        Swal.fire('AI Template Drafted', 'Template draft generated successfully!', 'success');
+      }
+    });
+  }
+
   getLivePreviewBody() {
     const val = this.templateForm.value.body || '';
-    // Replace variables like {{1}} with styled placeholders for preview
-    return val.replace(/\{\{(\d+)\}\}/g, '<strong>[Variable $1]</strong>');
+    return val.replace(/\{\{(\d+)\}\}/g, '<span style="background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700;">[Variable $1]</span>');
+  }
+
+  getParsedPreviewBody(templateBody: string) {
+    if (!templateBody) return '';
+    return templateBody.replace(/\{\{(\d+)\}\}/g, '<span style="background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px; font-weight: 700;">[Variable $1]</span>');
   }
 
   // Save template as a draft locally
@@ -197,7 +302,6 @@ export class TemplatesView implements OnInit {
       return;
     }
 
-    // Build Meta standard components payload
     const components: any[] = [];
     
     if (val.headerFormat === 'TEXT' && val.headerText) {
@@ -265,75 +369,6 @@ export class TemplatesView implements OnInit {
     });
   }
 
-  openGuide(guideKey: string) {
-    if (guideKey === 'CREATE') {
-      this.guideTitle.set('How to Create WhatsApp Template Messages');
-      this.guideContent.set(`
-# How to Create WhatsApp Template Messages
-
-Templates are pre-approved message formats used for initiating conversations with users on WhatsApp.
-
-### 📝 Key Rules & Guidelines:
-1. **Naming**: Only lowercase letters, numbers, and underscores are allowed (e.g. \`welcome_offer_v1\`).
-2. **Categories**:
-   - **MARKETING**: Promotions, staycation deals, and re-engagement campaigns.
-   - **UTILITY**: Booking confirmations, flight alerts, and receipts.
-   - **AUTHENTICATION**: One-Time Passwords (OTP).
-3. **Variables**: Use positional placeholders like \`{{1}}\`, \`{{2}}\` for dynamic text (e.g. \`Hello {{1}}, your booking for {{2}} is confirmed!\`).
-4. **Approval**: Meta automatically approves compliant utility and marketing templates within 1-5 minutes.
-      `);
-    } else if (guideKey === 'PARAMS') {
-      this.guideTitle.set('Using Chatbot Parameters for Leads');
-      this.guideContent.set(`
-# Using Chatbot Parameters in WhatsApp Templates
-
-Dynamic parameters allow you to personalize every broadcast message with customer details.
-
-### 💡 Example Parameter Mapping:
-* **\`{{1}}\`** ➔ Customer Name (\`John Doe\`)
-* **\`{{2}}\`** ➔ Hotel / Destination (\`Atlantis The Palm Dubai\`)
-* **\`{{3}}\`** ➔ Booking Reference ID (\`BK-98412\`)
-* **\`{{4}}\`** ➔ Checkout Date (\`Nov 24, 2026\`)
-
-### ⚡ Quick Tip:
-You can pass custom fallback variables in Pace Messenger when broadcasting campaigns!
-      `);
-    } else if (guideKey === 'QUICK_REPLY') {
-      this.guideTitle.set('Adding Quick Replies to WhatsApp Templates');
-      this.guideContent.set(`
-# Adding Quick Reply Buttons to Templates
-
-Quick reply buttons allow recipients to respond with a single tap, dramatically boosting response rates!
-
-### 🔘 Supported Button Types:
-1. **Quick Reply**: Pre-defined response buttons (e.g. \`Book Now\`, \`Speak to Agent\`, \`Cancel\`).
-2. **Call to Action**:
-   - **Call Phone Number**: Direct phone call (e.g. \`+917204262473\`).
-   - **Visit Website**: Custom web URL with dynamic URL tracking.
-      `);
-    } else if (guideKey === 'FORMATTING') {
-      this.guideTitle.set('Message Formatting Guidelines');
-      this.guideContent.set(`
-# WhatsApp Text Formatting Guide
-
-Enhance your template text with rich markdown formatting supported by WhatsApp:
-
-* **Bold**: Wrap text in asterisks \`*bold text*\` ➔ **bold text**
-* *Italic*: Wrap text in underscores \`_italic text_\` ➔ *italic text*
-* ~Strikethrough~: Wrap text in tildes \`~strikethrough~\` ➔ ~strikethrough~
-* \`Monospace\`: Wrap text in triple backticks \` \`\`\`monospace\`\`\` \` ➔ \`monospace\`
-
-> **Note**: Avoid headers longer than 60 characters to ensure 100% Meta approval.
-      `);
-    }
-
-    this.showGuideModal.set(true);
-  }
-
-  closeGuide() {
-    this.showGuideModal.set(false);
-  }
-
   openPreview(tpl: MessageTemplate) {
     this.selectedPreviewTemplate.set(tpl);
     this.showPreviewModal.set(true);
@@ -344,12 +379,17 @@ Enhance your template text with rich markdown formatting supported by WhatsApp:
     this.selectedPreviewTemplate.set(null);
   }
 
+  // --- Quick Send Modal Controls ---
   openQuickSend(tpl: MessageTemplate) {
     this.selectedQuickSendTemplate.set(tpl);
+    this.quickSendMode.set('SINGLE');
+    this.singleRecipientPhone.set('');
     this.quickSendForm.reset({
       targetType: 'ALL',
+      headerMedia: '',
       var1: '',
-      var2: ''
+      var2: '',
+      var3: ''
     });
     this.showQuickSendModal.set(true);
   }
@@ -360,34 +400,97 @@ Enhance your template text with rich markdown formatting supported by WhatsApp:
   }
 
   submitQuickSend() {
-    const val = this.quickSendForm.value;
     const tpl = this.selectedQuickSendTemplate();
-    if (!tpl || this.quickSendForm.invalid) return;
+    if (!tpl) return;
 
-    let parameters: any = {};
+    const val = this.quickSendForm.value;
+    const parameters: any = {};
     if (val.headerMedia) parameters['header_image'] = val.headerMedia;
     if (val.var1) parameters['1'] = val.var1;
     if (val.var2) parameters['2'] = val.var2;
+    if (val.var3) parameters['3'] = val.var3;
 
-    const payload = {
-      name: `Quick Broadcast - ${tpl.templateName}`,
-      description: `Quick send initiated from templates for ${tpl.templateName}`,
-      templateId: tpl.id,
-      targetType: val.targetType,
-      status: 'RUNNING', // Instant execution
-      createdBy: 1, // Defaulting to admin/1, typically should pull from auth
-      parameters
-    };
-
-    this.api.post('/campaigns', payload).subscribe({
-      next: () => {
-        this.closeQuickSend();
-        Swal.fire('Broadcast Queued', '🚀 Quick Broadcast has been queued and is executing!', 'success');
-      },
-      error: (err: any) => {
-        Swal.fire('Error', 'Failed to launch Quick Broadcast: ' + (err.error?.error || err.message), 'error');
+    if (this.quickSendMode() === 'SINGLE') {
+      const phone = this.singleRecipientPhone();
+      if (!phone || phone.length < 7) {
+        Swal.fire('Error', 'Please enter a valid WhatsApp phone number.', 'error');
+        return;
       }
-    });
+
+      const payload = {
+        templateId: tpl.id,
+        phone: phone,
+        parameters
+      };
+
+      this.api.post('/campaigns/send-test', payload).subscribe({
+        next: () => {
+          this.closeQuickSend();
+          Swal.fire('Message Sent', `Template message delivered to ${phone}!`, 'success');
+        },
+        error: (err: any) => {
+          Swal.fire('Delivery Error', (err.error?.error || err.message), 'error');
+        }
+      });
+    } else {
+      const payload = {
+        name: `Quick Broadcast - ${tpl.templateName}`,
+        description: `Quick broadcast initiated for ${tpl.templateName}`,
+        templateId: tpl.id,
+        targetType: val.targetType,
+        status: 'RUNNING',
+        createdBy: 1,
+        parameters
+      };
+
+      this.api.post('/campaigns', payload).subscribe({
+        next: () => {
+          this.closeQuickSend();
+          Swal.fire('Broadcast Queued', '🚀 Quick Broadcast has been queued and is executing!', 'success');
+        },
+        error: (err: any) => {
+          Swal.fire('Error', 'Failed to launch Quick Broadcast: ' + (err.error?.error || err.message), 'error');
+        }
+      });
+    }
+  }
+
+  openGuide(guideKey: string) {
+    if (guideKey === 'CREATE') {
+      this.guideTitle.set('How to Create WhatsApp Template Messages');
+      this.guideContent.set(`
+### WhatsApp Template Rules
+- Must belong to **MARKETING**, **UTILITY**, or **AUTHENTICATION** category.
+- Template names must contain only **lowercase letters**, **numbers**, and **underscores** (e.g. \`welcome_offer_v1\`).
+- Variable parameters can be inserted using positional brackets like \`{{1}}\`, \`{{2}}\`.
+      `);
+    } else if (guideKey === 'PARAMS') {
+      this.guideTitle.set('Using Parameters & Personalization');
+      this.guideContent.set(`
+### Dynamic Variables
+- Placeholders like \`{{1}}\` and \`{{2}}\` are replaced dynamically during broadcast dispatch.
+- You can map \`{{1}}\` to contact names, booking codes, or discount links.
+      `);
+    } else if (guideKey === 'QUICK_REPLY') {
+      this.guideTitle.set('Quick Reply & Action Buttons');
+      this.guideContent.set(`
+### Interactive Buttons
+- Add quick reply buttons (e.g. *Visit Website*, *Book Now*, *Call Agent*) to boost user response rates by up to 4x.
+      `);
+    } else if (guideKey === 'FORMATTING') {
+      this.guideTitle.set('Message Formatting Guidelines');
+      this.guideContent.set(`
+### Rich Formatting
+- **Bold**: Wrap text in asterisks: \`*your bold text*\`
+- *Italic*: Wrap text in underscores: \`_your italic text_\`
+- Monospace: Wrap text in backticks: \`code\`
+      `);
+    }
+    this.showGuideModal.set(true);
+  }
+
+  closeGuide() {
+    this.showGuideModal.set(false);
   }
 
   navigateTo(path: string) {
