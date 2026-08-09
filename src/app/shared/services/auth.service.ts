@@ -33,6 +33,11 @@ export class AuthService {
       localStorage.setItem('token', res.token);
       if (res.user) {
         localStorage.setItem('user', JSON.stringify(res.user));
+        const activeProjId = res.user.projectId || localStorage.getItem('activeProjectId') || '1';
+        localStorage.setItem('activeProjectId', activeProjId.toString());
+      }
+      if (!localStorage.getItem('whatsapp_environment_mode')) {
+        localStorage.setItem('whatsapp_environment_mode', 'DEVELOPMENT');
       }
       this.router.navigate(['/dashboard']);
     }
