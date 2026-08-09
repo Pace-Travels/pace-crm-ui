@@ -5,7 +5,7 @@ import { ProjectService } from '../services/project.service';
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
 
-import { ApiService } from '../../../../shared/services/api.service';
+import { ApiService } from '../../../shared/services/api.service';
 
 declare var FB: any;
 
@@ -21,6 +21,13 @@ export class ProjectsView implements OnInit {
   userName = 'User';
   editingProjectId: number | null = null;
   showCreateForm = signal<boolean>(false);
+
+  // Diagnostic Status Check Modal Signals
+  showDiagnosticModal = signal<boolean>(false);
+  diagnosticData = signal<any>(null);
+  isCheckingHealth = signal<boolean>(false);
+  activeCheckingProjectName = signal<string>('');
+
   private router = inject(Router);
   private api = inject(ApiService);
 
@@ -140,6 +147,31 @@ export class ProjectsView implements OnInit {
   showMetaModal = signal(false);
   metaAccessToken = signal<string>('');
   fbLoginStatus = signal<string>('unknown');
+
+  runHealthCheck(project: any) {
+    this.activeCheckingProjectName.set(project.name);
+    this.isCheckingHealth.set(true);
+    this.diagnosticData.set(null);
+    this.showDiagnosticModal.set(true);
+
+    this.api.get(`/projects/${project.id}/status-check`).subscribe({
+      next: (res: any) => {
+        this.isCheckingHealth.set(false);
+        if (res.success && res.diagnostic) {
+          this.diagnosticData.set(res.diagnostic);
+        }
+      },
+      error: (err: any) => {
+        this.isCheckingHealth.set(false);
+        Swal.fire('Error', 'Status check failed: ' + (err.error?.message || err.message), 'error');
+      }
+    });
+  }
+
+  closeDiagnosticModal() {
+    this.showDiagnosticModal.set(false);
+    this.diagnosticData.set(null);
+  }
 
   checkLoginState() {
     if (typeof FB === 'undefined') {

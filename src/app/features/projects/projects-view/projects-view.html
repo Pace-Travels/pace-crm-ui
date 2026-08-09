@@ -135,10 +135,149 @@
                 <button (click)="selectProject(project)" [style.background]="projectService.currentProject()?.id === project.id ? '#e2e8f0' : '#0b494d'" [style.color]="projectService.currentProject()?.id === project.id ? '#475569' : 'white'" style="flex: 1; border: none; padding: 9px 14px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer;">
                     {{ projectService.currentProject()?.id === project.id ? 'Current Context' : 'Switch Context' }}
                 </button>
+                <button (click)="runHealthCheck(project)" style="background: #f0f9ff; border: 1px solid #0284c7; color: #0369a1; padding: 9px 14px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Check Live Meta Connection Status">
+                    <i class="fa-solid fa-heart-pulse" style="color: #0284c7;"></i> Status Check
+                </button>
                 <button (click)="editProject(project)" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 9px 14px; border-radius: 6px; font-weight: 600; font-size: 12.5px; cursor: pointer;" title="Edit Configuration">
                     <i class="fa-solid fa-pencil"></i> Edit
                 </button>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- Meta WABA Connection Diagnostic Status Modal -->
+<div *ngIf="showDiagnosticModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Inter', sans-serif;">
+    <div style="background: #ffffff; width: 720px; max-width: 95vw; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-height: 90vh; display: flex; flex-direction: column;">
+        
+        <!-- Header -->
+        <div style="background: #0f172a; color: white; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 38px; height: 38px; background: #0284c7; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                    <i class="fa-solid fa-heart-pulse"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 17px; font-weight: 700;">Meta Connection Diagnostic Status</h3>
+                    <span style="font-size: 12px; color: #94a3b8;">Real-time parameter verification for <strong>{{ activeCheckingProjectName() }}</strong></span>
+                </div>
+            </div>
+            <button (click)="closeDiagnosticModal()" style="background: rgba(255,255,255,0.1); border: none; font-size: 16px; cursor: pointer; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+
+        <!-- Body Area -->
+        <div style="padding: 24px; flex: 1; overflow-y: auto;">
+            
+            <!-- Loading Indicator -->
+            <div *ngIf="isCheckingHealth()" style="text-align: center; padding: 40px 0;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 36px; color: #0284c7; margin-bottom: 14px;"></i>
+                <h4 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #0f172a;">Testing Meta API Connection...</h4>
+                <p style="margin: 0; font-size: 13px; color: #64748b;">Querying Facebook Graph API for Access Token, Phone Number ID, WABA Account & Webhook status.</p>
+            </div>
+
+            <div *ngIf="!isCheckingHealth() && diagnosticData()">
+                
+                <!-- Overall Status Banner -->
+                <div [style.background]="diagnosticData().overallStatus === 'HEALTHY' ? '#f0fdf4' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? '#fffbe6' : '#fef2f2')" 
+                     [style.border-color]="diagnosticData().overallStatus === 'HEALTHY' ? '#bbf7d0' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? '#ffe58f' : '#fecaca')"
+                     style="border-width: 1px; border-style: solid; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px;">
+                    
+                    <div style="font-size: 24px;">
+                        <span *ngIf="diagnosticData().overallStatus === 'HEALTHY'">✅</span>
+                        <span *ngIf="diagnosticData().overallStatus === 'PARTIAL_WARNING'">⚠️</span>
+                        <span *ngIf="diagnosticData().overallStatus === 'FAILED'">❌</span>
+                    </div>
+
+                    <div>
+                        <strong [style.color]="diagnosticData().overallStatus === 'HEALTHY' ? '#14532d' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? '#92400e' : '#991b1b')" style="font-size: 15px; display: block; margin-bottom: 4px;">
+                            {{ diagnosticData().overallStatus === 'HEALTHY' ? '100% Connected & Healthy' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? 'Connected with Minor Warnings' : 'Action Required: Meta Connection Error') }}
+                        </strong>
+                        <p [style.color]="diagnosticData().overallStatus === 'HEALTHY' ? '#166534' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? '#b45309' : '#b91c1c')" style="margin: 0; font-size: 13px; line-height: 1.4;">
+                            {{ diagnosticData().summaryMessage }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Parameter Checks Grid -->
+                <div style="display: flex; flex-direction: column; gap: 14px;">
+                    
+                    <!-- 1. Access Token -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <i class="fa-solid fa-key" style="color: #64748b; font-size: 14px;"></i>
+                                <strong style="font-size: 13.5px; color: #0f172a;">Permanent Access Token</strong>
+                            </div>
+                            <span style="font-size: 12.5px; color: #475569;">{{ diagnosticData().checks.accessToken.message }}</span>
+                        </div>
+                        <span [style.background]="diagnosticData().checks.accessToken.status === 'OK' ? '#dcfce7' : '#fee2e2'"
+                              [style.color]="diagnosticData().checks.accessToken.status === 'OK' ? '#15803d' : '#b91c1c'"
+                              style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
+                            {{ diagnosticData().checks.accessToken.status }}
+                        </span>
+                    </div>
+
+                    <!-- 2. Phone Number ID -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <i class="fa-solid fa-phone" style="color: #64748b; font-size: 14px;"></i>
+                                <strong style="font-size: 13.5px; color: #0f172a;">Phone Number ID</strong>
+                            </div>
+                            <span style="font-size: 12.5px; color: #475569;">{{ diagnosticData().checks.phoneNumber.message }}</span>
+                        </div>
+                        <span [style.background]="diagnosticData().checks.phoneNumber.status === 'OK' ? '#dcfce7' : '#fee2e2'"
+                              [style.color]="diagnosticData().checks.phoneNumber.status === 'OK' ? '#15803d' : '#b91c1c'"
+                              style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
+                            {{ diagnosticData().checks.phoneNumber.status }}
+                        </span>
+                    </div>
+
+                    <!-- 3. WABA Account ID -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <i class="fa-solid fa-building" style="color: #64748b; font-size: 14px;"></i>
+                                <strong style="font-size: 13.5px; color: #0f172a;">WABA Business Account ID</strong>
+                            </div>
+                            <span style="font-size: 12.5px; color: #475569;">{{ diagnosticData().checks.wabaAccount.message }}</span>
+                        </div>
+                        <span [style.background]="diagnosticData().checks.wabaAccount.status === 'OK' ? '#dcfce7' : '#fee2e2'"
+                              [style.color]="diagnosticData().checks.wabaAccount.status === 'OK' ? '#15803d' : '#b91c1c'"
+                              style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
+                            {{ diagnosticData().checks.wabaAccount.status }}
+                        </span>
+                    </div>
+
+                    <!-- 4. Webhook Subscription -->
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                <i class="fa-solid fa-bolt" style="color: #64748b; font-size: 14px;"></i>
+                                <strong style="font-size: 13.5px; color: #0f172a;">Webhook Subscription</strong>
+                            </div>
+                            <span style="font-size: 12.5px; color: #475569;">{{ diagnosticData().checks.webhook.message }}</span>
+                        </div>
+                        <span [style.background]="diagnosticData().checks.webhook.status === 'OK' ? '#dcfce7' : '#fef3c7'"
+                              [style.color]="diagnosticData().checks.webhook.status === 'OK' ? '#15803d' : '#b45309'"
+                              style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
+                            {{ diagnosticData().checks.webhook.status }}
+                        </span>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="background: #f8fafc; padding: 14px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; color: #64748b;">
+                Tested live against Meta Graph API v19.0
+            </span>
+            <button (click)="closeDiagnosticModal()" style="background: #0f172a; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer;">
+                Close Diagnostic
+            </button>
+        </div>
+
     </div>
 </div>
