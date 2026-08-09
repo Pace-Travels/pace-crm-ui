@@ -1,8 +1,9 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ContactService, Contact } from '../../services/contact.service';
 import { ApiService } from '../../../../shared/services/api.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-contacts-table',
@@ -12,11 +13,29 @@ import { ApiService } from '../../../../shared/services/api.service';
   styleUrl: './contacts-table.scss',
 })
 export class ContactsTable implements OnInit {
+  contactService = inject(ContactService);
+  private fb = inject(FormBuilder);
+  private api = inject(ApiService);
+
   // Modal states
   showAddContactModal = signal(false);
   showImportModal = signal(false);
   showCreateGroupModal = signal(false);
   showSendMessageModal = signal(false);
+  showFilterPanel = signal(false);
+
+  // Editing state
+  editingContactId = signal<number | null>(null);
+
+  // Datatable Search, Filter & Pagination State
+  searchQuery = signal('');
+  filterLocation = signal('');
+  filterSource = signal('');
+  sortColumn = signal<string>('name');
+  sortDirection = signal<'asc' | 'desc'>('asc');
+  
+  currentPage = signal(1);
+  pageSize = signal(10);
 
   // Single Send Message States
   activeSendMode = signal<'TEXT' | 'TEMPLATE'>('TEXT');
@@ -33,7 +52,6 @@ export class ContactsTable implements OnInit {
   // Dropdown states
   showRunAdDropdown = signal(false);
   showImportDropdown = signal(false);
-  showActionsDropdown = signal(false);
 
   // Group Form
   groupName = signal('');
@@ -45,16 +63,13 @@ export class ContactsTable implements OnInit {
   // Selection
   selectedIds = signal<number[]>([]);
   isBroadcastActive = computed(() => this.selectedIds().length > 0);
+  
   isAllSelected = computed(() => {
-    const contacts = this.contactService.filteredContacts();
-    return contacts.length > 0 && this.selectedIds().length === contacts.length;
+    const list = this.paginatedContacts();
+    return list.length > 0 && list.every(c => c.id !== undefined && this.selectedIds().includes(c.id));
   });
 
-  constructor(
-    public contactService: ContactService,
-    private fb: FormBuilder,
-    private api: ApiService
-  ) {
+  constructor() {
     this.contactForm = this.fb.group({
       agencyName: [''],
       name: ['', Validators.required],
@@ -73,22 +88,85 @@ export class ContactsTable implements OnInit {
     this.contactService.fetchContacts();
   }
 
-  toggleRunAdDropdown() { this.showRunAdDropdown.set(!this.showRunAdDropdown()); this.showImportDropdown.set(false); this.showActionsDropdown.set(false); }
-  toggleImportDropdown() { this.showImportDropdown.set(!this.showImportDropdown()); this.showRunAdDropdown.set(false); this.showActionsDropdown.set(false); }
-  toggleActionsDropdown() { this.showActionsDropdown.set(!this.showActionsDropdown()); this.showRunAdDropdown.set(false); this.showImportDropdown.set(false); }
+  // Filtered & Sorted Contacts computation
+  processedContacts = computed(() => {
+    let list = this.contactService.filteredContacts();
+    const query = this.searchQuery().trim().toLowerCase();
+    const loc = this.filterLocation().trim().toLowerCase();
+    const src = this.filterSource().trim().toLowerCase();
 
-  closeDropdowns() {
-    this.showRunAdDropdown.set(false);
-    this.showImportDropdown.set(false);
-    this.showActionsDropdown.set(false);
+    // 1. Search Query Filter
+    if (query) {
+      list = list.filter(c => 
+        (c.name && c.name.toLowerCase().includes(query)) ||
+        (c.agencyName && c.agencyName.toLowerCase().includes(query)) ||
+        (c.phone && c.phone.includes(query)) ||
+        (c.phone2 && c.phone2.includes(query)) ||
+        (c.email && c.email.toLowerCase().includes(query)) ||
+        (c.location && c.location.toLowerCase().includes(query))
+      );
+    }
+
+    // 2. Specific Location Filter
+    if (loc) {
+      list = list.filter(c => c.location && c.location.toLowerCase().includes(loc));
+    }
+
+    // 3. Source Filter
+    if (src) {
+      list = list.filter(c => c.source && c.source.toLowerCase().includes(src));
+    }
+
+    // 4. Sorting
+    const col = this.sortColumn();
+    const dir = this.sortDirection() === 'asc' ? 1 : -1;
+
+    list = [...list].sort((a: any, b: any) => {
+      const valA = (a[col] || '').toString().toLowerCase();
+      const valB = (b[col] || '').toString().toLowerCase();
+      if (valA < valB) return -1 * dir;
+      if (valA > valB) return 1 * dir;
+      return 0;
+    });
+
+    return list;
+  });
+
+  // Pagination computation
+  paginatedContacts = computed(() => {
+    const list = this.processedContacts();
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return list.slice(start, start + this.pageSize());
+  });
+
+  totalPages = computed(() => Math.ceil(this.processedContacts().length / this.pageSize()) || 1);
+
+  changeSort(column: string) {
+    if (this.sortColumn() === column) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortColumn.set(column);
+      this.sortDirection.set('asc');
+    }
   }
+
+  setPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  toggleImportDropdown() { this.showImportDropdown.set(!this.showImportDropdown()); }
+  closeDropdowns() { this.showImportDropdown.set(false); }
 
   toggleSelectAll(event: any) {
     if (event.target.checked) {
-      const allIds = this.contactService.filteredContacts().map(c => c.id!).filter(id => id !== undefined);
-      this.selectedIds.set(allIds);
+      const pageIds = this.paginatedContacts().map(c => c.id!).filter(id => id !== undefined);
+      const combined = Array.from(new Set([...this.selectedIds(), ...pageIds]));
+      this.selectedIds.set(combined);
     } else {
-      this.selectedIds.set([]);
+      const pageIds = this.paginatedContacts().map(c => c.id!);
+      this.selectedIds.set(this.selectedIds().filter(id => !pageIds.includes(id)));
     }
   }
 
@@ -107,39 +185,100 @@ export class ContactsTable implements OnInit {
   }
 
   openAddContact() {
+    this.editingContactId.set(null);
     this.contactForm.reset({ source: 'ORGANIC' });
+    this.showAddContactModal.set(true);
+  }
+
+  openEditContact(contact: Contact, event: Event) {
+    event.stopPropagation();
+    this.editingContactId.set(contact.id || null);
+    this.contactForm.patchValue({
+      agencyName: contact.agencyName || '',
+      name: contact.name,
+      location: contact.location || '',
+      phone: contact.phone,
+      phone2: contact.phone2 || '',
+      email: contact.email || '',
+      email2: contact.email2 || '',
+      userName: contact.userName || '',
+      tags: contact.tags ? contact.tags.join(', ') : '',
+      source: contact.source || 'ORGANIC'
+    });
     this.showAddContactModal.set(true);
   }
 
   closeAddContact() {
     this.showAddContactModal.set(false);
+    this.editingContactId.set(null);
   }
 
   onAddContactSubmit() {
-    if (this.contactForm.valid) {
-      const val = this.contactForm.value;
-      const payload = {
-        type: this.contactService.activeType(),
-        agencyName: val.agencyName || null,
-        name: val.name,
-        location: val.location || null,
-        phone: val.phone,
-        phone2: val.phone2 || null,
-        email: val.email || null,
-        email2: val.email2 || null,
-        userName: val.userName || null,
-        tags: val.tags ? [val.tags] : [],
-        source: val.source,
-        leadStage: 'New'
-      };
-      
+    if (this.contactForm.invalid) {
+      Swal.fire('Error', 'Please enter required fields (Name and Phone Number)', 'error');
+      return;
+    }
+
+    const val = this.contactForm.value;
+    const payload = {
+      type: this.contactService.activeType(),
+      agencyName: val.agencyName || null,
+      name: val.name,
+      location: val.location || null,
+      phone: val.phone,
+      phone2: val.phone2 || null,
+      email: val.email || null,
+      email2: val.email2 || null,
+      userName: val.userName || null,
+      tags: val.tags ? val.tags.split(',').map((t: string) => t.trim()) : [],
+      source: val.source,
+      leadStage: 'New'
+    };
+    
+    const editId = this.editingContactId();
+    if (editId) {
+      this.contactService.updateContact(editId, payload).subscribe({
+        next: () => {
+          this.closeAddContact();
+          this.contactService.fetchContacts();
+          Swal.fire('Success', 'Contact details updated successfully!', 'success');
+        },
+        error: (err: any) => Swal.fire('Error', err.error?.message || 'Failed to update contact', 'error')
+      });
+    } else {
       this.contactService.addContact(payload).subscribe({
         next: () => {
           this.closeAddContact();
           this.contactService.fetchContacts();
-        }
+          Swal.fire('Success', 'New contact added successfully!', 'success');
+        },
+        error: (err: any) => Swal.fire('Error', err.error?.message || 'Failed to add contact', 'error')
       });
     }
+  }
+
+  deleteContact(contact: Contact, event: Event) {
+    event.stopPropagation();
+    if (!contact.id) return;
+
+    Swal.fire({
+      title: 'Delete Contact?',
+      text: `Are you sure you want to delete ${contact.name}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      confirmButtonText: 'Yes, Delete'
+    }).then((res) => {
+      if (res.isConfirmed) {
+        this.contactService.deleteContact(contact.id!).subscribe({
+          next: () => {
+            this.contactService.fetchContacts();
+            Swal.fire('Deleted!', 'Contact removed successfully.', 'success');
+          },
+          error: (err: any) => Swal.fire('Error', err.error?.message || 'Failed to delete contact', 'error')
+        });
+      }
+    });
   }
 
   openImportModal() {
@@ -161,7 +300,7 @@ export class ContactsTable implements OnInit {
           this.isPreviewMode.set(true);
         },
         error: (err: any) => {
-          alert("Error importing file: " + (err.error?.error || err.message));
+          Swal.fire("Import Error", (err.error?.error || err.message), 'error');
         }
       });
     }
@@ -170,7 +309,7 @@ export class ContactsTable implements OnInit {
   approveImport() {
     const validContacts = this.previewContacts().filter(c => c.isValid);
     if (validContacts.length === 0) {
-      alert("No valid contacts to import.");
+      Swal.fire("Warning", "No valid contacts to import.", 'warning');
       return;
     }
     this.contactService.bulkSaveContacts(validContacts).subscribe({
@@ -178,10 +317,10 @@ export class ContactsTable implements OnInit {
         this.isPreviewMode.set(false);
         this.previewContacts.set([]);
         this.contactService.fetchContacts();
-        alert("Contacts imported successfully!");
+        Swal.fire("Success", "Contacts imported and saved successfully!", 'success');
       },
       error: (err: any) => {
-        alert("Failed to save contacts: " + err.message);
+        Swal.fire("Error", err.message, 'error');
       }
     });
   }
@@ -227,7 +366,7 @@ export class ContactsTable implements OnInit {
 
   submitCreateGroup() {
     if (!this.groupName()) {
-      alert("Group name is required");
+      Swal.fire("Error", "Group name is required", 'error');
       return;
     }
     this.contactService.createGroup(
@@ -240,15 +379,14 @@ export class ContactsTable implements OnInit {
         this.closeCreateGroup();
         this.selectedIds.set([]);
         this.contactService.fetchGroups();
-        alert("Group created successfully!");
+        Swal.fire("Success", "Contact Group created successfully!", 'success');
       },
       error: (err: any) => {
-        alert("Failed to create group: " + err.message);
+        Swal.fire("Error", err.message, 'error');
       }
     });
   }
 
-  // Single message dispatch methods
   openSendMessage(contact: any, event: Event) {
     event.stopPropagation();
     this.selectedContactForMessage.set(contact);
@@ -257,13 +395,10 @@ export class ContactsTable implements OnInit {
     this.selectedMessageTemplate.set(null);
     this.messageTemplateParams.set({});
     
-    // Fetch approved templates for selection
     this.api.get('/messagetemplates/list').subscribe((res: any) => {
-      const all = res.data || [];
-      this.approvedTemplates.set(all.filter((t: any) => t.status === 'APPROVED'));
+      this.approvedTemplates.set(res.data || []);
+      this.showSendMessageModal.set(true);
     });
-
-    this.showSendMessageModal.set(true);
   }
 
   closeSendMessage() {
@@ -282,24 +417,14 @@ export class ContactsTable implements OnInit {
     this.messageTemplateParams.set(paramsMap);
   }
 
-  getMsgTemplateParamKeys() {
+  getTemplateParamKeys() {
     return Object.keys(this.messageTemplateParams());
   }
 
-  onMsgParamChange(key: string, event: any) {
+  onParamChange(key: string, event: any) {
     const current = { ...this.messageTemplateParams() };
     current[key] = event.target.value;
     this.messageTemplateParams.set(current);
-  }
-
-  getMsgPreviewText() {
-    let body = this.selectedMessageTemplate()?.templateBody || '';
-    const params = this.messageTemplateParams();
-    Object.keys(params).forEach((key) => {
-      const val = params[key] || `[Variable ${key}]`;
-      body = body.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), val);
-    });
-    return body;
   }
 
   dispatchSingleMessage() {
@@ -307,26 +432,23 @@ export class ContactsTable implements OnInit {
     if (!contact) return;
 
     if (this.activeSendMode() === 'TEXT') {
-      if (!this.messageText().trim()) {
-        alert("Please enter message text.");
+      if (!this.messageText()) {
+        Swal.fire("Error", "Please enter message text", 'error');
         return;
       }
-      const payload = {
-        contactId: contact.id,
-        textContent: this.messageText().trim()
-      };
-      this.api.post('/messages/send', payload).subscribe({
+      this.api.post('/messages/send', {
+        recipientPhone: contact.phone,
+        textContent: this.messageText()
+      }).subscribe({
         next: () => {
           this.closeSendMessage();
-          alert("Free-text outbound message sent and logged successfully!");
+          Swal.fire("Message Sent", `WhatsApp message sent to ${contact.name}`, 'success');
         },
-        error: (err: any) => {
-          alert("Failed to send text message: " + (err.error?.error || err.message));
-        }
+        error: (err: any) => Swal.fire("Delivery Failed", err.error?.error || err.message, 'error')
       });
     } else {
       if (!this.selectedMessageTemplate()) {
-        alert("Please select a template.");
+        Swal.fire("Error", "Please select a message template", 'error');
         return;
       }
       const payload = {
@@ -337,11 +459,9 @@ export class ContactsTable implements OnInit {
       this.api.post('/campaigns/send-test', payload).subscribe({
         next: () => {
           this.closeSendMessage();
-          alert("Approved template message sent and logged successfully!");
+          Swal.fire("Template Sent", `Template message delivered to ${contact.name}`, 'success');
         },
-        error: (err: any) => {
-          alert("Failed to send template message: " + (err.error?.error || err.message));
-        }
+        error: (err: any) => Swal.fire("Delivery Failed", err.error?.error || err.message, 'error')
       });
     }
   }
