@@ -220,8 +220,7 @@
             </div>
 
             <div>
-                <label style="font-size: 12px; font-weight: 700; color: #334155;">WhatsApp Phone Number *</label>
-                <input type="text" formControlName="phone" placeholder="e.g. 919876543210" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-family: monospace; font-weight: 600;">
+                <app-phone-input formControlName="phone" label="WhatsApp Business Phone Number" [required]="true"></app-phone-input>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">

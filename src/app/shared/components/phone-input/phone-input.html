@@ -1,0 +1,64 @@
+<div class="phone-input-wrapper" style="position: relative; font-family: 'Inter', sans-serif;">
+    <label *ngIf="label" style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+        {{ label }} <span *ngIf="required" style="color: #ef4444;">*</span>
+    </label>
+
+    <div style="display: flex; gap: 0; position: relative; border: 1px solid #cbd5e1; border-radius: 6px; overflow: visible; background: white; box-shadow: 0 1px 2px rgba(0,0,0,0.03);" [style.border-color]="verificationResult()?.isValid === false ? '#ef4444' : (verificationResult()?.isValid ? '#10b981' : '#cbd5e1')">
+        
+        <!-- Country Selector Trigger Button -->
+        <button type="button" (click)="showDropdown.set(!showDropdown()); $event.stopPropagation()" style="display: flex; align-items: center; gap: 6px; padding: 9px 12px; background: #f8fafc; border: none; border-right: 1px solid #cbd5e1; border-top-left-radius: 6px; border-bottom-left-radius: 6px; cursor: pointer; font-size: 13.5px; font-weight: 700; color: #0f172a; white-space: nowrap;">
+            <span style="font-size: 16px;">{{ selectedCountry().flag }}</span>
+            <span>{{ selectedCountry().code }}</span>
+            <i class="fa-solid fa-chevron-down" style="font-size: 10px; color: #64748b;"></i>
+        </button>
+
+        <!-- Phone Number Digits Input -->
+        <input type="text" 
+               [value]="phoneNumberOnly()" 
+               (input)="onInputNumber($event)" 
+               [placeholder]="placeholder" 
+               style="flex: 1; border: none; padding: 9px 12px; font-size: 13.5px; outline: none; font-family: monospace; font-weight: 600; color: #0f172a; background: transparent; border-top-right-radius: 6px; border-bottom-right-radius: 6px;">
+
+        <!-- Inline Verify WhatsApp Button & Status Badge -->
+        <div *ngIf="showVerifyButton" style="display: flex; align-items: center; padding-right: 8px;">
+            <button *ngIf="!verificationResult() && !isVerifying()" type="button" (click)="verifyWhatsappNumber()" [disabled]="!phoneNumberOnly() || phoneNumberOnly().length < 7" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #00695c; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;" [style.opacity]="phoneNumberOnly().length >= 7 ? '1' : '0.5'">
+                <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i> Verify WA
+            </button>
+
+            <span *ngIf="isVerifying()" style="font-size: 11px; color: #64748b; font-weight: 600; padding: 4px 8px;">
+                <i class="fa-solid fa-spinner fa-spin"></i> Checking...
+            </span>
+
+            <span *ngIf="verificationResult()?.isValid" style="font-size: 11px; font-weight: 800; color: #15803d; background: #dcfce7; padding: 3px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
+                <i class="fa-solid fa-circle-check"></i> Verified WA
+            </span>
+
+            <span *ngIf="verificationResult() && !verificationResult()?.isValid" style="font-size: 11px; font-weight: 800; color: #b91c1c; background: #fee2e2; padding: 3px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px;">
+                <i class="fa-solid fa-circle-xmark"></i> Invalid WA
+            </span>
+        </div>
+    </div>
+
+    <!-- Country Dropdown Overlay Panel -->
+    <div *ngIf="showDropdown()" style="position: absolute; left: 0; top: 100%; margin-top: 4px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.15); width: 320px; max-height: 280px; z-index: 9999; display: flex; flex-direction: column; overflow: hidden;" (click)="$event.stopPropagation()">
+        <!-- Search Country Bar -->
+        <div style="padding: 8px; border-bottom: 1px solid #f1f5f9; background: #f8fafc;">
+            <input type="text" [(ngModel)]="searchQuery" placeholder="Search country or code..." style="width: 100%; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12.5px; outline: none;">
+        </div>
+
+        <!-- Scrollable Countries List -->
+        <div style="overflow-y: auto; flex: 1;">
+            <div *ngFor="let c of filteredCountries" (click)="selectCountry(c)" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; font-size: 13px; cursor: pointer; border-bottom: 1px solid #f8fafc;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">
+                <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <span style="font-size: 16px;">{{ c.flag }}</span>
+                    <span style="font-weight: 600; color: #0f172a;">{{ c.name }}</span>
+                </div>
+                <strong style="color: #0b494d; font-family: monospace; font-size: 12.5px;">{{ c.code }}</strong>
+            </div>
+
+            <div *ngIf="filteredCountries.length === 0" style="padding: 16px; text-align: center; color: #64748b; font-size: 12px;">
+                No country matched search query.
+            </div>
+        </div>
+    </div>
+</div>

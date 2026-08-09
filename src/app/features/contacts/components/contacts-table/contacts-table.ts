@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ContactService, Contact } from '../../services/contact.service';
 import { ApiService } from '../../../../shared/services/api.service';
+import { PhoneInputComponent } from '../../../../shared/components/phone-input/phone-input';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-contacts-table',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PhoneInputComponent],
   templateUrl: './contacts-table.html',
   styleUrl: './contacts-table.scss',
 })
