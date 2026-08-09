@@ -18,7 +18,12 @@ export class ProjectsView implements OnInit {
   projectForm: FormGroup;
   userName = 'User';
   editingProjectId: number | null = null;
+  showCreateForm = signal<boolean>(false);
   private router = inject(Router);
+
+  toggleCreateForm() {
+    this.showCreateForm.set(!this.showCreateForm());
+  }
 
   constructor(
     public projectService: ProjectService,
