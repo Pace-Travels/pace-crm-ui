@@ -2,14 +2,14 @@
     <div class="table-controls">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" placeholder="Search campaign">
+            <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Search campaign by name or audience...">
         </div>
         
         <div class="tabs">
-            <button class="tab" [class.active]="activeTab === 'All'" (click)="activeTab = 'All'">All</button>
-            <button class="tab" [class.active]="activeTab === 'Broadcast'" (click)="activeTab = 'Broadcast'">Broadcast</button>
-            <button class="tab" [class.active]="activeTab === 'API'" (click)="activeTab = 'API'">API</button>
-            <button class="tab" [class.active]="activeTab === 'Scheduled'" (click)="activeTab = 'Scheduled'">Scheduled</button>
+            <button class="tab" [class.active]="activeTab() === 'All'" (click)="activeTab.set('All')">All</button>
+            <button class="tab" [class.active]="activeTab() === 'Broadcast'" (click)="activeTab.set('Broadcast')">Broadcast</button>
+            <button class="tab" [class.active]="activeTab() === 'B2B/B2C'" (click)="activeTab.set('B2B/B2C')">B2B / B2C</button>
+            <button class="tab" [class.active]="activeTab() === 'Scheduled'" (click)="activeTab.set('Scheduled')">Scheduled</button>
         </div>
     </div>
 
@@ -20,35 +20,40 @@
                 <th>TYPE</th>
                 <th>CREATED AT</th>
                 <th>STATUS</th>
-                <th>AUDIENCE</th>
-                <th>ACTION</th>
+                <th>TARGET AUDIENCE</th>
+                <th style="text-align: right;">ACTION</th>
             </tr>
         </thead>
         <tbody>
             @if (campaignService.isLoading()) {
-                <tr><td colspan="6" class="text-center">Loading...</td></tr>
-            } @else if (campaignService.campaigns().length === 0) {
+                <tr><td colspan="6" class="text-center" style="padding: 30px; color: #64748b;">Loading active campaigns...</td></tr>
+            } @else if (filteredCampaigns.length === 0) {
                 <tr>
-                    <td colspan="6" class="empty-state-cell">
-                        <img src="https://via.placeholder.com/150?text=No+Campaigns" alt="No Campaigns">
-                        <p>No campaign running currently!</p>
-                        <p class="subtext">You'll be able to see the list of your campaigns here.</p>
+                    <td colspan="6" class="empty-state-cell" style="padding: 40px; text-align: center;">
+                        <p style="font-weight: 700; color: #1e293b; margin: 0 0 4px 0;">No campaigns found</p>
+                        <p class="subtext" style="color: #64748b; font-size: 13px; margin: 0;">Create a new broadcast campaign to launch marketing dispatches.</p>
                     </td>
                 </tr>
             } @else {
-                @for(campaign of campaignService.campaigns(); track campaign.id) {
+                @for(campaign of filteredCampaigns; track campaign.id) {
                     <tr>
-                        <td>{{ campaign.campaignName }}</td>
+                        <td style="font-weight: 700; color: #0f172a;">{{ campaign.campaignName }}</td>
                         <td>
-                            <span class="type-badge" [class.broadcast]="campaign.type === 'BROADCAST'" [class.api]="campaign.type === 'API'">
+                            <span class="type-badge" [class.broadcast]="campaign.type === 'BROADCAST' || campaign.type === 'ALL'" [class.api]="campaign.type === 'API' || campaign.type === 'B2B'">
                                 {{ campaign.type }}
                             </span>
                         </td>
-                        <td>{{ campaign.createdAt }}</td>
-                        <td>{{ campaign.status }}</td>
-                        <td>{{ campaign.audience }}</td>
+                        <td style="font-size: 13px; color: #475569;">{{ campaign.createdAt }}</td>
                         <td>
-                            <button class="icon-btn"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                            <span [style.background]="campaign.status === 'RUNNING' || campaign.status === 'Completed' ? '#dcfce7' : '#fef3c7'" [style.color]="campaign.status === 'RUNNING' || campaign.status === 'Completed' ? '#15803d' : '#b45309'" style="padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">
+                                {{ campaign.status }}
+                            </span>
+                        </td>
+                        <td style="font-size: 13px; color: #334155;">{{ campaign.audience }}</td>
+                        <td style="text-align: right;">
+                            <button (click)="deleteCampaign(campaign)" class="icon-btn" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 6px 10px; font-size: 14px;" title="Delete Campaign">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
                         </td>
                     </tr>
                 }

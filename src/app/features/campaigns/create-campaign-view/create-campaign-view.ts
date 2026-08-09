@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ContactService } from '../../contacts/services/contact.service';
 import { ApiService } from '../../../shared/services/api.service';
 import { ContactProfilePanel } from '../../../shared/components/contact-profile-panel/contact-profile-panel';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-create-campaign-view',
@@ -149,11 +150,11 @@ export class CreateCampaignView implements OnInit {
 
   launchCampaign() {
     if (!this.campaignName) {
-      alert("Campaign Name is required");
+      Swal.fire('Error', 'Campaign Name is required', 'error');
       return;
     }
     if (!this.selectedTemplate()) {
-      alert("Please select a template");
+      Swal.fire('Error', 'Please select a template', 'error');
       return;
     }
 
@@ -161,30 +162,32 @@ export class CreateCampaignView implements OnInit {
       name: this.campaignName,
       description: `WhatsApp Campaign: ${this.selectedTemplate().templateName}`,
       templateId: this.selectedTemplate().id,
+      parameters: this.templateParams(),
       targetType: this.audienceType(),
       targetGroupId: this.audienceType() === 'GROUP' ? this.selectedGroupId() : null,
       status: 'RUNNING',
       createdBy: 1
     };
 
-    this.api.post('/campaigns/add', payload).subscribe({
+    this.api.post('campaigns/add', payload).subscribe({
       next: () => {
-        alert("Campaign launched successfully!");
-        this.router.navigate(['/campaigns']);
+        Swal.fire('Campaign Launched', 'Your WhatsApp broadcast campaign is now running!', 'success').then(() => {
+          this.router.navigate(['/campaigns']);
+        });
       },
       error: (err: any) => {
-        alert("Failed to launch campaign: " + err.message);
+        Swal.fire('Error', 'Failed to launch campaign: ' + (err.error?.message || err.message), 'error');
       }
     });
   }
 
   sendTestMessage() {
     if (!this.testPhoneNumber()) {
-      alert("Test phone number is required");
+      Swal.fire('Error', 'Test phone number is required', 'error');
       return;
     }
     if (!this.selectedTemplate()) {
-      alert("Please select a template first");
+      Swal.fire('Error', 'Please select a template first', 'error');
       return;
     }
 
@@ -194,12 +197,12 @@ export class CreateCampaignView implements OnInit {
       parameters: this.templateParams()
     };
 
-    this.api.post('/campaigns/send-test', payload).subscribe({
+    this.api.post('campaigns/send-test', payload).subscribe({
       next: () => {
-        alert("Test marketing message sent successfully!");
+        Swal.fire('Test Sent', 'Test marketing message sent successfully via WhatsApp!', 'success');
       },
       error: (err: any) => {
-        alert("Failed to send test: " + (err.error?.error || err.message));
+        Swal.fire('Error', 'Failed to send test: ' + (err.error?.error || err.message), 'error');
       }
     });
   }
