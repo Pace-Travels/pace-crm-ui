@@ -17,6 +17,9 @@
 <div class="templates-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
     <h2 style="margin: 0; font-size: 20px; color: #0f172a;">Template Messages</h2>
     <div style="display: flex; gap: 12px;">
+        <button class="btn btn-outline" (click)="openMetaLibrary()" style="background: #f0f9ff; border: 1px solid #0284c7; color: #0369a1; padding: 8px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <i class="fa-brands fa-facebook" style="font-size: 15px; color: #0284c7;"></i> Meta Template Library
+        </button>
         <button class="btn btn-outline" (click)="syncTemplates()" style="background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer;">
             <i class="fa-solid fa-rotate" style="color: #0284c7;"></i> Sync Meta Status
         </button>
@@ -398,5 +401,102 @@
         <div style="display: flex; justify-content: flex-end; margin-top: 16px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
             <button (click)="closeGuide()" style="background: #0f172a; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">Got It</button>
         </div>
+    </div>
+</div>
+
+<!-- Meta Official Template Library Modal -->
+<div *ngIf="showMetaLibraryModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Inter', sans-serif;">
+    <div style="background: #f8fafc; width: 1040px; max-width: 95vw; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-height: 90vh; display: flex; flex-direction: column;">
+        
+        <!-- Modal Header -->
+        <div style="background: #ffffff; padding: 20px 28px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 42px; height: 42px; background: #0284c7; color: white; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                    <i class="fa-brands fa-facebook-f"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a;">Meta Official WhatsApp Template Library</h3>
+                    <p style="margin: 2px 0 0 0; font-size: 12.5px; color: #64748b;">Browse and import pre-built Meta stock templates (Utility, Authentication & Marketing) directly into your repository.</p>
+                </div>
+            </div>
+            <button (click)="closeMetaLibrary()" style="background: #f1f5f9; border: none; font-size: 16px; cursor: pointer; color: #64748b; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+
+        <!-- Category Bar -->
+        <div style="background: #ffffff; padding: 12px 28px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; gap: 8px;">
+                <button (click)="selectedMetaCategory.set('ALL')" [style.background]="selectedMetaCategory() === 'ALL' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedMetaCategory() === 'ALL' ? 'white' : '#475569'" style="border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    All Templates ({{ metaLibraryTemplates().length }})
+                </button>
+                <button (click)="selectedMetaCategory.set('UTILITY')" [style.background]="selectedMetaCategory() === 'UTILITY' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedMetaCategory() === 'UTILITY' ? 'white' : '#475569'" style="border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    Utility (157)
+                </button>
+                <button (click)="selectedMetaCategory.set('AUTHENTICATION')" [style.background]="selectedMetaCategory() === 'AUTHENTICATION' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedMetaCategory() === 'AUTHENTICATION' ? 'white' : '#475569'" style="border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    Authentication (20)
+                </button>
+                <button (click)="selectedMetaCategory.set('MARKETING')" [style.background]="selectedMetaCategory() === 'MARKETING' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedMetaCategory() === 'MARKETING' ? 'white' : '#475569'" style="border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    Marketing & Promos
+                </button>
+            </div>
+            <span style="font-size: 12px; color: #64748b; font-weight: 600;">
+                <i class="fa-solid fa-circle-check" style="color: #16a34a;"></i> Meta Pre-Approved Specs
+            </span>
+        </div>
+
+        <!-- Cards Grid Area -->
+        <div style="flex: 1; overflow-y: auto; padding: 24px 28px;">
+            <div *ngIf="isLoadingMetaLibrary()" style="text-align: center; padding: 40px 0; color: #64748b;">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 28px; color: #0284c7; margin-bottom: 12px;"></i>
+                <p style="font-size: 13px; margin: 0;">Loading Meta Official Template Library...</p>
+            </div>
+
+            <div *ngIf="!isLoadingMetaLibrary()" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                
+                <div *ngFor="let tpl of metaLibraryTemplates()" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); transition: transform 0.15s ease, box-shadow 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.08)'" onmouseout="this.style.transform='none'; this.style.boxShadow='0 4px 6px -1px rgba(0,0,0,0.02)'">
+                    
+                    <div>
+                        <!-- Category Tag & Meta Badge -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span [style.background]="tpl.category === 'UTILITY' ? '#e0f2fe' : (tpl.category === 'AUTHENTICATION' ? '#fef3c7' : '#fce7f3')" [style.color]="tpl.category === 'UTILITY' ? '#0369a1' : (tpl.category === 'AUTHENTICATION' ? '#b45309' : '#be185d')" style="font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 6px; text-transform: uppercase;">
+                                {{ tpl.category }}
+                            </span>
+                            <span style="font-size: 11px; color: #0284c7; font-weight: 700; display: flex; align-items: center; gap: 4px;">
+                                <i class="fa-brands fa-facebook"></i> Meta Library
+                            </span>
+                        </div>
+
+                        <h4 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #0f172a;">{{ tpl.title }}</h4>
+                        <code style="font-size: 11px; color: #64748b; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 14px;">{{ tpl.templateName }}</code>
+
+                        <!-- WhatsApp Message Card Simulation -->
+                        <div style="background: #efeae2; border-radius: 10px; padding: 14px; margin-bottom: 16px; position: relative;">
+                            <div style="background: white; border-radius: 8px; padding: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); font-size: 12.5px; color: #111827; line-height: 1.5; white-space: pre-wrap;">
+                                <strong *ngIf="tpl.headerText" style="display: block; margin-bottom: 6px; color: #0f172a; font-size: 13px;">{{ tpl.headerText }}</strong>
+                                {{ tpl.templateBody }}
+                                <div *ngIf="tpl.footerText" style="margin-top: 8px; font-size: 10.5px; color: #6b7280; border-top: 1px solid #f3f4f6; padding-top: 4px;">
+                                    {{ tpl.footerText }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button (click)="importMetaTemplate(tpl)" style="background: #0b494d; color: white; border: none; padding: 9px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; transition: background 0.15s ease;" onmouseover="this.style.background='#08373a'" onmouseout="this.style.background='#0b494d'">
+                        <i class="fa-solid fa-file-import"></i> Use & Import Template
+                    </button>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div style="background: #ffffff; padding: 16px 28px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12.5px; color: #64748b;">
+                Need custom templates? Create custom templates or generate them with Gemini AI in 1-click.
+            </span>
+            <button (click)="closeMetaLibrary()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">
+                Close Library
+            </button>
+        </div>
+
     </div>
 </div>

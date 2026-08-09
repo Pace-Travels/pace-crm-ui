@@ -5,7 +5,7 @@ import { ProjectService } from '../services/project.service';
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
 
-import { environment } from '../../../../environments/environment';
+import { ApiService } from '../../../../shared/services/api.service';
 
 declare var FB: any;
 
@@ -22,6 +22,7 @@ export class ProjectsView implements OnInit {
   editingProjectId: number | null = null;
   showCreateForm = signal<boolean>(false);
   private router = inject(Router);
+  private api = inject(ApiService);
 
   toggleCreateForm() {
     this.showCreateForm.set(!this.showCreateForm());
@@ -184,16 +185,31 @@ export class ProjectsView implements OnInit {
   }
 
   connectWithFacebook() {
-    const appId = environment.facebookAppId;
-    if (!appId || appId === '109841289150123' || appId.includes('YOUR_ACTUAL_APP_ID')) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Meta App ID Required',
-        html: `Your app is using a placeholder Meta App ID (<code>109841289150123</code>).<br><br>Please replace <b>facebookAppId</b> in <code>src/environments/environment.ts</code> with your actual Meta App ID from <a href="https://developers.facebook.com/apps" target="_blank" style="color: #2563eb;">Meta Developer Console</a>.`
-      });
-      return;
-    }
-    this.checkLoginState();
+    this.api.get('/config/public').subscribe({
+      next: (res: any) => {
+        const appId = res?.metaAppId;
+        if (!appId || appId === '109841289150123' || appId.includes('YOUR_ACTUAL_APP_ID')) {
+          Swal.fire({
+            icon: 'warning',
+            title: 'Meta App ID Required',
+            html: `META_APP_ID is not configured in backend <code>.env</code> file.<br><br>Please set <b>META_APP_ID</b> in backend <code>.env</code>.`
+          });
+          return;
+        }
+
+        if (typeof FB !== 'undefined' && FB && FB.init) {
+          FB.init({
+            appId: appId,
+            cookie: true,
+            autoLogAppEvents: true,
+            xfbml: true,
+            version: 'v19.0'
+          });
+        }
+        this.checkLoginState();
+      },
+      error: () => this.checkLoginState()
+    });
   }
 
   fetchMetaAccounts(accessToken: string) {

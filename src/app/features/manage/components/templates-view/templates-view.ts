@@ -46,6 +46,12 @@ export class TemplatesView implements OnInit {
   showPreviewModal = signal<boolean>(false);
   showGuideModal = signal<boolean>(false);
   showAiGenModal = signal<boolean>(false);
+  showMetaLibraryModal = signal<boolean>(false);
+
+  // Meta Template Library State
+  metaLibraryTemplates = signal<any[]>([]);
+  selectedMetaCategory = signal<string>('ALL');
+  isLoadingMetaLibrary = signal<boolean>(false);
 
   guideTitle = signal<string>('');
   guideContent = signal<string>('');
@@ -172,6 +178,59 @@ export class TemplatesView implements OnInit {
       error: (err: any) => {
         this.isLoading.set(false);
         Swal.fire('Error', 'Sync failed: ' + (err.error?.message || err.message), 'error');
+      }
+    });
+  }
+
+  openMetaLibrary() {
+    this.showMetaLibraryModal.set(true);
+    this.isLoadingMetaLibrary.set(true);
+    this.api.get('/messagetemplates/meta-library').subscribe({
+      next: (res: any) => {
+        this.isLoadingMetaLibrary.set(false);
+        if (res.success && res.data) {
+          this.metaLibraryTemplates.set(res.data);
+        }
+      },
+      error: () => this.isLoadingMetaLibrary.set(false)
+    });
+  }
+
+  closeMetaLibrary() {
+    this.showMetaLibraryModal.set(false);
+  }
+
+  importMetaTemplate(metaTpl: any) {
+    Swal.fire({
+      title: 'Import Meta Template',
+      html: `Do you want to import <b>"${metaTpl.title}"</b> (<code>${metaTpl.templateName}</code>) into your template repository?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: 'Import & Use',
+      confirmButtonColor: '#0b494d'
+    }).then(res => {
+      if (res.isConfirmed) {
+        const payload = {
+          templateName: metaTpl.templateName,
+          templateBody: metaTpl.templateBody,
+          language: metaTpl.language || 'en_US',
+          category: metaTpl.category || 'UTILITY',
+          status: 'APPROVED',
+          headerText: metaTpl.headerText || null,
+          footerText: metaTpl.footerText || null,
+          buttons: metaTpl.buttons || null
+        };
+
+        this.api.post('/messagetemplates/add', payload).subscribe({
+          next: () => {
+            Swal.fire('Template Imported', `"${metaTpl.title}" imported successfully!`, 'success');
+            this.closeMetaLibrary();
+            this.loadTemplates();
+          },
+          error: (err: any) => {
+            Swal.fire('Error', 'Import failed: ' + (err.error?.error || err.message), 'error');
+          }
+        });
       }
     });
   }

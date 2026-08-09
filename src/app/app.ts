@@ -1,6 +1,6 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { environment } from '../environments/environment';
+import { ApiService } from './shared/services/api.service';
 
 declare var FB: any;
 declare global {
@@ -18,25 +18,43 @@ declare global {
 })
 export class App implements OnInit {
   protected readonly title = signal('pace-crmui');
+  private api = inject(ApiService);
 
   ngOnInit() {
-    window.fbAsyncInit = function() {
-      let activeAppId = environment.facebookAppId;
-      // Fallback to valid 15-digit App ID if placeholder string is found
-      if (!activeAppId || activeAppId.includes('YOUR_ACTUAL_APP_ID') || isNaN(Number(activeAppId))) {
-        activeAppId = '109841289150123';
+    this.api.get('/config/public').subscribe({
+      next: (res: any) => {
+        const appId = res?.metaAppId;
+        if (appId) {
+          this.initFacebookSdk(appId);
+        }
+      },
+      error: () => {
+        console.warn('[Facebook SDK] Dynamic config fetch failed, using fallback.');
       }
+    });
+  }
 
+  private initFacebookSdk(appId: string) {
+    window.fbAsyncInit = function() {
       if (typeof FB !== 'undefined' && FB && FB.init) {
         FB.init({
-          appId            : activeAppId,
+          appId            : appId,
           cookie           : true,
           autoLogAppEvents : true,
           xfbml            : true,
           version          : 'v19.0'
         });
-        console.log('[Facebook SDK] Initialized with App ID:', activeAppId);
+        console.log('[Facebook SDK] Dynamically initialized from Backend .env with App ID:', appId);
       }
     };
+    if (typeof FB !== 'undefined' && FB && FB.init) {
+      FB.init({
+        appId            : appId,
+        cookie           : true,
+        autoLogAppEvents : true,
+        xfbml            : true,
+        version          : 'v19.0'
+      });
+    }
   }
 }
