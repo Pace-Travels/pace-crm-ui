@@ -16,12 +16,24 @@ export class AIMarketingIntelligenceService {
     return this.api.get('/marketing-intelligence/competitors');
   }
 
+  addCompetitor(data: any): Observable<any> {
+    return this.api.post('/marketing-intelligence/competitors/add', data);
+  }
+
+  deleteCompetitor(id: number | string): Observable<any> {
+    return this.api.delete(`/marketing-intelligence/competitors/${id}`);
+  }
+
   discoverCompetitors(params: any): Observable<any> {
     return this.api.post('/marketing-intelligence/competitors/discover', params);
   }
 
   analyzeCompetitorPattern(id: number | string): Observable<any> {
     return this.api.get(`/marketing-intelligence/competitors/${id}/analyze`);
+  }
+
+  runMarketAnalysis(): Observable<any> {
+    return this.api.post('/marketing-intelligence/run-analysis', {});
   }
 
   getMetaAds(): Observable<any> {

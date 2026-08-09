@@ -61,8 +61,19 @@ export class AIMarketingIntelligence implements OnInit {
   // Competitor Discovery State
   showDiscoveryModal = signal<boolean>(false);
   discoveryQuery = signal<string>('');
+  discoveryCity = signal<string>('');
+  discoveryState = signal<string>('');
+  discoveryCountry = signal<string>('India');
   discoveredResults = signal<any[]>([]);
   isDiscovering = signal<boolean>(false);
+
+  // Manual Add Competitor Modal State & Form
+  showAddCompetitorModal = signal<boolean>(false);
+  addCompetitorForm: FormGroup;
+  isSavingCompetitor = signal<boolean>(false);
+
+  // Agentic Analysis Trigger State
+  isAnalyzingMarket = signal<boolean>(false);
 
   // Competitor Pattern Analysis State
   selectedCompetitorAnalysis = signal<any>(null);
@@ -84,6 +95,19 @@ export class AIMarketingIntelligence implements OnInit {
       objective: ['Lead Generation'],
       audience: ['Families & Honeymoon Couples'],
       budget: ['$50/day']
+    });
+
+    this.addCompetitorForm = this.fb.group({
+      companyName: ['', Validators.required],
+      websiteUrl: [''],
+      city: [''],
+      state: [''],
+      country: ['India'],
+      targetDestinations: ['Dubai, Thailand, Europe'],
+      googleRating: [4.5],
+      reviewCount: [100],
+      activeAdsCount: [10],
+      aggressionScore: [75]
     });
   }
 
@@ -216,9 +240,15 @@ export class AIMarketingIntelligence implements OnInit {
   }
 
   searchCompetitors() {
-    if (!this.discoveryQuery()) return;
     this.isDiscovering.set(true);
-    this.intelligenceService.discoverCompetitors({ query: this.discoveryQuery() }).subscribe({
+    const params = {
+      query: this.discoveryQuery(),
+      city: this.discoveryCity(),
+      state: this.discoveryState(),
+      country: this.discoveryCountry()
+    };
+
+    this.intelligenceService.discoverCompetitors(params).subscribe({
       next: (res: any) => {
         this.isDiscovering.set(false);
         if (res.success && res.data) {
@@ -226,6 +256,101 @@ export class AIMarketingIntelligence implements OnInit {
         }
       },
       error: () => this.isDiscovering.set(false)
+    });
+  }
+
+  // Add Competitor Modal Handlers
+  openAddCompetitorModal() {
+    this.addCompetitorForm.reset({
+      country: 'India',
+      googleRating: 4.5,
+      reviewCount: 100,
+      activeAdsCount: 10,
+      aggressionScore: 75
+    });
+    this.showAddCompetitorModal.set(true);
+  }
+
+  closeAddCompetitorModal() {
+    this.showAddCompetitorModal.set(false);
+  }
+
+  saveCompetitor() {
+    if (this.addCompetitorForm.invalid) return;
+    this.isSavingCompetitor.set(true);
+    const val = this.addCompetitorForm.value;
+    
+    // Parse comma separated destinations
+    if (typeof val.targetDestinations === 'string') {
+      val.targetDestinations = val.targetDestinations.split(',').map((s: string) => s.trim()).filter(Boolean);
+    }
+
+    this.intelligenceService.addCompetitor(val).subscribe({
+      next: (res: any) => {
+        this.isSavingCompetitor.set(false);
+        this.closeAddCompetitorModal();
+        Swal.fire('Competitor Added', `"${val.companyName}" added to your intelligence watchlist!`, 'success');
+        this.loadOverviewData();
+      },
+      error: (err: any) => {
+        this.isSavingCompetitor.set(false);
+        Swal.fire('Error', 'Failed to add competitor: ' + (err.error?.error || err.message), 'error');
+      }
+    });
+  }
+
+  saveDiscoveredCompetitor(comp: any) {
+    this.intelligenceService.addCompetitor(comp).subscribe({
+      next: () => {
+        Swal.fire('Discovered Competitor Saved', `"${comp.companyName}" saved to your competitor database!`, 'success');
+        this.loadOverviewData();
+      },
+      error: (err: any) => {
+        Swal.fire('Error', 'Failed to save competitor: ' + (err.error?.error || err.message), 'error');
+      }
+    });
+  }
+
+  deleteCompetitor(comp: any) {
+    Swal.fire({
+      title: 'Remove Competitor?',
+      text: `Are you sure you want to remove "${comp.companyName}" from your watchlist?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Remove',
+      confirmButtonColor: '#dc2626'
+    }).then(res => {
+      if (res.isConfirmed) {
+        this.intelligenceService.deleteCompetitor(comp.id).subscribe({
+          next: () => {
+            Swal.fire('Removed', `"${comp.companyName}" removed.`, 'success');
+            this.loadOverviewData();
+          }
+        });
+      }
+    });
+  }
+
+  // Trigger Agentic Market Intelligence Analysis
+  triggerAgenticAnalysis() {
+    this.isAnalyzingMarket.set(true);
+    Swal.fire({
+      title: 'Running Agentic Market Analysis...',
+      text: 'Gemini AI is analyzing active competitors, regional demand signals, and market opportunities.',
+      allowOutsideClick: false,
+      didOpen: () => Swal.showLoading()
+    });
+
+    this.intelligenceService.runMarketAnalysis().subscribe({
+      next: (res: any) => {
+        this.isAnalyzingMarket.set(false);
+        Swal.fire('Analysis Complete!', 'Market demand signals & recommendations updated.', 'success');
+        this.loadOverviewData();
+      },
+      error: (err: any) => {
+        this.isAnalyzingMarket.set(false);
+        Swal.fire('Analysis Error', err.error?.message || err.message, 'error');
+      }
     });
   }
 

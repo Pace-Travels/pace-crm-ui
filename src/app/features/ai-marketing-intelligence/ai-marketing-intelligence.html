@@ -8,8 +8,14 @@
             <p class="subtitle">AI Decision Support System for Tourism Demand Prediction, Competitor Pattern Analysis & Ad Campaigns</p>
         </div>
         <div style="display: flex; gap: 10px;">
+            <button type="button" (click)="openAddCompetitorModal()" style="background: #0b494d; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-plus"></i> Add Competitor
+            </button>
             <button type="button" (click)="openDiscoveryModal()" style="background: #0284c7; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-magnifying-glass"></i> Discover Competitors
+            </button>
+            <button type="button" (click)="triggerAgenticAnalysis()" [disabled]="isAnalyzingMarket()" style="background: #7e22ce; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-bolt"></i> Run AI Market Update
             </button>
             <button type="button" (click)="downloadReport('EXECUTIVE', 'JSON')" style="background: #0f172a; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-file-arrow-down"></i> Export Report
