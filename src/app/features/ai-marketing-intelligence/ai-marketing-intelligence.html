@@ -1,0 +1,473 @@
+<div class="intelligence-container">
+    <!-- Header Title Bar -->
+    <div class="header-title-bar">
+        <div>
+            <h2 class="main-heading">
+                <i class="fa-solid fa-brain"></i> AI Marketing Intelligence Platform
+            </h2>
+            <p class="subtitle">AI Decision Support System for Tourism Demand Prediction, Competitor Pattern Analysis & Ad Campaigns</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" (click)="openDiscoveryModal()" style="background: #0284c7; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-magnifying-glass"></i> Discover Competitors
+            </button>
+            <button type="button" (click)="downloadReport('EXECUTIVE', 'JSON')" style="background: #0f172a; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-file-arrow-down"></i> Export Report
+            </button>
+        </div>
+    </div>
+
+    <!-- Summary Metrics Grid -->
+    <div class="metrics-grid">
+        <div class="metric-card" style="border-left: 4px solid #059669;">
+            <div class="metric-label">Demand Score</div>
+            <div class="metric-value" style="color: #059669;">{{ summaryMetrics().demandScore || 86 }}/100</div>
+            <div class="metric-subtitle">High Tourism & Flight Intent</div>
+        </div>
+
+        <div class="metric-card" style="border-left: 4px solid #d97706;">
+            <div class="metric-label">Competition Score</div>
+            <div class="metric-value" style="color: #d97706;">{{ summaryMetrics().competitionScore || 68 }}/100</div>
+            <div class="metric-subtitle">Moderate Market Aggression</div>
+        </div>
+
+        <div class="metric-card" style="border-left: 4px solid #7e22ce;">
+            <div class="metric-label">Opportunity Score</div>
+            <div class="metric-value" style="color: #7e22ce;">{{ summaryMetrics().opportunityScore || 89 }}/100</div>
+            <div class="metric-subtitle">High Yield Lead Arbitrage</div>
+        </div>
+
+        <div class="metric-card" style="border-left: 4px solid #0284c7;">
+            <div class="metric-label">Active Competitors</div>
+            <div class="metric-value" style="color: #0284c7;">{{ summaryMetrics().activeCompetitorsCount || 5 }}</div>
+            <div class="metric-subtitle">Tracked Agencies & Brands</div>
+        </div>
+    </div>
+
+    <!-- Submodule Navigation Tabs -->
+    <div class="submodule-tabs-nav">
+        <button class="tab-btn" [class.active]="activeSubmodule() === 'DASHBOARD'" (click)="activeSubmodule.set('DASHBOARD')">📊 Executive Dashboard</button>
+        <button class="tab-btn" [class.active]="activeSubmodule() === 'COMPETITORS'" (click)="activeSubmodule.set('COMPETITORS')">🏢 Competitors</button>
+        <button class="tab-btn" [class.active]="activeSubmodule() === 'META_ADS'" (click)="activeSubmodule.set('META_ADS')">🎯 Meta Ad Intelligence</button>
+        <button class="tab-btn" [class.active]="activeSubmodule() === 'WHATSAPP_STUDIO'" (click)="activeSubmodule.set('WHATSAPP_STUDIO')">💬 WhatsApp Status Studio</button>
+        <button class="tab-btn" [class.active]="activeSubmodule() === 'FACEBOOK_STUDIO'" (click)="activeSubmodule.set('FACEBOOK_STUDIO')">📲 Facebook Ad Studio</button>
+        <button class="tab-btn" [class.active]="activeSubmodule() === 'DEMAND'" (click)="activeSubmodule.set('DEMAND')">📈 Google Trends & Demand</button>
+        <button class="tab-btn" [class.active]="activeSubmodule() === 'GEOGRAPHY'" (click)="activeSubmodule.set('GEOGRAPHY')">🗺️ Geographic Intelligence</button>
+        <button class="tab-btn" [class.active]="activeSubmodule() === 'RECOMMENDATIONS'" (click)="activeSubmodule.set('RECOMMENDATIONS')">💡 AI Strategy</button>
+        <button class="tab-btn" [class.active]="activeSubmodule() === 'ALERTS'" (click)="activeSubmodule.set('ALERTS')">🔔 Alerts Feed ({{ summaryMetrics().unreadAlertsCount || 0 }})</button>
+        <button class="tab-btn" [class.active]="activeSubmodule() === 'REPORTS'" (click)="activeSubmodule.set('REPORTS')">📥 Reports Exporter</button>
+        <button class="tab-btn" [class.active]="activeSubmodule() === 'SETTINGS'" (click)="activeSubmodule.set('SETTINGS')">⚙️ Settings</button>
+    </div>
+
+    <!-- 1. Executive Dashboard View -->
+    <div *ngIf="activeSubmodule() === 'DASHBOARD'">
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+            <!-- Left Column: Recommendations & Demand -->
+            <div>
+                <div class="card-box">
+                    <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-lightbulb" style="color: #d97706;"></i> Top AI Strategic Campaign Recommendations
+                    </h3>
+                    <div style="display: flex; flex-direction: column; gap: 14px;">
+                        <div *ngFor="let rec of recommendations()" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                                <h4 style="margin: 0; font-size: 14.5px; font-weight: 800; color: #0f172a;">{{ rec.title }}</h4>
+                                <span style="background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px;">{{ rec.confidenceScore }}% AI Confidence</span>
+                            </div>
+                            <p style="margin: 0 0 8px 0; font-size: 13px; color: #475569; line-height: 1.5;">{{ rec.reasoning }}</p>
+                            <div style="display: flex; gap: 12px; font-size: 12px; color: #64748b; font-weight: 600;">
+                                <span>🎯 Target: {{ rec.targetAudience }}</span>
+                                <span>📡 Channel: {{ rec.recommendedChannel }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-box">
+                    <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 800; color: #0f172a;">Market Demand Signals</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div *ngFor="let sig of demandSignals()" style="display: flex; justify-content: space-between; align-items: center; padding: 12px; border-bottom: 1px solid #f1f5f9;">
+                            <div>
+                                <strong style="font-size: 14px; color: #0f172a; display: block;">{{ sig.destination }}</strong>
+                                <span style="font-size: 12px; color: #64748b;">{{ sig.seasonalityStatus }} • Weather: {{ sig.weatherConditions }}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-size: 13px; font-weight: 800; color: #7e22ce;">Opportunity: {{ sig.opportunityScore }}/100</div>
+                                <span style="font-size: 11px; color: #059669;">Trends: {{ sig.googleTrendsIndex }}/100</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Top Competitors & Alerts -->
+            <div>
+                <div class="card-box">
+                    <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 800; color: #0f172a;">Top Tracked Competitors</h3>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div *ngFor="let comp of competitors()" style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: #f8fafc; border-radius: 8px;">
+                            <div>
+                                <strong style="font-size: 13.5px; color: #0f172a; display: block;">{{ comp.companyName }}</strong>
+                                <span style="font-size: 11.5px; color: #64748b;">{{ comp.city }}, {{ comp.country }}</span>
+                            </div>
+                            <button type="button" (click)="inspectCompetitorPattern(comp)" style="background: white; border: 1px solid #cbd5e1; color: #0369a1; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 4px; cursor: pointer;">
+                                Analyze
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card-box">
+                    <h3 style="margin: 0 0 16px 0; font-size: 16px; font-weight: 800; color: #0f172a;">Recent Market Alerts</h3>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div *ngFor="let alt of alerts()" style="padding: 10px; border-left: 3px solid #0284c7; background: #f0f9ff; border-radius: 4px;">
+                            <strong style="font-size: 12.5px; color: #0369a1; display: block;">{{ alt.title }}</strong>
+                            <p style="margin: 2px 0 0 0; font-size: 11.5px; color: #475569;">{{ alt.description }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Competitors View -->
+    <div *ngIf="activeSubmodule() === 'COMPETITORS'">
+        <div class="card-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a;">Competitor Profiles & Aggression Index</h3>
+                <input type="text" [ngModel]="competitorSearch()" (ngModelChange)="competitorSearch.set($event)" placeholder="Search competitors by name or city..." style="padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; width: 300px;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
+                <div *ngFor="let comp of filteredCompetitors()" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; background: white;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                        <div>
+                            <h4 style="margin: 0 0 2px 0; font-size: 15px; font-weight: 800; color: #0f172a;">{{ comp.companyName }}</h4>
+                            <span style="font-size: 12px; color: #64748b;">📍 {{ comp.city }}, {{ comp.country }}</span>
+                        </div>
+                        <span style="background: #fef3c7; color: #b45309; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px;">Score {{ comp.aggressionScore }}/100</span>
+                    </div>
+
+                    <div style="font-size: 12.5px; color: #475569; margin-bottom: 12px;">
+                        <div>⭐ Rating: <strong>{{ comp.googleRating }}</strong> ({{ comp.reviewCount }} reviews)</div>
+                        <div>📣 Active Ads: <strong>{{ comp.activeAdsCount }} campaigns</strong></div>
+                    </div>
+
+                    <button type="button" (click)="inspectCompetitorPattern(comp)" style="width: 100%; background: #0f172a; color: white; border: none; padding: 8px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;">
+                        Extract AI Pattern & Strategy Gaps
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Meta Ad Intelligence View -->
+    <div *ngIf="activeSubmodule() === 'META_ADS'">
+        <div class="card-box">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+                <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a;">Meta Ad Library Snapshots & Pattern Extraction</h3>
+                <input type="text" [ngModel]="metaAdSearch()" (ngModelChange)="metaAdSearch.set($event)" placeholder="Search ad copy, headline or brand..." style="padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; width: 320px;">
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px;">
+                <div *ngFor="let ad of filteredMetaAds()" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; background: white; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="background: #e0f2fe; color: #0369a1; font-size: 10px; font-weight: 800; padding: 2px 8px; border-radius: 4px; text-transform: uppercase;">{{ ad.category }}</span>
+                            <span style="font-size: 11px; color: #64748b; font-weight: 600;">Est. Spend: ${{ ad.estimatedMonthlySpend }}/mo</span>
+                        </div>
+                        <h5 style="margin: 0 0 6px 0; font-size: 14px; font-weight: 800; color: #0f172a;">{{ ad.headline }}</h5>
+                        <p style="margin: 0 0 10px 0; font-size: 12.5px; color: #475569; line-height: 1.4;">{{ ad.adCopy }}</p>
+                    </div>
+                    <div style="border-top: 1px solid #f1f5f9; padding-top: 10px; font-size: 11.5px; color: #64748b;">
+                        <strong>Tone:</strong> {{ ad.emotionalTone }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. WhatsApp Status Studio View -->
+    <div *ngIf="activeSubmodule() === 'WHATSAPP_STUDIO'">
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px;">
+            <div class="card-box">
+                <h3 style="margin: 0 0 16px 0; font-size: 17px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i> WhatsApp Status Campaign Studio
+                </h3>
+
+                <form [formGroup]="whatsappForm">
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Target Destination *</label>
+                        <input type="text" formControlName="destination" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Campaign Duration</label>
+                        <select formControlName="duration" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                            <option value="1 Day Flash">1 Day Flash Sale</option>
+                            <option value="3 Days">3 Days Campaign</option>
+                            <option value="7 Days Sequence">7 Days Sequence</option>
+                        </select>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Tone & Positioning</label>
+                        <select formControlName="tone" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                            <option value="Urgent & Premium">Urgent & Premium</option>
+                            <option value="Friendly & Helpful">Friendly & Helpful</option>
+                            <option value="Exclusive VIP Deal">Exclusive VIP Deal</option>
+                        </select>
+                    </div>
+
+                    <button type="button" (click)="generateWhatsappCampaign()" [disabled]="isGeneratingWhatsapp()" style="width: 100%; background: #0b494d; color: white; border: none; padding: 10px; border-radius: 6px; font-size: 13.5px; font-weight: 700; cursor: pointer;">
+                        <span *ngIf="!isGeneratingWhatsapp()"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate WhatsApp Status Sequence</span>
+                        <span *ngIf="isGeneratingWhatsapp()"><i class="fa-solid fa-spinner fa-spin"></i> Generating with Gemini AI...</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="card-box">
+                <h3 style="margin: 0 0 16px 0; font-size: 17px; font-weight: 800; color: #0f172a;">Generated Campaign Output</h3>
+                
+                <div *ngIf="!whatsappStudioResult()" style="padding: 40px; text-align: center; color: #64748b;">
+                    Fill parameters on left and click Generate to produce multi-part WhatsApp stories & video scripts.
+                </div>
+
+                <div *ngIf="whatsappStudioResult()" style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 8px;">
+                        <strong style="font-size: 12px; text-transform: uppercase; color: #0369a1; display: block; margin-bottom: 4px;">Single Status Copy</strong>
+                        <p style="margin: 0; font-size: 13px; color: #0f172a; white-space: pre-line;">{{ whatsappStudioResult()?.singleStatusText }}</p>
+                    </div>
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 8px;">
+                        <strong style="font-size: 12px; text-transform: uppercase; color: #7e22ce; display: block; margin-bottom: 8px;">Multi-Part Story Sequence</strong>
+                        <div *ngFor="let slide of whatsappStudioResult()?.multiPartSequence" style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed #cbd5e1;">
+                            <strong style="font-size: 12.5px; color: #0f172a;">Slide {{ slide.slideIndex }}: {{ slide.heading }}</strong>
+                            <p style="margin: 2px 0; font-size: 12px; color: #475569;">{{ slide.caption }}</p>
+                            <span style="font-size: 11px; color: #0284c7; font-style: italic;">Prompt: {{ slide.imagePrompt }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 5. Facebook Campaign Studio View -->
+    <div *ngIf="activeSubmodule() === 'FACEBOOK_STUDIO'">
+        <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 20px;">
+            <div class="card-box">
+                <h3 style="margin: 0 0 16px 0; font-size: 17px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-brands fa-facebook" style="color: #1877f2;"></i> Facebook & Meta Campaign Studio
+                </h3>
+
+                <form [formGroup]="facebookForm">
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Target Destination *</label>
+                        <input type="text" formControlName="destination" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Campaign Goal</label>
+                        <select formControlName="objective" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                            <option value="Lead Generation">Lead Generation</option>
+                            <option value="WhatsApp Messages">WhatsApp Messages</option>
+                            <option value="Website Traffic">Website Traffic</option>
+                        </select>
+                    </div>
+
+                    <button type="button" (click)="generateFacebookCampaign()" [disabled]="isGeneratingFacebook()" style="width: 100%; background: #1877f2; color: white; border: none; padding: 10px; border-radius: 6px; font-size: 13.5px; font-weight: 700; cursor: pointer;">
+                        <span *ngIf="!isGeneratingFacebook()"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate Meta Campaign Concept</span>
+                        <span *ngIf="isGeneratingFacebook()"><i class="fa-solid fa-spinner fa-spin"></i> Generating with Gemini AI...</span>
+                    </button>
+                </form>
+            </div>
+
+            <div class="card-box">
+                <h3 style="margin: 0 0 16px 0; font-size: 17px; font-weight: 800; color: #0f172a;">Generated Meta Campaign Assets</h3>
+
+                <div *ngIf="!facebookStudioResult()" style="padding: 40px; text-align: center; color: #64748b;">
+                    Fill parameters on left to generate original Meta ad copy, headlines, descriptions and audience targeting recommendations.
+                </div>
+
+                <div *ngIf="facebookStudioResult()" style="display: flex; flex-direction: column; gap: 14px;">
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 8px;">
+                        <strong style="font-size: 12px; text-transform: uppercase; color: #0369a1; display: block; margin-bottom: 6px;">Primary Text Concepts</strong>
+                        <ul style="margin: 0; padding-left: 18px; font-size: 12.5px; color: #0f172a;">
+                            <li *ngFor="let txt of facebookStudioResult()?.primaryTextOptions" style="margin-bottom: 6px;">{{ txt }}</li>
+                        </ul>
+                    </div>
+
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 8px;">
+                        <strong style="font-size: 12px; text-transform: uppercase; color: #059669; display: block; margin-bottom: 6px;">Headlines</strong>
+                        <div *ngFor="let h of facebookStudioResult()?.headlines" style="font-size: 13px; font-weight: 700; color: #0f172a; margin-bottom: 4px;">• {{ h }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Google Trends & Demand Radar -->
+    <div *ngIf="activeSubmodule() === 'DEMAND'">
+        <div class="card-box">
+            <h3 style="margin: 0 0 16px 0; font-size: 17px; font-weight: 800; color: #0f172a;">Multi-Signal Tourism Demand Radar</h3>
+            <div style="display: flex; flex-direction: column; gap: 14px;">
+                <div *ngFor="let sig of demandSignals()" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; background: white;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">📍 {{ sig.destination }}</h4>
+                        <span style="background: #e0f2fe; color: #0369a1; font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 20px;">Demand Score: {{ sig.demandScore }}/100</span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; font-size: 12.5px; color: #475569; background: #f8fafc; padding: 12px; border-radius: 8px;">
+                        <div><strong>Google Trends:</strong> {{ sig.googleTrendsIndex }}/100</div>
+                        <div><strong>Seasonality:</strong> {{ sig.seasonalityStatus }}</div>
+                        <div><strong>Visa Policy:</strong> {{ sig.visaPolicyUpdate }}</div>
+                        <div><strong>Exchange Rate:</strong> {{ sig.exchangeRateSummary }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 7. Geographic Intelligence View -->
+    <div *ngIf="activeSubmodule() === 'GEOGRAPHY'">
+        <div class="card-box">
+            <h3 style="margin: 0 0 16px 0; font-size: 17px; font-weight: 800; color: #0f172a;">Geographic Market Breakdown (Local to Global)</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                <div *ngFor="let geo of geographyData()" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; background: white;">
+                    <span style="background: #f1f5f9; color: #475569; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">{{ geo.locationLevel }} Level</span>
+                    <h4 style="margin: 6px 0 2px 0; font-size: 15px; font-weight: 800; color: #0f172a;">{{ geo.locationName }}</h4>
+                    <div style="font-size: 12px; color: #64748b; margin-bottom: 10px;">Parent Scope: {{ geo.parentLocation }}</div>
+                    
+                    <div style="font-size: 12.5px; color: #334155;">
+                        <div>Active Advertisers: <strong>{{ geo.activeAdvertisersCount }}</strong></div>
+                        <div>Intensity Score: <strong>{{ geo.campaignIntensityScore }}/100</strong></div>
+                        <div>Ad Competition: <strong>{{ geo.estimatedAdCompetition }}</strong></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 8. AI Recommendations View -->
+    <div *ngIf="activeSubmodule() === 'RECOMMENDATIONS'">
+        <div class="card-box">
+            <h3 style="margin: 0 0 16px 0; font-size: 17px; font-weight: 800; color: #0f172a;">Gemini AI Strategic Campaign Recommendations</h3>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div *ngFor="let rec of recommendations()" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; background: white;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">{{ rec.title }}</h4>
+                        <button type="button" (click)="navigateTo(rec.actionRoute || '/ads')" style="background: #0b494d; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;">
+                            Launch Campaign →
+                        </button>
+                    </div>
+                    <p style="margin: 0 0 12px 0; font-size: 13.5px; color: #334155; line-height: 1.5;">{{ rec.reasoning }}</p>
+                    <div style="display: flex; gap: 16px; font-size: 12px; color: #64748b; background: #f8fafc; padding: 10px 14px; border-radius: 6px;">
+                        <span><strong>Budget Split:</strong> {{ rec.suggestedBudgetSplit }}</span>
+                        <span><strong>Posting Schedule:</strong> {{ rec.postingSchedule }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 9. Alerts View -->
+    <div *ngIf="activeSubmodule() === 'ALERTS'">
+        <div class="card-box">
+            <h3 style="margin: 0 0 16px 0; font-size: 17px; font-weight: 800; color: #0f172a;">Real-Time Market Alerts Feed</h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div *ngFor="let alt of alerts()" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; background: white; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <span style="background: #fee2e2; color: #b91c1c; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase;">{{ alt.alertType }}</span>
+                        <h4 style="margin: 6px 0 2px 0; font-size: 14.5px; font-weight: 800; color: #0f172a;">{{ alt.title }}</h4>
+                        <p style="margin: 0; font-size: 12.5px; color: #475569;">{{ alt.description }}</p>
+                    </div>
+                    <span style="font-size: 12px; font-weight: 800; color: #0284c7;">{{ alt.metricValue }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 10. Reports Exporter View -->
+    <div *ngIf="activeSubmodule() === 'REPORTS'">
+        <div class="card-box">
+            <h3 style="margin: 0 0 16px 0; font-size: 17px; font-weight: 800; color: #0f172a;">Enterprise Intelligence Reports Exporter</h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; text-align: center; background: white;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 15px; font-weight: 800; color: #0f172a;">Executive Summary Report</h4>
+                    <p style="font-size: 12.5px; color: #64748b; margin: 0 0 16px 0;">Complete high-level overview of demand scores, competition index & top AI recommendations.</p>
+                    <button type="button" (click)="downloadReport('EXECUTIVE', 'JSON')" style="background: #0f172a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer;">
+                        Download Executive Summary
+                    </button>
+                </div>
+
+                <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; text-align: center; background: white;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 15px; font-weight: 800; color: #0f172a;">Demand & Opportunity Report</h4>
+                    <p style="font-size: 12.5px; color: #64748b; margin: 0 0 16px 0;">Detailed breakdown of Google Trends, holidays, weather, flight prices & visa updates.</p>
+                    <button type="button" (click)="downloadReport('DEMAND', 'JSON')" style="background: #059669; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer;">
+                        Download Demand Report
+                    </button>
+                </div>
+
+                <div style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; text-align: center; background: white;">
+                    <h4 style="margin: 0 0 8px 0; font-size: 15px; font-weight: 800; color: #0f172a;">Competitor & Meta Ad Report</h4>
+                    <p style="font-size: 12.5px; color: #64748b; margin: 0 0 16px 0;">Complete snapshot of active competitor campaigns, headlines & emotional tones.</p>
+                    <button type="button" (click)="downloadReport('COMPETITION', 'JSON')" style="background: #0284c7; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer;">
+                        Download Competitor Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 11. Settings View -->
+    <div *ngIf="activeSubmodule() === 'SETTINGS'">
+        <div class="card-box">
+            <h3 style="margin: 0 0 16px 0; font-size: 17px; font-weight: 800; color: #0f172a;">Intelligence Watchlist & Threshold Settings</h3>
+            <div style="display: flex; flex-direction: column; gap: 14px; max-width: 600px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Tracked Destinations</label>
+                    <input type="text" value="Dubai, Thailand, Maldives, Europe, Vietnam, Singapore" readonly style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: #f8fafc;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Demand Alert Trigger Threshold</label>
+                    <input type="number" value="75" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Competitor Pattern Analysis Modal -->
+<div *ngIf="showAnalysisModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+    <div style="background: white; width: 640px; border-radius: 12px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">
+            <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a;">
+                <i class="fa-solid fa-brain" style="color: #0284c7;"></i> AI Competitor Pattern & Gap Analysis
+            </h3>
+            <button (click)="closeAnalysisModal()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+
+        <div *ngIf="isAnalyzingPattern()" style="padding: 40px; text-align: center; color: #64748b;">
+            <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px;"></i> Extracting positioning patterns with Gemini AI...
+        </div>
+
+        <div *ngIf="!isAnalyzingPattern() && selectedCompetitorAnalysis()" style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="background: #f0f9ff; border: 1px solid #bae6fd; padding: 12px; border-radius: 8px;">
+                <strong style="font-size: 12px; text-transform: uppercase; color: #0369a1; display: block; margin-bottom: 4px;">Competitor Messaging Tone</strong>
+                <p style="margin: 0; font-size: 13px; font-weight: 700; color: #0f172a;">{{ selectedCompetitorAnalysis()?.emotionalTone }}</p>
+            </div>
+
+            <div>
+                <strong style="font-size: 12px; text-transform: uppercase; color: #b45309; display: block; margin-bottom: 6px;">Identified Positioning Gaps (Your Competitive Advantage)</strong>
+                <ul style="margin: 0; padding-left: 18px; font-size: 12.5px; color: #0f172a;">
+                    <li *ngFor="let gap of selectedCompetitorAnalysis()?.strategicGaps" style="margin-bottom: 4px;">{{ gap }}</li>
+                </ul>
+            </div>
+
+            <div>
+                <strong style="font-size: 12px; text-transform: uppercase; color: #15803d; display: block; margin-bottom: 6px;">AI Recommendations</strong>
+                <div *ngFor="let rec of selectedCompetitorAnalysis()?.aiRecommendations" style="font-size: 12.5px; color: #0f172a; margin-bottom: 4px;">• {{ rec }}</div>
+            </div>
+        </div>
+    </div>
+</div>
