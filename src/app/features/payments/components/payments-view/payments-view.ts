@@ -1,53 +1,54 @@
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { PaymentService, PaymentGateway, PaymentRecord } from '../../services/payment.service';
-
-declare var Swal: any;
+import { FormsModule } from '@angular/forms';
+import { PaymentService, PaymentRecord, PaymentGateway } from '../../services/payment.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-payments-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './payments-view.html',
   styleUrl: './payments-view.scss',
 })
 export class PaymentsView implements OnInit {
   paymentService = inject(PaymentService);
-  fb = inject(FormBuilder);
 
-  activeTab = 'All';
-
-  // Modal controls
-  showTopupModal = signal(false);
-  showInvoiceModal = signal(false);
-  selectedInvoice = signal<any | null>(null);
-
-  // Top-Up Form
-  selectedAmount = 1000;
+  showTopupModal = signal<boolean>(false);
+  selectedAmount: number = 1000;
   customAmount: number | null = null;
+  gstRate: number = 18;
   selectedGateway: PaymentGateway = 'RAZORPAY';
-  selectedPaymentMethod = 'UPI';
 
-  // Filter
-  searchQuery = signal('');
-  selectedStatusFilter = 'ALL';
+  searchQuery = signal<string>('');
+  selectedStatusFilter: string = 'ALL';
+
+  showInvoiceModal = signal<boolean>(false);
+  selectedInvoice = signal<any>(null);
 
   ngOnInit() {
     this.paymentService.fetchWallet();
     this.paymentService.fetchHistory();
   }
 
-  get finalAmount(): number {
-    return this.customAmount && this.customAmount > 0 ? this.customAmount : this.selectedAmount;
+  get topupAmount(): number {
+    if (this.customAmount && this.customAmount > 0) {
+      return this.customAmount;
+    }
+    return this.selectedAmount || 1000;
   }
 
-  selectPredefinedAmount(amt: number) {
-    this.selectedAmount = amt;
-    this.customAmount = null;
+  get gstAmount(): number {
+    return Math.round((this.topupAmount * this.gstRate) / 100);
+  }
+
+  get finalAmount(): number {
+    return this.topupAmount + this.gstAmount;
   }
 
   openTopupModal() {
+    this.selectedAmount = 1000;
+    this.customAmount = null;
     this.showTopupModal.set(true);
   }
 
@@ -55,72 +56,53 @@ export class PaymentsView implements OnInit {
     this.showTopupModal.set(false);
   }
 
-  // Submit Top-Up Order with custom UI handling for Razorpay, PhonePe, Stripe
+  selectPredefinedAmount(amt: number) {
+    this.selectedAmount = amt;
+    this.customAmount = null;
+  }
+
   submitTopup() {
-    const amountToPay = this.finalAmount;
-    if (!amountToPay || amountToPay <= 0) {
-      this.showAlert('Invalid Amount', 'Please enter a valid top-up amount.', 'warning');
+    this.initiateTopup();
+  }
+
+  initiateTopup() {
+    if (this.topupAmount < 100) {
+      this.showAlert('Invalid Amount', 'Minimum top-up amount is ₹100', 'error');
       return;
     }
 
-    const currency = this.selectedGateway === 'STRIPE' ? 'USD' : 'INR';
-
     this.paymentService.createOrder({
-      amount: amountToPay,
-      gateway: this.selectedGateway,
-      currency,
-      paymentMethod: this.selectedPaymentMethod
+      amount: this.topupAmount,
+      gateway: this.selectedGateway
     }).subscribe({
       next: (res) => {
-        if (res.success && res.payment) {
-          const txn = res.payment.transactionId;
-          const gatewayData = res.gatewayData;
-
-          this.handleGatewayCheckout(this.selectedGateway, txn, gatewayData);
+        this.closeTopupModal();
+        if (res.success && res.order) {
+          this.simulateGatewayCheckout(res.order);
         }
       },
-      error: (err) => {
-        this.showAlert('Payment Error', err.error?.error || 'Failed to create payment order', 'error');
-      }
+      error: (err) => this.showAlert('Order Error', err.error?.error || 'Failed to create order', 'error')
     });
   }
 
-  private handleGatewayCheckout(gateway: PaymentGateway, txnId: string, gatewayData: any) {
-    this.closeTopupModal();
+  private simulateGatewayCheckout(order: any) {
+    const gatewayName = this.selectedGateway;
+    const txnId = order.transactionId;
+    const details = `Order #${order.receiptNumber} - Total Payable: ₹${order.amountWithGst} (Incl. 18% GST)`;
 
-    if (gateway === 'RAZORPAY') {
-      this.simulateCheckoutPrompt('Razorpay UPI / Cards Gateway', `Order ID: ${txnId}\nAmount: ₹${this.finalAmount}`, txnId);
-    } else if (gateway === 'PHONEPE') {
-      this.simulateCheckoutPrompt('PhonePe Gateway (UPI / QR)', `Merchant Txn ID: ${txnId}\nAmount: ₹${this.finalAmount}`, txnId);
-    } else if (gateway === 'STRIPE') {
-      this.simulateCheckoutPrompt('Stripe International Payment', `Payment Intent: ${gatewayData.clientSecret}\nAmount: $${this.finalAmount}`, txnId);
-    }
-  }
-
-  private simulateCheckoutPrompt(gatewayName: string, details: string, txnId: string) {
-    if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
-      Swal.fire({
-        title: gatewayName,
-        html: `<div style="text-align:left; font-size:13px; color:#475569;">
-                <p><strong>Gateway:</strong> ${gatewayName}</p>
-                <p><strong>Details:</strong></p>
-                <pre style="background:#f8fafc; padding:8px; border-radius:6px; font-size:11px;">${details}</pre>
-                <p>Confirm test payment authorization to credit wallet balance.</p>
-               </div>`,
-        icon: 'info',
-        showCancelButton: true,
-        confirmButtonText: '✅ Authorize Payment (Success)',
-        cancelButtonText: '❌ Simulate Failure',
-        confirmButtonColor: '#10b981',
-        cancelButtonColor: '#ef4444'
-      }).then((result: any) => {
-        const isSuccess = result.isConfirmed;
-        this.verifyPayment(txnId, isSuccess);
-      });
-    } else {
-      const confirmOk = confirm(`${gatewayName}\n\n${details}\n\nClick OK to Authorize Payment Success, or Cancel to Simulate Failure.`);
-      this.verifyPayment(txnId, confirmOk);
-    }
+    Swal.fire({
+      title: `Authorize ${gatewayName} Payment`,
+      html: `<strong>${details}</strong><br/><br/>Simulate gateway response authorization:`,
+      icon: 'info',
+      showCancelButton: true,
+      confirmButtonText: 'Authorize Success',
+      cancelButtonText: 'Simulate Failure',
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#ef4444'
+    }).then((result: any) => {
+      const isSuccess = result.isConfirmed;
+      this.verifyPayment(txnId, isSuccess);
+    });
   }
 
   private verifyPayment(txnId: string, isSuccess: boolean) {
@@ -176,10 +158,6 @@ export class PaymentsView implements OnInit {
   }
 
   private showAlert(title: string, text: string, icon: string) {
-    if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
-      Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
-    } else {
-      alert(`${title}: ${text}`);
-    }
+    Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
   }
 }

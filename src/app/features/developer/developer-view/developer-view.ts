@@ -15,10 +15,11 @@ export class DeveloperView implements OnInit {
   api = inject(ApiService);
 
   activeTab = 'api-campaign-key';
-  apiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3MmIwNWIxZGVmNDZmMGJmNjVhMDhjZSIsIm5hbWUiOiJQYWNlIFRyYXZlbHMiLCJhcHBJZCI6IjQWlTZW5zSIsInNsaWdCI6InjcYjA1YjBkZWY0NmYwYmY2NWcwGM3IiwiYWN0aXZlUGxhbiI6IkJBU0lDX01PTlRITHkiLCJpYXQiOjE3MzI4NDYyMzh9.xZJTS61DbI0f6F_IQUETPwLPMaPjt7BpKFKJwv_VQ';
+  apiKey: string = 'pace_live_sec_98472948294829';
 
   // Webhook inspector logs
   webhookLogs = signal<any[]>([]);
+  isLoading = signal<boolean>(false);
   showPayloadModal = signal(false);
   selectedLog = signal<any | null>(null);
 
@@ -27,13 +28,15 @@ export class DeveloperView implements OnInit {
   }
 
   fetchWebhookLogs() {
+    this.isLoading.set(true);
     this.api.get<any>('webhookendpoints/logs').subscribe({
       next: (res) => {
-        if (res.success) {
-          this.webhookLogs.set(res.logs || []);
+        if (res.success && res.data) {
+          this.webhookLogs.set(res.data);
         }
+        this.isLoading.set(false);
       },
-      error: (err) => console.warn('Fetch webhook logs error', err)
+      error: () => this.isLoading.set(false)
     });
   }
 
@@ -46,7 +49,7 @@ export class DeveloperView implements OnInit {
     this.showPayloadModal.set(false);
   }
 
-  retryWebhook(logId: string) {
+  retryWebhook(logId: number) {
     this.api.post<any>('webhookendpoints/retry', { logId }).subscribe({
       next: (res) => {
         if (res.success) {
@@ -64,10 +67,6 @@ export class DeveloperView implements OnInit {
   }
 
   private showAlert(title: string, text: string, icon: string) {
-    if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
-      Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
-    } else {
-      alert(`${title}: ${text}`);
-    }
+    Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
   }
 }

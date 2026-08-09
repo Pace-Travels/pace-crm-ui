@@ -9,6 +9,13 @@
     <!-- Right -->
     <div class="header-right">
 
+        <!-- Subscription Plan Badge in Top Bar -->
+        <div class="desktop-only" style="display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 20px; font-size: 12px; color: #475569;">
+            <i class="fa-solid fa-crown" style="color: #f59e0b;"></i>
+            <span>Plan: <strong style="color: #0f172a;">BASIC</strong></span>
+            <button (click)="navigateTo('/payments')" style="background: #0f172a; color: white; border: none; padding: 2px 8px; border-radius: 12px; font-size: 10.5px; font-weight: 700; cursor: pointer; text-transform: uppercase;">Upgrade</button>
+        </div>
+
         <!-- Top Right Meta WhatsApp Environment Mode Selector Dropdown -->
         <div class="environment-switcher desktop-only">
             <div class="mode-badge" [ngClass]="envModeService.currentMode() === 'DEVELOPMENT' ? 'dev-mode' : 'prod-mode'">

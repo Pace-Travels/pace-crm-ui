@@ -5,9 +5,9 @@ import { EventsService, EventItem } from './services/events.service';
 import { ProjectService } from '../projects/services/project.service';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import Swal from 'sweetalert2';
 
 declare var L: any;
-declare var Swal: any;
 
 const CITY_COORDINATES: { [key: string]: { lat: number; lng: number; zoom: number } } = {
   'Dubai': { lat: 25.2048, lng: 55.2708, zoom: 12 },
@@ -388,10 +388,6 @@ export class EventsRadar implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private showAlert(title: string, text: string, icon: string) {
-    if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
-      Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
-    } else {
-      alert(`${title}: ${text}`);
-    }
+    Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
   }
 }

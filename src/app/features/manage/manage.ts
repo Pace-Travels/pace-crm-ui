@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { TemplatesView } from './components/templates-view/templates-view';
 import { ApiService } from '../../shared/services/api.service';
 
+import Swal from 'sweetalert2';
+
 interface Widget {
   id?: number;
   widgetApiKey?: string;
@@ -80,10 +82,10 @@ export class Manage implements OnInit {
 
     this.api.post('/aipersonas/settings', payload).subscribe({
       next: () => {
-        alert("Gemini AI agent settings saved successfully!");
+        Swal.fire('Success', 'Gemini AI agent settings saved successfully!', 'success');
       },
       error: (err: any) => {
-        alert("Failed to save AI settings: " + err.message);
+        Swal.fire('Error', 'Failed to save AI settings: ' + err.message, 'error');
       }
     });
   }
@@ -130,7 +132,7 @@ export class Manage implements OnInit {
 
   saveWidget() {
     if (!this.wName) {
-      alert("Widget name is required!");
+      Swal.fire('Error', 'Widget name is required!', 'error');
       return;
     }
 
@@ -157,28 +159,39 @@ export class Manage implements OnInit {
         next: () => {
           this.showAddWidgetForm.set(false);
           this.fetchWidgets();
-          alert("Widget configurations updated!");
+          Swal.fire('Updated', 'Widget configurations updated!', 'success');
         },
-        error: (err: any) => alert("Failed to update widget: " + err.message)
+        error: (err: any) => Swal.fire('Error', 'Failed to update widget: ' + err.message, 'error')
       });
     } else {
       this.api.post('widget/add', payload).subscribe({
         next: () => {
           this.showAddWidgetForm.set(false);
           this.fetchWidgets();
-          alert("New Web Widget created successfully!");
+          Swal.fire('Created', 'New Web Widget created successfully!', 'success');
         },
-        error: (err: any) => alert("Failed to create widget: " + err.message)
+        error: (err: any) => Swal.fire('Error', 'Failed to create widget: ' + err.message, 'error')
       });
     }
   }
 
   deleteWidget(id?: number) {
-    if (!id || !confirm("Are you sure you want to delete this widget integration?")) return;
-    this.api.delete(`widget/delete/${id}`).subscribe({
-      next: () => {
-        this.fetchWidgets();
-        alert("Widget integration removed.");
+    if (!id) return;
+    Swal.fire({
+      title: 'Delete Web Widget?',
+      text: 'Are you sure you want to delete this widget integration?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      confirmButtonText: 'Yes, Delete'
+    }).then((res) => {
+      if (res.isConfirmed) {
+        this.api.delete(`widget/delete/${id}`).subscribe({
+          next: () => {
+            this.fetchWidgets();
+            Swal.fire('Deleted', 'Widget integration removed.', 'success');
+          }
+        });
       }
     });
   }

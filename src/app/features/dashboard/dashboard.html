@@ -1,160 +1,208 @@
-<div class="dashboard-container">
-    <!-- Dashboard Top Bar -->
-    <div class="dashboard-topbar">
-        <div class="topbar-left">
-            <h2>Dashboard</h2>
-            <p class="text-muted" style="margin: 4px 0 0; font-size: 13px;">Overview of your active WhatsApp projects and operations.</p>
+<div class="dashboard-container" style="max-width: 1280px; margin: 0 auto; padding: 24px; font-family: 'Inter', sans-serif;">
+    
+    <!-- Dashboard Top Header Bar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px;">
+        <div>
+            <h1 style="font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 4px 0;">Operations Dashboard</h1>
+            <p style="font-size: 13px; color: #64748b; margin: 0;">Real-time overview of active WhatsApp business campaigns, AI agent sessions, and delivery analytics.</p>
         </div>
-        <div class="topbar-stats" style="display: flex; align-items: center; gap: 12px;">
-            <select class="form-control" [ngModel]="selectedDateRange" (change)="onRangeChange($event)" style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 12px; font-size: 13px;">
-                <option value="TODAY">Today</option>
-                <option value="7_DAYS">Last 7 Days</option>
-                <option value="30_DAYS">Last 30 Days</option>
-            </select>
-            <button type="button" class="btn btn-outline" (click)="exportCSV()" style="background: white; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600;">
+
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 4px 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+                <i class="fa-regular fa-calendar-days" style="color: #64748b; font-size: 13px; margin-left: 4px;"></i>
+                <select [ngModel]="selectedDateRange" (change)="onRangeChange($event)" style="border: none; outline: none; background: transparent; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; padding: 4px 8px;">
+                    <option value="TODAY">Today</option>
+                    <option value="7_DAYS">Last 7 Days</option>
+                    <option value="30_DAYS">Last 30 Days</option>
+                </select>
+            </div>
+
+            <button type="button" (click)="exportCSV()" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
                 <i class="fa-solid fa-file-csv" style="color: #10b981;"></i> Export CSV
             </button>
         </div>
-        <div class="topbar-right">
-            <span class="plan-info">Current Plan: <b>BASIC</b> (monthly)</span>
-            <button class="btn btn-outline-success">Upgrade</button>
+    </div>
+
+    <!-- Executive KPI Metric Cards (Row 1) -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 28px;">
+        
+        <!-- Total Sent -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Sent</span>
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: #eff6ff; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-regular fa-paper-plane" style="color: #2563eb; font-size: 16px;"></i>
+                </div>
+            </div>
+            <div>
+                <div style="font-size: 28px; font-weight: 800; color: #0f172a; line-height: 1;">{{ analytics().totalMessagesSent | number }}</div>
+                <div style="display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #166534; margin-top: 8px;">
+                    <i class="fa-solid fa-arrow-trend-up"></i> +12% vs last month
+                </div>
+            </div>
+        </div>
+
+        <!-- Delivered -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Delivered</span>
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: #f0fdf4; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-check-double" style="color: #16a34a; font-size: 16px;"></i>
+                </div>
+            </div>
+            <div>
+                <div style="font-size: 28px; font-weight: 800; color: #0f172a; line-height: 1;">{{ analytics().totalDelivered | number }}</div>
+                <div style="display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #166534; margin-top: 8px;">
+                    <i class="fa-solid fa-circle-check"></i> {{ analytics().deliverySuccessRate }}% delivery rate
+                </div>
+            </div>
+        </div>
+
+        <!-- Read -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Read</span>
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: #f0f9ff; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-check-double" style="color: #0284c7; font-size: 16px;"></i>
+                </div>
+            </div>
+            <div>
+                <div style="font-size: 28px; font-weight: 800; color: #0f172a; line-height: 1;">{{ analytics().totalRead | number }}</div>
+                <div style="display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #0284c7; margin-top: 8px;">
+                    <i class="fa-solid fa-eye"></i> {{ analytics().readRate }}% read rate
+                </div>
+            </div>
+        </div>
+
+        <!-- Active AI Sessions -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Active AI Sessions</span>
+                <div style="width: 36px; height: 36px; border-radius: 8px; background: #fff7ed; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-robot" style="color: #ea580c; font-size: 16px;"></i>
+                </div>
+            </div>
+            <div>
+                <div style="font-size: 28px; font-weight: 800; color: #0f172a; line-height: 1;">142</div>
+                <div style="display: flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600; color: #d97706; margin-top: 8px;">
+                    <i class="fa-solid fa-bolt"></i> Real-time active
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Content Area -->
-    <div class="dashboard-content">
+    <!-- Quick Action Launchpad (Row 2) -->
+    <div style="margin-bottom: 32px;">
+        <h3 style="font-size: 15px; font-weight: 700; color: #334155; margin: 0 0 14px 0;">Quick Action Launchpad</h3>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px;">
+            
+            <a routerLink="/campaigns" style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; display: flex; align-items: center; gap: 16px; text-decoration: none; transition: all 0.15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.02);" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#cbd5e1'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0'">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background: #eff6ff; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-bullhorn" style="color: #2563eb; font-size: 18px;"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">Create Campaign</h4>
+                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Broadcast messages to your audience</p>
+                </div>
+            </a>
 
-        <!-- Quick Actions Row -->
-        <div class="quick-actions-row">
-            <a routerLink="/campaigns" class="quick-action-card">
-                <div class="icon bg-blue-light"><i class="fa-solid fa-bullhorn text-blue"></i></div>
-                <div class="details">
-                    <h4>Create Campaign</h4>
-                    <p>Broadcast messages to your audience</p>
+            <a routerLink="/flows/builder" style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; display: flex; align-items: center; gap: 16px; text-decoration: none; transition: all 0.15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.02);" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#cbd5e1'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0'">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background: #f0fdf4; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-robot" style="color: #16a34a; font-size: 18px;"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">Build AI Flow</h4>
+                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Create interactive chat agents</p>
                 </div>
             </a>
-            
-            <a routerLink="/flows/builder" class="quick-action-card">
-                <div class="icon bg-green-light"><i class="fa-solid fa-robot text-green"></i></div>
-                <div class="details">
-                    <h4>Build AI Flow</h4>
-                    <p>Create interactive chat agents</p>
+
+            <a routerLink="/manage" style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; display: flex; align-items: center; gap: 16px; text-decoration: none; transition: all 0.15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.02);" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#cbd5e1'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0'">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background: #fff7ed; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-message" style="color: #ea580c; font-size: 18px;"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">Message Templates</h4>
+                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Design & submit Meta templates</p>
                 </div>
             </a>
-            
-            <a routerLink="/manage" class="quick-action-card">
-                <div class="icon bg-orange-light"><i class="fa-solid fa-message text-orange"></i></div>
-                <div class="details">
-                    <h4>Message Templates</h4>
-                    <p>Design and submit WhatsApp templates</p>
+
+            <a routerLink="/manage" style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 18px; display: flex; align-items: center; gap: 16px; text-decoration: none; transition: all 0.15s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.02);" onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='#cbd5e1'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0'">
+                <div style="width: 44px; height: 44px; border-radius: 10px; background: #fdf2f8; display: flex; align-items: center; justify-content: center;">
+                    <i class="fa-solid fa-code" style="color: #db2777; font-size: 18px;"></i>
                 </div>
-            </a>
-            
-            <a routerLink="/manage" class="quick-action-card">
-                <div class="icon bg-pink-light"><i class="fa-solid fa-code text-pink"></i></div>
-                <div class="details">
-                    <h4>Web Widget SDK</h4>
-                    <p>Embed chat widget on your website</p>
+                <div>
+                    <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a;">Web Widget SDK</h4>
+                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Embed chat widget on your website</p>
                 </div>
             </a>
         </div>
+    </div>
 
-        <!-- Key Metrics -->
-        <div class="metrics-grid">
-            <div class="metric-card">
-                <div class="metric-header">
-                    <span class="title">Total Sent</span>
-                    <i class="fa-regular fa-paper-plane text-blue"></i>
-                </div>
-                <div class="metric-body">
-                    <h2>{{ analytics().totalMessagesSent | number }}</h2>
-                    <span class="trend up"><i class="fa-solid fa-arrow-up"></i> 12% vs last month</span>
-                </div>
-            </div>
-            
-            <div class="metric-card">
-                <div class="metric-header">
-                    <span class="title">Delivered</span>
-                    <i class="fa-solid fa-check-double text-green"></i>
-                </div>
-                <div class="metric-body">
-                    <h2>{{ analytics().totalDelivered | number }}</h2>
-                    <span class="trend up"><i class="fa-solid fa-arrow-up"></i> {{ analytics().deliverySuccessRate }}% delivery rate</span>
-                </div>
-            </div>
-
-            <div class="metric-card">
-                <div class="metric-header">
-                    <span class="title">Read</span>
-                    <i class="fa-solid fa-check-double text-blue"></i>
-                </div>
-                <div class="metric-body">
-                    <h2>{{ analytics().totalRead | number }}</h2>
-                    <span class="trend up"><i class="fa-solid fa-arrow-up"></i> {{ analytics().readRate }}% read rate</span>
-                </div>
-            </div>
-            
-            <div class="metric-card">
-                <div class="metric-header">
-                    <span class="title">Active AI Sessions</span>
-                    <i class="fa-solid fa-robot text-orange"></i>
-                </div>
-                <div class="metric-body">
-                    <h2>142</h2>
-                    <span class="trend neutral"><i class="fa-solid fa-minus"></i> Real-time active</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Template Agents Gallery -->
-        <div class="templates-section">
-            <div class="section-header">
-                <h3>Readymade Agent Templates</h3>
-                <a routerLink="/manage" class="view-all">View All Templates</a>
-            </div>
-            
-            <div class="templates-grid">
-                <!-- Template 1 -->
-                <div class="agent-template-card">
-                    <div class="template-icon bg-blue-light">
-                        <i class="fa-solid fa-headset text-blue"></i>
-                    </div>
-                    <h4>Customer Support Bot</h4>
-                    <p>Automatically handle FAQs, triage tickets, and connect users to human agents.</p>
-                    <button type="button" class="btn btn-primary btn-sm" (click)="useAgentTemplate('Customer Support Bot')" style="background: #0f172a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px;">Use Template</button>
-                </div>
-                
-                <!-- Template 2 -->
-                <div class="agent-template-card">
-                    <div class="template-icon bg-green-light">
-                        <i class="fa-solid fa-magnet text-green"></i>
-                    </div>
-                    <h4>Lead Generation Bot</h4>
-                    <p>Qualify leads interactively, collect emails, and schedule calls.</p>
-                    <button type="button" class="btn btn-primary btn-sm" (click)="useAgentTemplate('Lead Generation Bot')" style="background: #0f172a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px;">Use Template</button>
-                </div>
-                
-                <!-- Template 3 -->
-                <div class="agent-template-card">
-                    <div class="template-icon bg-orange-light">
-                        <i class="fa-regular fa-calendar-check text-orange"></i>
-                    </div>
-                    <h4>Appointment Booking</h4>
-                    <p>Check availability and book appointments directly through WhatsApp.</p>
-                    <button type="button" class="btn btn-primary btn-sm" (click)="useAgentTemplate('Appointment Booking')" style="background: #0f172a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px;">Use Template</button>
-                </div>
-                
-                <!-- Template 4 -->
-                <div class="agent-template-card">
-                    <div class="template-icon bg-pink-light">
-                        <i class="fa-solid fa-cart-shopping text-pink"></i>
-                    </div>
-                    <h4>E-commerce Cart Recovery</h4>
-                    <p>Send automated reminders and discount offers for abandoned carts.</p>
-                    <button type="button" class="btn btn-primary btn-sm" (click)="useAgentTemplate('E-commerce Cart Recovery')" style="background: #0f172a; color: white; border: none; padding: 8px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; margin-top: 10px;">Use Template</button>
-                </div>
-            </div>
+    <!-- Readymade Agent Templates Section (Row 3) -->
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 15px; font-weight: 700; color: #334155; margin: 0;">Readymade Agent Templates</h3>
+            <a routerLink="/manage" style="font-size: 13px; font-weight: 600; color: #0b494d; text-decoration: none;">View All Templates →</a>
         </div>
         
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px;">
+            
+            <!-- Customer Support Bot -->
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div>
+                    <div style="width: 44px; height: 44px; border-radius: 10px; background: #eff6ff; display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+                        <i class="fa-solid fa-headset" style="color: #2563eb; font-size: 20px;"></i>
+                    </div>
+                    <h4 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #0f172a;">Customer Support Bot</h4>
+                    <p style="margin: 0; font-size: 12.5px; color: #64748b; line-height: 1.5;">Automatically handle FAQs, triage tickets, and connect users to human agents.</p>
+                </div>
+                <button type="button" (click)="useAgentTemplate('Customer Support Bot')" style="background: #0b494d; color: white; border: none; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px; width: 100%; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
+                    Use Template
+                </button>
+            </div>
+            
+            <!-- Lead Generation Bot -->
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div>
+                    <div style="width: 44px; height: 44px; border-radius: 10px; background: #f0fdf4; display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+                        <i class="fa-solid fa-magnet" style="color: #16a34a; font-size: 20px;"></i>
+                    </div>
+                    <h4 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #0f172a;">Lead Generation Bot</h4>
+                    <p style="margin: 0; font-size: 12.5px; color: #64748b; line-height: 1.5;">Qualify leads interactively, collect emails, and schedule sales discovery calls.</p>
+                </div>
+                <button type="button" (click)="useAgentTemplate('Lead Generation Bot')" style="background: #0b494d; color: white; border: none; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px; width: 100%; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
+                    Use Template
+                </button>
+            </div>
+            
+            <!-- Appointment Booking -->
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div>
+                    <div style="width: 44px; height: 44px; border-radius: 10px; background: #fff7ed; display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+                        <i class="fa-regular fa-calendar-check" style="color: #ea580c; font-size: 20px;"></i>
+                    </div>
+                    <h4 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #0f172a;">Appointment Booking</h4>
+                    <p style="margin: 0; font-size: 12.5px; color: #64748b; line-height: 1.5;">Check availability and book appointments directly through WhatsApp.</p>
+                </div>
+                <button type="button" (click)="useAgentTemplate('Appointment Booking')" style="background: #0b494d; color: white; border: none; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px; width: 100%; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
+                    Use Template
+                </button>
+            </div>
+            
+            <!-- E-commerce Cart Recovery -->
+            <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+                <div>
+                    <div style="width: 44px; height: 44px; border-radius: 10px; background: #fdf2f8; display: flex; align-items: center; justify-content: center; margin-bottom: 14px;">
+                        <i class="fa-solid fa-cart-shopping" style="color: #db2777; font-size: 20px;"></i>
+                    </div>
+                    <h4 style="margin: 0 0 6px 0; font-size: 15px; font-weight: 700; color: #0f172a;">E-commerce Cart Recovery</h4>
+                    <p style="margin: 0; font-size: 12.5px; color: #64748b; line-height: 1.5;">Send automated reminders and discount offers for abandoned carts.</p>
+                </div>
+                <button type="button" (click)="useAgentTemplate('E-commerce Cart Recovery')" style="background: #0b494d; color: white; border: none; padding: 10px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 18px; width: 100%; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
+                    Use Template
+                </button>
+            </div>
+        </div>
     </div>
 </div>

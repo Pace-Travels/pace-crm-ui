@@ -84,7 +84,7 @@ export class ProjectsView implements OnInit {
 
   onCreateProject() {
     if (this.projectForm.invalid) {
-      alert("Please enter the brand name and all required WhatsApp Meta credentials configuration fields.");
+      Swal.fire('Error', 'Please enter the brand name and all required WhatsApp Meta credentials configuration fields.', 'error');
       return;
     }
     const val = this.projectForm.value;
@@ -104,10 +104,10 @@ export class ProjectsView implements OnInit {
           this.projectForm.reset();
           this.editingProjectId = null;
           this.projectService.fetchProjects();
-          alert("Brand Project updated successfully!");
+          Swal.fire('Updated', 'Brand Project updated successfully!', 'success');
         },
         error: (err: any) => {
-          alert("Failed to update project: " + err.message);
+          Swal.fire('Error', 'Failed to update project: ' + err.message, 'error');
         }
       });
     } else {
@@ -115,10 +115,10 @@ export class ProjectsView implements OnInit {
         next: () => {
           this.projectForm.reset();
           this.projectService.fetchProjects();
-          alert("Brand Project and WhatsApp config registered successfully!");
+          Swal.fire('Registered', 'Brand Project and WhatsApp config registered successfully!', 'success');
         },
         error: (err: any) => {
-          alert("Failed to create project: " + err.message);
+          Swal.fire('Error', 'Failed to create project: ' + err.message, 'error');
         }
       });
     }

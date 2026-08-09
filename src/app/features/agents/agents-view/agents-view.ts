@@ -154,10 +154,6 @@ export class AgentsView implements OnInit {
   }
 
   private showAlert(title: string, text: string, icon: 'success' | 'error' | 'warning' | 'info') {
-    if (typeof Swal !== 'undefined') {
-      Swal.fire({ title, text, icon, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
-    } else {
-      alert(`${title}: ${text}`);
-    }
+    Swal.fire({ title, text, icon, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
   }
 }

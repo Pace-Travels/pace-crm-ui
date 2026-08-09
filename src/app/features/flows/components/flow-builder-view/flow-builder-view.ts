@@ -96,10 +96,6 @@ export class FlowBuilderView implements OnInit {
   }
 
   private showAlert(title: string, text: string, icon: string) {
-    if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
-      Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
-    } else {
-      alert(`${title}: ${text}`);
-    }
+    Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
   }
 }

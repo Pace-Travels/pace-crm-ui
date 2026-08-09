@@ -4,6 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { Router } from '@angular/router';
 import { MarkdownComponent } from 'ngx-markdown';
 import { ApiService } from '../../../../shared/services/api.service';
+import Swal from 'sweetalert2';
 
 interface MessageTemplate {
   id?: number;
@@ -133,11 +134,11 @@ export class TemplatesView implements OnInit {
       next: (res: any) => {
         this.templates.set(res.data || []);
         this.isLoading.set(false);
-        alert("Templates synced successfully from WhatsApp!");
+        Swal.fire('Synced', 'Templates synced successfully from WhatsApp!', 'success');
       },
       error: (err: any) => {
         this.isLoading.set(false);
-        alert("Sync failed: " + err.message);
+        Swal.fire('Error', 'Sync failed: ' + err.message, 'error');
       }
     });
   }
@@ -166,7 +167,7 @@ export class TemplatesView implements OnInit {
   saveAsDraft() {
     const val = this.templateForm.value;
     if (!val.name || !val.body) {
-      alert("Name and Body are required to draft a template.");
+      Swal.fire('Error', 'Name and Body are required to draft a template.', 'error');
       return;
     }
     const payload = {
@@ -180,10 +181,10 @@ export class TemplatesView implements OnInit {
       next: () => {
         this.closeCreateTemplate();
         this.fetchTemplates();
-        alert("Template draft saved locally!");
+        Swal.fire('Saved', 'Template draft saved locally!', 'success');
       },
       error: (err: any) => {
-        alert("Failed to save draft: " + err.message);
+        Swal.fire('Error', 'Failed to save draft: ' + err.message, 'error');
       }
     });
   }
@@ -192,7 +193,7 @@ export class TemplatesView implements OnInit {
   submitForApproval() {
     const val = this.templateForm.value;
     if (this.templateForm.invalid) {
-      alert("Please correct validation errors before submitting.");
+      Swal.fire('Error', 'Please correct validation errors before submitting.', 'error');
       return;
     }
 
@@ -242,10 +243,10 @@ export class TemplatesView implements OnInit {
       next: () => {
         this.closeCreateTemplate();
         this.fetchTemplates();
-        alert("Template submitted to Meta for review!");
+        Swal.fire('Submitted', 'Template submitted to Meta for review!', 'success');
       },
       error: (err: any) => {
-        alert("Meta submission failed: " + (err.error?.error || err.message));
+        Swal.fire('Submission Failed', (err.error?.error || err.message), 'error');
       }
     });
   }
@@ -256,10 +257,10 @@ export class TemplatesView implements OnInit {
     this.api.post(`/messagetemplates/draft/${id}/submit`, {}).subscribe({
       next: () => {
         this.fetchTemplates();
-        alert("Draft template submitted to Meta WABA successfully!");
+        Swal.fire('Submitted', 'Draft template submitted to Meta WABA successfully!', 'success');
       },
       error: (err: any) => {
-        alert("Failed to submit draft: " + (err.error?.error || err.message));
+        Swal.fire('Submission Failed', (err.error?.error || err.message), 'error');
       }
     });
   }
@@ -381,10 +382,10 @@ Enhance your template text with rich markdown formatting supported by WhatsApp:
     this.api.post('/campaigns', payload).subscribe({
       next: () => {
         this.closeQuickSend();
-        alert('🚀 Quick Broadcast has been queued and is executing!');
+        Swal.fire('Broadcast Queued', '🚀 Quick Broadcast has been queued and is executing!', 'success');
       },
       error: (err: any) => {
-        alert('Failed to launch Quick Broadcast: ' + (err.error?.error || err.message));
+        Swal.fire('Error', 'Failed to launch Quick Broadcast: ' + (err.error?.error || err.message), 'error');
       }
     });
   }

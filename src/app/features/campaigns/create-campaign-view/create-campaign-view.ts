@@ -64,10 +64,10 @@ export class CreateCampaignView implements OnInit {
         if (res.data && res.data.length > 0) {
           this.selectTemplate(res.data[0]);
         }
-        alert("Templates synced successfully from WhatsApp API!");
+        Swal.fire('Synced', 'Templates synced successfully from WhatsApp API!', 'success');
       },
       error: (err: any) => {
-        alert("Failed to sync templates: " + err.message);
+        Swal.fire('Error', 'Failed to sync templates: ' + err.message, 'error');
       }
     });
   }

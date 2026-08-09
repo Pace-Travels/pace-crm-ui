@@ -9,7 +9,7 @@ import {
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FlowService } from '../../services/flow.service';
 
-declare var Swal: any;
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-flow-canvas-view',
@@ -243,10 +243,6 @@ export class FlowCanvasView implements OnInit {
   }
 
   private showAlert(title: string, text: string, icon: string) {
-    if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
-      Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
-    } else {
-      alert(`${title}: ${text}`);
-    }
+    Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
   }
 }

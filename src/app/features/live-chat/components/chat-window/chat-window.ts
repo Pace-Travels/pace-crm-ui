@@ -100,96 +100,80 @@ export class ChatWindow {
 
   // Action 1: Add User Attributes
   onAddUserAttribute() {
-    if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
-      Swal.fire({
-        title: 'Add Contact Attribute',
-        html: `<input id="swal-key" class="swal2-input" placeholder="Attribute Key (e.g. City, VIP, LeadScore)">
-               <input id="swal-val" class="swal2-input" placeholder="Attribute Value (e.g. Mumbai, High)">`,
-        focusConfirm: false,
-        showCancelButton: true,
-        confirmButtonText: 'Save Attribute',
-        preConfirm: () => {
-          const key = (document.getElementById('swal-key') as HTMLInputElement).value;
-          const val = (document.getElementById('swal-val') as HTMLInputElement).value;
-          if (!key || !val) {
-            Swal.showValidationMessage('Both key and value are required!');
-          }
-          return { key, val };
+    Swal.fire({
+      title: 'Add Contact Attribute',
+      html: `<input id="swal-key" class="swal2-input" placeholder="Attribute Key (e.g. City, VIP, LeadScore)">
+             <input id="swal-val" class="swal2-input" placeholder="Attribute Value (e.g. Mumbai, High)">`,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Save Attribute',
+      preConfirm: () => {
+        const key = (document.getElementById('swal-key') as HTMLInputElement).value;
+        const val = (document.getElementById('swal-val') as HTMLInputElement).value;
+        if (!key || !val) {
+          Swal.showValidationMessage('Both key and value are required!');
         }
-      }).then((result: any) => {
-        if (result.isConfirmed) {
-          this.showAlert('Attribute Added', `Attribute "${result.value.key}: ${result.value.val}" saved to contact.`, 'success');
-        }
-      });
-    } else {
-      alert('Add User Attribute Clicked');
-    }
+        return { key, val };
+      }
+    }).then((result: any) => {
+      if (result.isConfirmed) {
+        this.showAlert('Attribute Added', `Attribute "${result.value.key}: ${result.value.val}" saved to contact.`, 'success');
+      }
+    });
   }
 
   // Action 2: Add/Remove Tag
   onAddRemoveTag() {
-    if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
-      Swal.fire({
-        title: 'Add/Remove Contact Tag',
-        input: 'text',
-        inputPlaceholder: 'Enter tag name (e.g. HotLead, Purchased, Support)',
-        showCancelButton: true,
-        confirmButtonText: 'Apply Tag',
-        inputValidator: (value: string) => {
-          if (!value) return 'Tag name cannot be empty!';
-          return null;
-        }
-      }).then((result: any) => {
-        if (result.isConfirmed) {
-          this.showAlert('Tag Applied', `Tag "${result.value}" updated on contact profile.`, 'success');
-        }
-      });
-    } else {
-      alert('Add/Remove Tag Clicked');
-    }
+    Swal.fire({
+      title: 'Add/Remove Contact Tag',
+      input: 'text',
+      inputPlaceholder: 'Enter tag name (e.g. HotLead, Purchased, Support)',
+      showCancelButton: true,
+      confirmButtonText: 'Apply Tag',
+      inputValidator: (value: string) => {
+        if (!value) return 'Tag name cannot be empty!';
+        return null;
+      }
+    }).then((result: any) => {
+      if (result.isConfirmed) {
+        this.showAlert('Tag Applied', `Tag "${result.value}" updated on contact profile.`, 'success');
+      }
+    });
   }
 
   // Action 3: Send & Generate Media Link
   onSendMediaLink() {
-    if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
-      Swal.fire({
-        title: 'Generate & Share Media Link',
-        input: 'url',
-        inputPlaceholder: 'Paste Image, PDF, or Document URL',
-        showCancelButton: true,
-        confirmButtonText: 'Send Media Link',
-        inputValidator: (value: string) => {
-          if (!value) return 'Please paste a valid URL!';
-          return null;
+    Swal.fire({
+      title: 'Generate & Share Media Link',
+      input: 'url',
+      inputPlaceholder: 'Paste Image, PDF, or Document URL',
+      showCancelButton: true,
+      confirmButtonText: 'Send Media Link',
+      inputValidator: (value: string) => {
+        if (!value) return 'Please paste a valid URL!';
+        return null;
+      }
+    }).then((result: any) => {
+      if (result.isConfirmed) {
+        const conv = this.chatService.selectedConversation();
+        if (conv) {
+          this.api.post('messages/send', {
+            conversationId: conv.id,
+            textContent: `[Media Attachment Link]: ${result.value}`
+          }).subscribe({
+            next: () => {
+              this.chatService.selectConversation(conv);
+              this.showAlert('Media Sent', 'Media link shared in conversation.', 'success');
+            }
+          });
+        } else {
+          this.showAlert('Notice', 'Media link generated: ' + result.value, 'info');
         }
-      }).then((result: any) => {
-        if (result.isConfirmed) {
-          const conv = this.chatService.selectedConversation();
-          if (conv) {
-            this.api.post('messages/send', {
-              conversationId: conv.id,
-              textContent: `[Media Attachment Link]: ${result.value}`
-            }).subscribe({
-              next: () => {
-                this.chatService.selectConversation(conv);
-                this.showAlert('Media Sent', 'Media link shared in conversation.', 'success');
-              }
-            });
-          } else {
-            this.showAlert('Notice', 'Media link generated: ' + result.value, 'info');
-          }
-        }
-      });
-    } else {
-      alert('Generate Media Link Clicked');
-    }
+      }
+    });
   }
 
   private showAlert(title: string, text: string, icon: string) {
-    if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
-      Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
-    } else {
-      alert(`${title}: ${text}`);
-    }
+    Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
   }
 }
