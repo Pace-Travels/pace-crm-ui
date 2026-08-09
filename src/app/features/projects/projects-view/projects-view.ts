@@ -5,6 +5,8 @@ import { ProjectService } from '../services/project.service';
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
 
+import { environment } from '../../../../environments/environment';
+
 declare var FB: any;
 
 @Component({
@@ -182,6 +184,15 @@ export class ProjectsView implements OnInit {
   }
 
   connectWithFacebook() {
+    const appId = environment.facebookAppId;
+    if (!appId || appId === '109841289150123' || appId.includes('YOUR_ACTUAL_APP_ID')) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Meta App ID Required',
+        html: `Your app is using a placeholder Meta App ID (<code>109841289150123</code>).<br><br>Please replace <b>facebookAppId</b> in <code>src/environments/environment.ts</code> with your actual Meta App ID from <a href="https://developers.facebook.com/apps" target="_blank" style="color: #2563eb;">Meta Developer Console</a>.`
+      });
+      return;
+    }
     this.checkLoginState();
   }
 
