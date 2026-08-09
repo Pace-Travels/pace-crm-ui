@@ -25,6 +25,7 @@ import { AccountLayout } from './features/account/account-layout/account-layout'
 import { ProfileView } from './features/account/profile-view/profile-view';
 
 import { EventsRadar } from './features/events-radar/events-radar';
+import { MarketIntelligence } from './features/market-intelligence/market-intelligence';
 import { WebPush } from './features/webpush/components/web-push/web-push';
 import { Email } from './features/email/components/email/email';
 
@@ -153,6 +154,11 @@ export const routes: Routes = [
             },
             {
                 path:'email', component:Email, title: 'E-mail'
+            },
+            {
+                path: 'market-intelligence',
+                component: MarketIntelligence,
+                title: 'Market Intelligence Cloud - Pace Messenger'
             }
         ]
     }
