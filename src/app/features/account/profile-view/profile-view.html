@@ -1,42 +1,110 @@
-<div class="profile-container">
-    <div class="header-section">
-        <h1 class="page-title">Your Profile</h1>
+<div class="profile-container" style="max-width: 760px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); font-family: 'Inter', sans-serif;">
+    
+    <!-- Profile Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px; margin-bottom: 28px;">
+        <div>
+            <h1 style="font-size: 22px; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">Account Profile</h1>
+            <p style="font-size: 13px; color: #64748b; margin: 0;">Manage your personal details, profile avatar, WhatsApp number, and password credentials.</p>
+        </div>
+        <button (click)="logout()" style="background: white; border: 1px solid #fca5a5; color: #ef4444; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">
+            <i class="fa-solid fa-right-from-bracket"></i> Logout
+        </button>
     </div>
 
-    <div class="profile-content">
-        <div class="avatar-section" *ngIf="user">
-            <div class="avatar">
-                <span>{{ user.name ? user.name.charAt(0).toUpperCase() : 'U' }}</span>
-            </div>
-            <button class="btn-text">Edit</button>
-            <button class="btn-outline" (click)="logout()">Logout</button>
-        </div>
-
-        <div class="form-section" *ngIf="user">
-            <div class="form-group">
-                <label>Display Name</label>
-                <input type="text" [value]="user.name || 'Not provided'" readonly>
+    <!-- Profile Avatar & Info Card -->
+    <div style="display: flex; gap: 32px; align-items: flex-start; margin-bottom: 32px;">
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
+            <div style="position: relative; width: 104px; height: 104px; border-radius: 50%; border: 3px solid #0b494d; overflow: hidden; background: #e0f2f1; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(0,0,0,0.08);">
+                <img *ngIf="avatarUrl()" [src]="avatarUrl()" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                <span *ngIf="!avatarUrl()" style="font-size: 38px; font-weight: 800; color: #00695c;">
+                    {{ displayName ? displayName.charAt(0).toUpperCase() : 'U' }}
+                </span>
             </div>
             
-            <div class="form-group">
-                <label>Email</label>
-                <input type="text" [value]="user.email || 'Not provided'" readonly>
+            <input type="file" #fileInput (change)="onAvatarSelected($event)" accept="image/*" style="display: none;">
+            <button (click)="fileInput.click()" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-camera"></i> Upload Photo
+            </button>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; gap: 18px;">
+            <!-- Display Name -->
+            <div>
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">Display Name *</label>
+                <input type="text" [(ngModel)]="displayName" placeholder="Enter your full name" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-weight: 600;">
             </div>
 
-            <div class="form-group">
-                <label>WhatsApp Number</label>
-                <input type="text" value="Not provided" readonly>
+            <!-- Email -->
+            <div>
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">Email Address *</label>
+                <input type="email" [(ngModel)]="email" placeholder="name@example.com" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
             </div>
 
-            <div class="form-group">
-                <label>User Name</label>
-                <input type="text" [value]="user.email || 'Not provided'" readonly>
+            <!-- WhatsApp Number with Country Code Search -->
+            <div>
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">WhatsApp Business Mobile Number</label>
+                <div style="display: flex; gap: 8px; margin-top: 4px;">
+                    <!-- Country Selector Dropdown -->
+                    <select [ngModel]="selectedCountry()" (ngModelChange)="selectedCountry.set($event)" style="padding: 9px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: #f8fafc; font-weight: 700; outline: none; cursor: pointer;">
+                        <option *ngFor="let c of countryList" [ngValue]="c">
+                            {{ c.flag }} {{ c.code }} ({{ c.country }})
+                        </option>
+                    </select>
+
+                    <input type="text" [(ngModel)]="whatsappNumberOnly" placeholder="Enter mobile number (e.g. 9876543210)" style="flex: 1; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none; font-weight: 600;">
+                </div>
             </div>
 
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" value="password" readonly>
+            <!-- User Name -->
+            <div>
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">Username</label>
+                <input type="text" [(ngModel)]="username" placeholder="Username" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; background: #f8fafc;" readonly>
             </div>
+
+            <!-- Password Reset Trigger -->
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 14px 18px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <div>
+                    <strong style="font-size: 13.5px; color: #1e293b;">Password Credentials</strong>
+                    <div style="font-size: 12px; color: #64748b;">••••••••••••</div>
+                </div>
+                <button (click)="openPasswordModal()" style="background: #0f172a; color: white; border: none; padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
+                    <i class="fa-solid fa-key"></i> Reset Password
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div style="display: flex; justify-content: flex-end; border-top: 1px solid #f1f5f9; padding-top: 20px;">
+        <button (click)="saveProfile()" style="background: #0b494d; color: white; border: none; padding: 11px 28px; border-radius: 6px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(11, 73, 77, 0.2);">
+            Save Profile Changes
+        </button>
+    </div>
+</div>
+
+<!-- Reset Password Modal -->
+<div *ngIf="showPasswordModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Inter', sans-serif;">
+    <div style="background: white; width: 440px; border-radius: 12px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+            <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a;">Reset Password</h3>
+            <button (click)="showPasswordModal.set(false)" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px;">
+            <div>
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">New Password *</label>
+                <input type="password" [(ngModel)]="newPassword" placeholder="Enter new password" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+            </div>
+
+            <div>
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">Confirm New Password *</label>
+                <input type="password" [(ngModel)]="confirmPassword" placeholder="Re-enter new password" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button (click)="showPasswordModal.set(false)" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 9px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">Cancel</button>
+            <button (click)="resetPassword()" style="background: #0f172a; color: white; border: none; padding: 9px 20px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">Update Password</button>
         </div>
     </div>
 </div>

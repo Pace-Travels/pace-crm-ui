@@ -5,6 +5,8 @@ import { Menu } from 'primeng/menu';
 import { Router } from '@angular/router';
 import { EnvironmentModeService, EnvironmentMode } from '../services/environment-mode.service';
 
+import { ApiService } from '../services/api.service';
+
 declare var Swal: any;
 
 @Component({
@@ -19,6 +21,7 @@ export class Header implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
 
   envModeService = inject(EnvironmentModeService);
+  api = inject(ApiService);
   router = inject(Router);
 
   userName = 'Shadab';
@@ -28,13 +31,15 @@ export class Header implements OnInit {
   showNotifications = signal(false);
   showProfileDropdown = signal(false);
 
-  notificationsList = signal<any[]>([
-    { id: 1, title: 'Meta WABA Connected', desc: 'WhatsApp Business API in Live Production mode.', time: '2m ago', icon: 'fa-brands fa-whatsapp text-green' },
-    { id: 2, title: 'AI Event Radar Active', desc: 'Scanned 12 high-surge events in Dubai & Mumbai.', time: '15m ago', icon: 'fa-solid fa-bolt text-yellow' },
-    { id: 3, title: 'Templates Synced', desc: '4 pre-approved WhatsApp templates synchronized.', time: '1h ago', icon: 'fa-solid fa-circle-check text-blue' }
-  ]);
+  notificationsList = signal<any[]>([]);
 
   ngOnInit() {
+    this.loadUserData();
+    this.envModeService.fetchCurrentSettings();
+    this.fetchNotifications();
+  }
+
+  loadUserData() {
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
@@ -47,7 +52,36 @@ export class Header implements OnInit {
         console.error('Error parsing user data', e);
       }
     }
-    this.envModeService.fetchCurrentSettings();
+  }
+
+  fetchNotifications() {
+    this.api.get<any>('notifications/list').subscribe({
+      next: (res) => {
+        if (res.success && Array.isArray(res.data)) {
+          const mapped = res.data.map((item: any) => {
+            let iconClass = 'fa-solid fa-bell text-blue';
+            if (item.type === 'WABA') iconClass = 'fa-brands fa-whatsapp text-green';
+            else if (item.type === 'RADAR') iconClass = 'fa-solid fa-bolt text-yellow';
+            else if (item.type === 'TEMPLATES') iconClass = 'fa-solid fa-circle-check text-blue';
+            else if (item.type === 'INTEGRATIONS') iconClass = 'fa-solid fa-plug text-purple';
+
+            const formattedTime = item.createdAt 
+              ? new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              : 'Recently';
+
+            return {
+              id: item.id,
+              title: item.type ? `${item.type} Notification` : 'System Alert',
+              desc: item.content,
+              time: formattedTime,
+              icon: iconClass
+            };
+          });
+          this.notificationsList.set(mapped);
+        }
+      },
+      error: () => {}
+    });
   }
 
   onToggleSidebar() {
@@ -57,6 +91,9 @@ export class Header implements OnInit {
   toggleNotifications() {
     this.showNotifications.set(!this.showNotifications());
     this.showProfileDropdown.set(false);
+    if (this.showNotifications()) {
+      this.fetchNotifications();
+    }
   }
 
   toggleProfileDropdown() {
