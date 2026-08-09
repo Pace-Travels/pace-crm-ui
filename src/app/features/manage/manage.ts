@@ -184,6 +184,7 @@ export class Manage implements OnInit {
   }
 
   getEmbedCode(apiKey?: string): string {
-    return `<script src="https://messengerapi.quotedesks.com/sdk/widget.js" data-api-key="${apiKey || 'YOUR_KEY'}"></script>`;
+    const apiHost = this.api.baseUrl.replace(/\/api\/v1\/?$/, '');
+    return `<script src="${apiHost}/sdk/widget.js" data-api-key="${apiKey || 'YOUR_KEY'}"></script>`;
   }
 }
