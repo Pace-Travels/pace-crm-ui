@@ -2,7 +2,7 @@
 
 **Effective Date:** 2026-08-08
 
-Welcome to Pace CRM ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our application and use our CRM and messaging services.
+Welcome to Pace Messenger ("we," "our," or "us"). We are committed to protecting your personal information and your right to privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our application and use our CRM and messaging services.
 
 ## 1. Information We Collect
 

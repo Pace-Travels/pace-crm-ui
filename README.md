@@ -1,6 +1,6 @@
-# Pace CRM UI
+# Pace Messenger UI
 
-Pace CRM UI is the robust, high-performance Angular frontend for the Pace Messenger platform. It provides a beautiful, modern interface for managing WhatsApp marketing campaigns, live chat interactions, automation flows, and contacts.
+Pace Messenger UI is the robust, high-performance Angular frontend for the Pace Messenger platform. It provides a beautiful, modern interface for managing WhatsApp marketing campaigns, live chat interactions, automation flows, and contacts.
 
 ## 🚀 System Readiness
 

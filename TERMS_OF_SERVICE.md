@@ -2,20 +2,20 @@
 
 **Effective Date:** 2026-08-08
 
-Welcome to Pace CRM! These Terms of Service ("Terms") govern your access to and use of the Pace CRM application, including our messaging server capabilities and related services (collectively, the "Services").
+Welcome to Pace Messenger! These Terms of Service ("Terms") govern your access to and use of the Pace Messenger application, including our messaging server capabilities and related services (collectively, the "Services").
 
 By accessing or using the Services, you agree to be bound by these Terms. If you do not agree to these Terms, you may not access or use the Services.
 
 ## 1. Description of Service
 
-Pace CRM provides a platform for managing customer relationships and sending messages (including template-based communications) via integrated platforms like WhatsApp. You are responsible for maintaining the security of your account and for all activities that occur under your account.
+Pace Messenger provides a platform for managing customer relationships and sending messages (including template-based communications) via integrated platforms like WhatsApp. You are responsible for maintaining the security of your account and for all activities that occur under your account.
 
 ## 2. Acceptable Use
 
-You agree not to use the Services in any way that is unlawful, or harms Pace CRM, its service providers, its suppliers, or any other user. Specifically, you agree NOT to:
+You agree not to use the Services in any way that is unlawful, or harms Pace Messenger, its service providers, its suppliers, or any other user. Specifically, you agree NOT to:
 * Use the Services to send spam, unsolicited messages, or unauthorized promotional material.
 * Transmit any content that is abusive, harassing, defamatory, or violates the privacy rights of others.
-* Violate the terms of service of third-party platforms integrated with Pace CRM (e.g., WhatsApp/Meta Business terms).
+* Violate the terms of service of third-party platforms integrated with Pace Messenger (e.g., WhatsApp/Meta Business terms).
 * Attempt to gain unauthorized access to our systems or networks.
 
 ## 3. User Content and Data
@@ -30,7 +30,7 @@ We may terminate or suspend your access to the Services immediately, without pri
 
 ## 5. Limitation of Liability
 
-In no event shall Pace CRM, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Services.
+In no event shall Pace Messenger, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your access to or use of or inability to access or use the Services.
 
 ## 6. Changes to Terms
 

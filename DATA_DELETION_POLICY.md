@@ -2,11 +2,11 @@
 
 **Effective Date:** 2026-08-08
 
-At Pace CRM, we respect your right to privacy and your right to control your personal data. This Data Deletion Policy outlines the procedures for the deletion of user data in compliance with relevant data protection regulations (such as GDPR and CCPA).
+At Pace Messenger, we respect your right to privacy and your right to control your personal data. This Data Deletion Policy outlines the procedures for the deletion of user data in compliance with relevant data protection regulations (such as GDPR and CCPA).
 
 ## 1. Right to Erasure
 
-Users of Pace CRM have the right to request the deletion of their personal data from our systems. This includes account information, contact lists, and message history. 
+Users of Pace Messenger have the right to request the deletion of their personal data from our systems. This includes account information, contact lists, and message history. 
 
 ## 2. How to Request Data Deletion
 
@@ -33,4 +33,4 @@ Please note that we may retain certain data if it is necessary for legitimate bu
 
 ## 5. Third-Party Services
 
-For data processed via third-party services integrated into Pace CRM (e.g., WhatsApp APIs), we will ensure that deletion requests are cascaded to those third parties where technically feasible and required by law.
+For data processed via third-party services integrated into Pace Messenger (e.g., WhatsApp APIs), we will ensure that deletion requests are cascaded to those third parties where technically feasible and required by law.
