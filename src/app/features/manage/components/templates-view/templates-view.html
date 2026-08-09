@@ -84,6 +84,23 @@
 
 <!-- Filters & Search Controls Bar -->
 <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    <!-- Template Source Origin Filter Pills -->
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px dashed #e2e8f0;">
+        <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-right: 4px;">Template Source:</span>
+        <button type="button" [style.background]="selectedSource() === 'ALL' ? '#0f172a' : '#f8fafc'" [style.color]="selectedSource() === 'ALL' ? 'white' : '#475569'" (click)="selectedSource.set('ALL')" style="padding: 5px 14px; font-size: 12px; border-radius: 20px; border: 1px solid #cbd5e1; font-weight: 700; cursor: pointer;">
+            All Sources ({{ templates().length }})
+        </button>
+        <button type="button" [style.background]="selectedSource() === 'CUSTOM' ? '#0b494d' : '#f8fafc'" [style.color]="selectedSource() === 'CUSTOM' ? 'white' : '#475569'" (click)="selectedSource.set('CUSTOM')" style="padding: 5px 14px; font-size: 12px; border-radius: 20px; border: 1px solid #cbd5e1; font-weight: 700; cursor: pointer;">
+            🎨 Custom Created ({{ customCount() }})
+        </button>
+        <button type="button" [style.background]="selectedSource() === 'META_SYNC' ? '#0284c7' : '#f8fafc'" [style.color]="selectedSource() === 'META_SYNC' ? 'white' : '#475569'" (click)="selectedSource.set('META_SYNC')" style="padding: 5px 14px; font-size: 12px; border-radius: 20px; border: 1px solid #cbd5e1; font-weight: 700; cursor: pointer;">
+            🔵 Facebook Synced ({{ metaSyncedCount() }})
+        </button>
+        <button type="button" [style.background]="selectedSource() === 'META_LIBRARY' ? '#7e22ce' : '#f8fafc'" [style.color]="selectedSource() === 'META_LIBRARY' ? 'white' : '#475569'" (click)="selectedSource.set('META_LIBRARY')" style="padding: 5px 14px; font-size: 12px; border-radius: 20px; border: 1px solid #cbd5e1; font-weight: 700; cursor: pointer;">
+            ✨ Facebook Library ({{ metaLibraryCount() }})
+        </button>
+    </div>
+
     <!-- Brand Unit Filter Pills -->
     <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px;">
         <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-right: 4px;">Brand Unit:</span>
@@ -104,7 +121,7 @@
 
 <!-- Signal Tabs Navigation -->
 <div style="display: flex; gap: 8px; border-bottom: 2px solid #e2e8f0; margin-bottom: 24px;">
-    <button (click)="activeTab.set('All')" [style.border-bottom-color]="activeTab() === 'All' ? '#0b494d' : 'transparent'" [style.color]="activeTab() === 'All' ? '#0b494d' : '#64748b'" style="background: none; border: none; border-bottom: 3px solid; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer;">All ({{ templates().length }})</button>
+    <button (click)="activeTab.set('All')" [style.border-bottom-color]="activeTab() === 'All' ? '#0b494d' : 'transparent'" [style.color]="activeTab() === 'All' ? '#0b494d' : '#64748b'" style="background: none; border: none; border-bottom: 3px solid; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer;">All Templates ({{ filteredTemplates().length }})</button>
     <button (click)="activeTab.set('Draft')" [style.border-bottom-color]="activeTab() === 'Draft' ? '#0b494d' : 'transparent'" [style.color]="activeTab() === 'Draft' ? '#0b494d' : '#64748b'" style="background: none; border: none; border-bottom: 3px solid; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer;">Draft</button>
     <button (click)="activeTab.set('Pending')" [style.border-bottom-color]="activeTab() === 'Pending' ? '#0b494d' : 'transparent'" [style.color]="activeTab() === 'Pending' ? '#0b494d' : '#64748b'" style="background: none; border: none; border-bottom: 3px solid; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer;">Pending / In-Review</button>
     <button (click)="activeTab.set('Approved')" [style.border-bottom-color]="activeTab() === 'Approved' ? '#0b494d' : 'transparent'" [style.color]="activeTab() === 'Approved' ? '#0b494d' : '#64748b'" style="background: none; border: none; border-bottom: 3px solid; padding: 10px 18px; font-size: 14px; font-weight: 700; cursor: pointer;">Approved</button>
@@ -119,13 +136,20 @@
 
     <div *ngIf="!isLoading() && filteredTemplates().length === 0" style="padding: 48px; text-align: center; color: #64748b; background: white; border: 1px solid #e2e8f0; border-radius: 12px;">
         <p style="font-weight: 700; color: #0f172a; margin: 0 0 4px 0; font-size: 15px;">No templates found</p>
-        <p style="font-size: 13px; margin: 0;">No templates match status tab "{{ activeTab() }}". Click "+ Create Template" or "Sync Meta Status" to import templates.</p>
+        <p style="font-size: 13px; margin: 0;">No templates match source filter "{{ selectedSource() }}" and status tab "{{ activeTab() }}".</p>
     </div>
 
     <div *ngIf="!isLoading() && filteredTemplates().length > 0" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">
         <div *ngFor="let tpl of filteredTemplates()" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 2px 6px rgba(0,0,0,0.02); transition: transform 0.15s ease;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
             <div>
-                <h5 style="margin: 0 0 10px 0; font-size: 16px; font-weight: 800; color: #0f172a; font-family: monospace;">{{ tpl.templateName }}</h5>
+                <!-- Source Origin Demarcation Badge -->
+                <div [style.background]="getSourceBadge(tpl).bg" [style.color]="getSourceBadge(tpl).color" [style.border]="getSourceBadge(tpl).border" style="display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; border-radius: 6px; margin-bottom: 12px; font-size: 11px; font-weight: 800;">
+                    <span><i [class]="getSourceBadge(tpl).icon" style="margin-right: 6px;"></i> {{ getSourceBadge(tpl).label }}</span>
+                    <span *ngIf="tpl.isMetaOfficial" style="font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9;">Preset</span>
+                </div>
+
+                <h5 style="margin: 0 0 4px 0; font-size: 16px; font-weight: 800; color: #0f172a; font-family: monospace;">{{ tpl.templateName }}</h5>
+                <h6 *ngIf="tpl.title" style="margin: 0 0 10px 0; font-size: 12.5px; font-weight: 600; color: #475569;">{{ tpl.title }}</h6>
                 
                 <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
                     <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px;">{{ tpl.category }}</span>
@@ -147,12 +171,16 @@
                     <i class="fa-regular fa-eye"></i> Preview
                 </button>
                 
-                <button *ngIf="tpl.status === 'APPROVED'" (click)="openQuickSend(tpl)" style="flex: 1; background: #0b494d; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
+                <button *ngIf="tpl.isMetaOfficial" (click)="importMetaTemplate(tpl)" style="flex: 1.2; background: #7e22ce; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fa-solid fa-file-import"></i> Import & Use
+                </button>
+
+                <button *ngIf="!tpl.isMetaOfficial && tpl.status === 'APPROVED'" (click)="openQuickSend(tpl)" style="flex: 1.2; background: #0b494d; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
                     <i class="fa-solid fa-paper-plane"></i> Quick Send
                 </button>
                 
-                <button *ngIf="tpl.status === 'DRAFT'" (click)="submitDraft(tpl.id)" style="flex: 1; background: #0f172a; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
-                    Submit
+                <button *ngIf="!tpl.isMetaOfficial && tpl.status === 'DRAFT'" (click)="submitDraft(tpl.id)" style="flex: 1.2; background: #0f172a; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
+                    Submit to Meta
                 </button>
             </div>
         </div>

@@ -11,6 +11,7 @@ import Swal from 'sweetalert2';
 interface MessageTemplate {
   id?: number;
   templateName: string;
+  title?: string;
   templateBody: string;
   language: string;
   category: string;
@@ -18,6 +19,8 @@ interface MessageTemplate {
   headerText?: string;
   footerText?: string;
   buttons?: string; // stringified JSON
+  source?: 'CUSTOM' | 'META_SYNC' | 'META_LIBRARY';
+  isMetaOfficial?: boolean;
 }
 
 @Component({
@@ -33,13 +36,19 @@ export class TemplatesView implements OnInit {
   private api = inject(ApiService);
   private fb = inject(FormBuilder);
 
-  // Signal Tab & Brand Filters
+  // Signal Tab, Brand & Source Filters
   activeTab = signal<string>('All');
   selectedBrand = signal<string>('ALL');
+  selectedSource = signal<string>('ALL'); // ALL | CUSTOM | META_SYNC | META_LIBRARY
   searchQuery = signal<string>('');
 
   templates = signal<MessageTemplate[]>([]);
   isLoading = signal<boolean>(false);
+
+  // Source Origin Counts
+  customCount = computed(() => this.templates().filter(t => (t.source === 'CUSTOM' || !t.source) && !t.isMetaOfficial).length);
+  metaSyncedCount = computed(() => this.templates().filter(t => t.source === 'META_SYNC').length);
+  metaLibraryCount = computed(() => this.templates().filter(t => t.isMetaOfficial || t.source === 'META_LIBRARY').length);
 
   // Modal State Controls
   showCreateModal = signal<boolean>(false);
@@ -84,8 +93,20 @@ export class TemplatesView implements OnInit {
     const query = this.searchQuery().toLowerCase().trim();
     const brand = this.selectedBrand();
     const tab = this.activeTab();
+    const source = this.selectedSource();
 
-    // 1. Brand Unit Filter
+    // 1. Source Origin Filter
+    if (source !== 'ALL') {
+      if (source === 'CUSTOM') {
+        list = list.filter(t => (t.source === 'CUSTOM' || !t.source) && !t.isMetaOfficial);
+      } else if (source === 'META_SYNC') {
+        list = list.filter(t => t.source === 'META_SYNC');
+      } else if (source === 'META_LIBRARY') {
+        list = list.filter(t => t.source === 'META_LIBRARY' || t.isMetaOfficial);
+      }
+    }
+
+    // 2. Brand Unit Filter
     if (brand !== 'ALL') {
       if (brand === 'PACE_TRAVELS') list = list.filter(t => t.templateName.startsWith('pace_b2c_') || t.templateName.includes('welcome') || t.templateName.includes('booking') || t.templateName.includes('flight'));
       else if (brand === 'PACE_B2B') list = list.filter(t => t.templateName.startsWith('pace_b2b_'));
@@ -94,16 +115,17 @@ export class TemplatesView implements OnInit {
       else if (brand === 'VIETNAM_PACE') list = list.filter(t => t.templateName.startsWith('vietnam_pace_'));
     }
 
-    // 2. Search Query Filter
+    // 3. Search Query Filter
     if (query) {
       list = list.filter(t => 
         t.templateName.toLowerCase().includes(query) || 
+        (t.title && t.title.toLowerCase().includes(query)) ||
         t.status.toLowerCase().includes(query) || 
         t.templateBody.toLowerCase().includes(query)
       );
     }
 
-    // 3. Tab Status Filter
+    // 4. Tab Status Filter
     if (tab === 'Draft') {
       return list.filter(t => t.status === 'DRAFT');
     } else if (tab === 'Pending') {
@@ -144,13 +166,84 @@ export class TemplatesView implements OnInit {
 
   fetchTemplates() {
     this.isLoading.set(true);
+    // Fetch DB Templates & Meta Library Templates in parallel
     this.api.get('/messagetemplates/list').subscribe({
       next: (res: any) => {
-        this.templates.set(res.data || []);
-        this.isLoading.set(false);
+        const dbTemplates: MessageTemplate[] = (res.data || []).map((t: any) => ({
+          ...t,
+          source: t.source || 'CUSTOM'
+        }));
+
+        this.api.get('/messagetemplates/meta-library').subscribe({
+          next: (libRes: any) => {
+            const metaLibTemplates: MessageTemplate[] = (libRes.data || []).map((t: any) => ({
+              ...t,
+              status: 'APPROVED',
+              source: 'META_LIBRARY',
+              isMetaOfficial: true
+            }));
+
+            // Filter out Meta Library items that are already imported in DB
+            const existingNames = new Set(dbTemplates.map(t => t.templateName));
+            const freshMetaLib = metaLibTemplates.filter(t => !existingNames.has(t.templateName));
+
+            this.templates.set([...dbTemplates, ...freshMetaLib]);
+            this.isLoading.set(false);
+          },
+          error: () => {
+            this.templates.set(dbTemplates);
+            this.isLoading.set(false);
+          }
+        });
       },
       error: () => this.isLoading.set(false)
     });
+  }
+
+  getSourceBadge(tpl: MessageTemplate) {
+    if (tpl.isMetaOfficial || tpl.source === 'META_LIBRARY') {
+      return {
+        label: '✨ Facebook Library (Ready)',
+        bg: '#f3e8ff',
+        color: '#6b21a8',
+        border: '1px solid #d8b4fe',
+        icon: 'fa-brands fa-facebook'
+      };
+    }
+    if (tpl.source === 'META_SYNC') {
+      return {
+        label: '🔵 Synced from Meta WABA',
+        bg: '#e0f2fe',
+        color: '#0369a1',
+        border: '1px solid #7dd3fc',
+        icon: 'fa-brands fa-facebook-messenger'
+      };
+    }
+    if (tpl.status === 'APPROVED') {
+      return {
+        label: '✅ Custom • Meta Approved',
+        bg: '#dcfce7',
+        color: '#15803d',
+        border: '1px solid #86efac',
+        icon: 'fa-solid fa-circle-check'
+      };
+    }
+    if (tpl.status === 'PENDING' || tpl.status === 'IN_REVIEW') {
+      return {
+        label: '⏳ Custom • Pending Meta Review',
+        bg: '#fef3c7',
+        color: '#b45309',
+        border: '1px solid #fde68a',
+        icon: 'fa-solid fa-hourglass-half'
+      };
+    }
+    return {
+      label: '🎨 Custom Created (Draft)',
+      bg: '#f1f5f9',
+      color: '#475569',
+      border: '1px solid #cbd5e1',
+      icon: 'fa-solid fa-pen-ruler'
+    };
   }
 
   syncTemplates() {
@@ -225,7 +318,7 @@ export class TemplatesView implements OnInit {
           next: () => {
             Swal.fire('Template Imported', `"${metaTpl.title}" imported successfully!`, 'success');
             this.closeMetaLibrary();
-            this.loadTemplates();
+            this.fetchTemplates();
           },
           error: (err: any) => {
             Swal.fire('Error', 'Import failed: ' + (err.error?.error || err.message), 'error');
