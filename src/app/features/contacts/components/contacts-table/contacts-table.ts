@@ -5,7 +5,7 @@ import { ContactService, Contact } from '../../services/contact.service';
 import { ApiService } from '../../../../shared/services/api.service';
 import { PhoneInputComponent } from '../../../../shared/components/phone-input/phone-input';
 import Swal from 'sweetalert2';
-
+import { ViewChild, ElementRef } from '@angular/core';
 @Component({
   selector: 'app-contacts-table',
   standalone: true,
@@ -14,6 +14,7 @@ import Swal from 'sweetalert2';
   styleUrl: './contacts-table.scss',
 })
 export class ContactsTable implements OnInit {
+  @ViewChild('fileInput') fileInput!: ElementRef;
   contactService = inject(ContactService);
   private fb = inject(FormBuilder);
   private api = inject(ApiService);
@@ -283,8 +284,8 @@ export class ContactsTable implements OnInit {
   }
 
   openImportModal() {
-    this.closeDropdowns();
-    this.showImportModal.set(true);
+   this.showImportDropdown.set(false);
+        this.fileInput.nativeElement.click(); // Trigger the hidden file input
   }
 
   closeImportModal() {
@@ -292,39 +293,57 @@ export class ContactsTable implements OnInit {
   }
 
   onFileSelected(event: any) {
-    const file: File = event.target.files[0];
-    if (file) {
-      this.contactService.importCsv(file, this.contactService.activeType()).subscribe({
-        next: (res: any) => {
-          this.closeImportModal();
-          this.previewContacts.set(res.data || []);
-          this.isPreviewMode.set(true);
-        },
-        error: (err: any) => {
-          Swal.fire("Import Error", (err.error?.error || err.message), 'error');
-        }
-      });
-    }
-  }
+        const file = event.target.files[0];
+        if (!file) return;
 
-  approveImport() {
-    const validContacts = this.previewContacts().filter(c => c.isValid);
-    if (validContacts.length === 0) {
-      Swal.fire("Warning", "No valid contacts to import.", 'warning');
-      return;
+        const reader = new FileReader();
+        reader.onload = (e: any) => {
+            const csv = e.target.result;
+            const lines = csv.split('\n');
+            const result = [];
+            
+            // Basic CSV parsing (assuming headers: Name, Phone, Email, Location, AgencyName)
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+                const currentline = lines[i].split(',');
+                
+                // Construct preview object based on standard columns
+                result.push({
+                    name: currentline[0]?.trim(),
+                    phone: currentline[1]?.trim(),
+                    email: currentline[2]?.trim() || '',
+                    location: currentline[3]?.trim() || '',
+                    agencyName: currentline[4]?.trim() || '',
+                    type: this.contactService.activeType(),
+                    source: 'IMPORT'
+                });
+            }
+            
+            this.previewContacts.set(result);
+            this.isPreviewMode.set(true); // Switches UI to the green preview top bar
+            this.fileInput.nativeElement.value = ''; // Reset input
+        };
+        reader.readAsText(file);
     }
-    this.contactService.bulkSaveContacts(validContacts).subscribe({
-      next: () => {
+cancelImport() {
         this.isPreviewMode.set(false);
         this.previewContacts.set([]);
-        this.contactService.fetchContacts();
-        Swal.fire("Success", "Contacts imported and saved successfully!", 'success');
-      },
-      error: (err: any) => {
-        Swal.fire("Error", err.message, 'error');
-      }
-    });
-  }
+    }
+  approveImport() {
+        const payload = { contacts: this.previewContacts() };
+        
+        // Hit your backend bulk import route
+        this.api.post('/contacts/bulk', payload).subscribe({
+            next: () => {
+                Swal.fire('Imported!', `${this.previewContacts().length} contacts imported successfully.`, 'success');
+                this.isPreviewMode.set(false);
+                this.previewContacts.set([]);
+                // Refresh the table
+                this.contactService.fetchContacts(); 
+            },
+            error: (err) => Swal.fire('Import Failed', err.error?.error || 'Failed to import sheet', 'error')
+        });
+    }
 
   cancelPreview() {
     this.isPreviewMode.set(false);
@@ -355,11 +374,42 @@ export class ContactsTable implements OnInit {
     document.body.removeChild(link);
   }
 
-  openCreateGroup() {
-    this.groupName.set('');
-    this.groupDescription.set('');
-    this.showCreateGroupModal.set(true);
-  }
+openCreateGroup() {
+    const ids = this.selectedIds();
+    if (ids.length === 0) return;
+
+    Swal.fire({
+        title: `Create ${this.contactService.activeType()} Group`,
+        html: `
+            <input id="swal-group-name" class="swal2-input" placeholder="Group Name (e.g. VIP Dubai)">
+            <input id="swal-group-desc" class="swal2-input" placeholder="Description (Optional)">
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Create Group',
+        confirmButtonColor: '#0f172a',
+        preConfirm: () => {
+            const name = (document.getElementById('swal-group-name') as HTMLInputElement).value;
+            if (!name) Swal.showValidationMessage('Group Name is required');
+            return {
+                name,
+                desc: (document.getElementById('swal-group-desc') as HTMLInputElement).value
+            };
+        }
+    }).then((result) => {
+        if (result.isConfirmed && result.value?.name) {
+            // Pass the selected IDs array as the 4th parameter
+            this.contactService.createGroup(result.value.name, result.value.desc, this.contactService.activeType(), ids).subscribe({
+                next: () => {
+                    this.selectedIds.set([]); // Clear selection
+                    this.contactService.fetchGroups(); // Refresh sidebar groups
+                    Swal.fire('Created', `Group created with ${ids.length} contacts!`, 'success');
+                },
+                error: (err) => Swal.fire('Error', 'Failed to create group', 'error')
+            });
+        }
+    });
+}
 
   closeCreateGroup() {
     this.showCreateGroupModal.set(false);
@@ -388,19 +438,30 @@ export class ContactsTable implements OnInit {
     });
   }
 
-  openSendMessage(contact: any, event: Event) {
+openSendMessage(contact: any, event: Event) {
     event.stopPropagation();
-    this.selectedContactForMessage.set(contact);
-    this.activeSendMode.set('TEXT');
-    this.messageText.set('');
-    this.selectedMessageTemplate.set(null);
-    this.messageTemplateParams.set({});
     
-    this.api.get('/messagetemplates/list').subscribe((res: any) => {
-      this.approvedTemplates.set(res.data || []);
-      this.showSendMessageModal.set(true);
+    Swal.fire({
+        title: `Message ${contact.name}`,
+        input: 'textarea',
+        inputPlaceholder: 'Type your WhatsApp message here...',
+        showCancelButton: true,
+        confirmButtonText: 'Send <i class="fa-solid fa-paper-plane"></i>',
+        confirmButtonColor: '#10b981'
+    }).then(res => {
+        if (res.isConfirmed && res.value) {
+            // Hit your message.controller.js sendOutbound endpoint
+            this.api.post('/messages/send-outbound', {
+                contactId: contact.id,
+                phone: contact.phone,
+                textContent: res.value
+            }).subscribe({
+                next: () => Swal.fire('Sent!', 'Message delivered successfully.', 'success'),
+                error: (err) => Swal.fire('Error', err.error?.error || 'Failed to send', 'error')
+            });
+        }
     });
-  }
+}
 
   closeSendMessage() {
     this.showSendMessageModal.set(false);
