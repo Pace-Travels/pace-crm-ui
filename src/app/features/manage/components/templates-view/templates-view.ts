@@ -21,6 +21,8 @@ interface MessageTemplate {
   buttons?: string; // stringified JSON
   source?: 'CUSTOM' | 'META_SYNC' | 'META_LIBRARY';
   isMetaOfficial?: boolean;
+  rejectionReason?: string;
+  metaError?: string;
 }
 
 @Component({
@@ -44,6 +46,10 @@ export class TemplatesView implements OnInit {
 
   templates = signal<MessageTemplate[]>([]);
   isLoading = signal<boolean>(false);
+
+  // Real-Time Meta Rule & Rejection Risk Validator
+  validationFeedback = signal<{ type: 'error' | 'warning' | 'info'; message: string }[]>([]);
+  rejectionRisk = signal<'LOW' | 'MEDIUM' | 'HIGH'>('LOW');
 
   // Source Origin Counts
   customCount = computed(() => this.templates().filter(t => (t.source === 'CUSTOM' || !t.source) && !t.isMetaOfficial).length);
@@ -151,6 +157,10 @@ export class TemplatesView implements OnInit {
       buttonsText: ['']
     });
 
+    this.templateForm.valueChanges.subscribe(() => {
+      this.validateMetaRules();
+    });
+
     this.quickSendForm = this.fb.group({
       targetType: ['ALL'],
       headerMedia: [''],
@@ -162,6 +172,114 @@ export class TemplatesView implements OnInit {
 
   ngOnInit() {
     this.fetchTemplates();
+    this.syncTemplates(true);
+  }
+
+  validateMetaRules() {
+    const val = this.templateForm ? this.templateForm.value : {};
+    const body = (val.body || '').trim();
+    const header = (val.headerText || '').trim();
+    const footer = (val.footerText || '').trim();
+    const category = val.category || 'MARKETING';
+    const buttons = val.buttonsText || '';
+
+    const feedback: { type: 'error' | 'warning' | 'info'; message: string }[] = [];
+    let riskScore = 0;
+
+    // 1. Character Limits
+    if (header.length > 60) {
+      feedback.push({ type: 'error', message: `Header text exceeds Meta limit of 60 chars (${header.length}/60).` });
+      riskScore += 3;
+    }
+    if (body.length > 1024) {
+      feedback.push({ type: 'error', message: `Body text exceeds Meta limit of 1024 chars (${body.length}/1024).` });
+      riskScore += 3;
+    } else if (body.length > 0 && body.length < 15) {
+      feedback.push({ type: 'warning', message: 'Very short body text may be flagged by Meta for quality review.' });
+      riskScore += 1;
+    }
+    if (footer.length > 60) {
+      feedback.push({ type: 'error', message: `Footer text exceeds Meta limit of 60 chars (${footer.length}/60).` });
+      riskScore += 3;
+    }
+
+    // 2. Buttons Limit
+    if (buttons) {
+      const btnArray = buttons.split(',').map((b: string) => b.trim());
+      if (btnArray.length > 3) {
+        feedback.push({ type: 'error', message: `Meta permits max 3 Quick Reply buttons (${btnArray.length} provided).` });
+        riskScore += 3;
+      }
+      btnArray.forEach((b: string, i: number) => {
+        if (b.length > 25) {
+          feedback.push({ type: 'error', message: `Button #${i+1} "${b}" exceeds 25 chars limit.` });
+          riskScore += 2;
+        }
+      });
+    }
+
+    // 3. Variable Syntax & Indexing Check
+    const varMatches = [...body.matchAll(/\{\{(\d+)\}\}/g)];
+    if (varMatches.length > 0) {
+      const indices = varMatches.map(m => parseInt(m[1], 10));
+      let expected = 1;
+      let sequential = true;
+      for (const idx of indices) {
+        if (idx !== expected && idx !== expected - 1) {
+          if (idx !== expected) {
+            sequential = false;
+            break;
+          }
+        }
+        if (idx === expected) expected++;
+      }
+
+      if (!sequential) {
+        feedback.push({ type: 'error', message: 'Variables must be strictly sequential starting from {{1}}, then {{2}}, {{3}} without skipping.' });
+        riskScore += 3;
+      }
+
+      if (/^\s*\{\{\d+\}\}/.test(body)) {
+        feedback.push({ type: 'error', message: 'Meta rejects templates starting directly with a variable placeholder {{1}}.' });
+        riskScore += 3;
+      }
+      if (/\{\{\d+\}\}\s*$/.test(body)) {
+        feedback.push({ type: 'error', message: 'Meta rejects templates ending directly with a variable placeholder.' });
+        riskScore += 3;
+      }
+
+      if (/\{\{\d+\}\}\{\{\d+\}\}/.test(body)) {
+        feedback.push({ type: 'error', message: 'Adjacent variables {{1}}{{2}} must be separated by text or space.' });
+        riskScore += 3;
+      }
+    }
+
+    // 4. Check non-positional syntax like {{name}}
+    const invalidVarMatches = body.match(/\{\{[a-zA-Z_$][a-zA-Z0-9_$]*\}\}/g);
+    if (invalidVarMatches) {
+      feedback.push({ type: 'error', message: `Invalid variable format ${invalidVarMatches.join(', ')}. Use positional brackets like {{1}}, {{2}}.` });
+      riskScore += 4;
+    }
+
+    // 5. Category Policy Check
+    if (category === 'UTILITY' || category === 'AUTHENTICATION') {
+      const promoWords = ['discount', 'sale', 'free', 'offer', 'buy now', 'cashback', 'deal', 'promo', 'coupon', 'limited time', 'save', 'off'];
+      const bodyLower = body.toLowerCase();
+      const foundPromo = promoWords.filter(w => bodyLower.includes(w));
+      if (foundPromo.length > 0) {
+        feedback.push({ type: 'warning', message: `Body contains promotional words (${foundPromo.join(', ')}). Meta may reject ${category} template or force MARKETING category.` });
+        riskScore += 2;
+      }
+    }
+
+    if (feedback.length === 0) {
+      feedback.push({ type: 'info', message: 'All Meta format & policy guidelines satisfied! Template has high approval probability.' });
+    }
+
+    this.validationFeedback.set(feedback);
+    if (riskScore === 0) this.rejectionRisk.set('LOW');
+    else if (riskScore <= 2) this.rejectionRisk.set('MEDIUM');
+    else this.rejectionRisk.set('HIGH');
   }
 
   fetchTemplates() {
@@ -246,18 +364,20 @@ export class TemplatesView implements OnInit {
     };
   }
 
-  syncTemplates() {
+  syncTemplates(isAuto = false) {
     if (this.hasMissingCredentials()) {
-      Swal.fire({
-        title: 'Meta WABA Credentials Missing',
-        text: 'The active project is missing valid Meta WABA credentials. Please configure WABA ID, Phone Number ID, and Access Token in Brand Projects.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Configure Credentials',
-        confirmButtonColor: '#0b494d'
-      }).then(res => {
-        if (res.isConfirmed) this.navigateTo('/projects');
-      });
+      if (!isAuto) {
+        Swal.fire({
+          title: 'Meta WABA Credentials Missing',
+          text: 'The active project is missing valid Meta WABA credentials. Please configure WABA ID, Phone Number ID, and Access Token in Brand Projects.',
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Configure Credentials',
+          confirmButtonColor: '#0b494d'
+        }).then(res => {
+          if (res.isConfirmed) this.navigateTo('/projects');
+        });
+      }
       return;
     }
 
@@ -266,11 +386,46 @@ export class TemplatesView implements OnInit {
       next: (res: any) => {
         this.templates.set(res.data || []);
         this.isLoading.set(false);
-        Swal.fire('Synced', 'Templates synced successfully from Meta WhatsApp API!', 'success');
+
+        const summary = res.summary || {};
+        const count = res.count || (res.data ? res.data.length : 0);
+        const rejectedItems = (res.data || []).filter((t: any) => t.status === 'REJECTED');
+
+        let rejectedListHtml = '';
+        if (rejectedItems.length > 0) {
+          rejectedListHtml = `
+            <div style="margin-top: 14px; text-align: left; background: #fef2f2; border: 1px solid #fca5a5; padding: 12px; border-radius: 8px;">
+              <strong style="color: #991b1b; font-size: 13px; display: block; margin-bottom: 6px;">⚠️ Templates Action Required / Rejected (${rejectedItems.length}):</strong>
+              <ul style="margin: 0; padding-left: 18px; font-size: 12px; color: #7f1d1d;">
+                ${rejectedItems.map((item: any) => `<li><b>${item.templateName}</b>: ${item.rejectionReason || item.metaError || 'Rejected by Meta quality review'}</li>`).join('')}
+              </ul>
+            </div>
+          `;
+        }
+
+        Swal.fire({
+          title: 'Meta WhatsApp Status Auto-Synced',
+          html: `
+            <div style="font-size: 14px; color: #334155;">
+              <p style="margin-bottom: 10px;">Successfully synchronized <b>${count}</b> templates with Facebook Meta WABA.</p>
+              <div style="display: flex; justify-content: space-around; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 10px;">
+                <div><span style="color: #16a34a; font-weight: 800; font-size: 16px;">${summary.approved || 0}</span><br><small style="color: #64748b;">Approved</small></div>
+                <div><span style="color: #d97706; font-weight: 800; font-size: 16px;">${summary.pending || 0}</span><br><small style="color: #64748b;">Pending</small></div>
+                <div><span style="color: #dc2626; font-weight: 800; font-size: 16px;">${summary.rejected || 0}</span><br><small style="color: #64748b;">Rejected</small></div>
+              </div>
+              ${rejectedListHtml}
+            </div>
+          `,
+          icon: rejectedItems.length > 0 ? 'warning' : 'success',
+          confirmButtonText: 'Great!',
+          confirmButtonColor: '#0b494d'
+        });
       },
       error: (err: any) => {
         this.isLoading.set(false);
-        Swal.fire('Error', 'Sync failed: ' + (err.error?.message || err.message), 'error');
+        if (!isAuto) {
+          Swal.fire('Error', 'Sync failed: ' + (err.error?.error || err.error?.message || err.message), 'error');
+        }
       }
     });
   }
@@ -446,6 +601,33 @@ export class TemplatesView implements OnInit {
     });
   }
 
+  // View complete Meta error breakdown for rejected templates
+  viewMetaErrorDetails(tpl: MessageTemplate) {
+    const errorText = tpl.rejectionReason || tpl.metaError || 'Template rejected by Meta quality review.';
+    Swal.fire({
+      title: `Meta Rejection: ${tpl.templateName}`,
+      html: `
+        <div style="text-align: left; font-family: 'Inter', sans-serif;">
+          <p style="font-size: 13px; color: #991b1b; background: #fef2f2; border: 1px solid #fca5a5; padding: 12px; border-radius: 8px; font-weight: 600; margin-bottom: 14px;">
+            ❌ Meta API Error Trace:<br>
+            <span style="font-size: 12px; font-weight: 400; font-family: monospace; display: block; margin-top: 6px; color: #7f1d1d; white-space: pre-wrap;">${errorText}</span>
+          </p>
+          <div style="font-size: 12.5px; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px;">
+            <strong style="color: #0f172a; display: block; margin-bottom: 6px;">How to resolve this rejection:</strong>
+            <ul style="margin: 0; padding-left: 18px; line-height: 1.5;">
+              <li>Ensure variables strictly follow <code>{{1}}</code>, <code>{{2}}</code> positional order.</li>
+              <li>Check body length is under 1024 characters and headers under 60 characters.</li>
+              <li>If category is Utility, remove promotional words like "discount", "sale", "offer".</li>
+            </ul>
+          </div>
+        </div>
+      `,
+      icon: 'error',
+      confirmButtonText: 'Understood',
+      confirmButtonColor: '#0b494d'
+    });
+  }
+
   // Submit template for Meta WABA approval
   submitForApproval() {
     const val = this.templateForm.value;
@@ -502,7 +684,33 @@ export class TemplatesView implements OnInit {
         Swal.fire('Submitted', 'Template submitted to Meta for review!', 'success');
       },
       error: (err: any) => {
-        Swal.fire('Submission Failed', (err.error?.error || err.message), 'error');
+        this.closeCreateTemplate();
+        this.fetchTemplates();
+        const rawErr = err.error?.error || err.error?.message || err.message || 'Template submission failed.';
+        const rejectionNote = err.error?.rejectionReason || rawErr;
+
+        Swal.fire({
+          title: 'Meta Template Rejection',
+          html: `
+            <div style="text-align: left; font-family: 'Inter', sans-serif;">
+              <p style="font-size: 13.5px; color: #991b1b; background: #fef2f2; border: 1px solid #fca5a5; padding: 12px; border-radius: 8px; font-weight: 600; margin-bottom: 12px;">
+                ❌ Meta API Error Response:<br>
+                <span style="font-size: 12.5px; font-weight: 400; font-family: monospace; display: block; margin-top: 6px; color: #7f1d1d;">${rejectionNote}</span>
+              </p>
+              <div style="font-size: 12.5px; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; padding: 10px; border-radius: 6px;">
+                <b>Tips to fix rejection:</b>
+                <ul style="margin-top: 4px; padding-left: 18px; line-height: 1.5;">
+                  <li>Check variable placeholders use <code>{{1}}</code>, <code>{{2}}</code> positional format without skipping numbers.</li>
+                  <li>Ensure character limits (Header 60, Body 1024, Footer 60) are respected.</li>
+                  <li>Avoid promotional terms when category is set to Utility.</li>
+                </ul>
+              </div>
+            </div>
+          `,
+          icon: 'error',
+          confirmButtonText: 'Review in Action Required',
+          confirmButtonColor: '#0b494d'
+        });
       }
     });
   }
@@ -516,7 +724,24 @@ export class TemplatesView implements OnInit {
         Swal.fire('Submitted', 'Draft template submitted to Meta WABA successfully!', 'success');
       },
       error: (err: any) => {
-        Swal.fire('Submission Failed', (err.error?.error || err.message), 'error');
+        this.fetchTemplates();
+        const rawErr = err.error?.error || err.error?.message || err.message || 'Submission failed.';
+        const rejectionNote = err.error?.rejectionReason || rawErr;
+
+        Swal.fire({
+          title: 'Meta Template Rejection',
+          html: `
+            <div style="text-align: left; font-family: 'Inter', sans-serif;">
+              <p style="font-size: 13.5px; color: #991b1b; background: #fef2f2; border: 1px solid #fca5a5; padding: 12px; border-radius: 8px; font-weight: 600; margin-bottom: 12px;">
+                ❌ Meta API Error Response:<br>
+                <span style="font-size: 12.5px; font-weight: 400; font-family: monospace; display: block; margin-top: 6px; color: #7f1d1d;">${rejectionNote}</span>
+              </p>
+            </div>
+          `,
+          icon: 'error',
+          confirmButtonText: 'Close',
+          confirmButtonColor: '#0b494d'
+        });
       }
     });
   }

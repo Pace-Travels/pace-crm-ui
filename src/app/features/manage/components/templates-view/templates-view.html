@@ -161,9 +161,20 @@
                     <span *ngIf="tpl.status !== 'APPROVED' && tpl.status !== 'DRAFT' && tpl.status !== 'PENDING' && tpl.status !== 'IN_REVIEW'" style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 4px;">{{ tpl.status }}</span>
                 </div>
 
-                <p style="margin: 0; font-size: 13px; color: #475569; line-height: 1.5; height: 60px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
+                <p style="margin: 0 0 10px 0; font-size: 13px; color: #475569; line-height: 1.5; height: 60px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">
                     {{ tpl.templateBody }}
                 </p>
+
+                <!-- Rejection / Error Details Banner -->
+                <div *ngIf="tpl.status === 'REJECTED' || tpl.rejectionReason || tpl.metaError" style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 12px; margin-top: 10px;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                        <strong style="color: #991b1b; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.5px;">⚠️ Meta Rejection Details</strong>
+                        <button type="button" (click)="viewMetaErrorDetails(tpl)" style="background: #ef4444; color: white; border: none; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; cursor: pointer;">View Error Trace</button>
+                    </div>
+                    <p style="margin: 0; font-size: 11.5px; color: #7f1d1d; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        {{ tpl.rejectionReason || tpl.metaError || 'Rejected by Meta quality review' }}
+                    </p>
+                </div>
             </div>
 
             <div style="display: flex; gap: 8px; margin-top: 18px; border-top: 1px solid #f1f5f9; padding-top: 14px;">
@@ -179,8 +190,8 @@
                     <i class="fa-solid fa-paper-plane"></i> Quick Send
                 </button>
                 
-                <button *ngIf="!tpl.isMetaOfficial && tpl.status === 'DRAFT'" (click)="submitDraft(tpl.id)" style="flex: 1.2; background: #0f172a; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
-                    Submit to Meta
+                <button *ngIf="!tpl.isMetaOfficial && (tpl.status === 'DRAFT' || tpl.status === 'REJECTED')" (click)="submitDraft(tpl.id)" style="flex: 1.2; background: #0f172a; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer;">
+                    {{ tpl.status === 'REJECTED' ? 'Resubmit to Meta' : 'Submit to Meta' }}
                 </button>
             </div>
         </div>
@@ -198,7 +209,7 @@
         </div>
 
         <div style="margin-bottom: 20px;">
-            <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">Describe your campaign objective</label>
+            <label style="font-size: 12px; font-weight: 700; color: #334155;">Describe your campaign objective</label>
             <textarea [ngModel]="aiPrompt()" (ngModelChange)="aiPrompt.set($event)" rows="4" placeholder="e.g. Create a 25% discount promotional template for Dubai luxury desert safari tours with quick reply buttons..." style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none;"></textarea>
         </div>
 
@@ -231,6 +242,14 @@
                     </div>
 
                     <div style="display: flex; gap: 12px; margin-top: 12px;">
+                        <div style="flex: 1;">
+    <label style="font-size: 12px; font-weight: 700; color: #334155;">Category</label>
+    <select formControlName="category" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none;">
+        <option value="MARKETING">MARKETING (Promotions, Discounts)</option>
+        <option value="UTILITY">UTILITY (Order Updates, Transactional)</option>
+        <option value="AUTHENTICATION">AUTHENTICATION (OTPs, Security Code)</option>
+    </select>
+</div>
                         <div style="flex: 1;">
     <label style="font-size: 12px; font-weight: 700; color: #334155;">Language</label>
     <select formControlName="language" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none;">
@@ -267,14 +286,6 @@
         <option value="ru">Russian</option>
     </select>
 </div>
-                        <div style="flex: 1;">
-                            <label style="font-size: 12px; font-weight: 700; color: #334155;">Language</label>
-                            <select formControlName="language" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none;">
-                                <option value="en_US">English (US)</option>
-                                <option value="hi_IN">Hindi (India)</option>
-                                <option value="ar">Arabic</option>
-                            </select>
-                        </div>
                     </div>
 
                     <div style="margin-top: 14px;">
@@ -306,7 +317,33 @@
                         <p style="font-size: 11px; color: #64748b; margin: 2px 0 4px 0;">Comma separated (e.g. Claim Offer, Ask Agent)</p>
                         <input type="text" formControlName="buttonsText" placeholder="e.g. Claim Offer, Talk to Agent" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none;">
                     </div>
-                </form>
+                
+                <!-- Real-time Meta Rule & Rejection Risk Validator Box -->
+                <div style="margin-top: 18px; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; background: #f8fafc;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 11.5px; font-weight: 800; text-transform: uppercase; color: #475569;">Meta Rejection Risk Assessment</span>
+                        
+                        <span *ngIf="rejectionRisk() === 'LOW'" style="background: #dcfce7; color: #15803d; border: 1px solid #86efac; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 4px;">
+                            🟢 Low Rejection Risk (Compliant)
+                        </span>
+                        <span *ngIf="rejectionRisk() === 'MEDIUM'" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 4px;">
+                            🟡 Moderate Rejection Risk (Check Warnings)
+                        </span>
+                        <span *ngIf="rejectionRisk() === 'HIGH'" style="background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 4px;">
+                            🔴 High Rejection Risk (Will be Rejected)
+                        </span>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 6px; font-size: 12px;">
+                        <div *ngFor="let fb of validationFeedback()" [style.color]="fb.type === 'error' ? '#dc2626' : (fb.type === 'warning' ? '#d97706' : '#16a34a')" style="display: flex; align-items: flex-start; gap: 6px; line-height: 1.4;">
+                            <span *ngIf="fb.type === 'error'">❌</span>
+                            <span *ngIf="fb.type === 'warning'">⚠️</span>
+                            <span *ngIf="fb.type === 'info'">✅</span>
+                            <span>{{ fb.message }}</span>
+                        </div>
+                    </div>
+                </div>
+            </form>
             </div>
 
             <!-- Right panel: Live WhatsApp Mockup -->
