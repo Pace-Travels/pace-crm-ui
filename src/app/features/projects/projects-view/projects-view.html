@@ -23,9 +23,14 @@
                 <p style="font-size: 13px; color: #64748b; margin: 0;">Enter your Meta WhatsApp Business API parameters or use Facebook Quick Setup.</p>
             </div>
 
-            <button type="button" (click)="connectWithFacebook()" style="background: #1877F2; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                <i class="fa-brands fa-facebook" style="font-size: 16px;"></i> Quick Connect via Meta
-            </button>
+            <div style="display: flex; gap: 12px; align-items: center;">
+                <button type="button" (click)="logoutFacebook()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;" title="Clear Facebook Login Session">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Disconnect FB
+                </button>
+                <button type="button" (click)="connectWithFacebook()" style="background: #1877F2; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-brands fa-facebook" style="font-size: 16px;"></i> Quick Connect via Meta
+                </button>
+            </div>
         </div>
 
         <form [formGroup]="projectForm" (ngSubmit)="onCreateProject()" style="display: flex; flex-direction: column; gap: 20px;">
