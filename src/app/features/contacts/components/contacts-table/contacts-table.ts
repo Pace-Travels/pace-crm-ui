@@ -50,9 +50,10 @@ export class ContactsTable implements OnInit {
   selectedMessageTemplate = signal<any>(null);
   messageTemplateParams = signal<any>({});
 
-  // Preview Mode
+  // Preview & Verification Mode
   isPreviewMode = signal(false);
   previewContacts = signal<any[]>([]);
+  verificationSummary = signal<any>(null);
 
   // Dropdown states
   showRunAdDropdown = signal(false);
@@ -296,38 +297,59 @@ export class ContactsTable implements OnInit {
   }
 
   onFileSelected(event: any) {
-        const file = event.target.files[0];
-        if (!file) return;
+    const file = event.target.files[0];
+    if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (e: any) => {
-            const csv = e.target.result;
-            const lines = csv.split('\n');
-            const result = [];
-            
-            // Basic CSV parsing (assuming headers: Name, Phone, Email, Location, AgencyName)
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                const currentline = lines[i].split(',');
-                
-                // Construct preview object based on standard columns
-                result.push({
-                    name: currentline[0]?.trim(),
-                    phone: currentline[1]?.trim(),
-                    email: currentline[2]?.trim() || '',
-                    location: currentline[3]?.trim() || '',
-                    agencyName: currentline[4]?.trim() || '',
-                    type: this.contactService.activeType(),
-                    source: 'IMPORT'
-                });
-            }
-            
-            this.previewContacts.set(result);
-            this.isPreviewMode.set(true); // Switches UI to the green preview top bar
-            this.fileInput.nativeElement.value = ''; // Reset input
-        };
-        reader.readAsText(file);
-    }
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const csv = e.target.result;
+      const lines = csv.split(/\r?\n/).filter((l: string) => l.trim().length > 0);
+      if (lines.length <= 1) {
+        Swal.fire('Error', 'Uploaded CSV file contains no data rows.', 'error');
+        return;
+      }
+
+      const headers = lines[0].split(',').map((h: string) => h.trim().toLowerCase());
+      const rawRows = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map((v: string) => v.trim());
+        const rowObj: any = {};
+        headers.forEach((h: string, idx: number) => {
+          rowObj[h] = values[idx] || '';
+        });
+        rawRows.push(rowObj);
+      }
+
+      // Call Verification & Validation Service
+      this.api.post<any>('/whatsappcontacts/verify-import', {
+        contacts: rawRows,
+        type: this.contactService.activeType()
+      }).subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.previewContacts.set(res.rows || []);
+            this.verificationSummary.set(res.summary || null);
+            this.isPreviewMode.set(true);
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: `WhatsApp Verification Complete: ${res.summary?.validCount || 0} Valid Numbers`,
+              timer: 3000,
+              showConfirmButton: false
+            });
+          }
+          this.fileInput.nativeElement.value = '';
+        },
+        error: (err) => {
+          Swal.fire('Verification Failed', err.error?.error || err.message || 'Failed to verify upload data', 'error');
+          this.fileInput.nativeElement.value = '';
+        }
+      });
+    };
+    reader.readAsText(file);
+  }
 cancelImport() {
         this.isPreviewMode.set(false);
         this.previewContacts.set([]);
