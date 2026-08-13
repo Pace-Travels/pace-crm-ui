@@ -6,6 +6,8 @@ import { ApiService } from '../../../../shared/services/api.service';
 import { PhoneInputComponent } from '../../../../shared/components/phone-input/phone-input';
 import Swal from 'sweetalert2';
 import { ViewChild, ElementRef } from '@angular/core';
+import { Router } from '@angular/router';
+
 @Component({
   selector: 'app-contacts-table',
   standalone: true,
@@ -18,6 +20,7 @@ export class ContactsTable implements OnInit {
   contactService = inject(ContactService);
   private fb = inject(FormBuilder);
   private api = inject(ApiService);
+  private router = inject(Router);
 
   // Modal states
   showAddContactModal = signal(false);
@@ -332,22 +335,28 @@ cancelImport() {
   approveImport() {
         const payload = { contacts: this.previewContacts() };
         
-        // Hit your backend bulk import route
-        this.api.post('/contacts/bulk', payload).subscribe({
+        // Hit backend bulk save route
+        this.api.post('/whatsappcontacts/bulk-save', payload).subscribe({
             next: () => {
                 Swal.fire('Imported!', `${this.previewContacts().length} contacts imported successfully.`, 'success');
                 this.isPreviewMode.set(false);
                 this.previewContacts.set([]);
-                // Refresh the table
+                // Refresh table
                 this.contactService.fetchContacts(); 
             },
-            error: (err) => Swal.fire('Import Failed', err.error?.error || 'Failed to import sheet', 'error')
+            error: (err) => Swal.fire('Import Failed', err.error?.error || err.message || 'Failed to import sheet', 'error')
         });
     }
 
   cancelPreview() {
     this.isPreviewMode.set(false);
     this.previewContacts.set([]);
+  }
+
+  goToLiveChat(contact: any, event?: Event) {
+    if (event) event.stopPropagation();
+    if (!contact || !contact.phone) return;
+    this.router.navigate(['/chat'], { queryParams: { phone: contact.phone, name: contact.name } });
   }
 
   downloadSample() {

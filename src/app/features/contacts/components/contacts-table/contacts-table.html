@@ -158,8 +158,11 @@
 
                     <td style="padding: 14px 16px; text-align: right;">
                         <div style="display: flex; justify-content: flex-end; gap: 6px;">
-                            <button (click)="openSendMessage(contact, $event)" style="background: #dcfce7; border: 1px solid #86efac; color: #15803d; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
-                                <i class="fa-brands fa-whatsapp"></i> Chat
+                            <button (click)="openSendMessage(contact, $event)" style="background: #e0f2fe; border: 1px solid #7dd3fc; color: #0369a1; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Send WhatsApp Message">
+                                <i class="fa-solid fa-paper-plane"></i> Message
+                            </button>
+                            <button (click)="goToLiveChat(contact, $event)" style="background: #dcfce7; border: 1px solid #86efac; color: #15803d; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;" title="Open Live Chat Session">
+                                <i class="fa-brands fa-whatsapp"></i> Live Chat
                             </button>
                             <button (click)="openEditContact(contact, $event)" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;" title="Edit Contact">
                                 <i class="fa-solid fa-pencil"></i>

@@ -36,7 +36,11 @@ export class ContactService {
   isLoading = signal<boolean>(false);
 
   filteredContacts = computed(() => {
-    return this.contacts().filter(c => c.type === this.activeType());
+    const targetType = this.activeType();
+    return this.contacts().filter(c => {
+      const cType = (c.type || 'B2C').toUpperCase();
+      return cType === targetType;
+    });
   });
 
   constructor(private api: ApiService) { }

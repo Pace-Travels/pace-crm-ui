@@ -121,4 +121,19 @@ export class LiveChatService {
       }
     });
   }
+
+  selectConversationByPhone(phone: string) {
+    const clean = (phone || '').replace(/\D/g, '');
+    const list = this.activeConversations();
+    let match = list.find((c: any) => {
+      const p = (c.Contact?.phone || '').replace(/\D/g, '');
+      return p && clean && (p.includes(clean) || clean.includes(p));
+    });
+    if (!match && list.length > 0) {
+      match = list[0];
+    }
+    if (match) {
+      this.selectConversation(match);
+    }
+  }
 }

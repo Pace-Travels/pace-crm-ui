@@ -30,6 +30,7 @@ import { AIMarketingIntelligence } from './features/ai-marketing-intelligence/ai
 import { WebPush } from './features/webpush/components/web-push/web-push';
 import { Email } from './features/email/components/email/email';
 import { Templates } from './features/templates/templates';
+import { History } from './features/history/history';
 
 export const routes: Routes = [
     {
@@ -99,6 +100,11 @@ export const routes: Routes = [
                 path: 'chat',
                 component: LiveChat,
                 title: 'Live Chat - Pace Messenger'
+            },
+            {
+                path: 'history',
+                component: History,
+                title: 'Communication History - Pace Messenger'
             },
             {
                 path: 'campaigns',
