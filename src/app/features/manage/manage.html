@@ -4,9 +4,14 @@
         <div class="sidebar-inner">
             <div class="sidebar-section">
                 <ul>
-                    <li [class.active]="activeTab() === 'templates'" (click)="activeTab.set('templates')"><i class="fa-regular fa-message"></i> Template Message</li>
-                    <li [class.active]="activeTab() === 'ai-agent'" (click)="activeTab.set('ai-agent')"><i class="fa-solid fa-brain"></i> AI Agent Setup</li>
-                    <li [class.active]="activeTab() === 'widget-sdk'" (click)="activeTab.set('widget-sdk')"><i class="fa-solid fa-code"></i> Web Widget SDK</li>
+                    <li [class.active]="activeTab() === 'templates'" (click)="activeTab.set('templates')"><i
+                            class="fa-regular fa-message"></i> Template Message</li>
+                    <li [class.active]="activeTab() === 'ai-agent'" (click)="activeTab.set('ai-agent')"><i
+                            class="fa-solid fa-brain"></i> AI Agent Setup</li>
+                    <li [class.active]="activeTab() === 'widget-sdk'" (click)="activeTab.set('widget-sdk')"><i
+                            class="fa-solid fa-code"></i> Web Widget SDK</li>
+                    <li [class.active]="activeTab() === 'fcm-sdk'" (click)="activeTab.set('fcm-sdk')"><i
+                            class="fa-solid fa-code"></i>FCM SDK</li>
                 </ul>
             </div>
         </div>
@@ -15,190 +20,319 @@
     <!-- Main Content -->
     <div class="manage-content" style="flex: 1; padding: 24px; overflow-y: auto;">
         @if (activeTab() === 'templates') {
-            <app-templates-view></app-templates-view>
+        <app-templates-view></app-templates-view>
         } @else if (activeTab() === 'ai-agent') {
-            <div class="ai-agent-setup-panel" style="background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 24px; font-family: 'Inter', sans-serif;">
-                <h2 style="margin: 0 0 16px 0; font-size: 20px; color: #0b494d;">Agentic AI Bot Settings</h2>
-                
-                <div style="display: flex; gap: 24px; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px;">
-                    <div>
-                        <h4 style="margin: 0; font-size: 15px; color: #1e293b;">Enable Gemini WhatsApp Agent</h4>
-                        <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">Automatically reply to incoming user inquiries when conversation is assigned to AI.</p>
+        <div class="ai-agent-setup-panel"
+            style="background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 24px; font-family: 'Inter', sans-serif;">
+            <h2 style="margin: 0 0 16px 0; font-size: 20px; color: #0b494d;">Agentic AI Bot Settings</h2>
+
+            <div
+                style="display: flex; gap: 24px; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px;">
+                <div>
+                    <h4 style="margin: 0; font-size: 15px; color: #1e293b;">Enable Gemini WhatsApp Agent</h4>
+                    <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">Automatically reply to incoming user
+                        inquiries when conversation is assigned to AI.</p>
+                </div>
+                <label class="switch-container"
+                    style="position: relative; display: inline-block; width: 50px; height: 26px;">
+                    <input type="checkbox" [ngModel]="isAgentEnabled()" (ngModelChange)="isAgentEnabled.set($event)"
+                        style="opacity: 0; width: 0; height: 0;">
+                    <span class="slider" [style.background]="isAgentEnabled() ? '#10b981' : '#cbd5e1'"
+                        style="position: absolute; cursor: pointer; inset: 0; border-radius: 34px; transition: .4s;">
+                        <span class="slider-circle"
+                            [style.transform]="isAgentEnabled() ? 'translateX(24px)' : 'translateX(0)'"
+                            style="position: absolute; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s;"></span>
+                    </span>
+                </label>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div class="form-row-vert">
+                    <label>Select AI Engine Model</label>
+                    <select class="form-control" [ngModel]="modelName()" (ngModelChange)="modelName.set($event)">
+                        <option value="gemini-1.5-pro">Gemini 1.5 Pro (Recommended)</option>
+                        <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast)</option>
+                        <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                    </select>
+                </div>
+
+                <div class="form-row-vert">
+                    <label>Gemini API Key</label>
+                    <input type="password" class="form-control" [ngModel]="geminiApiKey()"
+                        (ngModelChange)="geminiApiKey.set($event)"
+                        placeholder="Enter Google Generative Language API Key">
+                </div>
+
+                <div class="form-row-vert">
+                    <label>System Instructions / Agent Persona</label>
+                    <p class="help-text">Explain the persona, booking guidelines, context about travels or tourism
+                        packages, and fallback instructions.</p>
+                    <textarea class="form-control" rows="8" [ngModel]="systemPrompt()"
+                        (ngModelChange)="systemPrompt.set($event)"
+                        placeholder="e.g. You are a conversational booking assistant for Pace Travels..."></textarea>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
+                    <button class="btn btn-primary" (click)="saveAISettings()"
+                        style="padding: 10px 24px; font-weight: 600;">Save AI Settings</button>
+                </div>
+            </div>
+        </div>
+        } @else if (activeTab() === 'widget-sdk') {
+        <div class="widget-sdk-panel"
+            style="background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 24px; font-family: 'Inter', sans-serif;">
+
+            @if (!showAddWidgetForm()) {
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div>
+                    <h2 style="margin: 0; font-size: 20px; color: #0b494d;">Website Widgets Integrations</h2>
+                    <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">Create chatbot script loaders to
+                        embed live chat or WhatsApp links on external sites.</p>
+                </div>
+                <button class="btn btn-primary" (click)="openNewWidgetForm()"><i class="fa-solid fa-plus"></i> Create
+                    Web Widget</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                @if (widgets().length === 0) {
+                <div
+                    style="padding: 40px; text-align: center; color: #64748b; font-size: 14px; border: 2px dashed #cbd5e1; border-radius: 8px;">
+                    No website widgets configured yet. Click "Create Web Widget" to get started.
+                </div>
+                }
+
+                @for (w of widgets(); track w.id) {
+                <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; background: #f8fafc;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 16px; color: #1e293b;">{{ w.name }}</h3>
+                            <div style="margin-top: 4px; display: flex; gap: 8px;">
+                                <span
+                                    style="font-size: 10px; font-weight: 700; text-transform: uppercase; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px;">
+                                    {{ w.type === 'WEB_CLIENT' ? 'Web Chat Widget' : 'WhatsApp Link Redirect' }}
+                                </span>
+                                @if (w.isAgentEnabled) {
+                                <span
+                                    style="font-size: 10px; font-weight: 700; text-transform: uppercase; background: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 4px;">AI
+                                    Bot Active</span>
+                                }
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-outline"
+                                style="padding: 6px 12px; font-size: 12px; background: white;"
+                                (click)="openEditWidgetForm(w)">Configure</button>
+                            <button class="btn btn-outline"
+                                style="padding: 6px 12px; font-size: 12px; color: #ef4444; border-color: #fca5a5; background: white;"
+                                (click)="deleteWidget(w.id)">Delete</button>
+                        </div>
                     </div>
-                    <label class="switch-container" style="position: relative; display: inline-block; width: 50px; height: 26px;">
-                        <input type="checkbox" [ngModel]="isAgentEnabled()" (ngModelChange)="isAgentEnabled.set($event)" style="opacity: 0; width: 0; height: 0;">
-                        <span class="slider" [style.background]="isAgentEnabled() ? '#10b981' : '#cbd5e1'" style="position: absolute; cursor: pointer; inset: 0; border-radius: 34px; transition: .4s;">
-                            <span class="slider-circle" [style.transform]="isAgentEnabled() ? 'translateX(24px)' : 'translateX(0)'" style="position: absolute; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s;"></span>
+
+                    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569;">Widget API Key</label>
+                        <code
+                            style="background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-size: 12px; width: fit-content;">{{ w.widgetApiKey }}</code>
+                    </div>
+
+                    @if (w.type === 'WEB_CLIENT') {
+                    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 12px;">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569;">HTML Embed Script Code</label>
+                        <textarea readonly class="form-control" rows="2"
+                            style="font-family: monospace; font-size: 12px; background: #ffffff; padding: 8px;"
+                            onclick="this.select()">{{ getEmbedCode(w.widgetApiKey) }}</textarea>
+                        <span class="help-text">Copy and paste this script tag right before the closing &lt;/body&gt;
+                            tag of your website.</span>
+                    </div>
+                    } @else {
+                    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 12px;">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569;">WhatsApp Redirect Pre-chat
+                            Link</label>
+                        <input type="text" readonly class="form-control"
+                            style="font-family: monospace; font-size: 12px; background: #ffffff;"
+                            value="https://wa.me/{{ w.whatsappNumber }}?text={{ w.predefinedText }}"
+                            onclick="this.select()">
+                    </div>
+                    }
+                </div>
+                }
+            </div>
+            } @else {
+            <div
+                style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
+                <h2 style="margin: 0; font-size: 18px; color: #0b494d;">
+                    {{ editingWidget() ? 'Modify Web Widget' : 'Configure New Web Widget' }}
+                </h2>
+                <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;"
+                    (click)="showAddWidgetForm.set(false)">Back to list</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: flex; gap: 16px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569;">Widget Config Name *</label>
+                        <input type="text" class="form-control" [(ngModel)]="wName"
+                            placeholder="e.g. Landing Page Widget">
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569;">Integration Type</label>
+                        <select class="form-control" [(ngModel)]="wType">
+                            <option value="WEB_CLIENT">Web Chat Widget popup</option>
+                            <option value="WHATSAPP_LINK">Branded WhatsApp Link Generator</option>
+                        </select>
+                    </div>
+                </div>
+
+                @if (wType === 'WEB_CLIENT') {
+                <div style="display: flex; gap: 16px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569;">Widget Primary Accent
+                            Color</label>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <input type="color" [(ngModel)]="wThemeColor"
+                                style="width: 40px; height: 34px; padding: 0; border: none; border-radius: 4px; cursor: pointer;">
+                            <input type="text" class="form-control" [(ngModel)]="wThemeColor" style="flex: 1;"
+                                placeholder="#0b494d">
+                        </div>
+                    </div>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569;">Call Shortcut Support
+                            Number</label>
+                        <input type="text" class="form-control" [(ngModel)]="wCallPhoneNumber"
+                            placeholder="e.g. 917204262473">
+                    </div>
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-size: 11px; font-weight: 700; color: #475569;">Welcome Header Text</label>
+                    <input type="text" class="form-control" [(ngModel)]="wWelcomeText"
+                        placeholder="Hello! How can we help you today?">
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <label style="font-size: 11px; font-weight: 700; color: #475569;">Pre-Chat Questionnaire Fields
+                        (Optional)</label>
+                    <input type="text" class="form-control" [(ngModel)]="wPreChatFieldsText"
+                        placeholder="e.g. Destination, Budget, Travelers count">
+                    <span class="help-text">Comma-separated list of questions. Collected answers will be logged under
+                        the chat timeline before Gemini takes over.</span>
+                </div>
+
+                <div
+                    style="display: flex; gap: 24px; align-items: flex-start; justify-content: space-between; border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 8px;">
+                    <div>
+                        <h4 style="margin: 0; font-size: 14px; color: #1e293b;">Enable Gemini Auto-responder</h4>
+                        <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">If active, messages are processed
+                            by Gemini using the system prompts configured in the AI Persona settings tab.</p>
+                    </div>
+                    <label class="switch-container"
+                        style="position: relative; display: inline-block; width: 50px; height: 26px;">
+                        <input type="checkbox" [(ngModel)]="wIsAgentEnabled" style="opacity: 0; width: 0; height: 0;">
+                        <span class="slider" [style.background]="wIsAgentEnabled ? '#10b981' : '#cbd5e1'"
+                            style="position: absolute; cursor: pointer; inset: 0; border-radius: 34px; transition: .4s;">
+                            <span class="slider-circle"
+                                [style.transform]="wIsAgentEnabled ? 'translateX(24px)' : 'translateX(0)'"
+                                style="position: absolute; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s;"></span>
                         </span>
                     </label>
                 </div>
-
-                <div style="display: flex; flex-direction: column; gap: 20px;">
-                    <div class="form-row-vert">
-                        <label>Select AI Engine Model</label>
-                        <select class="form-control" [ngModel]="modelName()" (ngModelChange)="modelName.set($event)">
-                            <option value="gemini-1.5-pro">Gemini 1.5 Pro (Recommended)</option>
-                            <option value="gemini-1.5-flash">Gemini 1.5 Flash (Fast)</option>
-                            <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-                        </select>
+                } @else {
+                <div style="display: flex; gap: 16px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569;">WhatsApp Number *</label>
+                        <input type="text" class="form-control" [(ngModel)]="wWhatsappNumber"
+                            placeholder="e.g. 917204262473">
                     </div>
-
-                    <div class="form-row-vert">
-                        <label>Gemini API Key</label>
-                        <input type="password" class="form-control" [ngModel]="geminiApiKey()" (ngModelChange)="geminiApiKey.set($event)" placeholder="Enter Google Generative Language API Key">
-                    </div>
-
-                    <div class="form-row-vert">
-                        <label>System Instructions / Agent Persona</label>
-                        <p class="help-text">Explain the persona, booking guidelines, context about travels or tourism packages, and fallback instructions.</p>
-                        <textarea class="form-control" rows="8" [ngModel]="systemPrompt()" (ngModelChange)="systemPrompt.set($event)" placeholder="e.g. You are a conversational booking assistant for Pace Travels..."></textarea>
-                    </div>
-
-                    <div style="display: flex; justify-content: flex-end; margin-top: 12px;">
-                        <button class="btn btn-primary" (click)="saveAISettings()" style="padding: 10px 24px; font-weight: 600;">Save AI Settings</button>
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                        <label style="font-size: 11px; font-weight: 700; color: #475569;">Predefined Direct
+                            Message</label>
+                        <input type="text" class="form-control" [(ngModel)]="wPredefinedText"
+                            placeholder="e.g. I want to inquire about Pace Travels packages.">
                     </div>
                 </div>
-            </div>
-        } @else if (activeTab() === 'widget-sdk') {
-            <div class="widget-sdk-panel" style="background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 24px; font-family: 'Inter', sans-serif;">
-                
-                @if (!showAddWidgetForm()) {
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <div>
-                            <h2 style="margin: 0; font-size: 20px; color: #0b494d;">Website Widgets Integrations</h2>
-                            <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">Create chatbot script loaders to embed live chat or WhatsApp links on external sites.</p>
-                        </div>
-                        <button class="btn btn-primary" (click)="openNewWidgetForm()"><i class="fa-solid fa-plus"></i> Create Web Widget</button>
-                    </div>
-
-                    <div style="display: flex; flex-direction: column; gap: 16px;">
-                        @if (widgets().length === 0) {
-                            <div style="padding: 40px; text-align: center; color: #64748b; font-size: 14px; border: 2px dashed #cbd5e1; border-radius: 8px;">
-                                No website widgets configured yet. Click "Create Web Widget" to get started.
-                            </div>
-                        }
-
-                        @for (w of widgets(); track w.id) {
-                            <div style="border: 1px solid #cbd5e1; border-radius: 8px; padding: 16px; background: #f8fafc;">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
-                                    <div>
-                                        <h3 style="margin: 0; font-size: 16px; color: #1e293b;">{{ w.name }}</h3>
-                                        <div style="margin-top: 4px; display: flex; gap: 8px;">
-                                            <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; background: #e2e8f0; color: #475569; padding: 2px 6px; border-radius: 4px;">
-                                                {{ w.type === 'WEB_CLIENT' ? 'Web Chat Widget' : 'WhatsApp Link Redirect' }}
-                                            </span>
-                                            @if (w.isAgentEnabled) {
-                                                <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; background: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 4px;">AI Bot Active</span>
-                                            }
-                                        </div>
-                                    </div>
-                                    <div style="display: flex; gap: 8px;">
-                                        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; background: white;" (click)="openEditWidgetForm(w)">Configure</button>
-                                        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px; color: #ef4444; border-color: #fca5a5; background: white;" (click)="deleteWidget(w.id)">Delete</button>
-                                    </div>
-                                </div>
-
-                                <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 8px;">
-                                    <label style="font-size: 11px; font-weight: 700; color: #475569;">Widget API Key</label>
-                                    <code style="background: #e2e8f0; padding: 4px 8px; border-radius: 4px; font-size: 12px; width: fit-content;">{{ w.widgetApiKey }}</code>
-                                </div>
-
-                                @if (w.type === 'WEB_CLIENT') {
-                                    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 12px;">
-                                        <label style="font-size: 11px; font-weight: 700; color: #475569;">HTML Embed Script Code</label>
-                                        <textarea readonly class="form-control" rows="2" style="font-family: monospace; font-size: 12px; background: #ffffff; padding: 8px;" onclick="this.select()">{{ getEmbedCode(w.widgetApiKey) }}</textarea>
-                                        <span class="help-text">Copy and paste this script tag right before the closing &lt;/body&gt; tag of your website.</span>
-                                    </div>
-                                } @else {
-                                    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 12px;">
-                                        <label style="font-size: 11px; font-weight: 700; color: #475569;">WhatsApp Redirect Pre-chat Link</label>
-                                        <input type="text" readonly class="form-control" style="font-family: monospace; font-size: 12px; background: #ffffff;" value="https://wa.me/{{ w.whatsappNumber }}?text={{ w.predefinedText }}" onclick="this.select()">
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-                } @else {
-                    <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
-                        <h2 style="margin: 0; font-size: 18px; color: #0b494d;">
-                            {{ editingWidget() ? 'Modify Web Widget' : 'Configure New Web Widget' }}
-                        </h2>
-                        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;" (click)="showAddWidgetForm.set(false)">Back to list</button>
-                    </div>
-
-                    <div style="display: flex; flex-direction: column; gap: 16px;">
-                        <div style="display: flex; gap: 16px;">
-                            <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-                                <label style="font-size: 11px; font-weight: 700; color: #475569;">Widget Config Name *</label>
-                                <input type="text" class="form-control" [(ngModel)]="wName" placeholder="e.g. Landing Page Widget">
-                            </div>
-                            <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-                                <label style="font-size: 11px; font-weight: 700; color: #475569;">Integration Type</label>
-                                <select class="form-control" [(ngModel)]="wType">
-                                    <option value="WEB_CLIENT">Web Chat Widget popup</option>
-                                    <option value="WHATSAPP_LINK">Branded WhatsApp Link Generator</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        @if (wType === 'WEB_CLIENT') {
-                            <div style="display: flex; gap: 16px;">
-                                <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-                                    <label style="font-size: 11px; font-weight: 700; color: #475569;">Widget Primary Accent Color</label>
-                                    <div style="display: flex; gap: 8px; align-items: center;">
-                                        <input type="color" [(ngModel)]="wThemeColor" style="width: 40px; height: 34px; padding: 0; border: none; border-radius: 4px; cursor: pointer;">
-                                        <input type="text" class="form-control" [(ngModel)]="wThemeColor" style="flex: 1;" placeholder="#0b494d">
-                                    </div>
-                                </div>
-                                <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-                                    <label style="font-size: 11px; font-weight: 700; color: #475569;">Call Shortcut Support Number</label>
-                                    <input type="text" class="form-control" [(ngModel)]="wCallPhoneNumber" placeholder="e.g. 917204262473">
-                                </div>
-                            </div>
-
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <label style="font-size: 11px; font-weight: 700; color: #475569;">Welcome Header Text</label>
-                                <input type="text" class="form-control" [(ngModel)]="wWelcomeText" placeholder="Hello! How can we help you today?">
-                            </div>
-
-                            <div style="display: flex; flex-direction: column; gap: 4px;">
-                                <label style="font-size: 11px; font-weight: 700; color: #475569;">Pre-Chat Questionnaire Fields (Optional)</label>
-                                <input type="text" class="form-control" [(ngModel)]="wPreChatFieldsText" placeholder="e.g. Destination, Budget, Travelers count">
-                                <span class="help-text">Comma-separated list of questions. Collected answers will be logged under the chat timeline before Gemini takes over.</span>
-                            </div>
-
-                            <div style="display: flex; gap: 24px; align-items: flex-start; justify-content: space-between; border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 8px;">
-                                <div>
-                                    <h4 style="margin: 0; font-size: 14px; color: #1e293b;">Enable Gemini Auto-responder</h4>
-                                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">If active, messages are processed by Gemini using the system prompts configured in the AI Persona settings tab.</p>
-                                </div>
-                                <label class="switch-container" style="position: relative; display: inline-block; width: 50px; height: 26px;">
-                                    <input type="checkbox" [(ngModel)]="wIsAgentEnabled" style="opacity: 0; width: 0; height: 0;">
-                                    <span class="slider" [style.background]="wIsAgentEnabled ? '#10b981' : '#cbd5e1'" style="position: absolute; cursor: pointer; inset: 0; border-radius: 34px; transition: .4s;">
-                                        <span class="slider-circle" [style.transform]="wIsAgentEnabled ? 'translateX(24px)' : 'translateX(0)'" style="position: absolute; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; border-radius: 50%; transition: .4s;"></span>
-                                    </span>
-                                </label>
-                            </div>
-                        } @else {
-                            <div style="display: flex; gap: 16px;">
-                                <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-                                    <label style="font-size: 11px; font-weight: 700; color: #475569;">WhatsApp Number *</label>
-                                    <input type="text" class="form-control" [(ngModel)]="wWhatsappNumber" placeholder="e.g. 917204262473">
-                                </div>
-                                <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
-                                    <label style="font-size: 11px; font-weight: 700; color: #475569;">Predefined Direct Message</label>
-                                    <input type="text" class="form-control" [(ngModel)]="wPredefinedText" placeholder="e.g. I want to inquire about Pace Travels packages.">
-                                </div>
-                            </div>
-                        }
-
-                        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
-                            <button class="btn btn-outline" style="padding: 10px 20px;" (click)="showAddWidgetForm.set(false)">Cancel</button>
-                            <button class="btn btn-primary" style="padding: 10px 24px;" (click)="saveWidget()">Save Widget Configs</button>
-                        </div>
-                    </div>
                 }
+
+                <div
+                    style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+                    <button class="btn btn-outline" style="padding: 10px 20px;"
+                        (click)="showAddWidgetForm.set(false)">Cancel</button>
+                    <button class="btn btn-primary" style="padding: 10px 24px;" (click)="saveWidget()">Save Widget
+                        Configs</button>
+                </div>
             </div>
+            }
+        </div>
+        } @else if (activeTab() === 'fcm-sdk') {
+            <div class="widget-sdk-panel" style="background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 24px; font-family: 'Inter', sans-serif;">
+  
+    <!-- Header -->
+    <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
+        <h2 style="margin: 0; font-size: 18px; color: #0b494d;"> FCM Token Generate</h2>
+    </div>
+
+    <!-- Form Body -->
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+        
+        <!-- Row 1: Name and Integration Type -->
+        <div style="display: flex; gap: 16px;">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 11px; font-weight: 700; color: #475569;">Widget Config Name *</label>
+                <input type="text" class="form-control" [(ngModel)]="fcmName" placeholder="e.g. Landing Page Widget">
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 11px; font-weight: 700; color: #475569;">Integration Type</label>
+                <select class="form-control" [(ngModel)]="fcmType">
+                    <option value="WEB_CLIENT">Web Chat Widget popup</option>
+                    <option value="WHATSAPP_LINK">Branded WhatsApp Link Generator</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- WEB_CLIENT Specific Controls -->
+        <div style="display: flex; gap: 16px;">
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 11px; font-weight: 700; color: #475569;">Widget Primary Accent Color</label>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <input type="color" [(ngModel)]="fcmThemeColor" style="width: 40px; height: 34px; padding: 0; border: none; border-radius: 4px; cursor: pointer;">
+                    <input type="text" class="form-control" [(ngModel)]="fcmThemeColor" style="flex: 1;" placeholder="#0b494d">
+                </div>
+            </div>
+            <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 11px; font-weight: 700; color: #475569;">Call Shortcut Support Number</label>
+                <input type="text" class="form-control" [(ngModel)]="fcmCallPhoneNumber" placeholder="e.g. 917204262473">
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="font-size: 11px; font-weight: 700; color: #475569;">Welcome Header Text</label>
+            <input type="text" class="form-control" [(ngModel)]="fcmWelcomeText" placeholder="Hello! How can we help you today?">
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 4px;">
+            <label style="font-size: 11px; font-weight: 700; color: #475569;">Pre-Chat Questionnaire Fields (Optional)</label>
+            <input type="text" class="form-control" [(ngModel)]="fcmPreChatFieldsText" placeholder="e.g. Destination, Budget, Travelers count">
+            <span class="help-text">Comma-separated list of questions. Collected answers will be logged under the chat timeline before Gemini takes over.</span>
+        </div>
+
+        <!-- Footer Actions -->
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
+            <button class="btn btn-outline" style="padding: 10px 20px;" (click)="showAddWidgetForm.set(false)">Cancel</button>
+            <button class="btn btn-primary" style="padding: 10px 24px;" (click)="saveToken()">Generate Token</button>
+        </div>
+
+        <!-- Response Result & Copy Token Box -->
+        <div *ngIf="generatedToken()" style="margin-top: 16px; padding: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-size: 12px; font-weight: 700; color: #0b494d;">Generated JWT Token:</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" class="form-control" [value]="generatedToken()" readonly style="background: #ffffff; color: #334155; font-family: monospace; font-size: 12px;">
+                <button class="btn btn-primary" style="padding: 8px 16px; white-space: nowrap;" (click)="copyTokenToClipboard()">
+                    Copy Token
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
         }
     </div>
 </div>

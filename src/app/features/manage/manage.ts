@@ -52,6 +52,17 @@ export class Manage implements OnInit {
   wCallPhoneNumber = '';
   wIsAgentEnabled = false;
 
+  // FCM Token Generator Fields
+  fcmName = '';
+  fcmType = 'WEB_CLIENT';
+  fcmThemeColor = '#0b494d';
+  fcmWelcomeText = 'Hello! How can we help you today?';
+  fcmPreChatFieldsText = '';
+  fcmCallPhoneNumber = '';
+
+  // Store newly generated token for copying
+  generatedToken = signal<string>('');
+
   constructor(private api: ApiService) {}
 
   ngOnInit() {
@@ -199,5 +210,59 @@ export class Manage implements OnInit {
   getEmbedCode(apiKey?: string): string {
     const apiHost = this.api.baseUrl.replace(/\/api\/v1\/?$/, '');
     return `<script src="${apiHost}/sdk/widget.js" data-api-key="${apiKey || 'YOUR_KEY'}"></script>`;
+  }
+
+  // --- FCM Token Generator Section ---
+
+  saveToken() {
+    if (!this.fcmName) {
+      Swal.fire('Error', 'Widget Config Name is required!', 'error');
+      return;
+    }
+
+    const preChatFields = this.fcmPreChatFieldsText
+      .split(',')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
+
+    const payload = {
+      name: this.fcmName,
+      type: this.fcmType,
+      themeColor: this.fcmThemeColor,
+      welcomeText: this.fcmWelcomeText,
+      preChatFields,
+      callPhoneNumber: this.fcmCallPhoneNumber || null
+    };
+
+    this.api.post('userToken/add', payload).subscribe({
+      next: (res: any) => {
+        // Response me jo identityToken mila hai use signal me set karein
+        const token = res?.data?.identityToken || '';
+        this.generatedToken.set(token);
+
+        Swal.fire('Success', 'FCM Token generated successfully!', 'success');
+      },
+      error: (err: any) => {
+        Swal.fire('Error', 'Failed to generate token: ' + err.message, 'error');
+      }
+    });
+  }
+
+  copyTokenToClipboard() {
+    const token = this.generatedToken();
+    if (!token) return;
+
+    navigator.clipboard.writeText(token).then(() => {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Token copied to clipboard!',
+        showConfirmButton: false,
+        timer: 2000
+      });
+    }).catch(err => {
+      console.error('Failed to copy: ', err);
+    });
   }
 }
