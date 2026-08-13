@@ -76,10 +76,10 @@ export class ProjectsView implements OnInit {
       accessToken: project.accessToken || '',
       testPhoneNumber: project.testPhoneNumber || ''
     });
-    
+
     // Scroll to form
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
+
     // Open details tag if closed
     const details = document.querySelector('details');
     if (details && !details.open) {
@@ -235,7 +235,7 @@ export class ProjectsView implements OnInit {
             cookie: true,
             autoLogAppEvents: true,
             xfbml: true,
-            version: 'v19.0'
+            version: 'v26.0'
           });
         }
         this.checkLoginState();

@@ -1,81 +1,102 @@
-<div class="projects-container" style="max-width: 1280px; margin: 0 auto; padding: 24px; font-family: 'Inter', sans-serif;">
-    
+<div class="projects-container"
+    style="max-width: 1280px; margin: 0 auto; padding: 24px; font-family: 'Inter', sans-serif;">
+
     <!-- Top Header Banner -->
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+    <div
+        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px 32px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
         <div>
-            <h1 style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">Brand Projects & WABA Setup</h1>
-            <p style="font-size: 14px; color: #64748b; margin: 0;">Manage your Meta WhatsApp Business API accounts, credentials, and active project contexts.</p>
+            <h1 style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">Brand Projects & WABA
+                Setup</h1>
+            <p style="font-size: 14px; color: #64748b; margin: 0;">Manage your Meta WhatsApp Business API accounts,
+                credentials, and active project contexts.</p>
         </div>
 
-        <button (click)="toggleCreateForm()" style="background: #0b494d; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(11, 73, 77, 0.2);">
+        <button (click)="toggleCreateForm()"
+            style="background: #0b494d; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(11, 73, 77, 0.2);">
             <i class="fa-solid" [class.fa-plus]="!showCreateForm()" [class.fa-xmark]="showCreateForm()"></i>
             {{ showCreateForm() ? 'Close Form' : 'Register New Project' }}
         </button>
     </div>
 
     <!-- Register / Edit Brand Project Panel -->
-    <div *ngIf="showCreateForm() || editingProjectId" style="background: white; border: 1px solid #cbd5e1; border-radius: 12px; padding: 32px; margin-bottom: 36px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); animation: fadeIn 0.3s ease;">
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 24px;">
+    <div *ngIf="showCreateForm() || editingProjectId"
+        style="background: white; border: 1px solid #cbd5e1; border-radius: 12px; padding: 32px; margin-bottom: 36px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); animation: fadeIn 0.3s ease;">
+        <div
+            style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 24px;">
             <div>
                 <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">
                     {{ editingProjectId ? 'Edit Project Configuration' : 'Register New Brand Project' }}
                 </h2>
-                <p style="font-size: 13px; color: #64748b; margin: 0;">Enter your Meta WhatsApp Business API parameters or use Facebook Quick Setup.</p>
+                <p style="font-size: 13px; color: #64748b; margin: 0;">Enter your Meta WhatsApp Business API parameters
+                    or use Facebook Quick Setup.</p>
             </div>
 
             <div style="display: flex; gap: 12px; align-items: center;">
-                <button type="button" (click)="logoutFacebook()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;" title="Clear Facebook Login Session">
+                <button type="button" (click)="logoutFacebook()"
+                    style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;"
+                    title="Clear Facebook Login Session">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i> Disconnect FB
                 </button>
-                <button type="button" (click)="connectWithFacebook()" style="background: #1877F2; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                <button type="button" (click)="connectWithFacebook()"
+                    style="background: #1877F2; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                     <i class="fa-brands fa-facebook" style="font-size: 16px;"></i> Quick Connect via Meta
                 </button>
             </div>
         </div>
 
-        <form [formGroup]="projectForm" (ngSubmit)="onCreateProject()" style="display: flex; flex-direction: column; gap: 20px;">
+        <form [formGroup]="projectForm" (ngSubmit)="onCreateProject()"
+            style="display: flex; flex-direction: column; gap: 20px;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
                 <div>
                     <label style="font-size: 12px; font-weight: 700; color: #334155;">Project Name *</label>
-                    <input type="text" formControlName="name" placeholder="e.g. Pace Travels (India)" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-weight: 600;">
+                    <input type="text" formControlName="name" placeholder="e.g. Pace Travels (India)"
+                        style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-weight: 600;">
                 </div>
 
                 <div>
                     <label style="font-size: 12px; font-weight: 700; color: #334155;">Project Logo (Icon URL)</label>
-                    <input type="text" formControlName="iconUrl" placeholder="https://example.com/logo.png" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                    <input type="text" formControlName="iconUrl" placeholder="https://example.com/logo.png"
+                        style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
                 </div>
 
                 <div>
                     <label style="font-size: 12px; font-weight: 700; color: #334155;">Sender Phone Number</label>
-                    <input type="text" formControlName="phoneNumber" placeholder="e.g. 917204262473" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-weight: 600;">
+                    <input type="text" formControlName="phoneNumber" placeholder="e.g. 917204262473"
+                        style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-weight: 600;">
                 </div>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
                 <div>
                     <label style="font-size: 12px; font-weight: 700; color: #334155;">Phone Number ID *</label>
-                    <input type="text" formControlName="phoneNumberId" placeholder="Meta Phone Number ID" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-family: monospace;">
+                    <input type="text" formControlName="phoneNumberId" placeholder="Meta Phone Number ID"
+                        style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-family: monospace;">
                 </div>
 
                 <div>
                     <label style="font-size: 12px; font-weight: 700; color: #334155;">WABA Account ID *</label>
-                    <input type="text" formControlName="wabaId" placeholder="Meta WABA Account ID" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-family: monospace;">
+                    <input type="text" formControlName="wabaId" placeholder="Meta WABA Account ID"
+                        style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-family: monospace;">
                 </div>
 
                 <div>
                     <label style="font-size: 12px; font-weight: 700; color: #334155;">Sender Test Phone Number</label>
-                    <input type="text" formControlName="testPhoneNumber" placeholder="e.g. 919876543210" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                    <input type="text" formControlName="testPhoneNumber" placeholder="e.g. 919876543210"
+                        style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
                 </div>
             </div>
 
             <div>
                 <label style="font-size: 12px; font-weight: 700; color: #334155;">Meta Permanent Access Token *</label>
-                <input type="password" formControlName="accessToken" placeholder="EAAB..." style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-family: monospace;">
+                <input type="password" formControlName="accessToken" placeholder="EAAB..."
+                    style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-family: monospace;">
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
-                <button type="button" (click)="cancelEdit()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 13.5px; cursor: pointer;">Cancel</button>
-                <button type="submit" [disabled]="projectForm.invalid" style="background: #0b494d; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 700; font-size: 13.5px; cursor: pointer;">
+                <button type="button" (click)="cancelEdit()"
+                    style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 20px; border-radius: 6px; font-weight: 600; font-size: 13.5px; cursor: pointer;">Cancel</button>
+                <button type="submit" [disabled]="projectForm.invalid"
+                    style="background: #0b494d; color: white; border: none; padding: 10px 24px; border-radius: 6px; font-weight: 700; font-size: 13.5px; cursor: pointer;">
                     {{ editingProjectId ? 'Update Project Configuration' : 'Save & Initialize Project' }}
                 </button>
             </div>
@@ -84,66 +105,88 @@
 
     <!-- Active Projects Grid Section -->
     <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-        <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0;">Registered Brand Projects ({{ projectService.projects().length }})</h2>
+        <h2 style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0;">Registered Brand Projects ({{
+            projectService.projects().length }})</h2>
     </div>
 
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px;">
-        <div *ngIf="projectService.projects().length === 0" style="grid-column: 1 / -1; padding: 48px; text-align: center; color: #64748b; background: white; border: 2px dashed #cbd5e1; border-radius: 12px;">
+        <div *ngIf="projectService.projects().length === 0"
+            style="grid-column: 1 / -1; padding: 48px; text-align: center; color: #64748b; background: white; border: 2px dashed #cbd5e1; border-radius: 12px;">
             No brand projects registered yet. Click "Register New Project" above to connect your WABA account.
         </div>
 
-        <div *ngFor="let project of projectService.projects()" 
-             [style.border-color]="projectService.currentProject()?.id === project.id ? '#0b494d' : '#cbd5e1'" 
-             [style.box-shadow]="projectService.currentProject()?.id === project.id ? '0 8px 24px rgba(11, 73, 77, 0.12)' : '0 2px 8px rgba(0,0,0,0.03)'"
-             style="background: white; border-width: 2px; border-style: solid; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; position: relative; transition: all 0.2s ease;">
-            
+        <div *ngFor="let project of projectService.projects()"
+            [style.border-color]="projectService.currentProject()?.id === project.id ? '#0b494d' : '#cbd5e1'"
+            [style.box-shadow]="projectService.currentProject()?.id === project.id ? '0 8px 24px rgba(11, 73, 77, 0.12)' : '0 2px 8px rgba(0,0,0,0.03)'"
+            style="background: white; border-width: 2px; border-style: solid; border-radius: 14px; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; position: relative; transition: all 0.2s ease;">
+
             <div>
                 <!-- Card Header -->
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
                     <div style="display: flex; align-items: center; gap: 14px;">
-                        <div style="width: 48px; height: 48px; border-radius: 10px; background: #e0f2f1; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #b2dfdb;">
-                            <img *ngIf="project.iconUrl" [src]="project.iconUrl" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;">
-                            <i *ngIf="!project.iconUrl" class="fa-solid fa-briefcase" style="font-size: 22px; color: #00695c;"></i>
+                        <div
+                            style="width: 48px; height: 48px; border-radius: 10px; background: #e0f2f1; display: flex; align-items: center; justify-content: center; overflow: hidden; border: 1px solid #b2dfdb;">
+                            <img *ngIf="project.iconUrl" [src]="project.iconUrl" alt="Logo"
+                                style="width: 100%; height: 100%; object-fit: cover;">
+                            <i *ngIf="!project.iconUrl" class="fa-solid fa-briefcase"
+                                style="font-size: 22px; color: #00695c;"></i>
                         </div>
                         <div>
-                            <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #0f172a;">{{ project.name }}</h3>
-                            <span style="font-size: 11px; color: #64748b;">Created {{ project.createdAt | date:'mediumDate' }}</span>
+                            <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #0f172a;">{{ project.name }}
+                            </h3>
+                            <span style="font-size: 11px; color: #64748b;">Created {{ project.createdAt |
+                                date:'mediumDate' }}</span>
                         </div>
                     </div>
 
-                    <span *ngIf="projectService.currentProject()?.id === project.id" style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #0b494d; color: white; padding: 4px 10px; border-radius: 20px;">
+                    <span *ngIf="projectService.currentProject()?.id === project.id"
+                        style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #0b494d; color: white; padding: 4px 10px; border-radius: 20px;">
                         ACTIVE CONTEXT
                     </span>
                 </div>
 
                 <!-- Card Details Grid -->
-                <div style="background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                <div
+                    style="background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px;">
                         <span style="color: #64748b;">WABA Phone Number:</span>
-                        <strong style="color: #166534; font-family: monospace; font-size: 13px;">{{ project.phoneNumber || 'Not Configured' }} <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i></strong>
+                        <strong style="color: #166534; font-family: monospace; font-size: 13px;">{{ project.phoneNumber
+                            || 'Not Configured' }} <i class="fa-brands fa-whatsapp"
+                                style="color: #25d366;"></i></strong>
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px;">
                         <span style="color: #64748b;">Phone Number ID:</span>
-                        <code style="background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; color: #1e293b;">{{ project.phoneNumberId || '—' }}</code>
+                        <code
+                            style="background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; color: #1e293b;">{{ project.phoneNumberId || '—' }}</code>
                     </div>
 
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px;">
                         <span style="color: #64748b;">Status / Plan:</span>
-                        <span style="font-size: 11px; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 4px;">ACTIVE (BASIC)</span>
+                        <span
+                            style="font-size: 11px; font-weight: 700; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 4px;">ACTIVE
+                            (BASIC)</span>
                     </div>
                 </div>
             </div>
 
             <!-- Card Actions -->
             <div style="display: flex; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 16px;">
-                <button (click)="selectProject(project)" [style.background]="projectService.currentProject()?.id === project.id ? '#e2e8f0' : '#0b494d'" [style.color]="projectService.currentProject()?.id === project.id ? '#475569' : 'white'" style="flex: 1; border: none; padding: 9px 14px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer;">
+                <button (click)="selectProject(project)"
+                    [style.background]="projectService.currentProject()?.id === project.id ? '#e2e8f0' : '#0b494d'"
+                    [style.color]="projectService.currentProject()?.id === project.id ? '#475569' : 'white'"
+                    style="flex: 1; border: none; padding: 9px 14px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer;">
                     {{ projectService.currentProject()?.id === project.id ? 'Current Context' : 'Switch Context' }}
                 </button>
-                <button (click)="runHealthCheck(project)" style="background: #f0f9ff; border: 1px solid #0284c7; color: #0369a1; padding: 9px 14px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 6px;" title="Check Live Meta Connection Status">
+                <button (click)="runHealthCheck(project)"
+                    style="background: #f0f9ff; border: 1px solid #0284c7; color: #0369a1; padding: 9px 14px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 6px;"
+                    title="Check Live Meta Connection Status">
                     <i class="fa-solid fa-heart-pulse" style="color: #0284c7;"></i> Status Check
                 </button>
-                <button (click)="editProject(project)" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 9px 14px; border-radius: 6px; font-weight: 600; font-size: 12.5px; cursor: pointer;" title="Edit Configuration">
+                <button (click)="editProject(project)"
+                    style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 9px 14px; border-radius: 6px; font-weight: 600; font-size: 12.5px; cursor: pointer;"
+                    title="Edit Configuration">
                     <i class="fa-solid fa-pencil"></i> Edit
                 </button>
             </div>
@@ -152,40 +195,49 @@
 </div>
 
 <!-- Meta WABA Connection Diagnostic Status Modal -->
-<div *ngIf="showDiagnosticModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Inter', sans-serif;">
-    <div style="background: #ffffff; width: 720px; max-width: 95vw; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-height: 90vh; display: flex; flex-direction: column;">
-        
+<div *ngIf="showDiagnosticModal()"
+    style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Inter', sans-serif;">
+    <div
+        style="background: #ffffff; width: 720px; max-width: 95vw; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); max-height: 90vh; display: flex; flex-direction: column;">
+
         <!-- Header -->
-        <div style="background: #0f172a; color: white; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
+        <div
+            style="background: #0f172a; color: white; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 12px;">
-                <div style="width: 38px; height: 38px; background: #0284c7; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                <div
+                    style="width: 38px; height: 38px; background: #0284c7; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
                     <i class="fa-solid fa-heart-pulse"></i>
                 </div>
                 <div>
                     <h3 style="margin: 0; font-size: 17px; font-weight: 700;">Meta Connection Diagnostic Status</h3>
-                    <span style="font-size: 12px; color: #94a3b8;">Real-time parameter verification for <strong>{{ activeCheckingProjectName() }}</strong></span>
+                    <span style="font-size: 12px; color: #94a3b8;">Real-time parameter verification for <strong>{{
+                            activeCheckingProjectName() }}</strong></span>
                 </div>
             </div>
-            <button (click)="closeDiagnosticModal()" style="background: rgba(255,255,255,0.1); border: none; font-size: 16px; cursor: pointer; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</button>
+            <button (click)="closeDiagnosticModal()"
+                style="background: rgba(255,255,255,0.1); border: none; font-size: 16px; cursor: pointer; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</button>
         </div>
 
         <!-- Body Area -->
         <div style="padding: 24px; flex: 1; overflow-y: auto;">
-            
+
             <!-- Loading Indicator -->
             <div *ngIf="isCheckingHealth()" style="text-align: center; padding: 40px 0;">
-                <i class="fa-solid fa-spinner fa-spin" style="font-size: 36px; color: #0284c7; margin-bottom: 14px;"></i>
-                <h4 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #0f172a;">Testing Meta API Connection...</h4>
-                <p style="margin: 0; font-size: 13px; color: #64748b;">Querying Facebook Graph API for Access Token, Phone Number ID, WABA Account & Webhook status.</p>
+                <i class="fa-solid fa-spinner fa-spin"
+                    style="font-size: 36px; color: #0284c7; margin-bottom: 14px;"></i>
+                <h4 style="margin: 0 0 6px 0; font-size: 16px; font-weight: 700; color: #0f172a;">Testing Meta API
+                    Connection...</h4>
+                <p style="margin: 0; font-size: 13px; color: #64748b;">Querying Facebook Graph API for Access Token,
+                    Phone Number ID, WABA Account & Webhook status.</p>
             </div>
 
             <div *ngIf="!isCheckingHealth() && diagnosticData()">
-                
+
                 <!-- Overall Status Banner -->
-                <div [style.background]="diagnosticData().overallStatus === 'HEALTHY' ? '#f0fdf4' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? '#fffbe6' : '#fef2f2')" 
-                     [style.border-color]="diagnosticData().overallStatus === 'HEALTHY' ? '#bbf7d0' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? '#ffe58f' : '#fecaca')"
-                     style="border-width: 1px; border-style: solid; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px;">
-                    
+                <div [style.background]="diagnosticData().overallStatus === 'HEALTHY' ? '#f0fdf4' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? '#fffbe6' : '#fef2f2')"
+                    [style.border-color]="diagnosticData().overallStatus === 'HEALTHY' ? '#bbf7d0' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? '#ffe58f' : '#fecaca')"
+                    style="border-width: 1px; border-style: solid; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 14px;">
+
                     <div style="font-size: 24px;">
                         <span *ngIf="diagnosticData().overallStatus === 'HEALTHY'">✅</span>
                         <span *ngIf="diagnosticData().overallStatus === 'PARTIAL_WARNING'">⚠️</span>
@@ -193,10 +245,15 @@
                     </div>
 
                     <div>
-                        <strong [style.color]="diagnosticData().overallStatus === 'HEALTHY' ? '#14532d' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? '#92400e' : '#991b1b')" style="font-size: 15px; display: block; margin-bottom: 4px;">
-                            {{ diagnosticData().overallStatus === 'HEALTHY' ? '100% Connected & Healthy' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? 'Connected with Minor Warnings' : 'Action Required: Meta Connection Error') }}
+                        <strong
+                            [style.color]="diagnosticData().overallStatus === 'HEALTHY' ? '#14532d' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? '#92400e' : '#991b1b')"
+                            style="font-size: 15px; display: block; margin-bottom: 4px;">
+                            {{ diagnosticData().overallStatus === 'HEALTHY' ? '100% Connected & Healthy' :
+                            (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? 'Connected with Minor Warnings' :
+                            'Action Required: Meta Connection Error') }}
                         </strong>
-                        <p [style.color]="diagnosticData().overallStatus === 'HEALTHY' ? '#166534' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? '#b45309' : '#b91c1c')" style="margin: 0; font-size: 13px; line-height: 1.4;">
+                        <p [style.color]="diagnosticData().overallStatus === 'HEALTHY' ? '#166534' : (diagnosticData().overallStatus === 'PARTIAL_WARNING' ? '#b45309' : '#b91c1c')"
+                            style="margin: 0; font-size: 13px; line-height: 1.4;">
                             {{ diagnosticData().summaryMessage }}
                         </p>
                     </div>
@@ -204,67 +261,79 @@
 
                 <!-- Parameter Checks Grid -->
                 <div style="display: flex; flex-direction: column; gap: 14px;">
-                    
+
                     <!-- 1. Access Token -->
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+                    <div
+                        style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                                 <i class="fa-solid fa-key" style="color: #64748b; font-size: 14px;"></i>
                                 <strong style="font-size: 13.5px; color: #0f172a;">Permanent Access Token</strong>
                             </div>
-                            <span style="font-size: 12.5px; color: #475569;">{{ diagnosticData().checks.accessToken.message }}</span>
+                            <span style="font-size: 12.5px; color: #475569;">{{
+                                diagnosticData().checks.accessToken.message }}</span>
                         </div>
-                        <span [style.background]="diagnosticData().checks.accessToken.status === 'OK' ? '#dcfce7' : '#fee2e2'"
-                              [style.color]="diagnosticData().checks.accessToken.status === 'OK' ? '#15803d' : '#b91c1c'"
-                              style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
+                        <span
+                            [style.background]="diagnosticData().checks.accessToken.status === 'OK' ? '#dcfce7' : '#fee2e2'"
+                            [style.color]="diagnosticData().checks.accessToken.status === 'OK' ? '#15803d' : '#b91c1c'"
+                            style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
                             {{ diagnosticData().checks.accessToken.status }}
                         </span>
                     </div>
 
                     <!-- 2. Phone Number ID -->
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+                    <div
+                        style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                                 <i class="fa-solid fa-phone" style="color: #64748b; font-size: 14px;"></i>
                                 <strong style="font-size: 13.5px; color: #0f172a;">Phone Number ID</strong>
                             </div>
-                            <span style="font-size: 12.5px; color: #475569;">{{ diagnosticData().checks.phoneNumber.message }}</span>
+                            <span style="font-size: 12.5px; color: #475569;">{{
+                                diagnosticData().checks.phoneNumber.message }}</span>
                         </div>
-                        <span [style.background]="diagnosticData().checks.phoneNumber.status === 'OK' ? '#dcfce7' : '#fee2e2'"
-                              [style.color]="diagnosticData().checks.phoneNumber.status === 'OK' ? '#15803d' : '#b91c1c'"
-                              style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
+                        <span
+                            [style.background]="diagnosticData().checks.phoneNumber.status === 'OK' ? '#dcfce7' : '#fee2e2'"
+                            [style.color]="diagnosticData().checks.phoneNumber.status === 'OK' ? '#15803d' : '#b91c1c'"
+                            style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
                             {{ diagnosticData().checks.phoneNumber.status }}
                         </span>
                     </div>
 
                     <!-- 3. WABA Account ID -->
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+                    <div
+                        style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                                 <i class="fa-solid fa-building" style="color: #64748b; font-size: 14px;"></i>
                                 <strong style="font-size: 13.5px; color: #0f172a;">WABA Business Account ID</strong>
                             </div>
-                            <span style="font-size: 12.5px; color: #475569;">{{ diagnosticData().checks.wabaAccount.message }}</span>
+                            <span style="font-size: 12.5px; color: #475569;">{{
+                                diagnosticData().checks.wabaAccount.message }}</span>
                         </div>
-                        <span [style.background]="diagnosticData().checks.wabaAccount.status === 'OK' ? '#dcfce7' : '#fee2e2'"
-                              [style.color]="diagnosticData().checks.wabaAccount.status === 'OK' ? '#15803d' : '#b91c1c'"
-                              style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
+                        <span
+                            [style.background]="diagnosticData().checks.wabaAccount.status === 'OK' ? '#dcfce7' : '#fee2e2'"
+                            [style.color]="diagnosticData().checks.wabaAccount.status === 'OK' ? '#15803d' : '#b91c1c'"
+                            style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
                             {{ diagnosticData().checks.wabaAccount.status }}
                         </span>
                     </div>
 
                     <!-- 4. Webhook Subscription -->
-                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
+                    <div
+                        style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
                         <div>
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
                                 <i class="fa-solid fa-bolt" style="color: #64748b; font-size: 14px;"></i>
                                 <strong style="font-size: 13.5px; color: #0f172a;">Webhook Subscription</strong>
                             </div>
-                            <span style="font-size: 12.5px; color: #475569;">{{ diagnosticData().checks.webhook.message }}</span>
+                            <span style="font-size: 12.5px; color: #475569;">{{ diagnosticData().checks.webhook.message
+                                }}</span>
                         </div>
-                        <span [style.background]="diagnosticData().checks.webhook.status === 'OK' ? '#dcfce7' : '#fef3c7'"
-                              [style.color]="diagnosticData().checks.webhook.status === 'OK' ? '#15803d' : '#b45309'"
-                              style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
+                        <span
+                            [style.background]="diagnosticData().checks.webhook.status === 'OK' ? '#dcfce7' : '#fef3c7'"
+                            [style.color]="diagnosticData().checks.webhook.status === 'OK' ? '#15803d' : '#b45309'"
+                            style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
                             {{ diagnosticData().checks.webhook.status }}
                         </span>
                     </div>
@@ -275,11 +344,13 @@
         </div>
 
         <!-- Footer -->
-        <div style="background: #f8fafc; padding: 14px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+        <div
+            style="background: #f8fafc; padding: 14px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
             <span style="font-size: 12px; color: #64748b;">
-                Tested live against Meta Graph API v19.0
+                Tested live against Meta Graph API v26.0
             </span>
-            <button (click)="closeDiagnosticModal()" style="background: #0f172a; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer;">
+            <button (click)="closeDiagnosticModal()"
+                style="background: #0f172a; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer;">
                 Close Diagnostic
             </button>
         </div>
