@@ -4,7 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Menu } from 'primeng/menu';
 import { Router } from '@angular/router';
 import { EnvironmentModeService, EnvironmentMode } from '../services/environment-mode.service';
-
+import { OnboardingService } from '../services/onboarding.service';
+import { ProjectService } from '../../features/projects/services/project.service';
 import { ApiService } from '../services/api.service';
 
 declare var Swal: any;
@@ -21,6 +22,8 @@ export class Header implements OnInit {
   @Output() toggleSidebar = new EventEmitter<void>();
 
   envModeService = inject(EnvironmentModeService);
+  onboardingService = inject(OnboardingService);
+  projectService = inject(ProjectService);
   api = inject(ApiService);
   router = inject(Router);
 
@@ -30,6 +33,7 @@ export class Header implements OnInit {
 
   showNotifications = signal(false);
   showProfileDropdown = signal(false);
+  showMetaStatusModal = signal(false);
 
   notificationsList = signal<any[]>([]);
 
@@ -99,6 +103,15 @@ export class Header implements OnInit {
   toggleProfileDropdown() {
     this.showProfileDropdown.set(!this.showProfileDropdown());
     this.showNotifications.set(false);
+  }
+
+  toggleMetaStatusModal() {
+    this.showMetaStatusModal.set(!this.showMetaStatusModal());
+  }
+
+  openTour() {
+    this.showMetaStatusModal.set(false);
+    this.onboardingService.openTour();
   }
 
   navigateTo(path: string) {

@@ -23,6 +23,9 @@
         </div>
     </div>
 
+    <!-- Onboarding Checklist (Hidden when 100% complete) -->
+    <app-checklist-widget *ngIf="onboardingService.progressPercentage() < 100"></app-checklist-widget>
+
     <!-- Executive KPI Metric Cards (Row 1) -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 28px;">
         

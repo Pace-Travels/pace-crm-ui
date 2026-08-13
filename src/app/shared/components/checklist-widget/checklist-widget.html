@@ -1,0 +1,81 @@
+<div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 24px;">
+  <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+    <div>
+      <h3 style="margin: 0 0 6px 0; font-size: 18px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+        <i class="fa-solid fa-list-check" style="color: #8b5cf6;"></i> Getting Started Checklist
+      </h3>
+      <p style="margin: 0; font-size: 13.5px; color: #64748b;">Complete these tasks to start sending WhatsApp messages.</p>
+    </div>
+    <div style="font-size: 14px; font-weight: 700; color: #8b5cf6;">
+      {{ onboardingService.progressPercentage() }}% Completed
+    </div>
+  </div>
+
+  <div style="display: flex; height: 6px; background: #f1f5f9; border-radius: 4px; margin-bottom: 20px; overflow: hidden;">
+    <div [style.width]="onboardingService.progressPercentage() + '%'" style="background: #8b5cf6; transition: width 0.4s ease;"></div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+    
+    <!-- Item 1 -->
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 8px; border: 1px solid" [style.borderColor]="onboardingService.state().connectMeta ? '#86efac' : '#e2e8f0'" [style.background]="onboardingService.state().connectMeta ? '#f0fdf4' : 'transparent'">
+      <div style="width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px;"
+           [style.background]="onboardingService.state().connectMeta ? '#16a34a' : 'transparent'"
+           [style.border]="onboardingService.state().connectMeta ? 'none' : '2px solid #cbd5e1'"
+           [style.color]="onboardingService.state().connectMeta ? 'white' : 'transparent'">
+        <i class="fa-solid fa-check" *ngIf="onboardingService.state().connectMeta"></i>
+      </div>
+      <div>
+        <strong style="display: block; font-size: 14px; color: #0f172a; margin-bottom: 4px;" [style.text-decoration]="onboardingService.state().connectMeta ? 'line-through' : 'none'">Connect Meta Account</strong>
+        <p style="margin: 0 0 8px 0; font-size: 12px; color: #64748b; line-height: 1.4;">Add your WABA credentials to enable messaging.</p>
+        <button *ngIf="!onboardingService.state().connectMeta" (click)="onboardingService.openTour()" style="background: none; border: none; padding: 0; color: #0284c7; font-size: 12px; font-weight: 600; cursor: pointer;">Open Setup Tour →</button>
+      </div>
+    </div>
+
+    <!-- Item 2 -->
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 8px; border: 1px solid" [style.borderColor]="onboardingService.state().createTemplate ? '#86efac' : '#e2e8f0'" [style.background]="onboardingService.state().createTemplate ? '#f0fdf4' : 'transparent'">
+      <div style="width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px;"
+           [style.background]="onboardingService.state().createTemplate ? '#16a34a' : 'transparent'"
+           [style.border]="onboardingService.state().createTemplate ? 'none' : '2px solid #cbd5e1'"
+           [style.color]="onboardingService.state().createTemplate ? 'white' : 'transparent'">
+        <i class="fa-solid fa-check" *ngIf="onboardingService.state().createTemplate"></i>
+      </div>
+      <div>
+        <strong style="display: block; font-size: 14px; color: #0f172a; margin-bottom: 4px;" [style.text-decoration]="onboardingService.state().createTemplate ? 'line-through' : 'none'">Create a Template</strong>
+        <p style="margin: 0 0 8px 0; font-size: 12px; color: #64748b; line-height: 1.4;">Create and approve a template to start conversations.</p>
+        <button *ngIf="!onboardingService.state().createTemplate" (click)="navigateTo('/manage')" style="background: none; border: none; padding: 0; color: #0284c7; font-size: 12px; font-weight: 600; cursor: pointer;">Go to Templates →</button>
+      </div>
+    </div>
+
+    <!-- Item 3 -->
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 8px; border: 1px solid" [style.borderColor]="onboardingService.state().sendSoloMessage ? '#86efac' : '#e2e8f0'" [style.background]="onboardingService.state().sendSoloMessage ? '#f0fdf4' : 'transparent'">
+      <div style="width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px;"
+           [style.background]="onboardingService.state().sendSoloMessage ? '#16a34a' : 'transparent'"
+           [style.border]="onboardingService.state().sendSoloMessage ? 'none' : '2px solid #cbd5e1'"
+           [style.color]="onboardingService.state().sendSoloMessage ? 'white' : 'transparent'">
+        <i class="fa-solid fa-check" *ngIf="onboardingService.state().sendSoloMessage"></i>
+      </div>
+      <div>
+        <strong style="display: block; font-size: 14px; color: #0f172a; margin-bottom: 4px;" [style.text-decoration]="onboardingService.state().sendSoloMessage ? 'line-through' : 'none'">Send a Solo Message</strong>
+        <p style="margin: 0 0 8px 0; font-size: 12px; color: #64748b; line-height: 1.4;">Test your connection by sending a Quick Send message.</p>
+        <button *ngIf="!onboardingService.state().sendSoloMessage" (click)="navigateTo('/manage')" style="background: none; border: none; padding: 0; color: #0284c7; font-size: 12px; font-weight: 600; cursor: pointer;">Send Test Message →</button>
+      </div>
+    </div>
+
+    <!-- Item 4 -->
+    <div style="display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: 8px; border: 1px solid" [style.borderColor]="onboardingService.state().sendBulkMessage ? '#86efac' : '#e2e8f0'" [style.background]="onboardingService.state().sendBulkMessage ? '#f0fdf4' : 'transparent'">
+      <div style="width: 24px; height: 24px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 12px;"
+           [style.background]="onboardingService.state().sendBulkMessage ? '#16a34a' : 'transparent'"
+           [style.border]="onboardingService.state().sendBulkMessage ? 'none' : '2px solid #cbd5e1'"
+           [style.color]="onboardingService.state().sendBulkMessage ? 'white' : 'transparent'">
+        <i class="fa-solid fa-check" *ngIf="onboardingService.state().sendBulkMessage"></i>
+      </div>
+      <div>
+        <strong style="display: block; font-size: 14px; color: #0f172a; margin-bottom: 4px;" [style.text-decoration]="onboardingService.state().sendBulkMessage ? 'line-through' : 'none'">Launch a Broadcast</strong>
+        <p style="margin: 0 0 8px 0; font-size: 12px; color: #64748b; line-height: 1.4;">Send a bulk campaign to your contacts.</p>
+        <button *ngIf="!onboardingService.state().sendBulkMessage" (click)="navigateTo('/campaigns')" style="background: none; border: none; padding: 0; color: #0284c7; font-size: 12px; font-weight: 600; cursor: pointer;">Create Campaign →</button>
+      </div>
+    </div>
+
+  </div>
+</div>

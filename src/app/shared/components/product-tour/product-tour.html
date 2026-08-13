@@ -1,0 +1,118 @@
+<div *ngIf="onboardingService.showTour()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(8px); z-index: 10000; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif;">
+  <div style="background: white; width: 650px; max-width: 90vw; border-radius: 16px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; overflow: hidden; position: relative;">
+    
+    <!-- Close Button -->
+    <button (click)="skipTour()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: #64748b; font-size: 20px; cursor: pointer; z-index: 10;">
+      ✕
+    </button>
+
+    <!-- Progress Indicator -->
+    <div style="display: flex; height: 4px; background: #f1f5f9; width: 100%;">
+      <div [style.width]="(currentStep() / totalSteps) * 100 + '%'" style="background: #0ea5e9; transition: width 0.3s ease;"></div>
+    </div>
+
+    <!-- Step Content -->
+    <div style="padding: 40px; text-align: center;">
+
+      <!-- STEP 1: Welcome -->
+      <div *ngIf="currentStep() === 1" class="animate-fade-in">
+        <div style="font-size: 48px; color: #0284c7; margin-bottom: 20px;">
+          <i class="fa-solid fa-rocket"></i>
+        </div>
+        <h2 style="font-size: 28px; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;">Welcome to Pace CRM</h2>
+        <p style="font-size: 15px; color: #475569; line-height: 1.6; margin: 0 0 32px 0; max-width: 500px; margin-inline: auto;">
+          The all-in-one platform to supercharge your WhatsApp marketing. We'll guide you through setting up your account so you can start sending messages in minutes.
+        </p>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px; align-items: center;">
+          <button (click)="nextStep()" style="background: #0f172a; color: white; border: none; padding: 12px 32px; border-radius: 8px; font-size: 15px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+            Let's Get Started <i class="fa-solid fa-arrow-right"></i>
+          </button>
+          <button (click)="skipTour()" style="background: none; border: none; color: #64748b; font-size: 13px; font-weight: 600; cursor: pointer;">
+            Skip Tour
+          </button>
+        </div>
+      </div>
+
+      <!-- STEP 2: WhatsApp Connection -->
+      <div *ngIf="currentStep() === 2" class="animate-fade-in">
+        <div style="font-size: 40px; color: #16a34a; margin-bottom: 16px;">
+          <i class="fa-brands fa-whatsapp"></i>
+        </div>
+        <h2 style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;">Connect Meta Account</h2>
+        <p style="font-size: 14px; color: #475569; line-height: 1.5; margin: 0 0 24px 0; max-width: 500px; margin-inline: auto;">
+          To send WhatsApp messages, you need to connect your Meta WhatsApp Business API credentials. You can find these in your Meta Developer Dashboard.
+        </p>
+
+        <form [formGroup]="waForm" style="text-align: left; background: #f8fafc; padding: 24px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+          <div style="margin-bottom: 16px;">
+            <label style="font-size: 12.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">WhatsApp Business Account ID (WABA ID)</label>
+            <input type="text" formControlName="wabaId" placeholder="e.g. 102434567891234" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none;">
+          </div>
+          <div style="margin-bottom: 16px;">
+            <label style="font-size: 12.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">Phone Number ID</label>
+            <input type="text" formControlName="phoneNumberId" placeholder="e.g. 101234567891234" style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none;">
+          </div>
+          <div>
+            <label style="font-size: 12.5px; font-weight: 700; color: #334155; display: block; margin-bottom: 6px;">Permanent Access Token</label>
+            <input type="password" formControlName="accessToken" placeholder="EAADXXXXXXXXXXXXXXX..." style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none;">
+          </div>
+        </form>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <button (click)="prevStep()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+            Back
+          </button>
+          <div style="display: flex; gap: 10px;">
+            <button (click)="nextStep()" style="background: none; border: none; color: #64748b; font-size: 13px; font-weight: 600; cursor: pointer; padding: 10px;">
+              I'll do this later
+            </button>
+            <button (click)="saveWaCredentials()" [disabled]="waForm.invalid || isSaving()" style="background: #16a34a; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+              <span *ngIf="!isSaving()">Save & Connect <i class="fa-solid fa-plug"></i></span>
+              <span *ngIf="isSaving()"><i class="fa-solid fa-spinner fa-spin"></i> Connecting...</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Checklist -->
+      <div *ngIf="currentStep() === 3" class="animate-fade-in">
+        <div style="font-size: 40px; color: #8b5cf6; margin-bottom: 16px;">
+          <i class="fa-solid fa-list-check"></i>
+        </div>
+        <h2 style="font-size: 24px; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;">You're almost there!</h2>
+        <p style="font-size: 14px; color: #475569; line-height: 1.5; margin: 0 0 24px 0; max-width: 500px; margin-inline: auto;">
+          We've added a Getting Started Checklist to your Dashboard. Complete these tasks to unlock the full potential of Pace CRM.
+        </p>
+
+        <div style="text-align: left; background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 24px;">
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 12px;"><i class="fa-solid fa-check"></i></div>
+            <span style="font-size: 14px; color: #0f172a; font-weight: 600;" [style.text-decoration]="onboardingService.state().connectMeta ? 'line-through' : 'none'">Connect Meta Account</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 12px;"></div>
+            <span style="font-size: 14px; color: #0f172a; font-weight: 600;">Create a WhatsApp Template</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 12px;"></div>
+            <span style="font-size: 14px; color: #0f172a; font-weight: 600;">Send a Solo Message</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 24px; height: 24px; border-radius: 50%; border: 2px solid #cbd5e1; display: flex; align-items: center; justify-content: center; font-size: 12px;"></div>
+            <span style="font-size: 14px; color: #0f172a; font-weight: 600;">Launch a Bulk Broadcast</span>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <button (click)="prevStep()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;">
+            Back
+          </button>
+          <button (click)="finishTour()" style="background: #8b5cf6; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            Go to Dashboard <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
