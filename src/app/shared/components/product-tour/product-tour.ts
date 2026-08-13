@@ -81,7 +81,7 @@ export class ProductTourModalComponent implements OnInit {
     this.isSaving.set(true);
     const payload = this.waForm.value;
 
-    this.api.post('/projects/settings/whatsapp', { projectId: proj.id, ...payload }).subscribe({
+    this.api.put(`/projects/${proj.id}`, payload).subscribe({
       next: (res: any) => {
         this.isSaving.set(false);
         // Update project in service
