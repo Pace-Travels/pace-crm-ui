@@ -11,6 +11,7 @@ pipeline {
         stage('Preparation') {
             steps {
                 echo 'Starting Frontend Deployment for messenger.quotedesks.com...'
+                sh 'curl -s -X POST -H "Content-Type: application/json" -H "x-deployment-token: DEPLOYMENT_TOKEN_PACE" -d \'{"status": true}\' http://localhost:3001/api/v1/system/maintenance || true'
             }
         }
 
@@ -44,6 +45,7 @@ pipeline {
     post {
         always {
             cleanWs()
+            sh 'sleep 3 && curl -s -X POST -H "Content-Type: application/json" -H "x-deployment-token: DEPLOYMENT_TOKEN_PACE" -d \'{"status": false}\' http://localhost:3001/api/v1/system/maintenance || true'
         }
         success {
             echo "Successfully deployed the frontend to ${NGINX_ROOT}!"
