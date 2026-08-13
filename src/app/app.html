@@ -1,1 +1,5 @@
+<div *ngIf="socketService.maintenanceActive()" class="maintenance-banner" style="background-color: #ff9800; color: white; text-align: center; padding: 10px; font-weight: bold; z-index: 9999; position: relative;">
+  <i class="pi pi-cog pi-spin" style="margin-right: 8px;"></i>
+  Scheduled maintenance is in progress. Some features may be temporarily unavailable.
+</div>
 <router-outlet></router-outlet>

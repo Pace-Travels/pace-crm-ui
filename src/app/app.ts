@@ -1,6 +1,8 @@
 import { Component, signal, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { ApiService } from './shared/services/api.service';
+import { SocketService } from './shared/services/socket.service';
 
 declare var FB: any;
 declare global {
@@ -12,13 +14,14 @@ declare global {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, CommonModule],
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
 export class App implements OnInit {
   protected readonly title = signal('pace-crmui');
   private api = inject(ApiService);
+  public socketService = inject(SocketService);
 
   ngOnInit() {
     this.api.get('/config/public').subscribe({

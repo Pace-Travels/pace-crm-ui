@@ -3,19 +3,22 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../shared/services/api.service';
+import { ChecklistWidgetComponent } from '../../shared/components/checklist-widget/checklist-widget';
+import { OnboardingService } from '../../shared/services/onboarding.service';
 
 declare var Swal: any;
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, ChecklistWidgetComponent],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.scss'
 })
 export class Dashboard implements OnInit {
   api = inject(ApiService);
   router = inject(Router);
+  onboardingService = inject(OnboardingService);
 
   selectedDateRange = '7_DAYS';
   analytics = signal<any>({
