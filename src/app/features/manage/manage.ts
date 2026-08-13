@@ -234,7 +234,7 @@ export class Manage implements OnInit {
       callPhoneNumber: this.fcmCallPhoneNumber || null
     };
 
-    this.api.post('userToken/add', payload).subscribe({
+    this.api.post('usertoken/add', payload).subscribe({
       next: (res: any) => {
         // Response me jo identityToken mila hai use signal me set karein
         const token = res?.data?.identityToken || '';

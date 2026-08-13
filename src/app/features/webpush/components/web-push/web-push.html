@@ -5,13 +5,22 @@
 
     <div class="form-body">
 
-      <!-- Recipient Field -->
+      <!-- Recipient Field (Simple Native Dropdown) -->
       <div class="form-group">
-        <label for="recipient">To: (Traveler / Audience) *</label>
-        <div class="input-pill-editable">
-          <i class="fa-solid fa-user-group"></i>
-          <input id="recipient" type="text" pInputText [(ngModel)]="user.recipient"
-            placeholder="Enter traveler or audience..." />
+        <label for="recipient-select">To: (Traveler / Registered Device) *</label>
+        <div class="native-dropdown-wrapper">
+          <select id="recipient-select" class="custom-select" [(ngModel)]="selectedDeviceIdKey"
+            (change)="onDeviceChange($event)">
+
+            <option value="" disabled selected>-- Select a registered device --</option>
+
+            <option *ngFor="let device of deviceList" [value]="device.idKey">
+              {{ device.displayName || device.browser || 'Device' }}
+              ({{ device.operatingSystem || 'OS' }})
+              - [Status: {{ device.access ? '🟢 Access ON' : '🔴 Access OFF' }}]
+            </option>
+
+          </select>
         </div>
       </div>
 
@@ -28,32 +37,33 @@
           <label for="push-title">Notification Title *</label>
           <span class="char-count">{{ pushData.title.length }}/50</span>
         </div>
-        <input id="push-title" type="text" pInputText [(ngModel)]="pushData.title" maxlength="50"
+        <input id="push-title" type="text" class="custom-input" [(ngModel)]="pushData.title" maxlength="50"
           placeholder="Enter notification title..." />
       </div>
 
-      <!-- Short Message (15 Rows & Unlimited Maxlength) -->
+      <!-- Short Message (13 Rows) -->
       <div class="form-group">
         <label for="push-message">Short Message *</label>
-        <textarea id="push-message" pTextarea rows="13" [(ngModel)]="pushData.message"
+        <textarea id="push-message" class="custom-textarea" rows="13" [(ngModel)]="pushData.message"
           placeholder="Notification body text..."></textarea>
       </div>
 
       <!-- Attachment File Upload -->
       <div class="form-group">
         <label for="attachment">Attachment (Image / PDF / File)</label>
-        <input id="attachment" type="file" pInputText (change)="handleFileUpload($event)" />
+        <input id="attachment" type="file" class="custom-input" (change)="handleFileUpload($event)" />
       </div>
 
       <!-- URLs Row -->
       <div class="form-row">
         <div class="form-group half-width">
           <label for="icon-url">Icon URL (Optional)</label>
-          <input id="icon-url" type="text" pInputText [(ngModel)]="pushData.iconUrl" placeholder="https://..." />
+          <input id="icon-url" type="text" class="custom-input" [(ngModel)]="pushData.iconUrl"
+            placeholder="https://..." />
         </div>
         <div class="form-group half-width">
           <label for="click-url">Click Action (URL)</label>
-          <input id="click-url" type="text" pInputText [(ngModel)]="pushData.clickUrl" />
+          <input id="click-url" type="text" class="custom-input" [(ngModel)]="pushData.clickUrl" />
         </div>
       </div>
 
@@ -61,15 +71,14 @@
 
     <!-- Form Footer Buttons -->
     <div class="form-footer">
-      <button pButton type="button" class="btn-warning">
+      <button type="button" class="btn-warning">
         <i class="fa-regular fa-clock"></i>
         <span>Schedule Send</span>
       </button>
 
       <!-- Send Button stays disabled until form is valid -->
-      <button pButton type="button" class="btn-light-blue" [disabled]="!isFormValid || isSending" [loading]="isSending"
-        (click)="sendNotification()">
-        <span>Send Notification</span>
+      <button type="button" class="btn-light-blue" [disabled]="!isFormValid || isSending" (click)="sendNotification()">
+        <span>{{ isSending ? 'Sending...' : 'Send Notification' }}</span>
         <i class="fa-solid fa-paper-plane"></i>
       </button>
     </div>
