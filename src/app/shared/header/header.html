@@ -9,6 +9,15 @@
     <!-- Right -->
     <div class="header-right">
 
+        <!-- Global Search Button (Algolia style) -->
+        <button class="desktop-only" (click)="searchService.openSearchModal()" style="display: flex; align-items: center; justify-content: space-between; gap: 40px; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fa-solid fa-magnifying-glass" style="color: #3b82f6;"></i>
+                <span>Search...</span>
+            </div>
+            <kbd style="background: white; border: 1px solid #cbd5e1; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: 700; color: #94a3b8; box-shadow: 0 1px 1px rgba(0,0,0,0.05);">Ctrl K</kbd>
+        </button>
+
         <!-- Subscription Plan Badge in Top Bar -->
         <div class="desktop-only" style="display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 20px; font-size: 12px; color: #475569;">
             <i class="fa-solid fa-crown" style="color: #f59e0b;"></i>

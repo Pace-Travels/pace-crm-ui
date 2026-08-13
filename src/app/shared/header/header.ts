@@ -7,6 +7,7 @@ import { EnvironmentModeService, EnvironmentMode } from '../services/environment
 import { OnboardingService } from '../services/onboarding.service';
 import { ProjectService } from '../../features/projects/services/project.service';
 import { ApiService } from '../services/api.service';
+import { SearchService } from '../services/search.service';
 
 declare var Swal: any;
 
@@ -26,6 +27,7 @@ export class Header implements OnInit {
   projectService = inject(ProjectService);
   api = inject(ApiService);
   router = inject(Router);
+  searchService = inject(SearchService);
 
   userName = 'Shadab';
   userRole = 'Administrator';
