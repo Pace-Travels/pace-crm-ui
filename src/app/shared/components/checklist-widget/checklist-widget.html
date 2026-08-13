@@ -43,7 +43,7 @@
       <div>
         <strong style="display: block; font-size: 14px; color: #0f172a; margin-bottom: 4px;" [style.text-decoration]="onboardingService.state().createTemplate ? 'line-through' : 'none'">Create a Template</strong>
         <p style="margin: 0 0 8px 0; font-size: 12px; color: #64748b; line-height: 1.4;">Create and approve a template to start conversations.</p>
-        <button *ngIf="!onboardingService.state().createTemplate" (click)="navigateTo('/manage')" style="background: none; border: none; padding: 0; color: #0284c7; font-size: 12px; font-weight: 600; cursor: pointer;">Go to Templates →</button>
+        <button *ngIf="!onboardingService.state().createTemplate" (click)="navigateTo('/templates')" style="background: none; border: none; padding: 0; color: #0284c7; font-size: 12px; font-weight: 600; cursor: pointer;">Go to Templates →</button>
       </div>
     </div>
 
@@ -58,7 +58,7 @@
       <div>
         <strong style="display: block; font-size: 14px; color: #0f172a; margin-bottom: 4px;" [style.text-decoration]="onboardingService.state().sendSoloMessage ? 'line-through' : 'none'">Send a Solo Message</strong>
         <p style="margin: 0 0 8px 0; font-size: 12px; color: #64748b; line-height: 1.4;">Test your connection by sending a Quick Send message.</p>
-        <button *ngIf="!onboardingService.state().sendSoloMessage" (click)="navigateTo('/manage')" style="background: none; border: none; padding: 0; color: #0284c7; font-size: 12px; font-weight: 600; cursor: pointer;">Send Test Message →</button>
+        <button *ngIf="!onboardingService.state().sendSoloMessage" (click)="navigateTo('/templates')" style="background: none; border: none; padding: 0; color: #0284c7; font-size: 12px; font-weight: 600; cursor: pointer;">Send Test Message →</button>
       </div>
     </div>
 

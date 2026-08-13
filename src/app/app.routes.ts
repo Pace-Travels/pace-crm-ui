@@ -29,6 +29,7 @@ import { MarketIntelligence } from './features/market-intelligence/market-intell
 import { AIMarketingIntelligence } from './features/ai-marketing-intelligence/ai-marketing-intelligence';
 import { WebPush } from './features/webpush/components/web-push/web-push';
 import { Email } from './features/email/components/email/email';
+import { Templates } from './features/templates/templates';
 
 export const routes: Routes = [
     {
@@ -108,8 +109,8 @@ export const routes: Routes = [
             },
             {
                 path: 'templates',
-                redirectTo: 'campaigns/create',
-                pathMatch: 'full'
+                component: Templates,
+                title: 'Message Templates - Pace Messenger'
             },
             {
                 path: 'contacts',
