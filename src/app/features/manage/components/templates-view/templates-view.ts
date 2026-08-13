@@ -57,6 +57,7 @@ export class TemplatesView implements OnInit {
   metaLibraryCount = computed(() => this.templates().filter(t => t.isMetaOfficial || t.source === 'META_LIBRARY').length);
 
   // Modal State Controls
+  editingTemplateId = signal<number | null>(null);
   showCreateModal = signal<boolean>(false);
   showPreviewModal = signal<boolean>(false);
   showGuideModal = signal<boolean>(false);
@@ -484,6 +485,7 @@ export class TemplatesView implements OnInit {
   }
 
   openCreateTemplate() {
+    this.editingTemplateId.set(null);
     this.templateForm.reset({
       category: 'MARKETING',
       language: 'en_US',
@@ -493,8 +495,47 @@ export class TemplatesView implements OnInit {
     this.showCreateModal.set(true);
   }
 
+  editTemplate(tpl: MessageTemplate) {
+    this.editingTemplateId.set(tpl.id || null);
+    this.templateForm.patchValue({
+      name: tpl.templateName,
+      category: tpl.category || 'MARKETING',
+      language: tpl.language || 'en_US',
+      headerFormat: tpl.headerText ? 'TEXT' : 'NONE',
+      headerText: tpl.headerText || '',
+      body: tpl.templateBody || '',
+      footerText: tpl.footerText || '',
+      buttonsText: tpl.buttons ? (Array.isArray(tpl.buttons) ? tpl.buttons.map((b: any) => b.text || b).join(', ') : tpl.buttons) : ''
+    });
+    this.showCreateModal.set(true);
+  }
+
+  deleteTemplate(tpl: MessageTemplate) {
+    Swal.fire({
+      title: 'Delete Template?',
+      text: `Are you sure you want to delete "${tpl.templateName}"? This action cannot be undone.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, Delete',
+      confirmButtonColor: '#dc2626'
+    }).then(res => {
+      if (res.isConfirmed) {
+        this.api.delete(`/messagetemplates/delete/${tpl.id}`).subscribe({
+          next: () => {
+            Swal.fire('Deleted', 'Template deleted successfully.', 'success');
+            this.fetchTemplates();
+          },
+          error: (err: any) => {
+            Swal.fire('Error', 'Failed to delete: ' + (err.error?.error || err.message), 'error');
+          }
+        });
+      }
+    });
+  }
+
   closeCreateTemplate() {
     this.showCreateModal.set(false);
+    this.editingTemplateId.set(null);
   }
 
   // --- AI Template Generator ---
@@ -583,22 +624,36 @@ export class TemplatesView implements OnInit {
       return;
     }
     const payload = {
-      name: val.name,
+      templateName: val.name,
       category: val.category,
       language: val.language,
-      templateBody: val.body
+      templateBody: val.body,
+      headerType: val.headerFormat === 'TEXT' ? 'TEXT' : null,
+      headerText: val.headerText || null,
+      footerText: val.footerText || null,
+      buttons: val.buttonsText ? val.buttonsText.split(',').map((b: string) => b.trim()) : null,
+      components: this.buildComponentsPayload()
     };
 
-    this.api.post('/messagetemplates/draft', payload).subscribe({
-      next: () => {
-        this.closeCreateTemplate();
-        this.fetchTemplates();
-        Swal.fire('Saved', 'Template draft saved locally!', 'success');
-      },
-      error: (err: any) => {
-        Swal.fire('Error', 'Failed to save draft: ' + err.message, 'error');
-      }
-    });
+    if (this.editingTemplateId()) {
+      this.api.put(`/messagetemplates/update/${this.editingTemplateId()}`, payload).subscribe({
+        next: () => {
+          this.closeCreateTemplate();
+          this.fetchTemplates();
+          Swal.fire('Updated', 'Template draft updated successfully!', 'success');
+        },
+        error: (err: any) => Swal.fire('Error', 'Failed to update: ' + err.message, 'error')
+      });
+    } else {
+      this.api.post('/messagetemplates/draft', { ...payload, name: payload.templateName }).subscribe({
+        next: () => {
+          this.closeCreateTemplate();
+          this.fetchTemplates();
+          Swal.fire('Saved', 'Template draft saved locally!', 'success');
+        },
+        error: (err: any) => Swal.fire('Error', 'Failed to save draft: ' + err.message, 'error')
+      });
+    }
   }
 
   // View complete Meta error breakdown for rejected templates
@@ -628,6 +683,25 @@ export class TemplatesView implements OnInit {
     });
   }
 
+  buildComponentsPayload() {
+    const val = this.templateForm.value;
+    const components: any[] = [];
+    if (val.headerFormat === 'TEXT' && val.headerText) {
+      components.push({ type: 'HEADER', format: 'TEXT', text: val.headerText });
+    }
+    components.push({ type: 'BODY', text: val.body });
+    if (val.footerText) {
+      components.push({ type: 'FOOTER', text: val.footerText });
+    }
+    if (val.buttonsText) {
+      components.push({
+        type: 'BUTTONS',
+        buttons: val.buttonsText.split(',').map((b: string) => ({ type: 'QUICK_REPLY', text: b.trim() }))
+      });
+    }
+    return components;
+  }
+
   // Submit template for Meta WABA approval
   submitForApproval() {
     const val = this.templateForm.value;
@@ -636,48 +710,33 @@ export class TemplatesView implements OnInit {
       return;
     }
 
-    const components: any[] = [];
-    
-    if (val.headerFormat === 'TEXT' && val.headerText) {
-      components.push({
-        type: 'HEADER',
-        format: 'TEXT',
-        text: val.headerText
-      });
-    }
-
-    components.push({
-      type: 'BODY',
-      text: val.body
-    });
-
-    if (val.footerText) {
-      components.push({
-        type: 'FOOTER',
-        text: val.footerText
-      });
-    }
-
-    if (val.buttonsText) {
-      const btns = val.buttonsText.split(',').map((b: string) => ({
-        type: 'QUICK_REPLY',
-        text: b.trim()
-      }));
-      components.push({
-        type: 'BUTTONS',
-        buttons: btns
-      });
-    }
+    const components = this.buildComponentsPayload();
 
     const payload = {
       name: val.name,
+      templateName: val.name,
       category: val.category,
       language: val.language,
       parameter_format: 'POSITIONAL',
+      templateBody: val.body,
+      headerType: val.headerFormat === 'TEXT' ? 'TEXT' : null,
+      headerText: val.headerText || null,
+      footerText: val.footerText || null,
+      buttons: val.buttonsText ? val.buttonsText.split(',').map((b: string) => b.trim()) : null,
       components
     };
 
-    this.api.post('/messagetemplates/submit', payload).subscribe({
+    if (this.editingTemplateId()) {
+      // First update the local template, then submit to Meta
+      this.api.put(`/messagetemplates/update/${this.editingTemplateId()}`, payload).subscribe({
+        next: () => {
+          this.submitDraft(this.editingTemplateId()!);
+          this.closeCreateTemplate();
+        },
+        error: (err: any) => Swal.fire('Error', 'Failed to update template before submission: ' + err.message, 'error')
+      });
+    } else {
+      this.api.post('/messagetemplates/submit', payload).subscribe({
       next: () => {
         this.closeCreateTemplate();
         this.fetchTemplates();
