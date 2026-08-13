@@ -64,7 +64,7 @@ export class LoginView implements OnInit {
       },
       error: (err) => {
         this.isSubmitting = false;
-        const msg = err.error?.message || 'Login failed. Please check your credentials.';
+        const msg = err.error?.error || err.error?.message || 'Login failed. Please check your credentials.';
         Swal.fire('Login Error', msg, 'error');
       }
     });
