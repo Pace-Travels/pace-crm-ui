@@ -772,6 +772,7 @@ export class TemplatesView implements OnInit {
         });
       }
     });
+    }
   }
 
   // Submit an existing draft template to Meta WABA

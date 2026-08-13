@@ -85,7 +85,7 @@ export class ProductTourModalComponent implements OnInit {
       next: (res: any) => {
         this.isSaving.set(false);
         // Update project in service
-        this.projectService.refreshProjects().subscribe();
+        this.projectService.fetchProjects();
         this.onboardingService.updateChecklist('connectMeta', true);
         
         Swal.fire({
