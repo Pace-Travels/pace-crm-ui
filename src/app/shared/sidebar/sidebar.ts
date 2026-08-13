@@ -3,6 +3,7 @@ import { Component, HostListener, OnInit, signal, Output, EventEmitter } from '@
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProjectService } from '../../features/projects/services/project.service';
+import { AuthService } from '../services/auth.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -22,7 +23,11 @@ export class Sidebar implements OnInit {
 
   isMobile = window.innerWidth < 992;
 
-  constructor(public projectService: ProjectService, private router: Router) {}
+  constructor(
+    public projectService: ProjectService,
+    private authService: AuthService,
+    private router: Router
+  ) {}
 
   onProjectSelectChange(id: any) {
     const match = this.projectService.projects().find(p => p.id === Number(id));
@@ -116,31 +121,7 @@ export class Sidebar implements OnInit {
   }
 
   logout() {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: 'You will be logged out of your session.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#10b981',
-      cancelButtonColor: '#ef4444',
-      confirmButtonText: 'Yes, logout'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('activeProjectId');
-        
-        this.router.navigate(['/login']);
-        
-        Swal.fire({
-          title: 'Logged Out!',
-          text: 'Your session token has been invalidated.',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false
-        });
-      }
-    });
+    this.authService.logout();
   }
 
 }

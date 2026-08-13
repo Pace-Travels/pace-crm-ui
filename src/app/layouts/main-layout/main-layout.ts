@@ -1,9 +1,10 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, OnInit, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { Sidebar } from '../../shared/sidebar/sidebar';
 import { Header } from '../../shared/header/header';
 import { ProductTourModalComponent } from '../../shared/components/product-tour/product-tour';
 import { GlobalSearchComponent } from '../../shared/components/global-search/global-search.component';
+import { AuthService } from '../../shared/services/auth.service';
 
 @Component({
   selector: 'app-main-layout',
@@ -12,13 +13,17 @@ import { GlobalSearchComponent } from '../../shared/components/global-search/glo
   templateUrl: './main-layout.html',
   styleUrl: './main-layout.scss',
 })
-export class MainLayout {
+export class MainLayout implements OnInit {
 
   @ViewChild(Sidebar)
   sidebar!: Sidebar;
 
   sidebarCollapsed = false;
+  authService = inject(AuthService);
 
+  ngOnInit() {
+    this.authService.checkSessionOrRedirect();
+  }
 
   toggleSidebar() {
     // sidebar component toggle

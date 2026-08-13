@@ -44,13 +44,55 @@ export class AuthService {
   }
 
   logout() {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    this.router.navigate(['/']);
-    Swal.fire('Logged Out', 'You have been successfully logged out.', 'info');
+    Swal.fire({
+      title: 'Sign Out Confirmation',
+      text: 'Are you sure you want to sign out? Click "No, Stay Back" to remain in your session.',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Yes, Sign Out',
+      cancelButtonText: 'No, Stay Back',
+      reverseButtons: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('activeProjectId');
+        
+        this.router.navigate(['/login']);
+        
+        Swal.fire({
+          title: 'Logged Out',
+          text: 'You have been signed out successfully.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
+      }
+    });
+  }
+
+  checkSessionOrRedirect(): boolean {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+    if (!token || !userStr) {
+      Swal.fire({
+        title: 'Session Required',
+        text: 'No active session details found. Redirecting to Login...',
+        icon: 'warning',
+        timer: 2000,
+        showConfirmButton: false
+      }).then(() => {
+        this.router.navigate(['/login']);
+      });
+      return false;
+    }
+    return true;
   }
 
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('token');
+    return !!localStorage.getItem('token') && !!localStorage.getItem('user');
   }
 }

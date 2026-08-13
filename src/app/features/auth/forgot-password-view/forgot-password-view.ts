@@ -37,7 +37,7 @@ export class ForgotPasswordView implements OnInit {
     });
 
     this.directResetForm = this.fb.group({
-      email: ['admin@quotedesks.com', [Validators.required, Validators.email]],
+      email: ['', [Validators.required, Validators.email]],
       newPassword: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]]
     });
@@ -112,7 +112,7 @@ export class ForgotPasswordView implements OnInit {
     }
 
     this.isSubmitting = true;
-    this.api.post('/users/reset-password', { email: this.targetEmail || 'admin@quotedesks.com', newPassword }).subscribe({
+    this.api.post('/users/reset-password', { email: this.targetEmail || '', newPassword }).subscribe({
       next: () => {
         this.isSubmitting = false;
         this.resetStep = 'SUCCESS';
