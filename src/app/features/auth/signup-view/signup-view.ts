@@ -66,7 +66,7 @@ export class SignupView implements OnInit {
       },
       error: (err) => {
         this.isSubmitting = false;
-        const msg = err.error?.message || 'Signup failed. Please try again.';
+        const msg = err.error?.error || err.error?.message || 'Signup failed. Please try again.';
         Swal.fire('Signup Error', msg, 'error');
       }
     });
