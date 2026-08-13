@@ -306,6 +306,7 @@ export class ContactsTable implements OnInit {
       const lines = csv.split(/\r?\n/).filter((l: string) => l.trim().length > 0);
       if (lines.length <= 1) {
         Swal.fire('Error', 'Uploaded CSV file contains no data rows.', 'error');
+        this.fileInput.nativeElement.value = '';
         return;
       }
 
