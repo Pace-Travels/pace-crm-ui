@@ -310,14 +310,42 @@ export class ContactsTable implements OnInit {
         return;
       }
 
-      const headers = lines[0].split(',').map((h: string) => h.trim().toLowerCase());
+      // Robust CSV line parser handling quotes, commas, and Excel formula formulas like ="'+91987..."
+      const parseCsvLine = (line: string): string[] => {
+        const result: string[] = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+              cur += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
+            }
+          } else if (char === ',' && !inQuotes) {
+            result.push(cur.trim());
+            cur = '';
+          } else {
+            cur += char;
+          }
+        }
+        result.push(cur.trim());
+        return result;
+      };
+
+      const headers = parseCsvLine(lines[0]).map((h: string) => h.trim().toLowerCase());
       const rawRows = [];
 
       for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map((v: string) => v.trim());
+        const values = parseCsvLine(lines[i]);
         const rowObj: any = {};
         headers.forEach((h: string, idx: number) => {
-          rowObj[h] = values[idx] || '';
+          let val = values[idx] || '';
+          // Strip outer quotes and Excel formula wrapper (e.g., ="'+91987..." -> +91987...)
+          val = val.replace(/^=\s*['"]?|['"]$/g, '').trim();
+          rowObj[h] = val;
         });
         rawRows.push(rowObj);
       }
@@ -351,25 +379,27 @@ export class ContactsTable implements OnInit {
     };
     reader.readAsText(file);
   }
-cancelImport() {
+
+  cancelImport() {
+    this.isPreviewMode.set(false);
+    this.previewContacts.set([]);
+  }
+
+  approveImport() {
+    const payload = { contacts: this.previewContacts() };
+    
+    // Hit backend bulk save route
+    this.api.post('/whatsappcontacts/bulk-save', payload).subscribe({
+      next: () => {
+        Swal.fire('Imported!', `${this.previewContacts().length} contacts imported successfully.`, 'success');
         this.isPreviewMode.set(false);
         this.previewContacts.set([]);
-    }
-  approveImport() {
-        const payload = { contacts: this.previewContacts() };
-        
-        // Hit backend bulk save route
-        this.api.post('/whatsappcontacts/bulk-save', payload).subscribe({
-            next: () => {
-                Swal.fire('Imported!', `${this.previewContacts().length} contacts imported successfully.`, 'success');
-                this.isPreviewMode.set(false);
-                this.previewContacts.set([]);
-                // Refresh table
-                this.contactService.fetchContacts(); 
-            },
-            error: (err) => Swal.fire('Import Failed', err.error?.error || err.message || 'Failed to import sheet', 'error')
-        });
-    }
+        // Refresh table
+        this.contactService.fetchContacts(); 
+      },
+      error: (err) => Swal.fire('Import Failed', err.error?.error || err.message || 'Failed to import sheet', 'error')
+    });
+  }
 
   cancelPreview() {
     this.isPreviewMode.set(false);
@@ -388,10 +418,10 @@ cancelImport() {
     let filename = "";
 
     if (activeType === 'B2B') {
-      csvContent = "Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2\n1,Pace Tourism,John Doe,New York,+919876543210,+919876543211,john@pace.com,doe@pace.com";
+      csvContent = "Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2\n1,Pace Tourism,John Doe,New York,=\"'+919876543210\",=\"'+919876543211\",john@pace.com,doe@pace.com";
       filename = "b2b_contacts_sample.csv";
     } else {
-      csvContent = "Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2\n1,Alice Smith,London,+919876543210,+919876543211,alice@gmail.com,alice2@gmail.com";
+      csvContent = "Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2\n1,Alice Smith,London,=\"'+919876543210\",=\"'+919876543211\",alice@gmail.com,alice2@gmail.com";
       filename = "b2c_contacts_sample.csv";
     }
 
@@ -404,6 +434,59 @@ cancelImport() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  }
+
+  exportContacts() {
+    const activeType = this.contactService.activeType();
+    const contacts = this.processedContacts();
+    if (!contacts || contacts.length === 0) {
+      Swal.fire('Info', `No ${activeType} contacts available to export.`, 'info');
+      return;
+    }
+
+    const formatPhoneForExcel = (phone: string) => {
+      if (!phone) return '""';
+      const clean = phone.replace(/^=\s*['"]?|['"]$/g, '').trim();
+      return clean ? `="'+${clean.replace(/^\+/, '')}"` : '""';
+    };
+
+    let csv = '';
+    if (activeType === 'B2B') {
+      csv = 'Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2\n';
+      contacts.forEach((c: any, idx: number) => {
+        const agency = (c.agencyName || '').replace(/"/g, '""');
+        const name = (c.name || '').replace(/"/g, '""');
+        const loc = (c.location || '').replace(/"/g, '""');
+        const p1 = formatPhoneForExcel(c.phone);
+        const p2 = formatPhoneForExcel(c.phone2);
+        const e1 = (c.email || '').replace(/"/g, '""');
+        const e2 = (c.email2 || '').replace(/"/g, '""');
+        csv += `${idx + 1},"${agency}","${name}","${loc}",${p1},${p2},"${e1}","${e2}"\n`;
+      });
+    } else {
+      csv = 'Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2\n';
+      contacts.forEach((c: any, idx: number) => {
+        const name = (c.name || '').replace(/"/g, '""');
+        const loc = (c.location || '').replace(/"/g, '""');
+        const p1 = formatPhoneForExcel(c.phone);
+        const p2 = formatPhoneForExcel(c.phone2);
+        const e1 = (c.email || '').replace(/"/g, '""');
+        const e2 = (c.email2 || '').replace(/"/g, '""');
+        csv += `${idx + 1},"${name}","${loc}",${p1},${p2},"${e1}","${e2}"\n`;
+      });
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${activeType.toLowerCase()}_contacts_export_${Date.now()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    Swal.fire('Export Complete', `${contacts.length} ${activeType} contacts exported successfully!`, 'success');
   }
 
 openCreateGroup() {

@@ -55,8 +55,13 @@
                     <button (click)="toggleImportDropdown()" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
                         Import <i class="fa-solid fa-chevron-down" style="font-size: 11px; margin-left: 4px;"></i>
                     </button>
-                    <div *ngIf="showImportDropdown()" style="position: absolute; right: 0; top: 42px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 200px; z-index: 100; overflow: hidden;">
-                        <a href="javascript:void(0)" (click)="openImportModal()" style="display: block; padding: 10px 16px; color: #1e293b; font-size: 13px; text-decoration: none; font-weight: 500;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">Import {{ contactService.activeType() }} Sheet</a>
+                    <div *ngIf="showImportDropdown()" style="position: absolute; right: 0; top: 42px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 210px; z-index: 100; overflow: hidden;">
+                        <a href="javascript:void(0)" (click)="openImportModal()" style="display: block; padding: 10px 16px; color: #1e293b; font-size: 13px; text-decoration: none; font-weight: 500;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                            <i class="fa-solid fa-file-import" style="margin-right: 6px; color: #0b494d;"></i> Import {{ contactService.activeType() }} Sheet
+                        </a>
+                        <a href="javascript:void(0)" (click)="exportContacts(); showImportDropdown.set(false)" style="display: block; padding: 10px 16px; color: #1e293b; font-size: 13px; text-decoration: none; font-weight: 500; border-top: 1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                            <i class="fa-solid fa-file-export" style="margin-right: 6px; color: #10b981;"></i> Export {{ contactService.activeType() }} Sheet
+                        </a>
                     </div>
                 </div>
             </div>
