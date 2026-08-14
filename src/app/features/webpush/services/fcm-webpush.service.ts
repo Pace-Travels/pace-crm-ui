@@ -1,112 +1,59 @@
-import { inject, Injectable, signal } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { initializeApp, FirebaseApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage, Messaging } from 'firebase/messaging';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
+// fcm-webpush.service.ts
+
 export interface DeviceItem {
-  id: number;
   idKey: string;
-  fcmToken: string | null;
-  displayName: string;
-  browser: string | null;
-  operatingSystem: string | null;
-  deviceType: string | null;
-  ipAddress: string | null;
-  access: boolean | null;
+  displayName?: string;
+  operatingSystem?: string;
+  browser?: string;
+  ipAddress?: string;
+  deviceType?: string;
+  access?: boolean;
+}
+
+export interface PushNotificationPayload {
+  idKey: string;
+  title: string;
+  body: string;
+  icon?: string;
+  clickUrl?: string;
 }
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class FcmWebpushService {
-
   private http = inject(HttpClient);
+  
+  // Base URL from environment (e.g. http://localhost:3000/api/v1)
+  private baseUrl = environment.apiUrl; 
 
-  private firebaseApp: FirebaseApp = initializeApp(environment.firebase);
-  private messaging: Messaging = getMessaging(this.firebaseApp);
+  // Signal to store devices for dropdown
+  public registeredDevices = signal<DeviceItem[]>([]);
 
-  private backendUrl = 'https://messengerapi.quotedesks.com/api/v1';
-
-  fcmToken = signal<string | null>(null);
-  registeredDevices = signal<DeviceItem[]>([]);
-  latestNotification = signal<{ title?: string; body?: string } | null>(null);
-
-  constructor() {
-    this.listenForMessages();
+  // 1. Database se registered users/devices ki list lana
+  getRegisteredDevices(): Observable<{ data: DeviceItem[] }> {
+    return this.http.get<{ data: DeviceItem[] }>(`${this.baseUrl}/deviceregister/getdata`);
   }
 
-  getRegisteredDevices(): Observable<{ success: boolean; data: DeviceItem[] }> {
-    return this.http.get<{ success: boolean; data: DeviceItem[] }>(
-      `${this.backendUrl}/deviceregister/getdata`
-    );
-  }
-
-  /**
-   * 🆕 Send notification request using idKey
-   * Endpoint: /userToken/sendnotification
-   */
-  sendNotificationByIdKey(payload: {
-    idKey: string;
-    title: string;
-    body: string;
-    icon?: string;
-    clickUrl?: string;
-  }): Observable<any> {
-    const formattedPayload = {
-      idKey: payload.idKey,
-      title: payload.title,
-      body: payload.body,
-      icon: payload.icon || '/favicon.ico',
-      clickUrl: payload.clickUrl || '/'
-    };
-
-    return this.http.post(`${this.backendUrl}/usertoken/sendnotification`, formattedPayload);
-  }
-
+  // Devices fetch karke signal update karna
   loadAndSetDevices(): void {
     this.getRegisteredDevices().subscribe({
-      next: (res) => {
-        if (res && res.data) {
-          this.registeredDevices.set(res.data);
+      next: (response) => {
+        if (response && response.data) {
+          this.registeredDevices.set(response.data);
         }
       },
-      error: (err) => console.error('Failed to load devices:', err)
+      error: (err) => console.error('Error fetching devices:', err)
     });
   }
 
-  async requestPermissionAndSaveToken(userId: string): Promise<void> {
-    try {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        const token = await getToken(this.messaging, {
-          vapidKey: environment.vapidKey
-        });
-
-        if (token) {
-          this.fcmToken.set(token);
-          this.saveTokenToBackend(userId, token);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching FCM token:', error);
-    }
-  }
-
-  private saveTokenToBackend(userId: string, token: string): void {
-    this.http.post(`${this.backendUrl}/save-token`, { userId, token }).subscribe({
-      next: () => this.loadAndSetDevices(),
-      error: (err) => console.error('Failed to send token to backend:', err)
-    });
-  }
-
-  private listenForMessages(): void {
-    onMessage(this.messaging, (payload) => {
-      this.latestNotification.set({
-        title: payload.notification?.title,
-        body: payload.notification?.body
-      });
-    });
+  // 2. Admin Form se Notification bhejna (Backend handles database lookup & FCM)
+  sendNotificationByIdKey(payload: PushNotificationPayload): Observable<any> {
+    return this.http.post(`${this.baseUrl}/usertoken/sendnotification`, payload);
   }
 }

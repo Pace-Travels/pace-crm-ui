@@ -6,7 +6,18 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { ButtonModule } from 'primeng/button';
 
-import { FcmWebpushService, DeviceItem } from '../../services/fcm-webpush.service';
+import { FcmWebpushService } from '../../services/fcm-webpush.service';
+
+// 🔹 Device Interface (Service mein na ho toh error se bachne ke liye)
+export interface DeviceItem {
+  idKey: string;
+  displayName?: string;
+  operatingSystem?: string;
+  browser?: string;
+  ipAddress?: string;
+  deviceType?: string;
+  access?: boolean;
+}
 
 @Component({
   selector: 'app-web-push',
@@ -23,15 +34,14 @@ import { FcmWebpushService, DeviceItem } from '../../services/fcm-webpush.servic
 })
 export class WebPush implements OnInit {
   private cdr = inject(ChangeDetectorRef);
-  public FcmWebpushService = inject(FcmWebpushService);
+  public fcmWebpushService = inject(FcmWebpushService);
 
   deviceList: DeviceItem[] = [];
-  selectedDeviceIdKey: string = ''; // 🔹 Dropdown ki selected idKey
+  selectedDeviceIdKey: string = ''; // Dropdown ki selected idKey
   selectedDevice: DeviceItem | null = null;
   isLoadingDevices = false;
 
   user = {
-    userId: 'user_alex_rivera',
     recipient: '',
     name: 'Select a Device',
     initials: '?',
@@ -56,23 +66,27 @@ export class WebPush implements OnInit {
   uploadedFile: { name: string; type: string; url: string } | null = null;
   isSending = false;
 
-  async ngOnInit(): Promise<void> {
+  ngOnInit(): void {
+    // Sirf registered devices fetch honge (No local permission/token calls)
     this.fetchRegisteredDevices();
-    await this.enableNotifications();
   }
 
   fetchRegisteredDevices(): void {
     this.isLoadingDevices = true;
-    this.FcmWebpushService.getRegisteredDevices().subscribe({
-      next: (response) => {
+    this.fcmWebpushService.getRegisteredDevices().subscribe({
+      next: (response: any) => {
         if (response && response.success) {
           this.deviceList = response.data || [];
+        } else if (response && Array.isArray(response.data)) {
+          this.deviceList = response.data;
+        } else if (Array.isArray(response)) {
+          this.deviceList = response;
         }
         this.isLoadingDevices = false;
         this.cdr.detectChanges();
       },
       error: (err) => {
-        console.error('Failed to fetch devices:', err);
+        console.error('Failed to fetch registered devices:', err);
         this.isLoadingDevices = false;
         this.cdr.detectChanges();
       }
@@ -83,7 +97,6 @@ export class WebPush implements OnInit {
     const selectElement = event.target as HTMLSelectElement;
     const selectedIdKey = selectElement.value;
 
-    // 🔹 Selected idKey ke basis par device find kar rahe hain
     const device = this.deviceList.find((d) => d.idKey === selectedIdKey) || null;
     this.selectedDevice = device;
 
@@ -103,11 +116,6 @@ export class WebPush implements OnInit {
       this.user.tier = 'N/A';
     }
 
-    this.cdr.detectChanges();
-  }
-
-  async enableNotifications(): Promise<void> {
-    await this.FcmWebpushService.requestPermissionAndSaveToken(this.user.userId);
     this.cdr.detectChanges();
   }
 
@@ -141,9 +149,8 @@ export class WebPush implements OnInit {
   sendNotification(): void {
     if (!this.isFormValid || !this.selectedDeviceIdKey) return;
 
-    // Selected device ka access pehle hi local UI level par bhi check kar sakte ho
     if (this.selectedDevice && this.selectedDevice.access === false) {
-      alert('Warning: This user has blocked/disabled notifications in their browser!');
+      alert('Warning: This user has blocked/disabled notifications on their device!');
       return;
     }
 
@@ -157,7 +164,7 @@ export class WebPush implements OnInit {
       clickUrl: this.pushData.clickUrl
     };
 
-    this.FcmWebpushService.sendNotificationByIdKey(payload).subscribe({
+    this.fcmWebpushService.sendNotificationByIdKey(payload).subscribe({
       next: (res) => {
         console.log('Notification Sent:', res);
         alert('Push notification sent successfully!');
@@ -166,11 +173,8 @@ export class WebPush implements OnInit {
       },
       error: (err) => {
         console.error('Failed to send push notification:', err);
-
-        // Backend se jo message aayega (e.g. Access Denied ya Token Not Found) wo alert me dikhega
         const errorMessage = err.error?.message || err.error?.error || 'Error sending push notification.';
         alert(`Failed: ${errorMessage}`);
-
         this.isSending = false;
         this.cdr.detectChanges();
       }
