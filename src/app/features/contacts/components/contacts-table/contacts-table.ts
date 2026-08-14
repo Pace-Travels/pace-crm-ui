@@ -199,6 +199,25 @@ export class ContactsTable implements OnInit {
   openEditContact(contact: Contact, event: Event) {
     event.stopPropagation();
     this.editingContactId.set(contact.id || null);
+
+    let parsedTags = '';
+    if (contact.tags) {
+      if (Array.isArray(contact.tags)) {
+        parsedTags = contact.tags.join(', ');
+      } else if (typeof contact.tags === 'string') {
+        try {
+          const parsed = JSON.parse(contact.tags);
+          if (Array.isArray(parsed)) {
+            parsedTags = parsed.join(', ');
+          } else {
+            parsedTags = contact.tags;
+          }
+        } catch (e) {
+          parsedTags = contact.tags;
+        }
+      }
+    }
+
     this.contactForm.patchValue({
       agencyName: contact.agencyName || '',
       name: contact.name,
@@ -208,7 +227,7 @@ export class ContactsTable implements OnInit {
       email: contact.email || '',
       email2: contact.email2 || '',
       userName: contact.userName || '',
-      tags: contact.tags ? contact.tags.join(', ') : '',
+      tags: parsedTags,
       source: contact.source || 'ORGANIC'
     });
     this.showAddContactModal.set(true);

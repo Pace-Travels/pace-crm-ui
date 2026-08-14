@@ -219,7 +219,7 @@
 
 <!-- Add / Edit Contact Modal -->
 <div *ngIf="showAddContactModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Inter', sans-serif;">
-    <div style="background: white; width: 500px; border-radius: 12px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+    <div style="background: white; width: 560px; max-height: 90vh; overflow-y: auto; border-radius: 12px; padding: 28px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
             <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a;">
                 {{ editingContactId() ? 'Edit' : 'Create' }} {{ contactService.activeType() }} Contact
@@ -238,8 +238,13 @@
                 <input type="text" formControlName="name" placeholder="Full Name" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-weight: 600;">
             </div>
 
-            <div>
-                <app-phone-input formControlName="phone" label="WhatsApp Business Phone Number" [required]="true"></app-phone-input>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <app-phone-input formControlName="phone" label="WhatsApp Phone (Phone 1) *" [required]="true"></app-phone-input>
+                </div>
+                <div>
+                    <app-phone-input formControlName="phone2" label="Alternative Phone (Phone 2)" [required]="false" [showVerifyButton]="false"></app-phone-input>
+                </div>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
@@ -250,6 +255,33 @@
                 <div>
                     <label style="font-size: 12px; font-weight: 700; color: #334155;">Email Address</label>
                     <input type="email" formControlName="email" placeholder="name@example.com" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Alternative Email (Email 2)</label>
+                    <input type="email" formControlName="email2" placeholder="alternative@example.com" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Agent Username</label>
+                    <input type="text" formControlName="userName" placeholder="Username" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Tags (comma-separated)</label>
+                    <input type="text" formControlName="tags" placeholder="e.g. VIP, Active, Prospect" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Lead Source</label>
+                    <select formControlName="source" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; background: white;">
+                        <option value="ORGANIC">Organic</option>
+                        <option value="WEBSITE_WIDGET">Website Widget</option>
+                        <option value="IMPORT">Imported Sheet</option>
+                        <option value="SHOPIFY">Shopify Store</option>
+                    </select>
                 </div>
             </div>
 
