@@ -23,6 +23,7 @@ export interface ContactGroup {
   name: string;
   description?: string;
   contactType: 'B2B' | 'B2C';
+  icon?: string;
 }
 
 @Injectable({
@@ -88,8 +89,8 @@ export class ContactService {
     });
   }
 
-  createGroup(name: string, description: string, contactType: 'B2B' | 'B2C', contactIds: number[]) {
-    return this.api.post('/whatsappcontacts/groups', { name, description, contactType, contactIds });
+  createGroup(name: string, description: string, contactType: 'B2B' | 'B2C', contactIds: number[], icon?: string) {
+    return this.api.post('/whatsappcontacts/groups', { name, description, contactType, contactIds, icon });
   }
 
   deleteGroup(id: number) {

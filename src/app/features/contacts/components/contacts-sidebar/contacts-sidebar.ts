@@ -15,6 +15,22 @@ export class ContactsSidebar implements OnInit {
   showGroupModal = signal(false);
   groupForm: FormGroup;
 
+  availableIcons = [
+    { class: 'fa-users', label: 'People' },
+    { class: 'fa-building', label: 'Company' },
+    { class: 'fa-star', label: 'Star' },
+    { class: 'fa-heart', label: 'Favorite' },
+    { class: 'fa-tag', label: 'Tag' },
+    { class: 'fa-award', label: 'VIP' },
+    { class: 'fa-crown', label: 'Premium' },
+    { class: 'fa-rocket', label: 'Active' },
+    { class: 'fa-briefcase', label: 'Work' },
+    { class: 'fa-compass', label: 'Explorer' },
+    { class: 'fa-plane', label: 'Traveler' },
+    { class: 'fa-globe', label: 'Global' },
+    { class: 'fa-layer-group', label: 'Default' }
+  ];
+
   constructor(
     public contactService: ContactService,
     private fb: FormBuilder
@@ -22,7 +38,8 @@ export class ContactsSidebar implements OnInit {
     this.groupForm = this.fb.group({
       name: ['', Validators.required],
       description: [''],
-      contactType: ['B2C', Validators.required]
+      contactType: ['B2C', Validators.required],
+      icon: ['fa-layer-group', Validators.required]
     });
   }
 
@@ -36,7 +53,7 @@ export class ContactsSidebar implements OnInit {
   }
 
   openCreateGroupModal() {
-    this.groupForm.patchValue({ contactType: this.contactService.activeType() });
+    this.groupForm.patchValue({ contactType: this.contactService.activeType(), icon: 'fa-layer-group' });
     this.showGroupModal.set(true);
   }
 
@@ -50,10 +67,10 @@ export class ContactsSidebar implements OnInit {
       return;
     }
 
-    const { name, description, contactType } = this.groupForm.value;
-    this.contactService.createGroup(name, description || '', contactType, []).subscribe({
+    const { name, description, contactType, icon } = this.groupForm.value;
+    this.contactService.createGroup(name, description || '', contactType, [], icon).subscribe({
       next: () => {
-        this.groupForm.reset({ contactType: this.contactService.activeType() });
+        this.groupForm.reset({ contactType: this.contactService.activeType(), icon: 'fa-layer-group' });
         this.closeCreateGroupModal();
         this.contactService.fetchGroups();
         Swal.fire('Group Created!', `Contact Group "${name}" created for ${contactType} contacts.`, 'success');

@@ -274,7 +274,7 @@ export class ContactsTable implements OnInit {
           this.contactService.fetchContacts();
           Swal.fire('Success', 'Contact details updated successfully!', 'success');
         },
-        error: (err: any) => Swal.fire('Error', err.error?.message || 'Failed to update contact', 'error')
+        error: (err: any) => Swal.fire('Error', err.error?.error || err.error?.message || 'Failed to update contact', 'error')
       });
     } else {
       this.contactService.addContact(payload).subscribe({
@@ -283,7 +283,7 @@ export class ContactsTable implements OnInit {
           this.contactService.fetchContacts();
           Swal.fire('Success', 'New contact added successfully!', 'success');
         },
-        error: (err: any) => Swal.fire('Error', err.error?.message || 'Failed to add contact', 'error')
+        error: (err: any) => Swal.fire('Error', err.error?.error || err.error?.message || 'Failed to add contact', 'error')
       });
     }
   }
@@ -570,6 +570,21 @@ openCreateGroup() {
         html: `
             <input id="swal-group-name" class="swal2-input" placeholder="Group Name (e.g. VIP Dubai)">
             <input id="swal-group-desc" class="swal2-input" placeholder="Description (Optional)">
+            <select id="swal-group-icon" class="swal2-input" style="width: 80%; max-width: 100%;">
+                <option value="fa-layer-group">Default Icon</option>
+                <option value="fa-users">People</option>
+                <option value="fa-building">Company</option>
+                <option value="fa-star">Star</option>
+                <option value="fa-heart">Favorite</option>
+                <option value="fa-tag">Tag</option>
+                <option value="fa-award">VIP</option>
+                <option value="fa-crown">Premium</option>
+                <option value="fa-rocket">Active</option>
+                <option value="fa-briefcase">Work</option>
+                <option value="fa-compass">Explorer</option>
+                <option value="fa-plane">Traveler</option>
+                <option value="fa-globe">Global</option>
+            </select>
         `,
         focusConfirm: false,
         showCancelButton: true,
@@ -580,13 +595,14 @@ openCreateGroup() {
             if (!name) Swal.showValidationMessage('Group Name is required');
             return {
                 name,
-                desc: (document.getElementById('swal-group-desc') as HTMLInputElement).value
+                desc: (document.getElementById('swal-group-desc') as HTMLInputElement).value,
+                icon: (document.getElementById('swal-group-icon') as HTMLSelectElement).value
             };
         }
     }).then((result) => {
         if (result.isConfirmed && result.value?.name) {
             // Pass the selected IDs array as the 4th parameter
-            this.contactService.createGroup(result.value.name, result.value.desc, this.contactService.activeType(), ids).subscribe({
+            this.contactService.createGroup(result.value.name, result.value.desc, this.contactService.activeType(), ids, result.value.icon).subscribe({
                 next: () => {
                     this.selectedIds.set([]); // Clear selection
                     this.contactService.fetchGroups(); // Refresh sidebar groups

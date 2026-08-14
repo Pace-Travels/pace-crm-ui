@@ -25,7 +25,7 @@
                 @for(group of contactService.groups(); track group.id) {
                     @if (group.contactType === contactService.activeType()) {
                         <li class="group-item" (click)="onGroupClick(group)" style="cursor: pointer;">
-                            <span class="group-name"><i class="fa-solid fa-layer-group"></i> {{ group.name }}</span>
+                            <span class="group-name"><i class="fa-solid" [ngClass]="group.icon || 'fa-layer-group'"></i> {{ group.name }}</span>
                             <button class="delete-btn" (click)="deleteGroup(group.id, $event)"><i class="fa-solid fa-trash"></i></button>
                         </li>
                     }
@@ -57,6 +57,21 @@
             <div style="display: flex; flex-direction: column; gap: 4px;">
                 <label style="font-size: 12px; font-weight: 700; color: #334155;">Group Name *</label>
                 <input type="text" formControlName="name" placeholder="e.g. Dubai High Spenders 2026" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">Select Group Icon</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #f8fafc; max-height: 100px; overflow-y: auto;">
+                    <button type="button" *ngFor="let icon of availableIcons" 
+                            (click)="groupForm.patchValue({ icon: icon.class })" 
+                            [style.background]="groupForm.value.icon === icon.class ? '#10b981' : 'white'"
+                            [style.color]="groupForm.value.icon === icon.class ? 'white' : '#475569'"
+                            [style.border]="groupForm.value.icon === icon.class ? '1px solid #10b981' : '1px solid #cbd5e1'"
+                            style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;"
+                            [title]="icon.label">
+                        <i class="fa-solid" [ngClass]="icon.class"></i>
+                    </button>
+                </div>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 4px;">
