@@ -85,4 +85,83 @@ export class ContactsSidebar implements OnInit {
       }
     });
   }
+
+  showAddMembersModal = signal(false);
+  groupMembers = signal<any[]>([]);
+  selectedContactIdsForGroup: number[] = [];
+
+  onGroupClick(group: any) {
+    this.contactService.selectedGroup.set(group);
+    
+    // Check if contacts of that category exist
+    const contactsOfType = this.contactService.contacts().filter(c => c.type === group.contactType);
+    if (contactsOfType.length === 0) {
+      Swal.fire({
+        title: `No ${group.contactType} Contacts`,
+        text: `There are no ${group.contactType} contacts in your database. Please add or import contacts first.`,
+        icon: 'info',
+        confirmButtonColor: '#0b494d'
+      });
+      return;
+    }
+
+    // Fetch existing group members
+    this.contactService.getGroupMembers(group.id).subscribe({
+      next: (res: any) => {
+        this.groupMembers.set(res.data || []);
+        this.selectedContactIdsForGroup = [];
+        this.showAddMembersModal.set(true);
+      },
+      error: () => {
+        this.groupMembers.set([]);
+        this.selectedContactIdsForGroup = [];
+        this.showAddMembersModal.set(true);
+      }
+    });
+  }
+
+  getAvailableContactsForGroup() {
+    const group = this.contactService.selectedGroup();
+    if (!group) return [];
+    
+    // Filter contacts of the same category
+    const contactsOfType = this.contactService.contacts().filter(c => c.type === group.contactType);
+    
+    // Filter out contacts who are already group members
+    const memberContactIds = new Set(this.groupMembers().map(m => m.contactId));
+    return contactsOfType.filter(c => c.id !== undefined && !memberContactIds.has(c.id));
+  }
+
+  isContactSelected(id: number | undefined) {
+    return id !== undefined && this.selectedContactIdsForGroup.includes(id);
+  }
+
+  toggleContactSelection(id: number | undefined, event: any) {
+    if (id === undefined) return;
+    if (event.target.checked) {
+      this.selectedContactIdsForGroup.push(id);
+    } else {
+      this.selectedContactIdsForGroup = this.selectedContactIdsForGroup.filter(x => x !== id);
+    }
+  }
+
+  closeAddMembersModal() {
+    this.showAddMembersModal.set(false);
+    this.contactService.selectedGroup.set(null);
+  }
+
+  submitAddMembers() {
+    const group = this.contactService.selectedGroup();
+    if (!group || this.selectedContactIdsForGroup.length === 0) return;
+
+    this.contactService.addContactsToGroup(group.id!, this.selectedContactIdsForGroup).subscribe({
+      next: (res: any) => {
+        Swal.fire('Contacts Added!', `${res.count} contacts added to group "${group.name}".`, 'success');
+        this.closeAddMembersModal();
+      },
+      error: (err: any) => {
+        Swal.fire('Error', err.error?.error || 'Failed to add contacts', 'error');
+      }
+    });
+  }
 }

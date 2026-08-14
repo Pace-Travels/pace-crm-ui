@@ -68,11 +68,17 @@ export class ContactsTable implements OnInit {
 
   // Selection
   selectedIds = signal<number[]>([]);
+  selectedPreviewSerials = signal<number[]>([]);
   isBroadcastActive = computed(() => this.selectedIds().length > 0);
   
   isAllSelected = computed(() => {
     const list = this.paginatedContacts();
     return list.length > 0 && list.every(c => c.id !== undefined && this.selectedIds().includes(c.id));
+  });
+
+  isAllPreviewSelected = computed(() => {
+    const list = this.paginatedContacts();
+    return list.length > 0 && list.every(c => c.serialNumber !== undefined && this.selectedPreviewSerials().includes(c.serialNumber));
   });
 
   constructor() {
@@ -96,7 +102,7 @@ export class ContactsTable implements OnInit {
 
   // Filtered & Sorted Contacts computation
   processedContacts = computed(() => {
-    let list = this.contactService.filteredContacts();
+    let list = this.isPreviewMode() ? this.previewContacts() : this.contactService.filteredContacts();
     const query = this.searchQuery().trim().toLowerCase();
     const loc = this.filterLocation().trim().toLowerCase();
     const src = this.filterSource().trim().toLowerCase();
@@ -378,6 +384,13 @@ export class ContactsTable implements OnInit {
           if (res.success) {
             this.previewContacts.set(res.rows || []);
             this.verificationSummary.set(res.summary || null);
+            
+            // Default select VALID and WARNING rows
+            const validSerials = (res.rows || [])
+              .filter((r: any) => r.verificationStatus === 'VALID' || r.verificationStatus === 'WARNING')
+              .map((r: any) => r.serialNumber);
+            this.selectedPreviewSerials.set(validSerials);
+
             this.isPreviewMode.set(true);
             Swal.fire({
               toast: true,
@@ -402,18 +415,26 @@ export class ContactsTable implements OnInit {
   cancelImport() {
     this.isPreviewMode.set(false);
     this.previewContacts.set([]);
+    this.selectedPreviewSerials.set([]);
   }
 
   approveImport() {
-    const payload = { contacts: this.previewContacts() };
+    const selectedSerials = new Set(this.selectedPreviewSerials());
+    const contactsToSave = this.previewContacts().filter((c: any) => selectedSerials.has(c.serialNumber));
     
-    // Hit backend bulk save route
+    if (contactsToSave.length === 0) {
+      Swal.fire('Error', 'Please select at least one contact to import.', 'error');
+      return;
+    }
+
+    const payload = { contacts: contactsToSave };
+    
     this.api.post('/whatsappcontacts/bulk-save', payload).subscribe({
       next: () => {
-        Swal.fire('Imported!', `${this.previewContacts().length} contacts imported successfully.`, 'success');
+        Swal.fire('Imported!', `${contactsToSave.length} contacts imported successfully.`, 'success');
         this.isPreviewMode.set(false);
         this.previewContacts.set([]);
-        // Refresh table
+        this.selectedPreviewSerials.set([]);
         this.contactService.fetchContacts(); 
       },
       error: (err) => Swal.fire('Import Failed', err.error?.error || err.message || 'Failed to import sheet', 'error')
@@ -423,6 +444,31 @@ export class ContactsTable implements OnInit {
   cancelPreview() {
     this.isPreviewMode.set(false);
     this.previewContacts.set([]);
+    this.selectedPreviewSerials.set([]);
+  }
+
+  togglePreviewSelect(serialNumber: number | undefined) {
+    if (serialNumber === undefined) return;
+    if (this.selectedPreviewSerials().includes(serialNumber)) {
+      this.selectedPreviewSerials.set(this.selectedPreviewSerials().filter(x => x !== serialNumber));
+    } else {
+      this.selectedPreviewSerials.set([...this.selectedPreviewSerials(), serialNumber]);
+    }
+  }
+
+  togglePreviewSelectAll(event: any) {
+    if (event.target.checked) {
+      const pageSerials = this.paginatedContacts().map(c => c.serialNumber).filter((s): s is number => s !== undefined);
+      const combined = Array.from(new Set([...this.selectedPreviewSerials(), ...pageSerials]));
+      this.selectedPreviewSerials.set(combined);
+    } else {
+      const pageSerials = this.paginatedContacts().map(c => c.serialNumber);
+      this.selectedPreviewSerials.set(this.selectedPreviewSerials().filter(s => !pageSerials.includes(s)));
+    }
+  }
+
+  isPreviewSelected(serialNumber: number | undefined) {
+    return serialNumber !== undefined && this.selectedPreviewSerials().includes(serialNumber);
   }
 
   goToLiveChat(contact: any, event?: Event) {
@@ -437,10 +483,10 @@ export class ContactsTable implements OnInit {
     let filename = "";
 
     if (activeType === 'B2B') {
-      csvContent = "Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2\n1,Pace Tourism,John Doe,New York,=\"'+919876543210\",=\"'+919876543211\",john@pace.com,doe@pace.com";
+      csvContent = "Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2,Agent Username,Tags,Lead Source\n1,Pace Tourism,John Doe,New York,=\"'+919876543210\",=\"'+919876543211\",john@pace.com,doe@pace.com,johndoe,\"VIP, Active\",IMPORT";
       filename = "b2b_contacts_sample.csv";
     } else {
-      csvContent = "Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2\n1,Alice Smith,London,=\"'+919876543210\",=\"'+919876543211\",alice@gmail.com,alice2@gmail.com";
+      csvContent = "Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2,Tags,Lead Source\n1,Alice Smith,London,=\"'+919876543210\",=\"'+919876543211\",alice@gmail.com,alice2@gmail.com,\"Prospect\",IMPORT";
       filename = "b2c_contacts_sample.csv";
     }
 
@@ -471,7 +517,7 @@ export class ContactsTable implements OnInit {
 
     let csv = '';
     if (activeType === 'B2B') {
-      csv = 'Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2\n';
+      csv = 'Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2,Agent Username,Tags,Lead Source\n';
       contacts.forEach((c: any, idx: number) => {
         const agency = (c.agencyName || '').replace(/"/g, '""');
         const name = (c.name || '').replace(/"/g, '""');
@@ -480,10 +526,14 @@ export class ContactsTable implements OnInit {
         const p2 = formatPhoneForExcel(c.phone2);
         const e1 = (c.email || '').replace(/"/g, '""');
         const e2 = (c.email2 || '').replace(/"/g, '""');
-        csv += `${idx + 1},"${agency}","${name}","${loc}",${p1},${p2},"${e1}","${e2}"\n`;
+        const uname = (c.userName || '').replace(/"/g, '""');
+        const tagsList = Array.isArray(c.tags) ? c.tags.join(', ') : (c.tags || '');
+        const tgs = tagsList.replace(/"/g, '""');
+        const src = (c.source || 'ORGANIC').replace(/"/g, '""');
+        csv += `${idx + 1},"${agency}","${name}","${loc}",${p1},${p2},"${e1}","${e2}","${uname}","${tgs}","${src}"\n`;
       });
     } else {
-      csv = 'Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2\n';
+      csv = 'Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2,Tags,Lead Source\n';
       contacts.forEach((c: any, idx: number) => {
         const name = (c.name || '').replace(/"/g, '""');
         const loc = (c.location || '').replace(/"/g, '""');
@@ -491,7 +541,10 @@ export class ContactsTable implements OnInit {
         const p2 = formatPhoneForExcel(c.phone2);
         const e1 = (c.email || '').replace(/"/g, '""');
         const e2 = (c.email2 || '').replace(/"/g, '""');
-        csv += `${idx + 1},"${name}","${loc}",${p1},${p2},"${e1}","${e2}"\n`;
+        const tagsList = Array.isArray(c.tags) ? c.tags.join(', ') : (c.tags || '');
+        const tgs = tagsList.replace(/"/g, '""');
+        const src = (c.source || 'ORGANIC').replace(/"/g, '""');
+        csv += `${idx + 1},"${name}","${loc}",${p1},${p2},"${e1}","${e2}","${tgs}","${src}"\n`;
       });
     }
 
@@ -572,30 +625,24 @@ openCreateGroup() {
     });
   }
 
-openSendMessage(contact: any, event: Event) {
+  openSendMessage(contact: any, event: Event) {
     event.stopPropagation();
-    
-    Swal.fire({
-        title: `Message ${contact.name}`,
-        input: 'textarea',
-        inputPlaceholder: 'Type your WhatsApp message here...',
-        showCancelButton: true,
-        confirmButtonText: 'Send <i class="fa-solid fa-paper-plane"></i>',
-        confirmButtonColor: '#10b981'
-    }).then(res => {
-        if (res.isConfirmed && res.value) {
-            // Hit your message.controller.js sendOutbound endpoint
-            this.api.post('/messages/send-outbound', {
-                contactId: contact.id,
-                phone: contact.phone,
-                textContent: res.value
-            }).subscribe({
-                next: () => Swal.fire('Sent!', 'Message delivered successfully.', 'success'),
-                error: (err) => Swal.fire('Error', err.error?.error || 'Failed to send', 'error')
-            });
+    this.selectedContactForMessage.set(contact);
+    this.messageText.set('');
+    this.activeSendMode.set('TEXT');
+    this.selectedMessageTemplate.set(null);
+    this.messageTemplateParams.set({});
+
+    this.api.get<any>('/messagetemplates/list').subscribe({
+      next: (res: any) => {
+        if (res.success && res.data) {
+          this.approvedTemplates.set(res.data.filter((t: any) => t.status === 'APPROVED' || t.status === 'ACTIVE'));
         }
+      }
     });
-}
+
+    this.showSendMessageModal.set(true);
+  }
 
   closeSendMessage() {
     this.showSendMessageModal.set(false);
@@ -604,6 +651,10 @@ openSendMessage(contact: any, event: Event) {
 
   selectMessageTemplate(tpl: any) {
     this.selectedMessageTemplate.set(tpl);
+    if (!tpl) {
+      this.messageTemplateParams.set({});
+      return;
+    }
     const matches = tpl.templateBody.match(/\{\{\d+\}\}/g) || [];
     const paramsMap: any = {};
     matches.forEach((match: string) => {
@@ -632,8 +683,9 @@ openSendMessage(contact: any, event: Event) {
         Swal.fire("Error", "Please enter message text", 'error');
         return;
       }
-      this.api.post('/messages/send', {
-        recipientPhone: contact.phone,
+      this.api.post('/messages/send-outbound', {
+        contactId: contact.id,
+        phone: contact.phone,
         textContent: this.messageText()
       }).subscribe({
         next: () => {

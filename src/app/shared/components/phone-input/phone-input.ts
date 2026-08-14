@@ -187,7 +187,15 @@ export class PhoneInputComponent implements ControlValueAccessor {
       const match = this.countries.find(c => clean.startsWith(c.code.replace('+', '')) || clean.startsWith(c.code));
       if (match) {
         this.selectedCountry.set(match);
-        this.phoneNumberOnly.set(clean.replace(match.code, '').replace(match.code.replace('+', ''), ''));
+        let phoneVal = clean;
+        const codeWithPlus = match.code;
+        const codeWithoutPlus = match.code.replace('+', '');
+        if (phoneVal.startsWith(codeWithPlus)) {
+          phoneVal = phoneVal.slice(codeWithPlus.length);
+        } else if (phoneVal.startsWith(codeWithoutPlus)) {
+          phoneVal = phoneVal.slice(codeWithoutPlus.length);
+        }
+        this.phoneNumberOnly.set(phoneVal);
       } else {
         this.phoneNumberOnly.set(clean);
       }

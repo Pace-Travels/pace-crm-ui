@@ -94,13 +94,13 @@ export class History implements OnInit {
           const formatted: MessageLog[] = res.data.map((m: any, idx: number) => ({
             id: m.id || idx + 1,
             timestamp: m.createdAt ? new Date(m.createdAt).toLocaleString() : new Date().toLocaleString(),
-            senderType: m.senderType || (idx % 2 === 0 ? 'AGENT' : 'USER'),
-            direction: m.senderType === 'USER' ? 'INBOUND' : 'OUTBOUND',
-            recipientName: m.recipientName || m.Contact?.name || `Customer ${m.conversationId || idx + 1}`,
-            recipientPhone: m.recipientPhone || m.Contact?.phone || `+91 98765 432${idx % 10}${idx % 10}`,
+            senderType: m.senderType || 'AGENT',
+            direction: m.direction || (m.senderType === 'CONTACT' ? 'INBOUND' : 'OUTBOUND'),
+            recipientName: m.Conversation?.Contact?.name || m.recipientName || `Customer ${m.conversationId || idx + 1}`,
+            recipientPhone: m.Conversation?.Contact?.phone || m.recipientPhone || '',
             messageType: m.messageType || 'TEXT',
-            content: m.content || m.textContent || 'WhatsApp message payload delivered.',
-            status: idx % 6 === 0 ? 'READ' : (idx % 5 === 0 ? 'DELIVERED' : (idx % 8 === 0 ? 'FAILED' : 'SENT')),
+            content: m.textContent || m.content || '',
+            status: m.status || 'SENT',
             channel: 'WhatsApp Meta WABA'
           }));
           this.messageLogs.set(formatted);

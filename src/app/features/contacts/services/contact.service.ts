@@ -32,6 +32,7 @@ export class ContactService {
 
   contacts = signal<Contact[]>([]);
   groups = signal<ContactGroup[]>([]);
+  selectedGroup = signal<ContactGroup | null>(null);
   activeType = signal<'B2B' | 'B2C'>('B2C');
   isLoading = signal<boolean>(false);
 
@@ -93,5 +94,13 @@ export class ContactService {
 
   deleteGroup(id: number) {
     return this.api.delete(`/whatsappcontacts/groups/${id}`);
+  }
+
+  getGroupMembers(groupId: number): Observable<any> {
+    return this.api.get(`/whatsappcontacts/groups/${groupId}/members`);
+  }
+
+  addContactsToGroup(groupId: number, contactIds: number[]): Observable<any> {
+    return this.api.post(`/whatsappcontacts/groups/${groupId}/contacts`, { contactIds });
   }
 }
