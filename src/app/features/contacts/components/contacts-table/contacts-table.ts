@@ -7,6 +7,7 @@ import { PhoneInputComponent } from '../../../../shared/components/phone-input/p
 import Swal from 'sweetalert2';
 import { ViewChild, ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
 
 @Component({
   selector: 'app-contacts-table',
@@ -49,6 +50,14 @@ export class ContactsTable implements OnInit {
   approvedTemplates = signal<any[]>([]);
   selectedMessageTemplate = signal<any>(null);
   messageTemplateParams = signal<any>({});
+
+  // Bulk Send States
+  isBulkSendMode = signal(false);
+  showBulkSummaryModal = signal(false);
+  bulkSendResults = signal<any[]>([]);
+  bulkSummaryStats = signal<{ total: number; success: number; failed: number } | null>(null);
+  isSendingBulk = signal(false);
+  bulkProgress = signal<number>(0);
 
   // Preview & Verification Mode
   isPreviewMode = signal(false);
@@ -643,7 +652,31 @@ openCreateGroup() {
 
   openSendMessage(contact: any, event: Event) {
     event.stopPropagation();
+    this.isBulkSendMode.set(false);
     this.selectedContactForMessage.set(contact);
+    this.messageText.set('');
+    this.activeSendMode.set('TEXT');
+    this.selectedMessageTemplate.set(null);
+    this.messageTemplateParams.set({});
+
+    this.api.get<any>('/messagetemplates/list').subscribe({
+      next: (res: any) => {
+        if (res.success && res.data) {
+          this.approvedTemplates.set(res.data.filter((t: any) => t.status === 'APPROVED' || t.status === 'ACTIVE'));
+        }
+      }
+    });
+
+    this.showSendMessageModal.set(true);
+  }
+
+  openBulkSend() {
+    if (this.selectedIds().length === 0) {
+      Swal.fire("Error", "Please select one or more contacts to send a message.", 'error');
+      return;
+    }
+    this.isBulkSendMode.set(true);
+    this.selectedContactForMessage.set(null);
     this.messageText.set('');
     this.activeSendMode.set('TEXT');
     this.selectedMessageTemplate.set(null);
@@ -663,6 +696,13 @@ openCreateGroup() {
   closeSendMessage() {
     this.showSendMessageModal.set(false);
     this.selectedContactForMessage.set(null);
+    this.isBulkSendMode.set(false);
+  }
+
+  closeBulkSummary() {
+    this.showBulkSummaryModal.set(false);
+    this.bulkSendResults.set([]);
+    this.bulkSummaryStats.set(null);
   }
 
   selectMessageTemplate(tpl: any) {
@@ -688,6 +728,113 @@ openCreateGroup() {
     const current = { ...this.messageTemplateParams() };
     current[key] = event.target.value;
     this.messageTemplateParams.set(current);
+  }
+
+  dispatchSendMessage() {
+    if (this.isBulkSendMode()) {
+      this.dispatchBulkMessages();
+    } else {
+      this.dispatchSingleMessage();
+    }
+  }
+
+  async dispatchBulkMessages() {
+    const selectedIds = this.selectedIds();
+    if (selectedIds.length === 0) {
+      Swal.fire("Error", "No contacts selected", "error");
+      return;
+    }
+
+    if (this.activeSendMode() === 'TEXT' && !this.messageText().trim()) {
+      Swal.fire("Error", "Please enter message text", "error");
+      return;
+    }
+
+    if (this.activeSendMode() === 'TEMPLATE' && !this.selectedMessageTemplate()) {
+      Swal.fire("Error", "Please select a message template", "error");
+      return;
+    }
+
+    this.isSendingBulk.set(true);
+    this.bulkProgress.set(0);
+    this.bulkSendResults.set([]);
+    this.bulkSummaryStats.set(null);
+
+    const contactsList = this.contactService.contacts();
+    const selectedContacts = contactsList.filter(c => c.id !== undefined && selectedIds.includes(c.id));
+    const total = selectedContacts.length;
+
+    let success = 0;
+    let failed = 0;
+    const results: any[] = [];
+
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    for (let i = 0; i < total; i++) {
+      const contact = selectedContacts[i];
+      const phone = contact.phone;
+      const name = contact.name || "Customer";
+
+      try {
+        if (this.activeSendMode() === 'TEXT') {
+          await firstValueFrom(this.api.post('/messages/send-outbound', {
+            contactId: contact.id,
+            phone: phone,
+            textContent: this.messageText()
+          }));
+        } else {
+          // Meta compliance & personalization: automatically replace variable 1 (typically name) with the contact's actual name.
+          const params = { ...this.messageTemplateParams() };
+          if (params['1'] !== undefined && (!params['1'] || params['1'].trim() === '')) {
+            params['1'] = name;
+          }
+          if (params['name'] !== undefined && (!params['name'] || params['name'].trim() === '')) {
+            params['name'] = name;
+          }
+
+          const payload = {
+            templateId: this.selectedMessageTemplate().id,
+            phone: phone,
+            parameters: params
+          };
+          await firstValueFrom(this.api.post('/campaigns/send-test', payload));
+        }
+
+        success++;
+        results.push({
+          name: name,
+          phone: phone,
+          status: 'SUCCESS',
+          details: 'Sent successfully'
+        });
+      } catch (err: any) {
+        failed++;
+        const errMsg = err.error?.error || err.message || 'Meta API error or connection failure';
+        results.push({
+          name: name,
+          phone: phone,
+          status: 'FAILED',
+          details: errMsg
+        });
+      }
+
+      this.bulkProgress.set(Math.round(((i + 1) / total) * 100));
+      // Meta compliance: Introduce 500ms delay between sending to avoid spike/rate-limits
+      await delay(500);
+    }
+
+    this.isSendingBulk.set(false);
+    this.closeSendMessage();
+    this.selectedIds.set([]); // clear selection after sending
+    this.bulkSendResults.set(results);
+    this.bulkSummaryStats.set({ total, success, failed });
+    this.showBulkSummaryModal.set(true);
+
+    if (failed === 0) {
+      Swal.fire("Bulk Send Complete", `All ${success} messages sent successfully.`, 'success');
+    } else {
+      Swal.fire("Bulk Send Complete", `${success} sent successfully, ${failed} failed. See details below.`, 'warning');
+    }
   }
 
   dispatchSingleMessage() {
