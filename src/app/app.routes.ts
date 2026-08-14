@@ -29,6 +29,8 @@ import { MarketIntelligence } from './features/market-intelligence/market-intell
 import { AIMarketingIntelligence } from './features/ai-marketing-intelligence/ai-marketing-intelligence';
 import { WebPush } from './features/webpush/components/web-push/web-push';
 import { Email } from './features/email/components/email/email';
+import { Templates } from './features/templates/templates';
+import { History } from './features/history/history';
 
 export const routes: Routes = [
     {
@@ -100,6 +102,11 @@ export const routes: Routes = [
                 title: 'Live Chat - Pace Messenger'
             },
             {
+                path: 'history',
+                component: History,
+                title: 'Communication History - Pace Messenger'
+            },
+            {
                 path: 'campaigns',
                 children: [
                     { path: '', component: Campaigns, title: 'Campaigns - Pace Messenger' },
@@ -108,8 +115,8 @@ export const routes: Routes = [
             },
             {
                 path: 'templates',
-                redirectTo: 'campaigns/create',
-                pathMatch: 'full'
+                component: Templates,
+                title: 'Message Templates - Pace Messenger'
             },
             {
                 path: 'contacts',

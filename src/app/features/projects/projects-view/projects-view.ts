@@ -76,10 +76,10 @@ export class ProjectsView implements OnInit {
       accessToken: project.accessToken || '',
       testPhoneNumber: project.testPhoneNumber || ''
     });
-    
+
     // Scroll to form
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    
+
     // Open details tag if closed
     const details = document.querySelector('details');
     if (details && !details.open) {
@@ -235,13 +235,31 @@ export class ProjectsView implements OnInit {
             cookie: true,
             autoLogAppEvents: true,
             xfbml: true,
-            version: 'v19.0'
+            version: 'v26.0'
           });
         }
         this.checkLoginState();
       },
       error: () => this.checkLoginState()
     });
+  }
+
+  logoutFacebook() {
+    if (typeof FB !== 'undefined' && FB) {
+      FB.getLoginStatus((response: any) => {
+        if (response.status === 'connected') {
+          FB.logout((res: any) => {
+            this.fbLoginStatus.set('unknown');
+            this.metaAccessToken.set('');
+            Swal.fire('Disconnected', 'You have been successfully logged out of your Meta session.', 'success');
+          });
+        } else {
+          Swal.fire('Info', 'You are not currently logged into Meta.', 'info');
+        }
+      });
+    } else {
+      Swal.fire('Error', 'Meta SDK not initialized yet.', 'error');
+    }
   }
 
   fetchMetaAccounts(accessToken: string) {

@@ -6,6 +6,9 @@ import { ApiService } from '../../../../shared/services/api.service';
 import { PhoneInputComponent } from '../../../../shared/components/phone-input/phone-input';
 import Swal from 'sweetalert2';
 import { ViewChild, ElementRef } from '@angular/core';
+import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+
 @Component({
   selector: 'app-contacts-table',
   standalone: true,
@@ -18,6 +21,7 @@ export class ContactsTable implements OnInit {
   contactService = inject(ContactService);
   private fb = inject(FormBuilder);
   private api = inject(ApiService);
+  private router = inject(Router);
 
   // Modal states
   showAddContactModal = signal(false);
@@ -47,9 +51,18 @@ export class ContactsTable implements OnInit {
   selectedMessageTemplate = signal<any>(null);
   messageTemplateParams = signal<any>({});
 
-  // Preview Mode
+  // Bulk Send States
+  isBulkSendMode = signal(false);
+  showBulkSummaryModal = signal(false);
+  bulkSendResults = signal<any[]>([]);
+  bulkSummaryStats = signal<{ total: number; success: number; failed: number } | null>(null);
+  isSendingBulk = signal(false);
+  bulkProgress = signal<number>(0);
+
+  // Preview & Verification Mode
   isPreviewMode = signal(false);
   previewContacts = signal<any[]>([]);
+  verificationSummary = signal<any>(null);
 
   // Dropdown states
   showRunAdDropdown = signal(false);
@@ -64,11 +77,17 @@ export class ContactsTable implements OnInit {
 
   // Selection
   selectedIds = signal<number[]>([]);
+  selectedPreviewSerials = signal<number[]>([]);
   isBroadcastActive = computed(() => this.selectedIds().length > 0);
   
   isAllSelected = computed(() => {
     const list = this.paginatedContacts();
     return list.length > 0 && list.every(c => c.id !== undefined && this.selectedIds().includes(c.id));
+  });
+
+  isAllPreviewSelected = computed(() => {
+    const list = this.paginatedContacts();
+    return list.length > 0 && list.every(c => c.serialNumber !== undefined && this.selectedPreviewSerials().includes(c.serialNumber));
   });
 
   constructor() {
@@ -92,7 +111,7 @@ export class ContactsTable implements OnInit {
 
   // Filtered & Sorted Contacts computation
   processedContacts = computed(() => {
-    let list = this.contactService.filteredContacts();
+    let list = this.isPreviewMode() ? this.previewContacts() : this.contactService.filteredContacts();
     const query = this.searchQuery().trim().toLowerCase();
     const loc = this.filterLocation().trim().toLowerCase();
     const src = this.filterSource().trim().toLowerCase();
@@ -195,6 +214,25 @@ export class ContactsTable implements OnInit {
   openEditContact(contact: Contact, event: Event) {
     event.stopPropagation();
     this.editingContactId.set(contact.id || null);
+
+    let parsedTags = '';
+    if (contact.tags) {
+      if (Array.isArray(contact.tags)) {
+        parsedTags = contact.tags.join(', ');
+      } else if (typeof contact.tags === 'string') {
+        try {
+          const parsed = JSON.parse(contact.tags);
+          if (Array.isArray(parsed)) {
+            parsedTags = parsed.join(', ');
+          } else {
+            parsedTags = contact.tags;
+          }
+        } catch (e) {
+          parsedTags = contact.tags;
+        }
+      }
+    }
+
     this.contactForm.patchValue({
       agencyName: contact.agencyName || '',
       name: contact.name,
@@ -204,7 +242,7 @@ export class ContactsTable implements OnInit {
       email: contact.email || '',
       email2: contact.email2 || '',
       userName: contact.userName || '',
-      tags: contact.tags ? contact.tags.join(', ') : '',
+      tags: parsedTags,
       source: contact.source || 'ORGANIC'
     });
     this.showAddContactModal.set(true);
@@ -245,7 +283,7 @@ export class ContactsTable implements OnInit {
           this.contactService.fetchContacts();
           Swal.fire('Success', 'Contact details updated successfully!', 'success');
         },
-        error: (err: any) => Swal.fire('Error', err.error?.message || 'Failed to update contact', 'error')
+        error: (err: any) => Swal.fire('Error', err.error?.error || err.error?.message || 'Failed to update contact', 'error')
       });
     } else {
       this.contactService.addContact(payload).subscribe({
@@ -254,7 +292,7 @@ export class ContactsTable implements OnInit {
           this.contactService.fetchContacts();
           Swal.fire('Success', 'New contact added successfully!', 'success');
         },
-        error: (err: any) => Swal.fire('Error', err.error?.message || 'Failed to add contact', 'error')
+        error: (err: any) => Swal.fire('Error', err.error?.error || err.error?.message || 'Failed to add contact', 'error')
       });
     }
   }
@@ -293,61 +331,159 @@ export class ContactsTable implements OnInit {
   }
 
   onFileSelected(event: any) {
-        const file = event.target.files[0];
-        if (!file) return;
+    const file = event.target.files[0];
+    if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = (e: any) => {
-            const csv = e.target.result;
-            const lines = csv.split('\n');
-            const result = [];
-            
-            // Basic CSV parsing (assuming headers: Name, Phone, Email, Location, AgencyName)
-            for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
-                const currentline = lines[i].split(',');
-                
-                // Construct preview object based on standard columns
-                result.push({
-                    name: currentline[0]?.trim(),
-                    phone: currentline[1]?.trim(),
-                    email: currentline[2]?.trim() || '',
-                    location: currentline[3]?.trim() || '',
-                    agencyName: currentline[4]?.trim() || '',
-                    type: this.contactService.activeType(),
-                    source: 'IMPORT'
-                });
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const csv = e.target.result;
+      const lines = csv.split(/\r?\n/).filter((l: string) => l.trim().length > 0);
+      if (lines.length <= 1) {
+        Swal.fire('Error', 'Uploaded CSV file contains no data rows.', 'error');
+        this.fileInput.nativeElement.value = '';
+        return;
+      }
+
+      // Robust CSV line parser handling quotes, commas, and Excel formula formulas like ="'+91987..."
+      const parseCsvLine = (line: string): string[] => {
+        const result: string[] = [];
+        let cur = '';
+        let inQuotes = false;
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          if (char === '"') {
+            if (inQuotes && line[i + 1] === '"') {
+              cur += '"';
+              i++;
+            } else {
+              inQuotes = !inQuotes;
             }
+          } else if (char === ',' && !inQuotes) {
+            result.push(cur.trim());
+            cur = '';
+          } else {
+            cur += char;
+          }
+        }
+        result.push(cur.trim());
+        return result;
+      };
+
+      const headers = parseCsvLine(lines[0]).map((h: string) => h.trim().toLowerCase());
+      const rawRows = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = parseCsvLine(lines[i]);
+        const rowObj: any = {};
+        headers.forEach((h: string, idx: number) => {
+          let val = values[idx] || '';
+          // Strip outer quotes and Excel formula wrapper (e.g., ="'+91987..." -> +91987...)
+          val = val.replace(/^=\s*['"]?|['"]$/g, '').trim();
+          rowObj[h] = val;
+        });
+        rawRows.push(rowObj);
+      }
+
+      // Call Verification & Validation Service
+      this.api.post<any>('/whatsappcontacts/verify-import', {
+        contacts: rawRows,
+        type: this.contactService.activeType()
+      }).subscribe({
+        next: (res) => {
+          if (res.success) {
+            this.previewContacts.set(res.rows || []);
+            this.verificationSummary.set(res.summary || null);
             
-            this.previewContacts.set(result);
-            this.isPreviewMode.set(true); // Switches UI to the green preview top bar
-            this.fileInput.nativeElement.value = ''; // Reset input
-        };
-        reader.readAsText(file);
+            // Default select VALID and WARNING rows
+            const validSerials = (res.rows || [])
+              .filter((r: any) => r.verificationStatus === 'VALID' || r.verificationStatus === 'WARNING')
+              .map((r: any) => r.serialNumber);
+            this.selectedPreviewSerials.set(validSerials);
+
+            this.isPreviewMode.set(true);
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: `WhatsApp Verification Complete: ${res.summary?.validCount || 0} Valid Numbers`,
+              timer: 3000,
+              showConfirmButton: false
+            });
+          }
+          this.fileInput.nativeElement.value = '';
+        },
+        error: (err) => {
+          Swal.fire('Verification Failed', err.error?.error || err.message || 'Failed to verify upload data', 'error');
+          this.fileInput.nativeElement.value = '';
+        }
+      });
+    };
+    reader.readAsText(file);
+  }
+
+  cancelImport() {
+    this.isPreviewMode.set(false);
+    this.previewContacts.set([]);
+    this.selectedPreviewSerials.set([]);
+  }
+
+  approveImport() {
+    const selectedSerials = new Set(this.selectedPreviewSerials());
+    const contactsToSave = this.previewContacts().filter((c: any) => selectedSerials.has(c.serialNumber));
+    
+    if (contactsToSave.length === 0) {
+      Swal.fire('Error', 'Please select at least one contact to import.', 'error');
+      return;
     }
-cancelImport() {
+
+    const payload = { contacts: contactsToSave };
+    
+    this.api.post('/whatsappcontacts/bulk-save', payload).subscribe({
+      next: () => {
+        Swal.fire('Imported!', `${contactsToSave.length} contacts imported successfully.`, 'success');
         this.isPreviewMode.set(false);
         this.previewContacts.set([]);
-    }
-  approveImport() {
-        const payload = { contacts: this.previewContacts() };
-        
-        // Hit your backend bulk import route
-        this.api.post('/contacts/bulk', payload).subscribe({
-            next: () => {
-                Swal.fire('Imported!', `${this.previewContacts().length} contacts imported successfully.`, 'success');
-                this.isPreviewMode.set(false);
-                this.previewContacts.set([]);
-                // Refresh the table
-                this.contactService.fetchContacts(); 
-            },
-            error: (err) => Swal.fire('Import Failed', err.error?.error || 'Failed to import sheet', 'error')
-        });
-    }
+        this.selectedPreviewSerials.set([]);
+        this.contactService.fetchContacts(); 
+      },
+      error: (err) => Swal.fire('Import Failed', err.error?.error || err.message || 'Failed to import sheet', 'error')
+    });
+  }
 
   cancelPreview() {
     this.isPreviewMode.set(false);
     this.previewContacts.set([]);
+    this.selectedPreviewSerials.set([]);
+  }
+
+  togglePreviewSelect(serialNumber: number | undefined) {
+    if (serialNumber === undefined) return;
+    if (this.selectedPreviewSerials().includes(serialNumber)) {
+      this.selectedPreviewSerials.set(this.selectedPreviewSerials().filter(x => x !== serialNumber));
+    } else {
+      this.selectedPreviewSerials.set([...this.selectedPreviewSerials(), serialNumber]);
+    }
+  }
+
+  togglePreviewSelectAll(event: any) {
+    if (event.target.checked) {
+      const pageSerials = this.paginatedContacts().map(c => c.serialNumber).filter((s): s is number => s !== undefined);
+      const combined = Array.from(new Set([...this.selectedPreviewSerials(), ...pageSerials]));
+      this.selectedPreviewSerials.set(combined);
+    } else {
+      const pageSerials = this.paginatedContacts().map(c => c.serialNumber);
+      this.selectedPreviewSerials.set(this.selectedPreviewSerials().filter(s => !pageSerials.includes(s)));
+    }
+  }
+
+  isPreviewSelected(serialNumber: number | undefined) {
+    return serialNumber !== undefined && this.selectedPreviewSerials().includes(serialNumber);
+  }
+
+  goToLiveChat(contact: any, event?: Event) {
+    if (event) event.stopPropagation();
+    if (!contact || !contact.phone) return;
+    this.router.navigate(['/chat'], { queryParams: { phone: contact.phone, name: contact.name } });
   }
 
   downloadSample() {
@@ -356,10 +492,10 @@ cancelImport() {
     let filename = "";
 
     if (activeType === 'B2B') {
-      csvContent = "Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2\n1,Pace Tourism,John Doe,New York,+919876543210,+919876543211,john@pace.com,doe@pace.com";
+      csvContent = "Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2,Agent Username,Tags,Lead Source\n1,Pace Tourism,John Doe,New York,=\"'+919876543210\",=\"'+919876543211\",john@pace.com,doe@pace.com,johndoe,\"VIP, Active\",IMPORT";
       filename = "b2b_contacts_sample.csv";
     } else {
-      csvContent = "Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2\n1,Alice Smith,London,+919876543210,+919876543211,alice@gmail.com,alice2@gmail.com";
+      csvContent = "Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2,Tags,Lead Source\n1,Alice Smith,London,=\"'+919876543210\",=\"'+919876543211\",alice@gmail.com,alice2@gmail.com,\"Prospect\",IMPORT";
       filename = "b2c_contacts_sample.csv";
     }
 
@@ -374,39 +510,183 @@ cancelImport() {
     document.body.removeChild(link);
   }
 
+  exportContacts() {
+    const activeType = this.contactService.activeType();
+    const contacts = this.processedContacts();
+    if (!contacts || contacts.length === 0) {
+      Swal.fire('Info', `No ${activeType} contacts available to export.`, 'info');
+      return;
+    }
+
+    const formatPhoneForExcel = (phone: string) => {
+      if (!phone) return '""';
+      const clean = phone.replace(/^=\s*['"]?|['"]$/g, '').trim();
+      return clean ? `="'+${clean.replace(/^\+/, '')}"` : '""';
+    };
+
+    let csv = '';
+    if (activeType === 'B2B') {
+      csv = 'Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2,Agent Username,Tags,Lead Source\n';
+      contacts.forEach((c: any, idx: number) => {
+        const agency = (c.agencyName || '').replace(/"/g, '""');
+        const name = (c.name || '').replace(/"/g, '""');
+        const loc = (c.location || '').replace(/"/g, '""');
+        const p1 = formatPhoneForExcel(c.phone);
+        const p2 = formatPhoneForExcel(c.phone2);
+        const e1 = (c.email || '').replace(/"/g, '""');
+        const e2 = (c.email2 || '').replace(/"/g, '""');
+        const uname = (c.userName || '').replace(/"/g, '""');
+        const tagsList = Array.isArray(c.tags) ? c.tags.join(', ') : (c.tags || '');
+        const tgs = tagsList.replace(/"/g, '""');
+        const src = (c.source || 'ORGANIC').replace(/"/g, '""');
+        csv += `${idx + 1},"${agency}","${name}","${loc}",${p1},${p2},"${e1}","${e2}","${uname}","${tgs}","${src}"\n`;
+      });
+    } else {
+      csv = 'Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2,Tags,Lead Source\n';
+      contacts.forEach((c: any, idx: number) => {
+        const name = (c.name || '').replace(/"/g, '""');
+        const loc = (c.location || '').replace(/"/g, '""');
+        const p1 = formatPhoneForExcel(c.phone);
+        const p2 = formatPhoneForExcel(c.phone2);
+        const e1 = (c.email || '').replace(/"/g, '""');
+        const e2 = (c.email2 || '').replace(/"/g, '""');
+        const tagsList = Array.isArray(c.tags) ? c.tags.join(', ') : (c.tags || '');
+        const tgs = tagsList.replace(/"/g, '""');
+        const src = (c.source || 'ORGANIC').replace(/"/g, '""');
+        csv += `${idx + 1},"${name}","${loc}",${p1},${p2},"${e1}","${e2}","${tgs}","${src}"\n`;
+      });
+    }
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${activeType.toLowerCase()}_contacts_export_${Date.now()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    Swal.fire('Export Complete', `${contacts.length} ${activeType} contacts exported successfully!`, 'success');
+  }
+
 openCreateGroup() {
     const ids = this.selectedIds();
     if (ids.length === 0) return;
 
+    const activeType = this.contactService.activeType();
+    const existingGroups = this.contactService.groups().filter(g => g.contactType === activeType);
+
+    let htmlContent = `
+        <div style="margin-bottom: 16px; text-align: left;">
+            <label style="font-weight: 700; font-size: 13.5px; color: #334155; display: block; margin-bottom: 6px;">Choose Action:</label>
+            <select id="swal-action-type" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;">
+                <option value="NEW">Create New Group</option>
+                ${existingGroups.length > 0 ? '<option value="EXISTING">Add to Existing Group</option>' : ''}
+            </select>
+        </div>
+
+        <div id="swal-new-group-fields" style="display: block;">
+            <input id="swal-group-name" class="swal2-input" placeholder="Group Name (e.g. VIP Dubai)" style="width: 100%; margin: 8px 0; box-sizing: border-box;">
+            <input id="swal-group-desc" class="swal2-input" placeholder="Description (Optional)" style="width: 100%; margin: 8px 0; box-sizing: border-box;">
+            <select id="swal-group-icon" class="swal2-input" style="width: 100%; margin: 8px 0; box-sizing: border-box;">
+                <option value="fa-layer-group">Default Icon</option>
+                <option value="fa-users">People</option>
+                <option value="fa-building">Company</option>
+                <option value="fa-star">Star</option>
+                <option value="fa-heart">Favorite</option>
+                <option value="fa-tag">Tag</option>
+                <option value="fa-award">VIP</option>
+                <option value="fa-crown">Premium</option>
+                <option value="fa-rocket">Active</option>
+                <option value="fa-briefcase">Work</option>
+                <option value="fa-compass">Explorer</option>
+                <option value="fa-plane">Traveler</option>
+                <option value="fa-globe">Global</option>
+            </select>
+        </div>
+    `;
+
+    if (existingGroups.length > 0) {
+        htmlContent += `
+            <div id="swal-existing-group-fields" style="display: none; text-align: left; margin-top: 10px;">
+                <label style="font-weight: 700; font-size: 13.5px; color: #334155; display: block; margin-bottom: 6px;">Select Group:</label>
+                <select id="swal-existing-group-id" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;">
+                    ${existingGroups.map(g => `<option value="${g.id}">${g.name}</option>`).join('')}
+                </select>
+            </div>
+        `;
+    }
+
     Swal.fire({
-        title: `Create ${this.contactService.activeType()} Group`,
-        html: `
-            <input id="swal-group-name" class="swal2-input" placeholder="Group Name (e.g. VIP Dubai)">
-            <input id="swal-group-desc" class="swal2-input" placeholder="Description (Optional)">
-        `,
+        title: `Group Management`,
+        html: htmlContent,
         focusConfirm: false,
         showCancelButton: true,
-        confirmButtonText: 'Create Group',
-        confirmButtonColor: '#0f172a',
+        confirmButtonText: 'Submit',
+        confirmButtonColor: '#0b494d',
+        didOpen: () => {
+            const actionTypeSelect = document.getElementById('swal-action-type') as HTMLSelectElement;
+            const newGroupFields = document.getElementById('swal-new-group-fields');
+            const existingGroupFields = document.getElementById('swal-existing-group-fields');
+
+            actionTypeSelect?.addEventListener('change', () => {
+                if (actionTypeSelect.value === 'NEW') {
+                    if (newGroupFields) newGroupFields.style.display = 'block';
+                    if (existingGroupFields) existingGroupFields.style.display = 'none';
+                } else {
+                    if (newGroupFields) newGroupFields.style.display = 'none';
+                    if (existingGroupFields) existingGroupFields.style.display = 'block';
+                }
+            });
+        },
         preConfirm: () => {
-            const name = (document.getElementById('swal-group-name') as HTMLInputElement).value;
-            if (!name) Swal.showValidationMessage('Group Name is required');
-            return {
-                name,
-                desc: (document.getElementById('swal-group-desc') as HTMLInputElement).value
-            };
+            const action = (document.getElementById('swal-action-type') as HTMLSelectElement).value;
+            if (action === 'NEW') {
+                const name = (document.getElementById('swal-group-name') as HTMLInputElement).value;
+                if (!name) {
+                    Swal.showValidationMessage('Group Name is required');
+                    return false;
+                }
+                return {
+                    action,
+                    name,
+                    desc: (document.getElementById('swal-group-desc') as HTMLInputElement).value,
+                    icon: (document.getElementById('swal-group-icon') as HTMLSelectElement).value
+                };
+            } else {
+                const groupId = (document.getElementById('swal-existing-group-id') as HTMLSelectElement).value;
+                return {
+                    action,
+                    groupId: parseInt(groupId, 10)
+                };
+            }
         }
     }).then((result) => {
-        if (result.isConfirmed && result.value?.name) {
-            // Pass the selected IDs array as the 4th parameter
-            this.contactService.createGroup(result.value.name, result.value.desc, this.contactService.activeType(), ids).subscribe({
-                next: () => {
-                    this.selectedIds.set([]); // Clear selection
-                    this.contactService.fetchGroups(); // Refresh sidebar groups
-                    Swal.fire('Created', `Group created with ${ids.length} contacts!`, 'success');
-                },
-                error: (err) => Swal.fire('Error', 'Failed to create group', 'error')
-            });
+        if (result.isConfirmed && result.value) {
+            const val = result.value;
+            if (val.action === 'NEW') {
+                this.contactService.createGroup(val.name, val.desc, activeType, ids, val.icon).subscribe({
+                    next: () => {
+                        this.selectedIds.set([]); // Clear selection
+                        this.contactService.fetchGroups(); // Refresh sidebar groups
+                        Swal.fire('Created', `Group created with ${ids.length} contacts!`, 'success');
+                    },
+                    error: () => Swal.fire('Error', 'Failed to create group', 'error')
+                });
+            } else {
+                this.contactService.addContactsToGroup(val.groupId, ids).subscribe({
+                    next: (res: any) => {
+                        this.selectedIds.set([]); // Clear selection
+                        // If they are currently viewing the group that they added contacts to, refresh the view
+                        if (this.contactService.selectedGroup()?.id === val.groupId) {
+                            this.contactService.refreshActiveGroupMembers();
+                        }
+                        Swal.fire('Contacts Added!', `Added ${ids.length} contacts to the group successfully.`, 'success');
+                    },
+                    error: () => Swal.fire('Error', 'Failed to add contacts to group', 'error')
+                });
+            }
         }
     });
 }
@@ -438,38 +718,67 @@ openCreateGroup() {
     });
   }
 
-openSendMessage(contact: any, event: Event) {
+  openSendMessage(contact: any, event: Event) {
     event.stopPropagation();
-    
-    Swal.fire({
-        title: `Message ${contact.name}`,
-        input: 'textarea',
-        inputPlaceholder: 'Type your WhatsApp message here...',
-        showCancelButton: true,
-        confirmButtonText: 'Send <i class="fa-solid fa-paper-plane"></i>',
-        confirmButtonColor: '#10b981'
-    }).then(res => {
-        if (res.isConfirmed && res.value) {
-            // Hit your message.controller.js sendOutbound endpoint
-            this.api.post('/messages/send-outbound', {
-                contactId: contact.id,
-                phone: contact.phone,
-                textContent: res.value
-            }).subscribe({
-                next: () => Swal.fire('Sent!', 'Message delivered successfully.', 'success'),
-                error: (err) => Swal.fire('Error', err.error?.error || 'Failed to send', 'error')
-            });
+    this.isBulkSendMode.set(false);
+    this.selectedContactForMessage.set(contact);
+    this.messageText.set('');
+    this.activeSendMode.set('TEXT');
+    this.selectedMessageTemplate.set(null);
+    this.messageTemplateParams.set({});
+
+    this.api.get<any>('/messagetemplates/list').subscribe({
+      next: (res: any) => {
+        if (res.success && res.data) {
+          this.approvedTemplates.set(res.data.filter((t: any) => t.status === 'APPROVED' || t.status === 'ACTIVE'));
         }
+      }
     });
-}
+
+    this.showSendMessageModal.set(true);
+  }
+
+  openBulkSend() {
+    if (this.selectedIds().length === 0) {
+      Swal.fire("Error", "Please select one or more contacts to send a message.", 'error');
+      return;
+    }
+    this.isBulkSendMode.set(true);
+    this.selectedContactForMessage.set(null);
+    this.messageText.set('');
+    this.activeSendMode.set('TEXT');
+    this.selectedMessageTemplate.set(null);
+    this.messageTemplateParams.set({});
+
+    this.api.get<any>('/messagetemplates/list').subscribe({
+      next: (res: any) => {
+        if (res.success && res.data) {
+          this.approvedTemplates.set(res.data.filter((t: any) => t.status === 'APPROVED' || t.status === 'ACTIVE'));
+        }
+      }
+    });
+
+    this.showSendMessageModal.set(true);
+  }
 
   closeSendMessage() {
     this.showSendMessageModal.set(false);
     this.selectedContactForMessage.set(null);
+    this.isBulkSendMode.set(false);
+  }
+
+  closeBulkSummary() {
+    this.showBulkSummaryModal.set(false);
+    this.bulkSendResults.set([]);
+    this.bulkSummaryStats.set(null);
   }
 
   selectMessageTemplate(tpl: any) {
     this.selectedMessageTemplate.set(tpl);
+    if (!tpl) {
+      this.messageTemplateParams.set({});
+      return;
+    }
     const matches = tpl.templateBody.match(/\{\{\d+\}\}/g) || [];
     const paramsMap: any = {};
     matches.forEach((match: string) => {
@@ -489,6 +798,113 @@ openSendMessage(contact: any, event: Event) {
     this.messageTemplateParams.set(current);
   }
 
+  dispatchSendMessage() {
+    if (this.isBulkSendMode()) {
+      this.dispatchBulkMessages();
+    } else {
+      this.dispatchSingleMessage();
+    }
+  }
+
+  async dispatchBulkMessages() {
+    const selectedIds = this.selectedIds();
+    if (selectedIds.length === 0) {
+      Swal.fire("Error", "No contacts selected", "error");
+      return;
+    }
+
+    if (this.activeSendMode() === 'TEXT' && !this.messageText().trim()) {
+      Swal.fire("Error", "Please enter message text", "error");
+      return;
+    }
+
+    if (this.activeSendMode() === 'TEMPLATE' && !this.selectedMessageTemplate()) {
+      Swal.fire("Error", "Please select a message template", "error");
+      return;
+    }
+
+    this.isSendingBulk.set(true);
+    this.bulkProgress.set(0);
+    this.bulkSendResults.set([]);
+    this.bulkSummaryStats.set(null);
+
+    const contactsList = this.contactService.contacts();
+    const selectedContacts = contactsList.filter(c => c.id !== undefined && selectedIds.includes(c.id));
+    const total = selectedContacts.length;
+
+    let success = 0;
+    let failed = 0;
+    const results: any[] = [];
+
+    const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+    for (let i = 0; i < total; i++) {
+      const contact = selectedContacts[i];
+      const phone = contact.phone;
+      const name = contact.name || "Customer";
+
+      try {
+        if (this.activeSendMode() === 'TEXT') {
+          await firstValueFrom(this.api.post('/messages/send-outbound', {
+            contactId: contact.id,
+            phone: phone,
+            textContent: this.messageText()
+          }));
+        } else {
+          // Meta compliance & personalization: automatically replace variable 1 (typically name) with the contact's actual name.
+          const params = { ...this.messageTemplateParams() };
+          if (params['1'] !== undefined && (!params['1'] || params['1'].trim() === '')) {
+            params['1'] = name;
+          }
+          if (params['name'] !== undefined && (!params['name'] || params['name'].trim() === '')) {
+            params['name'] = name;
+          }
+
+          const payload = {
+            templateId: this.selectedMessageTemplate().id,
+            phone: phone,
+            parameters: params
+          };
+          await firstValueFrom(this.api.post('/campaigns/send-test', payload));
+        }
+
+        success++;
+        results.push({
+          name: name,
+          phone: phone,
+          status: 'SUCCESS',
+          details: 'Sent successfully'
+        });
+      } catch (err: any) {
+        failed++;
+        const errMsg = err.error?.error || err.message || 'Meta API error or connection failure';
+        results.push({
+          name: name,
+          phone: phone,
+          status: 'FAILED',
+          details: errMsg
+        });
+      }
+
+      this.bulkProgress.set(Math.round(((i + 1) / total) * 100));
+      // Meta compliance: Introduce 500ms delay between sending to avoid spike/rate-limits
+      await delay(500);
+    }
+
+    this.isSendingBulk.set(false);
+    this.closeSendMessage();
+    this.selectedIds.set([]); // clear selection after sending
+    this.bulkSendResults.set(results);
+    this.bulkSummaryStats.set({ total, success, failed });
+    this.showBulkSummaryModal.set(true);
+
+    if (failed === 0) {
+      Swal.fire("Bulk Send Complete", `All ${success} messages sent successfully.`, 'success');
+    } else {
+      Swal.fire("Bulk Send Complete", `${success} sent successfully, ${failed} failed. See details below.`, 'warning');
+    }
+  }
+
   dispatchSingleMessage() {
     const contact = this.selectedContactForMessage();
     if (!contact) return;
@@ -498,8 +914,9 @@ openSendMessage(contact: any, event: Event) {
         Swal.fire("Error", "Please enter message text", 'error');
         return;
       }
-      this.api.post('/messages/send', {
-        recipientPhone: contact.phone,
+      this.api.post('/messages/send-outbound', {
+        contactId: contact.id,
+        phone: contact.phone,
         textContent: this.messageText()
       }).subscribe({
         next: () => {

@@ -38,25 +38,25 @@ export class App implements OnInit {
   }
 
   private initFacebookSdk(appId: string) {
-    window.fbAsyncInit = function() {
+    window.fbAsyncInit = function () {
       if (typeof FB !== 'undefined' && FB && FB.init) {
         FB.init({
-          appId            : appId,
-          cookie           : true,
-          autoLogAppEvents : true,
-          xfbml            : true,
-          version          : 'v19.0'
+          appId: appId,
+          cookie: true,
+          autoLogAppEvents: true,
+          xfbml: true,
+          version: 'v26.0'
         });
         console.log('[Facebook SDK] Dynamically initialized from Backend .env with App ID:', appId);
       }
     };
     if (typeof FB !== 'undefined' && FB && FB.init) {
       FB.init({
-        appId            : appId,
-        cookie           : true,
-        autoLogAppEvents : true,
-        xfbml            : true,
-        version          : 'v19.0'
+        appId: appId,
+        cookie: true,
+        autoLogAppEvents: true,
+        xfbml: true,
+        version: 'v26.0'
       });
     }
   }

@@ -5,6 +5,10 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
 import Swal from 'sweetalert2';
 
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { environment } from '../../../../environments/environment';
+
 @Component({
   selector: 'app-login-view',
   standalone: true,
@@ -71,36 +75,41 @@ export class LoginView implements OnInit {
   }
 
   googleLogin() {
-    Swal.fire({
-      title: 'Mock Google Sign In',
-      html: `
-        <input type="text" id="google-name" class="swal2-input" placeholder="Your Name (e.g. John Doe)">
-        <input type="email" id="google-email" class="swal2-input" placeholder="Your Email">
-      `,
-      confirmButtonText: 'Continue',
-      focusConfirm: false,
-      preConfirm: () => {
-        const name = (document.getElementById('google-name') as HTMLInputElement).value;
-        const email = (document.getElementById('google-email') as HTMLInputElement).value;
-        if (!name || !email) {
-          Swal.showValidationMessage('Please enter both name and email');
-          return false;
-        }
-        return { name, email, googleId: 'mock-id-' + new Date().getTime() };
-      }
-    }).then((result) => {
-      if (result.isConfirmed && result.value) {
-        this.isSubmitting = true;
-        this.authService.googleLogin(result.value).subscribe({
-          next: (res) => {
-            this.isSubmitting = false;
-          },
-          error: (err) => {
-            this.isSubmitting = false;
-            Swal.fire('Google Sign In Error', err.error?.message || 'Failed to sign in', 'error');
-          }
+    try {
+      const app = getApps().length ? getApp() : initializeApp(environment.firebase);
+      const auth = getAuth(app);
+      const provider = new GoogleAuthProvider();
+      provider.addScope('email');
+      provider.addScope('profile');
+
+      this.isSubmitting = true;
+      signInWithPopup(auth, provider)
+        .then((result) => {
+          const user = result.user;
+          const payload = {
+            name: user.displayName || user.email?.split('@')[0] || 'Google User',
+            email: user.email,
+            googleId: user.uid,
+            avatarUrl: user.photoURL
+          };
+          this.authService.googleLogin(payload).subscribe({
+            next: () => {
+              this.isSubmitting = false;
+            },
+            error: (err) => {
+              this.isSubmitting = false;
+              Swal.fire('Google Sign In Error', err.error?.message || err.message || 'Failed to authenticate Google user', 'error');
+            }
+          });
+        })
+        .catch((error) => {
+          this.isSubmitting = false;
+          console.error('Firebase Google Auth error:', error);
+          Swal.fire('Google Sign In Failed', error.message || 'Could not complete Google Sign In window popup', 'error');
         });
-      }
-    });
+    } catch (err: any) {
+      this.isSubmitting = false;
+      Swal.fire('Google Sign In Error', err.message || 'Firebase initialization error', 'error');
+    }
   }
 }

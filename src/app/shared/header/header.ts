@@ -9,6 +9,8 @@ import { ProjectService } from '../../features/projects/services/project.service
 import { ApiService } from '../services/api.service';
 import { SearchService } from '../services/search.service';
 
+import { AuthService } from '../services/auth.service';
+
 declare var Swal: any;
 
 @Component({
@@ -22,6 +24,7 @@ export class Header implements OnInit {
 
   @Output() toggleSidebar = new EventEmitter<void>();
 
+  authService = inject(AuthService);
   envModeService = inject(EnvironmentModeService);
   onboardingService = inject(OnboardingService);
   projectService = inject(ProjectService);
@@ -29,9 +32,10 @@ export class Header implements OnInit {
   router = inject(Router);
   searchService = inject(SearchService);
 
-  userName = 'Shadab';
+  userName = '';
+  userEmail = '';
   userRole = 'Administrator';
-  userInitial = 'S';
+  userInitial = 'U';
 
   showNotifications = signal(false);
   showProfileDropdown = signal(false);
@@ -46,13 +50,18 @@ export class Header implements OnInit {
   }
 
   loadUserData() {
+    if (!this.authService.checkSessionOrRedirect()) {
+      return;
+    }
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
         const user = JSON.parse(userStr);
-        if (user && user.name) {
-          this.userName = user.name;
-          this.userInitial = user.name.charAt(0).toUpperCase();
+        if (user) {
+          this.userName = user.name || user.displayName || user.username || user.email || 'User';
+          this.userEmail = user.email || '';
+          this.userRole = user.role || user.roleName || 'Administrator';
+          this.userInitial = (this.userName.charAt(0) || 'U').toUpperCase();
         }
       } catch (e) {
         console.error('Error parsing user data', e);
@@ -124,9 +133,7 @@ export class Header implements OnInit {
 
   logout() {
     this.showProfileDropdown.set(false);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    this.router.navigate(['/login']);
+    this.authService.logout();
   }
 
   onModeSwitch(event: Event) {
@@ -151,7 +158,8 @@ export class Header implements OnInit {
   moreItems = [
     {
       label: 'Settings',
-      icon: 'pi pi-cog'
+      icon: 'pi pi-cog',
+      command: () => this.navigateTo('/manage')
     },
     {
       label: 'Language',
@@ -159,7 +167,8 @@ export class Header implements OnInit {
     },
     {
       label: 'Help',
-      icon: 'pi pi-question-circle'
+      icon: 'pi pi-question-circle',
+      command: () => this.navigateTo('/docs')
     },
     {
       label: 'About',
@@ -170,7 +179,8 @@ export class Header implements OnInit {
   mobileItems = [
     {
       label: 'Notifications',
-      icon: 'pi pi-bell'
+      icon: 'pi pi-bell',
+      command: () => this.toggleNotifications()
     },
     {
       label: 'Language',
@@ -178,25 +188,29 @@ export class Header implements OnInit {
     },
     {
       label: 'Settings',
-      icon: 'pi pi-cog'
+      icon: 'pi pi-cog',
+      command: () => this.navigateTo('/manage')
     }
   ];
 
   profileItems = [
     {
       label: 'My Profile',
-      icon: 'pi pi-user'
+      icon: 'pi pi-user',
+      command: () => this.navigateTo('/account')
     },
     {
       label: 'Account Settings',
-      icon: 'pi pi-cog'
+      icon: 'pi pi-cog',
+      command: () => this.navigateTo('/manage')
     },
     {
       separator: true
     },
     {
       label: 'Logout',
-      icon: 'pi pi-sign-out'
+      icon: 'pi pi-sign-out',
+      command: () => this.logout()
     }
   ];
 

@@ -1,159 +1,160 @@
 <div class="header">
-    <!-- Left -->
+    <!-- Left: Menu Toggle & Left-Aligned Search -->
     <div class="header-left">
-        <button class="menu-btn" (click)="onToggleSidebar()">
+        <button class="menu-btn" (click)="onToggleSidebar()" title="Toggle Sidebar">
             <i class="fa-solid fa-bars"></i>
+        </button>
+
+        <!-- Global Search Input Trigger -->
+        <button class="search-trigger desktop-only" (click)="searchService.openSearchModal()">
+            <div class="search-placeholder">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <span>Search...</span>
+            </div>
+            <kbd class="shortcut-kbd">Ctrl K</kbd>
         </button>
     </div>
 
-    <!-- Right -->
+    <!-- Right: Action Controls & User Menu -->
     <div class="header-right">
 
-        <!-- Global Search Button (Algolia style) -->
-        <button class="desktop-only" (click)="searchService.openSearchModal()" style="display: flex; align-items: center; justify-content: space-between; gap: 40px; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; color: #64748b; font-size: 13px; cursor: pointer; transition: all 0.2s ease;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <i class="fa-solid fa-magnifying-glass" style="color: #3b82f6;"></i>
-                <span>Search...</span>
-            </div>
-            <kbd style="background: white; border: 1px solid #cbd5e1; border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: 700; color: #94a3b8; box-shadow: 0 1px 1px rgba(0,0,0,0.05);">Ctrl K</kbd>
-        </button>
-
-        <!-- Subscription Plan Badge in Top Bar -->
-        <div class="desktop-only" style="display: flex; align-items: center; gap: 8px; background: #f8fafc; border: 1px solid #cbd5e1; padding: 5px 12px; border-radius: 20px; font-size: 12px; color: #475569;">
-            <i class="fa-solid fa-crown" style="color: #f59e0b;"></i>
-            <span>Plan: <strong style="color: #0f172a;">BASIC</strong></span>
-            <button (click)="navigateTo('/payments')" style="background: #0f172a; color: white; border: none; padding: 2px 8px; border-radius: 12px; font-size: 10.5px; font-weight: 700; cursor: pointer; text-transform: uppercase;">Upgrade</button>
+        <!-- Subscription Plan Badge Pill -->
+        <div class="plan-pill desktop-only" (click)="navigateTo('/payments')" title="Click to view subscription plans">
+            <i class="fa-solid fa-crown plan-icon"></i>
+            <span class="plan-label">Plan: <strong>BASIC</strong></span>
+            <span class="upgrade-tag">Upgrade</span>
         </div>
 
-        <!-- Meta Connectivity Status Button & Modal -->
-        <div style="position: relative;" class="desktop-only">
-            <button (click)="toggleMetaStatusModal()" style="background: white; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #334155; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s ease;">
-                <span style="width: 8px; height: 8px; border-radius: 50%;" [style.background]="onboardingService.state().connectMeta ? '#10b981' : '#ef4444'"></span>
-                Meta Status
+        <!-- Consolidated Meta WhatsApp & Dev Environment Hub -->
+        <div class="meta-hub-container desktop-only" style="position: relative;">
+            <button class="meta-hub-pill" (click)="toggleMetaStatusModal()" [class.active]="showMetaStatusModal()">
+                <span class="status-dot" [class.connected]="onboardingService.state().connectMeta"></span>
+                <i class="fa-brands fa-whatsapp mode-icon"></i>
+                <span class="mode-text">{{ envModeService.currentMode() === 'DEVELOPMENT' ? 'Dev Mode' : 'Live Mode' }}</span>
+                <i class="fa-solid fa-angle-down arrow-icon"></i>
             </button>
 
-            <!-- Meta Status Dropdown/Modal View -->
-            <div *ngIf="showMetaStatusModal()" style="position: absolute; top: 40px; right: 0; width: 300px; background: white; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; padding: 16px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 12px;">
-                    <h4 style="margin: 0; font-size: 14px; color: #0f172a; font-weight: 700; display: flex; align-items: center; gap: 6px;">
-                        <i class="fa-brands fa-whatsapp" style="color: #16a34a;"></i> Meta Connection
+            <!-- Meta Hub Dropdown Popover -->
+            <div *ngIf="showMetaStatusModal()" class="header-popover meta-popover">
+                <div class="popover-header">
+                    <h4>
+                        <i class="fa-brands fa-whatsapp text-green"></i> WhatsApp & Meta Hub
                     </h4>
+                    <span class="status-tag" [class.connected]="onboardingService.state().connectMeta">
+                        {{ onboardingService.state().connectMeta ? 'CONNECTED' : 'DISCONNECTED' }}
+                    </span>
                 </div>
 
-                <div style="margin-bottom: 16px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <span style="font-size: 12px; color: #64748b;">Status:</span>
-                        <span *ngIf="onboardingService.state().connectMeta" style="background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">CONNECTED</span>
-                        <span *ngIf="!onboardingService.state().connectMeta" style="background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">DISCONNECTED</span>
+                <div class="popover-body">
+                    <!-- Environment Mode Selection -->
+                    <div class="env-section">
+                        <label class="env-label">Environment Mode</label>
+                        <div class="select-wrapper">
+                            <select class="mode-select" [value]="envModeService.currentMode()" (change)="onModeSwitch($event)">
+                                <option value="DEVELOPMENT">🧪 Development Mode (Test Number)</option>
+                                <option value="PRODUCTION">🚀 Production Mode (Live Number)</option>
+                            </select>
+                        </div>
+                        <div class="active-phone" *ngIf="envModeService.activePhoneNumber()">
+                            <i class="fa-solid fa-phone"></i> {{ envModeService.activePhoneNumber() }}
+                        </div>
                     </div>
-                    
-                    <div *ngIf="projectService.currentProject() as current">
-                        <div style="font-size: 12px; color: #475569; margin-bottom: 4px;"><strong>Project:</strong> {{ current.name }}</div>
-                        <div *ngIf="onboardingService.state().connectMeta" style="font-size: 12px; color: #475569;"><strong>WABA ID:</strong> {{ current.wabaId }}</div>
-                        <div *ngIf="onboardingService.state().connectMeta" style="font-size: 12px; color: #475569;"><strong>Phone ID:</strong> {{ current.phoneNumberId }}</div>
+
+                    <!-- Project Meta Details -->
+                    <div class="project-info" *ngIf="projectService.currentProject() as current">
+                        <div class="info-row"><span>Project:</span> <strong>{{ current.name }}</strong></div>
+                        <div class="info-row" *ngIf="onboardingService.state().connectMeta"><span>WABA ID:</span> <code>{{ current.wabaId }}</code></div>
+                        <div class="info-row" *ngIf="onboardingService.state().connectMeta"><span>Phone ID:</span> <code>{{ current.phoneNumberId }}</code></div>
                     </div>
                 </div>
 
-                <div style="display: flex; flex-direction: column; gap: 8px;">
-                    <button *ngIf="!onboardingService.state().connectMeta" (click)="openTour()" style="background: #0f172a; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        <i class="fa-solid fa-plug"></i> Connect Now
+                <div class="popover-footer">
+                    <button *ngIf="!onboardingService.state().connectMeta" (click)="openTour()" class="btn-primary">
+                        <i class="fa-solid fa-plug"></i> Connect Meta Account
                     </button>
-                    <button (click)="navigateTo('/projects'); showMetaStatusModal.set(false)" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <button (click)="navigateTo('/projects'); showMetaStatusModal.set(false)" class="btn-secondary">
                         <i class="fa-solid fa-diagram-project"></i> Manage Projects
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Top Right Meta WhatsApp Environment Mode Selector Dropdown -->
-        <div class="environment-switcher desktop-only">
-            <div class="mode-badge" [ngClass]="envModeService.currentMode() === 'DEVELOPMENT' ? 'dev-mode' : 'prod-mode'">
-                <span class="dot"></span>
-                <i class="fa-brands fa-whatsapp"></i>
-                <select class="mode-select" [value]="envModeService.currentMode()" (change)="onModeSwitch($event)">
-                    <option value="DEVELOPMENT">🧪 Development Mode (Test Number)</option>
-                    <option value="PRODUCTION">🚀 Production Mode (Live Number)</option>
-                </select>
-                <i class="fa-solid fa-chevron-down select-icon"></i>
-            </div>
-            <span class="active-phone-number" *ngIf="envModeService.activePhoneNumber()">
-                {{ envModeService.activePhoneNumber() }}
-            </span>
-        </div>
-
+        <!-- Notifications Bell Button -->
         <div style="position: relative;">
-            <button class="icon-btn desktop-only" (click)="toggleNotifications()">
+            <button class="icon-btn desktop-only" (click)="toggleNotifications()" title="Notifications">
                 <i class="fa-solid fa-bell"></i>
+                <span class="unread-indicator" *ngIf="notificationsList().length > 0"></span>
             </button>
 
             <!-- Notifications Popover -->
-            <div *ngIf="showNotifications()" style="position: absolute; top: 48px; right: 0; width: 320px; background: white; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; padding: 16px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 12px;">
-                    <h4 style="margin: 0; font-size: 14px; color: #0f172a; font-weight: 700;">System Notifications</h4>
-                    <span style="font-size: 10px; background: #e0f2fe; color: #0284c7; padding: 2px 6px; border-radius: 4px; font-weight: 700;">3 New</span>
+            <div *ngIf="showNotifications()" class="header-popover notifications-popover">
+                <div class="popover-header">
+                    <h4>Notifications</h4>
+                    <span class="notif-count-badge">{{ notificationsList().length }} New</span>
                 </div>
 
-                <div style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto;">
-                    <div *ngFor="let n of notificationsList()" style="display: flex; gap: 10px; align-items: flex-start; background: #f8fafc; padding: 8px 10px; border-radius: 6px; font-size: 12px;">
-                        <i [class]="n.icon" style="font-size: 14px; margin-top: 2px;"></i>
-                        <div style="flex: 1;">
-                            <strong style="color: #0f172a; display: block;">{{ n.title }}</strong>
-                            <span style="color: #64748b; font-size: 11px;">{{ n.desc }}</span>
-                            <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">{{ n.time }}</div>
+                <div class="notifications-scroll">
+                    <div *ngFor="let n of notificationsList()" class="notif-item">
+                        <i [class]="n.icon"></i>
+                        <div class="notif-details">
+                            <strong>{{ n.title }}</strong>
+                            <span>{{ n.desc }}</span>
+                            <div class="notif-time">{{ n.time }}</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <button class="icon-btn desktop-only" (click)="navigateTo('/manage')">
+        <!-- Settings Button -->
+        <button class="icon-btn desktop-only" (click)="navigateTo('/manage')" title="Platform Settings">
             <i class="fa-solid fa-gear"></i>
         </button>
 
+        <!-- Profile Menu Dropdown -->
         <div style="position: relative;">
-            <div class="profile desktop-only" (click)="toggleProfileDropdown()" style="cursor: pointer;">
+            <div class="profile desktop-only" (click)="toggleProfileDropdown()">
                 <div class="avatar">{{ userInitial }}</div>
                 <div class="user-info">
                     <span class="name">{{ userName }}</span>
                     <span class="role">{{ userRole }}</span>
                 </div>
-                <i class="fa-solid fa-angle-down"></i>
+                <i class="fa-solid fa-angle-down arrow-icon"></i>
             </div>
 
-            <!-- Profile / Administrator User Menu Dropdown -->
-            <div *ngIf="showProfileDropdown()" style="position: absolute; top: 48px; right: 0; width: 220px; background: white; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15); z-index: 1000; padding: 8px 0;">
-                <div style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9;">
-                    <strong style="font-size: 13px; color: #0f172a; display: block;">{{ userName }}</strong>
-                    <span style="font-size: 11px; color: #64748b;">admin&#64;quotedesks.com</span>
+            <!-- Profile Menu Popover -->
+            <div *ngIf="showProfileDropdown()" class="header-popover profile-popover">
+                <div class="profile-header">
+                    <strong class="user-display-name">{{ userName }}</strong>
+                    <span class="user-email-text">{{ userEmail }}</span>
                 </div>
 
-                <div style="display: flex; flex-direction: column;">
-                    <button type="button" (click)="navigateTo('/account')" style="background: none; border: none; padding: 10px 16px; text-align: left; font-size: 13px; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">
-                        <i class="fa-solid fa-user-gear" style="color: #3b82f6;"></i> Account Profile
+                <div class="profile-menu">
+                    <button type="button" (click)="navigateTo('/account')">
+                        <i class="fa-solid fa-user-gear text-blue"></i> Account Profile
                     </button>
-                    <button type="button" (click)="navigateTo('/manage')" style="background: none; border: none; padding: 10px 16px; text-align: left; font-size: 13px; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">
-                        <i class="fa-solid fa-sliders" style="color: #10b981;"></i> Platform Settings
+                    <button type="button" (click)="navigateTo('/manage')">
+                        <i class="fa-solid fa-sliders text-green"></i> Platform Settings
                     </button>
-                    <button type="button" (click)="navigateTo('/projects')" style="background: none; border: none; padding: 10px 16px; text-align: left; font-size: 13px; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='none'">
-                        <i class="fa-solid fa-diagram-project" style="color: #f59e0b;"></i> Brand Projects
+                    <button type="button" (click)="navigateTo('/projects')">
+                        <i class="fa-solid fa-diagram-project text-amber"></i> Brand Projects
                     </button>
                     
-                    <div style="border-top: 1px solid #f1f5f9; margin: 4px 0;"></div>
+                    <div class="menu-divider"></div>
 
-                    <button type="button" (click)="logout()" style="background: none; border: none; padding: 10px 16px; text-align: left; font-size: 13px; color: #ef4444; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'">
+                    <button type="button" (click)="logout()" class="signout-item">
                         <i class="fa-solid fa-right-from-bracket"></i> Sign Out
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- MOBILE MORE FIRST -->
+        <!-- Mobile Controls -->
         <p-menu #moreMenu [popup]="true" [model]="mobileItems"></p-menu>
         <button class="mobile-more" (click)="moreMenu.toggle($event)">
             <i class="fa-solid fa-ellipsis-vertical"></i>
         </button>
 
-        <!-- MOBILE PROFILE SECOND -->
         <p-menu #profileMenu [popup]="true" [model]="profileItems"></p-menu>
         <button class="mobile-profile" (click)="profileMenu.toggle($event)">
             <div class="avatar">{{ userInitial }}</div>

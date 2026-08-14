@@ -23,6 +23,7 @@ export interface ContactGroup {
   name: string;
   description?: string;
   contactType: 'B2B' | 'B2C';
+  icon?: string;
 }
 
 @Injectable({
@@ -32,11 +33,26 @@ export class ContactService {
 
   contacts = signal<Contact[]>([]);
   groups = signal<ContactGroup[]>([]);
+  selectedGroup = signal<ContactGroup | null>(null);
+  selectedGroupContactIds = signal<number[]>([]);
   activeType = signal<'B2B' | 'B2C'>('B2C');
   isLoading = signal<boolean>(false);
 
   filteredContacts = computed(() => {
-    return this.contacts().filter(c => c.type === this.activeType());
+    const targetType = this.activeType();
+    const group = this.selectedGroup();
+    const memberIds = this.selectedGroupContactIds();
+
+    let list = this.contacts().filter(c => {
+      const cType = (c.type || 'B2C').toUpperCase();
+      return cType === targetType;
+    });
+
+    if (group) {
+      list = list.filter(c => c.id !== undefined && memberIds.includes(c.id));
+    }
+
+    return list;
   });
 
   constructor(private api: ApiService) { }
@@ -83,11 +99,31 @@ export class ContactService {
     });
   }
 
-  createGroup(name: string, description: string, contactType: 'B2B' | 'B2C', contactIds: number[]) {
-    return this.api.post('/whatsappcontacts/groups', { name, description, contactType, contactIds });
+  createGroup(name: string, description: string, contactType: 'B2B' | 'B2C', contactIds: number[], icon?: string) {
+    return this.api.post('/whatsappcontacts/groups', { name, description, contactType, contactIds, icon });
   }
 
   deleteGroup(id: number) {
     return this.api.delete(`/whatsappcontacts/groups/${id}`);
+  }
+
+  getGroupMembers(groupId: number): Observable<any> {
+    return this.api.get(`/whatsappcontacts/groups/${groupId}/members`);
+  }
+
+  addContactsToGroup(groupId: number, contactIds: number[]): Observable<any> {
+    return this.api.post(`/whatsappcontacts/groups/${groupId}/contacts`, { contactIds });
+  }
+
+  refreshActiveGroupMembers() {
+    const group = this.selectedGroup();
+    if (!group) return;
+    this.getGroupMembers(group.id!).subscribe({
+      next: (res: any) => {
+        const memberIds = (res.data || []).map((m: any) => m.contactId);
+        this.selectedGroupContactIds.set(memberIds);
+      },
+      error: () => this.selectedGroupContactIds.set([])
+    });
   }
 }
