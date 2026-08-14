@@ -270,7 +270,7 @@
                 <span>Showing {{ (currentPage() - 1) * pageSize() + (paginatedContacts().length > 0 ? 1 : 0) }} - {{ (currentPage() - 1) * pageSize() + paginatedContacts().length }} of {{ processedContacts().length }} contacts</span>
             </div>
 
-            <div style="display: flex; items-center; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
                 <button [disabled]="currentPage() === 1" (click)="setPage(currentPage() - 1)" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 6px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer;" [style.opacity]="currentPage() === 1 ? '0.5' : '1'">
                     <i class="fa-solid fa-chevron-left"></i> Previous
                 </button>
