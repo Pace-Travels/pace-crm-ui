@@ -304,13 +304,11 @@
                 <input type="text" formControlName="name" placeholder="Full Name" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-weight: 600;">
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                <div>
-                    <app-phone-input formControlName="phone" label="WhatsApp Phone (Phone 1) *" [required]="true"></app-phone-input>
-                </div>
-                <div>
-                    <app-phone-input formControlName="phone2" label="Alternative Phone (Phone 2)" [required]="false" [showVerifyButton]="false"></app-phone-input>
-                </div>
+            <div>
+                <app-phone-input formControlName="phone" label="WhatsApp Phone (Phone 1)" [required]="true" [showVerifyButton]="true"></app-phone-input>
+            </div>
+            <div>
+                <app-phone-input formControlName="phone2" label="Alternative Phone (Phone 2)" [required]="false" [showVerifyButton]="true"></app-phone-input>
             </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
