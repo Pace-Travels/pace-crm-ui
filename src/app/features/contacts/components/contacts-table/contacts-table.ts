@@ -574,12 +574,22 @@ openCreateGroup() {
     const ids = this.selectedIds();
     if (ids.length === 0) return;
 
-    Swal.fire({
-        title: `Create ${this.contactService.activeType()} Group`,
-        html: `
-            <input id="swal-group-name" class="swal2-input" placeholder="Group Name (e.g. VIP Dubai)">
-            <input id="swal-group-desc" class="swal2-input" placeholder="Description (Optional)">
-            <select id="swal-group-icon" class="swal2-input" style="width: 80%; max-width: 100%;">
+    const activeType = this.contactService.activeType();
+    const existingGroups = this.contactService.groups().filter(g => g.contactType === activeType);
+
+    let htmlContent = `
+        <div style="margin-bottom: 16px; text-align: left;">
+            <label style="font-weight: 700; font-size: 13.5px; color: #334155; display: block; margin-bottom: 6px;">Choose Action:</label>
+            <select id="swal-action-type" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;">
+                <option value="NEW">Create New Group</option>
+                ${existingGroups.length > 0 ? '<option value="EXISTING">Add to Existing Group</option>' : ''}
+            </select>
+        </div>
+
+        <div id="swal-new-group-fields" style="display: block;">
+            <input id="swal-group-name" class="swal2-input" placeholder="Group Name (e.g. VIP Dubai)" style="width: 100%; margin: 8px 0; box-sizing: border-box;">
+            <input id="swal-group-desc" class="swal2-input" placeholder="Description (Optional)" style="width: 100%; margin: 8px 0; box-sizing: border-box;">
+            <select id="swal-group-icon" class="swal2-input" style="width: 100%; margin: 8px 0; box-sizing: border-box;">
                 <option value="fa-layer-group">Default Icon</option>
                 <option value="fa-users">People</option>
                 <option value="fa-building">Company</option>
@@ -594,31 +604,89 @@ openCreateGroup() {
                 <option value="fa-plane">Traveler</option>
                 <option value="fa-globe">Global</option>
             </select>
-        `,
+        </div>
+    `;
+
+    if (existingGroups.length > 0) {
+        htmlContent += `
+            <div id="swal-existing-group-fields" style="display: none; text-align: left; margin-top: 10px;">
+                <label style="font-weight: 700; font-size: 13.5px; color: #334155; display: block; margin-bottom: 6px;">Select Group:</label>
+                <select id="swal-existing-group-id" class="swal2-input" style="width: 100%; margin: 0; box-sizing: border-box; font-size: 14px;">
+                    ${existingGroups.map(g => `<option value="${g.id}">${g.name}</option>`).join('')}
+                </select>
+            </div>
+        `;
+    }
+
+    Swal.fire({
+        title: `Group Management`,
+        html: htmlContent,
         focusConfirm: false,
         showCancelButton: true,
-        confirmButtonText: 'Create Group',
-        confirmButtonColor: '#0f172a',
+        confirmButtonText: 'Submit',
+        confirmButtonColor: '#0b494d',
+        didOpen: () => {
+            const actionTypeSelect = document.getElementById('swal-action-type') as HTMLSelectElement;
+            const newGroupFields = document.getElementById('swal-new-group-fields');
+            const existingGroupFields = document.getElementById('swal-existing-group-fields');
+
+            actionTypeSelect?.addEventListener('change', () => {
+                if (actionTypeSelect.value === 'NEW') {
+                    if (newGroupFields) newGroupFields.style.display = 'block';
+                    if (existingGroupFields) existingGroupFields.style.display = 'none';
+                } else {
+                    if (newGroupFields) newGroupFields.style.display = 'none';
+                    if (existingGroupFields) existingGroupFields.style.display = 'block';
+                }
+            });
+        },
         preConfirm: () => {
-            const name = (document.getElementById('swal-group-name') as HTMLInputElement).value;
-            if (!name) Swal.showValidationMessage('Group Name is required');
-            return {
-                name,
-                desc: (document.getElementById('swal-group-desc') as HTMLInputElement).value,
-                icon: (document.getElementById('swal-group-icon') as HTMLSelectElement).value
-            };
+            const action = (document.getElementById('swal-action-type') as HTMLSelectElement).value;
+            if (action === 'NEW') {
+                const name = (document.getElementById('swal-group-name') as HTMLInputElement).value;
+                if (!name) {
+                    Swal.showValidationMessage('Group Name is required');
+                    return false;
+                }
+                return {
+                    action,
+                    name,
+                    desc: (document.getElementById('swal-group-desc') as HTMLInputElement).value,
+                    icon: (document.getElementById('swal-group-icon') as HTMLSelectElement).value
+                };
+            } else {
+                const groupId = (document.getElementById('swal-existing-group-id') as HTMLSelectElement).value;
+                return {
+                    action,
+                    groupId: parseInt(groupId, 10)
+                };
+            }
         }
     }).then((result) => {
-        if (result.isConfirmed && result.value?.name) {
-            // Pass the selected IDs array as the 4th parameter
-            this.contactService.createGroup(result.value.name, result.value.desc, this.contactService.activeType(), ids, result.value.icon).subscribe({
-                next: () => {
-                    this.selectedIds.set([]); // Clear selection
-                    this.contactService.fetchGroups(); // Refresh sidebar groups
-                    Swal.fire('Created', `Group created with ${ids.length} contacts!`, 'success');
-                },
-                error: (err) => Swal.fire('Error', 'Failed to create group', 'error')
-            });
+        if (result.isConfirmed && result.value) {
+            const val = result.value;
+            if (val.action === 'NEW') {
+                this.contactService.createGroup(val.name, val.desc, activeType, ids, val.icon).subscribe({
+                    next: () => {
+                        this.selectedIds.set([]); // Clear selection
+                        this.contactService.fetchGroups(); // Refresh sidebar groups
+                        Swal.fire('Created', `Group created with ${ids.length} contacts!`, 'success');
+                    },
+                    error: () => Swal.fire('Error', 'Failed to create group', 'error')
+                });
+            } else {
+                this.contactService.addContactsToGroup(val.groupId, ids).subscribe({
+                    next: (res: any) => {
+                        this.selectedIds.set([]); // Clear selection
+                        // If they are currently viewing the group that they added contacts to, refresh the view
+                        if (this.contactService.selectedGroup()?.id === val.groupId) {
+                            this.contactService.refreshActiveGroupMembers();
+                        }
+                        Swal.fire('Contacts Added!', `Added ${ids.length} contacts to the group successfully.`, 'success');
+                    },
+                    error: () => Swal.fire('Error', 'Failed to add contacts to group', 'error')
+                });
+            }
         }
     });
 }

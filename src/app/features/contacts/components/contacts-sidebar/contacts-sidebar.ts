@@ -48,6 +48,8 @@ export class ContactsSidebar implements OnInit {
   }
 
   selectType(type: 'B2B' | 'B2C') {
+    this.contactService.selectedGroup.set(null);
+    this.contactService.selectedGroupContactIds.set([]);
     this.contactService.activeType.set(type);
     this.groupForm.patchValue({ contactType: type });
   }
@@ -95,6 +97,10 @@ export class ContactsSidebar implements OnInit {
       if (result.isConfirmed) {
         this.contactService.deleteGroup(id).subscribe({
           next: () => {
+            if (this.contactService.selectedGroup()?.id === id) {
+              this.contactService.selectedGroup.set(null);
+              this.contactService.selectedGroupContactIds.set([]);
+            }
             this.contactService.fetchGroups();
             Swal.fire('Deleted!', 'Group has been removed.', 'success');
           }
@@ -110,29 +116,14 @@ export class ContactsSidebar implements OnInit {
   onGroupClick(group: any) {
     this.contactService.selectedGroup.set(group);
     
-    // Check if contacts of that category exist
-    const contactsOfType = this.contactService.contacts().filter(c => c.type === group.contactType);
-    if (contactsOfType.length === 0) {
-      Swal.fire({
-        title: `No ${group.contactType} Contacts`,
-        text: `There are no ${group.contactType} contacts in your database. Please add or import contacts first.`,
-        icon: 'info',
-        confirmButtonColor: '#0b494d'
-      });
-      return;
-    }
-
-    // Fetch existing group members
+    // Fetch group members to filter the main contacts table
     this.contactService.getGroupMembers(group.id).subscribe({
       next: (res: any) => {
-        this.groupMembers.set(res.data || []);
-        this.selectedContactIdsForGroup = [];
-        this.showAddMembersModal.set(true);
+        const memberIds = (res.data || []).map((m: any) => m.contactId);
+        this.contactService.selectedGroupContactIds.set(memberIds);
       },
       error: () => {
-        this.groupMembers.set([]);
-        this.selectedContactIdsForGroup = [];
-        this.showAddMembersModal.set(true);
+        this.contactService.selectedGroupContactIds.set([]);
       }
     });
   }

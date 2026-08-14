@@ -24,7 +24,7 @@
             } @else {
                 @for(group of contactService.groups(); track group.id) {
                     @if (group.contactType === contactService.activeType()) {
-                        <li class="group-item" (click)="onGroupClick(group)" style="cursor: pointer;">
+                        <li class="group-item" [class.active]="contactService.selectedGroup()?.id === group.id" (click)="onGroupClick(group)" style="cursor: pointer;">
                             <span class="group-name"><i class="fa-solid" [ngClass]="group.icon || 'fa-layer-group'"></i> {{ group.name }}</span>
                             <button class="delete-btn" (click)="deleteGroup(group.id, $event)"><i class="fa-solid fa-trash"></i></button>
                         </li>
@@ -87,37 +87,3 @@
     </div>
 </div>
 
-<!-- Modal for Adding Contacts to a Group -->
-<div class="modal-overlay" *ngIf="showAddMembersModal()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;">
-    <div class="modal-card" style="background: white; border-radius: 12px; padding: 24px; max-width: 520px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); max-height: 85vh; display: flex; flex-direction: column;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
-            <h3 style="margin: 0; font-size: 16px; color: #0f172a;">
-                Add Contacts to <strong>{{ contactService.selectedGroup()?.name }}</strong>
-            </h3>
-            <button type="button" style="background: transparent; border: none; font-size: 18px; cursor: pointer; color: #64748b;" (click)="closeAddMembersModal()">✕</button>
-        </div>
-
-        <div style="flex: 1; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
-            <p style="font-size: 13px; color: #64748b; margin: 0 0 10px 0;">Select contacts to add to this group:</p>
-            
-            <div *ngFor="let contact of getAvailableContactsForGroup()" style="display: flex; align-items: center; gap: 10px; padding: 8px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 13.5px;">
-                <input type="checkbox" [checked]="isContactSelected(contact.id)" (change)="toggleContactSelection(contact.id, $event)">
-                <div style="display: flex; flex-direction: column;">
-                    <span style="font-weight: 700; color: #0f172a;">{{ contact.name }}</span>
-                    <span style="font-size: 11px; color: #64748b; font-family: monospace;">{{ contact.phone }}</span>
-                </div>
-            </div>
-            
-            <div *ngIf="getAvailableContactsForGroup().length === 0" style="text-align: center; padding: 20px; color: #64748b; font-size: 13.5px;">
-                All available {{ contactService.selectedGroup()?.contactType }} contacts are already in this group!
-            </div>
-        </div>
-
-        <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #f1f5f9; padding-top: 12px;">
-            <button type="button" (click)="closeAddMembersModal()" style="background: white; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px;">Cancel</button>
-            <button type="button" [disabled]="selectedContactIdsForGroup.length === 0" (click)="submitAddMembers()" style="background: #10b981; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px;">
-                Add {{ selectedContactIdsForGroup.length }} Contacts
-            </button>
-        </div>
-    </div>
-</div>
