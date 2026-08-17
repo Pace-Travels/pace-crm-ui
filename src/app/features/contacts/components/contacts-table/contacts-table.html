@@ -25,18 +25,20 @@
             </div>
         </ng-container>
 
-        <ng-container *ngIf="!isPreviewMode()">
-            <div class="search-filter-group" style="display: flex; gap: 10px; align-items: center; flex: 1; max-width: 480px;">
-                <div class="search-box" style="position: relative; flex: 1;">
-                    <i class="fa-solid fa-magnifying-glass search-icon" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
-                    <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Search name, phone, or location..." style="width: 100%; padding: 9px 12px 9px 36px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none; font-weight: 500;">
-                </div>
-                
-                <button (click)="showFilterPanel.set(!showFilterPanel())" [style.background]="showFilterPanel() ? '#0f172a' : 'white'" [style.color]="showFilterPanel() ? 'white' : '#334155'" style="border: 1px solid #cbd5e1; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-sliders"></i> Filter
-                </button>
+        <!-- Search and Filter (Visible in BOTH Normal and Preview modes) -->
+        <div class="search-filter-group" style="display: flex; gap: 10px; align-items: center; flex: 1; max-width: 480px;">
+            <div class="search-box" style="position: relative; flex: 1;">
+                <i class="fa-solid fa-magnifying-glass search-icon" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8;"></i>
+                <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event); currentPage.set(1)" placeholder="Search name, phone, or location..." style="width: 100%; padding: 9px 12px 9px 36px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; outline: none; font-weight: 500;">
             </div>
+            
+            <button (click)="showFilterPanel.set(!showFilterPanel())" [style.background]="showFilterPanel() ? '#0f172a' : 'white'" [style.color]="showFilterPanel() ? 'white' : '#334155'" style="border: 1px solid #cbd5e1; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-sliders"></i> Filter
+            </button>
+        </div>
 
+        <!-- Action Group (ONLY visible in Normal Mode) -->
+        <ng-container *ngIf="!isPreviewMode()">
             <div class="action-group" style="display: flex; gap: 10px; align-items: center;">
                 <button *ngIf="selectedIds().length > 0" class="btn btn-dark" (click)="openCreateGroup()" style="background: #0f172a; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
                     <i class="fa-solid fa-layer-group"></i> Create Group ({{ selectedIds().length }})
@@ -210,8 +212,11 @@
                             {{ contact.phone }}
                         </td>
 
-                        <td style="padding: 14px 16px; font-weight: 600; color: #334155;">
-                            {{ contact.country || 'Rest of World' }} {{ getCountryFlag(contact.country) }}
+                        <td style="padding: 14px 16px;">
+                            <div style="display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px;">
+                                <span style="font-size: 16px; line-height: 1;">{{ getCountryFlag(contact.country) }}</span>
+                                <span style="font-weight: 600; color: #334155; font-size: 12.5px;">{{ contact.country || 'Rest of World' }}</span>
+                            </div>
                         </td>
 
                         <td style="padding: 14px 16px; font-weight: 700; color: #0b494d;">
@@ -273,24 +278,42 @@
                             {{ contact.name || 'UNKNOWN' }}
                         </td>
 
-                        <td style="padding: 14px 16px; font-family: monospace; font-size: 13px; font-weight: 600; color: #166534;">
-                            {{ contact.phone }}
+                        <td style="padding: 8px 12px; font-family: monospace; font-size: 13px; font-weight: 600; color: #166534;">
+                            <input type="text" [value]="contact.phone" (change)="onPreviewPhoneChange(contact, $event)" 
+                                   style="font-family: inherit; font-size: inherit; font-weight: inherit; color: inherit; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; width: 145px; outline: none; background: #fafafa; transition: border 0.15s ease;"
+                                   onfocus="this.style.border='#0b494d'; this.style.background='white';"
+                                   onblur="this.style.border='#cbd5e1'; this.style.background='#fafafa';">
                         </td>
 
-                        <td style="padding: 14px 16px; font-weight: 600; color: #334155;">
-                            {{ contact.country || 'Rest of World' }} {{ getCountryFlag(contact.country) }}
+                        <td style="padding: 14px 16px;">
+                            <div style="display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px;">
+                                <span style="font-size: 16px; line-height: 1;">{{ getCountryFlag(contact.country) }}</span>
+                                <span style="font-weight: 600; color: #334155; font-size: 12.5px;">{{ contact.country || 'Rest of World' }}</span>
+                            </div>
                         </td>
 
                         <td style="padding: 14px 16px; font-weight: 700; color: #0b494d;">
                             {{ contact.metaRate ? '₹' + contact.metaRate : '₹4.50' }}
                         </td>
 
-                        <td style="padding: 14px 16px;">
-                            <span [style.background]="contact.readinessStatus === 'READY' ? '#dcfce7' : '#fecaca'" 
-                                  [style.color]="contact.readinessStatus === 'READY' ? '#166534' : '#991b1b'"
-                                  style="font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;">
-                                {{ contact.readinessStatus || 'READY' }}
-                            </span>
+                        <td style="padding: 14px 16px; min-width: 155px;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span [style.background]="contact.readinessStatus === 'READY' ? '#dcfce7' : '#fecaca'" 
+                                      [style.color]="contact.readinessStatus === 'READY' ? '#166534' : '#991b1b'"
+                                      style="font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; display: inline-block; vertical-align: middle;">
+                                    {{ contact.readinessStatus || 'READY' }}
+                                </span>
+                                <button *ngIf="contact.readinessStatus === 'NOT_READY'" 
+                                        [disabled]="isAiFixing()[contact.serialNumber]"
+                                        (click)="aiFixPreviewContact(contact)" 
+                                        style="background: #fdf2f8; border: 1px solid #fbcfe8; color: #db2777; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;"
+                                        onmouseover="this.style.background='#fbcfe8'"
+                                        onmouseout="this.style.background='#fdf2f8'">
+                                    <i *ngIf="!isAiFixing()[contact.serialNumber]" class="fa-solid fa-wand-magic-sparkles"></i>
+                                    <i *ngIf="isAiFixing()[contact.serialNumber]" class="fa-solid fa-spinner fa-spin"></i>
+                                    <span>{{ isAiFixing()[contact.serialNumber] ? 'Fixing...' : 'AI Fix' }}</span>
+                                </button>
+                            </div>
                         </td>
 
                         <td style="padding: 14px 16px; font-size: 12.5px; font-weight: 500;"

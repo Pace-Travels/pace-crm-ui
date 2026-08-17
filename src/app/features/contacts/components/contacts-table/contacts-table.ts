@@ -1018,4 +1018,111 @@ openCreateGroup() {
     const activeCountries = this.selectedBulkCountries();
     return contactsList.filter(c => c.id !== undefined && selectedIds.includes(c.id) && activeCountries.includes(c.country || 'Unknown')).length;
   });
+
+  // State signal to track which preview contact is currently being fixed by AI
+  isAiFixing = signal<Record<number, boolean>>({});
+
+  onPreviewPhoneChange(contact: any, event: any) {
+    const newValue = event.target.value;
+    
+    // Call verify-import for just this single edited contact to re-validate it
+    this.api.post<any>('/whatsappcontacts/verify-import', {
+      contacts: [{ ...contact, phone: newValue }],
+      type: this.contactService.activeType()
+    }).subscribe({
+      next: (res) => {
+        if (res.success && res.rows && res.rows[0]) {
+          const verifiedRow = res.rows[0];
+          
+          // Merge verified result back into previewContacts list
+          this.previewContacts.update(list => list.map(c => c.serialNumber === contact.serialNumber ? { ...c, ...verifiedRow } : c));
+          
+          // Recalculate summary totals
+          this.recalculateVerificationSummary();
+          
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: verifiedRow.verificationStatus === 'ERROR' ? 'error' : 'success',
+            title: `Contact verified: ${verifiedRow.verificationStatus}`,
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+      },
+      error: () => {
+        Swal.fire('Error', 'Failed to verify manual phone edit', 'error');
+      }
+    });
+  }
+
+  aiFixPreviewContact(contact: any) {
+    const serial = contact.serialNumber;
+    if (serial === undefined) return;
+
+    // Set loading state for this row
+    this.isAiFixing.update(m => ({ ...m, [serial]: true }));
+
+    this.api.post<any>('/whatsappcontacts/ai-fix-contact', { contact }).subscribe({
+      next: (res) => {
+        // Clear loading state
+        this.isAiFixing.update(m => ({ ...m, [serial]: false }));
+
+        if (res.success) {
+          // Merge AI-fixed and verified row details
+          this.previewContacts.update(list => list.map(c => c.serialNumber === serial ? { 
+            ...c, 
+            phone: res.fixedPhone,
+            country: res.country,
+            countryCode: res.countryCode,
+            metaRate: res.metaRate,
+            readinessStatus: res.readinessStatus,
+            readinessReason: res.readinessReason,
+            verificationStatus: res.verificationStatus,
+            verificationNote: res.verificationNote
+          } : c));
+
+          // Recalculate summary totals
+          this.recalculateVerificationSummary();
+
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: res.verificationStatus === 'ERROR' ? 'error' : 'success',
+            title: `AI Fix success: ${res.fixedPhone}`,
+            timer: 3000,
+            showConfirmButton: false
+          });
+        }
+      },
+      error: (err) => {
+        // Clear loading state
+        this.isAiFixing.update(m => ({ ...m, [serial]: false }));
+        Swal.fire('AI Fix Failed', err.error?.error || 'Gemini could not resolve the country code for this row', 'error');
+      }
+    });
+  }
+
+  recalculateVerificationSummary() {
+    const list = this.previewContacts();
+    let validCount = 0;
+    let warningCount = 0;
+    let errorCount = 0;
+    let duplicateCount = 0;
+
+    list.forEach(c => {
+      if (c.verificationStatus === 'VALID') validCount++;
+      else if (c.verificationStatus === 'WARNING') warningCount++;
+      else if (c.verificationStatus === 'ERROR') errorCount++;
+      else if (c.verificationStatus === 'DUPLICATE') duplicateCount++;
+    });
+
+    this.verificationSummary.set({
+      total: list.length,
+      validCount,
+      warningCount,
+      errorCount,
+      duplicateCount
+    });
+  }
 }
