@@ -16,6 +16,11 @@ export interface Contact {
   tags?: string[];
   source?: string;
   leadStage?: string;
+  country?: string;
+  countryCode?: string;
+  metaRate?: number;
+  readinessStatus?: string;
+  readinessReason?: string;
 }
 
 export interface ContactGroup {

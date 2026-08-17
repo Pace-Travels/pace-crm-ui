@@ -79,6 +79,17 @@
             <input type="text" [ngModel]="filterLocation()" (ngModelChange)="filterLocation.set($event)" placeholder="e.g. Dubai, New York, Mumbai..." style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none;">
         </div>
         <div style="flex: 1;">
+            <label style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Filter by Country</label>
+            <select [ngModel]="filterCountry()" (ngModelChange)="filterCountry.set($event)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none; background: white;">
+                <option value="">All Countries</option>
+                <option value="India">India 🇮🇳</option>
+                <option value="UAE / Dubai">UAE / Dubai 🇦🇪</option>
+                <option value="United Kingdom">United Kingdom 🇬🇧</option>
+                <option value="USA / Canada">USA / Canada 🇺🇸</option>
+                <option value="Rest of World">Rest of World 🌐</option>
+            </select>
+        </div>
+        <div style="flex: 1;">
             <label style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase;">Filter by Source</label>
             <select [ngModel]="filterSource()" (ngModelChange)="filterSource.set($event)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none; background: white;">
                 <option value="">All Sources</option>
@@ -88,7 +99,7 @@
                 <option value="SHOPIFY">Shopify Store</option>
             </select>
         </div>
-        <button (click)="filterLocation.set(''); filterSource.set(''); searchQuery.set('')" style="background: white; border: 1px solid #cbd5e1; color: #64748b; padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
+        <button (click)="filterLocation.set(''); filterSource.set(''); filterCountry.set(''); searchQuery.set('')" style="background: white; border: 1px solid #cbd5e1; color: #64748b; padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;">
             Reset Filters
         </button>
     </div>
@@ -125,11 +136,17 @@
                     <th (click)="changeSort('name')" style="padding: 14px 16px; cursor: pointer;">
                         {{ contactService.activeType() === 'B2B' ? 'Agent Name' : 'Customer Name' }} <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
                     </th>
-                    <th (click)="changeSort('location')" style="padding: 14px 16px; cursor: pointer;">
-                        Location <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
-                    </th>
                     <th (click)="changeSort('phone')" style="padding: 14px 16px; cursor: pointer;">
                         Phone Number <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th (click)="changeSort('country')" style="padding: 14px 16px; cursor: pointer;">
+                        Country <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th (click)="changeSort('metaRate')" style="padding: 14px 16px; cursor: pointer;">
+                        Meta Rate <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th (click)="changeSort('location')" style="padding: 14px 16px; cursor: pointer;">
+                        Location <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
                     </th>
                     <th (click)="changeSort('email')" style="padding: 14px 16px; cursor: pointer;">
                         Email Address <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
@@ -147,9 +164,10 @@
                     <th style="padding: 14px 16px;">S.No</th>
                     <th *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px;">Agency Name</th>
                     <th style="padding: 14px 16px;">{{ contactService.activeType() === 'B2B' ? 'Agent Name' : 'Customer Name' }}</th>
-                    <th style="padding: 14px 16px;">Location</th>
                     <th style="padding: 14px 16px;">Phone Number</th>
-                    <th style="padding: 14px 16px;">Email Address</th>
+                    <th style="padding: 14px 16px;">Country</th>
+                    <th style="padding: 14px 16px;">Meta Rate</th>
+                    <th style="padding: 14px 16px;">Readiness</th>
                     <th style="padding: 14px 16px;">Verification Audit Note</th>
                     <th style="padding: 14px 16px; text-align: right;">Status</th>
                 </tr>
@@ -188,12 +206,20 @@
                             {{ contact.name || 'UNKNOWN' }}
                         </td>
 
-                        <td style="padding: 14px 16px; color: #475569;">
-                            {{ contact.location || '—' }}
-                        </td>
-
                         <td style="padding: 14px 16px; font-family: monospace; font-size: 13px; font-weight: 600; color: #166534;">
                             {{ contact.phone }}
+                        </td>
+
+                        <td style="padding: 14px 16px; font-weight: 600; color: #334155;">
+                            {{ contact.country || 'Rest of World' }} {{ getCountryFlag(contact.country) }}
+                        </td>
+
+                        <td style="padding: 14px 16px; font-weight: 700; color: #0b494d;">
+                            {{ contact.metaRate ? '₹' + contact.metaRate : '₹4.50' }}
+                        </td>
+
+                        <td style="padding: 14px 16px; color: #475569;">
+                            {{ contact.location || '—' }}
                         </td>
 
                         <td style="padding: 14px 16px; color: #475569;">
@@ -247,16 +273,24 @@
                             {{ contact.name || 'UNKNOWN' }}
                         </td>
 
-                        <td style="padding: 14px 16px; color: #475569;">
-                            {{ contact.location || '—' }}
-                        </td>
-
                         <td style="padding: 14px 16px; font-family: monospace; font-size: 13px; font-weight: 600; color: #166534;">
                             {{ contact.phone }}
                         </td>
 
-                        <td style="padding: 14px 16px; color: #475569;">
-                            {{ contact.email || '—' }}
+                        <td style="padding: 14px 16px; font-weight: 600; color: #334155;">
+                            {{ contact.country || 'Rest of World' }} {{ getCountryFlag(contact.country) }}
+                        </td>
+
+                        <td style="padding: 14px 16px; font-weight: 700; color: #0b494d;">
+                            {{ contact.metaRate ? '₹' + contact.metaRate : '₹4.50' }}
+                        </td>
+
+                        <td style="padding: 14px 16px;">
+                            <span [style.background]="contact.readinessStatus === 'READY' ? '#dcfce7' : '#fecaca'" 
+                                  [style.color]="contact.readinessStatus === 'READY' ? '#166534' : '#991b1b'"
+                                  style="font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase;">
+                                {{ contact.readinessStatus || 'READY' }}
+                            </span>
                         </td>
 
                         <td style="padding: 14px 16px; font-size: 12.5px; font-weight: 500;"
@@ -386,6 +420,19 @@
                 {{ isBulkSendMode() ? 'Bulk Send Message to ' + selectedIds().length + ' Contacts' : 'Send Message to ' + selectedContactForMessage()?.name }}
             </h3>
             <button [disabled]="isSendingBulk()" (click)="closeSendMessage()" style="background: none; border: none; font-size: 18px; cursor: pointer; color: #64748b;" [style.opacity]="isSendingBulk() ? 0.5 : 1">✕</button>
+        </div>
+
+        <!-- Bulk Target Country Filters -->
+        <div *ngIf="isBulkSendMode()" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px;">
+            <label style="font-size: 12.5px; font-weight: 700; color: #475569; display: block; margin-bottom: 8px;">
+                <i class="fa-solid fa-filter" style="color: #0b494d; margin-right: 4px;"></i> Target Countries (Sending to {{ getFilteredBulkCount() }} of {{ selectedIds().length }} selected)
+            </label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <label *ngFor="let country of availableBulkCountries()" style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; user-select: none;">
+                    <input type="checkbox" [checked]="isCountrySelectedForBulk(country)" (change)="toggleBulkCountryFilter(country)" [disabled]="isSendingBulk()" style="cursor: pointer;">
+                    <span>{{ country }} {{ getCountryFlag(country) }} ({{ getBulkCountryCount(country) }})</span>
+                </label>
+            </div>
         </div>
 
         <!-- Mode Toggle Switch -->

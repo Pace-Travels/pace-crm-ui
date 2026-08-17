@@ -37,6 +37,7 @@ export class ContactsTable implements OnInit {
   searchQuery = signal('');
   filterLocation = signal('');
   filterSource = signal('');
+  filterCountry = signal('');
   sortColumn = signal<string>('name');
   sortDirection = signal<'asc' | 'desc'>('asc');
   
@@ -58,6 +59,7 @@ export class ContactsTable implements OnInit {
   bulkSummaryStats = signal<{ total: number; success: number; failed: number } | null>(null);
   isSendingBulk = signal(false);
   bulkProgress = signal<number>(0);
+  selectedBulkCountries = signal<string[]>([]);
 
   // Preview & Verification Mode
   isPreviewMode = signal(false);
@@ -115,6 +117,7 @@ export class ContactsTable implements OnInit {
     const query = this.searchQuery().trim().toLowerCase();
     const loc = this.filterLocation().trim().toLowerCase();
     const src = this.filterSource().trim().toLowerCase();
+    const country = this.filterCountry().trim().toLowerCase();
 
     // 1. Search Query Filter
     if (query) {
@@ -136,6 +139,11 @@ export class ContactsTable implements OnInit {
     // 3. Source Filter
     if (src) {
       list = list.filter(c => c.source && c.source.toLowerCase().includes(src));
+    }
+
+    // 3.5. Country Filter
+    if (country) {
+      list = list.filter(c => c.country && c.country.toLowerCase().includes(country));
     }
 
     // 4. Sorting
@@ -750,6 +758,12 @@ openCreateGroup() {
     this.selectedMessageTemplate.set(null);
     this.messageTemplateParams.set({});
 
+    // Initialize bulk countries filter with all countries present in selected contacts
+    const contactsList = this.contactService.contacts();
+    const selectedContacts = contactsList.filter(c => c.id !== undefined && this.selectedIds().includes(c.id));
+    const countries = Array.from(new Set(selectedContacts.map(c => c.country || 'Unknown')));
+    this.selectedBulkCountries.set(countries);
+
     this.api.get<any>('/messagetemplates/list').subscribe({
       next: (res: any) => {
         if (res.success && res.data) {
@@ -830,7 +844,17 @@ openCreateGroup() {
 
     const contactsList = this.contactService.contacts();
     const selectedContacts = contactsList.filter(c => c.id !== undefined && selectedIds.includes(c.id));
-    const total = selectedContacts.length;
+    
+    // Filter by selected target countries
+    const activeCountries = this.selectedBulkCountries();
+    const filteredContacts = selectedContacts.filter(c => activeCountries.includes(c.country || 'Unknown'));
+    const total = filteredContacts.length;
+
+    if (total === 0) {
+      this.isSendingBulk.set(false);
+      Swal.fire("Error", "No contacts match the selected target countries", "error");
+      return;
+    }
 
     let success = 0;
     let failed = 0;
@@ -839,7 +863,7 @@ openCreateGroup() {
     const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
     for (let i = 0; i < total; i++) {
-      const contact = selectedContacts[i];
+      const contact = filteredContacts[i];
       const phone = contact.phone;
       const name = contact.name || "Customer";
 
@@ -944,4 +968,50 @@ openCreateGroup() {
       });
     }
   }
+
+  // Country Flag Helper
+  getCountryFlag(country: string): string {
+    if (!country) return '🌐';
+    const c = country.toLowerCase();
+    if (c.includes('india')) return '🇮🇳';
+    if (c.includes('uae') || c.includes('dubai') || c.includes('emirates')) return '🇦🇪';
+    if (c.includes('united kingdom') || c.includes('uk')) return '🇬🇧';
+    if (c.includes('usa') || c.includes('canada') || c.includes('united states')) return '🇺🇸';
+    return '🌐';
+  }
+
+  // Computations and helper methods for bulk send country filters
+  availableBulkCountries = computed(() => {
+    const selectedIds = this.selectedIds();
+    if (selectedIds.length === 0) return [];
+    const contactsList = this.contactService.contacts();
+    const selectedContacts = contactsList.filter(c => c.id !== undefined && selectedIds.includes(c.id));
+    return Array.from(new Set(selectedContacts.map(c => c.country || 'Unknown')));
+  });
+
+  getBulkCountryCount(country: string): number {
+    const selectedIds = this.selectedIds();
+    const contactsList = this.contactService.contacts();
+    return contactsList.filter(c => c.id !== undefined && selectedIds.includes(c.id) && (c.country || 'Unknown') === country).length;
+  }
+
+  isCountrySelectedForBulk(country: string): boolean {
+    return this.selectedBulkCountries().includes(country);
+  }
+
+  toggleBulkCountryFilter(country: string) {
+    const current = this.selectedBulkCountries();
+    if (current.includes(country)) {
+      this.selectedBulkCountries.set(current.filter(c => c !== country));
+    } else {
+      this.selectedBulkCountries.set([...current, country]);
+    }
+  }
+
+  getFilteredBulkCount = computed(() => {
+    const selectedIds = this.selectedIds();
+    const contactsList = this.contactService.contacts();
+    const activeCountries = this.selectedBulkCountries();
+    return contactsList.filter(c => c.id !== undefined && selectedIds.includes(c.id) && activeCountries.includes(c.country || 'Unknown')).length;
+  });
 }
