@@ -500,10 +500,14 @@ export class ContactsTable implements OnInit {
     let filename = "";
 
     if (activeType === 'B2B') {
-      csvContent = "Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2,Agent Username,Tags,Lead Source\n1,Pace Tourism,John Doe,New York,=\"'+919876543210\",=\"'+919876543211\",john@pace.com,doe@pace.com,johndoe,\"VIP, Active\",IMPORT";
+      csvContent = "Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2,Agent Username,Tags,Lead Source\n" +
+                   "1,Pace Tourism,John Doe,New York,=\"'+919876543210\",=\"'+919876543211\",john@pace.com,doe@pace.com,johndoe,\"VIP, Active\",IMPORT\n" +
+                   "2,Dubai Travels,Sarah Khan,Dubai,=\"'+971501234567\",,sarah@dubaitravels.com,,sarahk,\"Agent, Active\",IMPORT";
       filename = "b2b_contacts_sample.csv";
     } else {
-      csvContent = "Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2,Tags,Lead Source\n1,Alice Smith,London,=\"'+919876543210\",=\"'+919876543211\",alice@gmail.com,alice2@gmail.com,\"Prospect\",IMPORT";
+      csvContent = "Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2,Tags,Lead Source\n" +
+                   "1,Alice Smith,London,=\"'+919876543210\",=\"'+919876543211\",alice@gmail.com,alice2@gmail.com,\"Prospect\",IMPORT\n" +
+                   "2,Yusuf Ali,Dubai,=\"'+971501234567\",,yusuf@gmail.com,,\"VIP, Tourist\",IMPORT";
       filename = "b2c_contacts_sample.csv";
     }
 
