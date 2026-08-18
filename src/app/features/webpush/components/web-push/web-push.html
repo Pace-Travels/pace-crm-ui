@@ -5,12 +5,22 @@
 
     <div class="form-body">
 
-      <!-- Recipient Field (Simple Native Dropdown) -->
-      <div class="form-group">
+      <!-- 1. BULK SEND CHECKBOX TOGGLE -->
+      <div class="form-group bulk-toggle-card" style="background: #eef2ff; padding: 12px 16px; border-radius: 8px; border: 1px solid #c7d2fe; margin-bottom: 16px;">
+        <label class="checkbox-label" style="cursor: pointer; font-weight: 600; color: #3730a3; display: flex; align-items: center; gap: 10px; margin: 0;">
+          <input type="checkbox" [(ngModel)]="isBulkSend" (change)="onBulkToggleChange()" style="width: 18px; height: 18px; cursor: pointer;" />
+          <span>Send to All Active Devices (Bulk Send) 🚀</span>
+        </label>
+        <small style="display: block; color: #4338ca; margin-top: 4px; font-size: 12px;">
+          * Only devices with notification permission <b>Access ON 🟢</b> will receive this message.
+        </small>
+      </div>
+
+      <!-- 2. RECIPIENT FIELD (Hides automatically when isBulkSend is checked) -->
+      <div class="form-group" *ngIf="!isBulkSend">
         <label for="recipient-select">To: (Traveler / Registered Device) *</label>
         <div class="native-dropdown-wrapper">
-          <select id="recipient-select" class="custom-select" [(ngModel)]="selectedDeviceIdKey"
-            (change)="onDeviceChange($event)">
+          <select id="recipient-select" class="custom-select" [(ngModel)]="selectedDeviceIdKey" (change)="onDeviceChange($event)">
 
             <option value="" disabled selected>-- Select a registered device --</option>
 
@@ -44,7 +54,7 @@
       <!-- Short Message (13 Rows) -->
       <div class="form-group">
         <label for="push-message">Short Message *</label>
-        <textarea id="push-message" class="custom-textarea" rows="13" [(ngModel)]="pushData.message"
+        <textarea id="push-message" class="custom-textarea" rows="7.9" [(ngModel)]="pushData.message"
           placeholder="Notification body text..."></textarea>
       </div>
 
@@ -76,9 +86,9 @@
         <span>Schedule Send</span>
       </button>
 
-      <!-- Send Button stays disabled until form is valid -->
+      <!-- Dynamic Send Button Text for Single vs Bulk Send -->
       <button type="button" class="btn-light-blue" [disabled]="!isFormValid || isSending" (click)="sendNotification()">
-        <span>{{ isSending ? 'Sending...' : 'Send Notification' }}</span>
+        <span>{{ isSending ? 'Sending...' : (isBulkSend ? 'Send to All Active Devices' : 'Send Notification') }}</span>
         <i class="fa-solid fa-paper-plane"></i>
       </button>
     </div>
@@ -88,8 +98,8 @@
   <!-- RIGHT COLUMN: PREVIEW SIDEBAR -->
   <div class="preview-sidebar">
 
-    <!-- Profile & Booking Context Card -->
-    <div class="profile-card">
+    <!-- Profile & Booking Context Card (Hidden during Bulk Send) -->
+    <div class="profile-card" *ngIf="!isBulkSend">
       <div class="profile-header">
         <div class="avatar">{{ user.initials }}</div>
         <div class="user-details">
@@ -115,6 +125,15 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Bulk Send Info Header (Visible only when Bulk Send is active) -->
+    <div class="profile-card" *ngIf="isBulkSend" style="background: #f8fafc; border: 1px dashed #94a3b8; text-align: center; padding: 20px;">
+      <i class="fa-solid fa-users-gear" style="font-size: 32px; color: #475569; margin-bottom: 8px;"></i>
+      <h4 style="margin: 0; color: #1e293b;">Bulk Audience Target</h4>
+      <p style="font-size: 13px; color: #64748b; margin-top: 4px;">
+        Notification will broadcast to all registered devices that have <b>Access ON</b>.
+      </p>
     </div>
 
     <!-- Live Preview Panel -->

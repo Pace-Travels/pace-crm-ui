@@ -1,12 +1,11 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap } from 'rxjs';
+import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
-// fcm-webpush.service.ts
-
 export interface DeviceItem {
-  idKey: string;
+  idKey?: string;
+  identityToken?: string;
   displayName?: string;
   operatingSystem?: string;
   browser?: string;
@@ -16,10 +15,12 @@ export interface DeviceItem {
 }
 
 export interface PushNotificationPayload {
-  idKey: string;
+  isBulk?: boolean;
+  idKey?: string | null;
   title: string;
   body: string;
   icon?: string;
+  attachmentUrl?: string | null;
   clickUrl?: string;
 }
 
@@ -52,9 +53,20 @@ export class FcmWebpushService {
     });
   }
 
-  // 2. Admin Form se Notification bhejna (Backend handles database lookup & FCM)
-  sendNotificationByIdKey(payload: PushNotificationPayload): Observable<any> {
-    console.log(payload)
+  // 🔹 2. OLD SINGLE DEVICE NOTIFICATION
+  sendSingleNotification(payload: PushNotificationPayload): Observable<any> {
+    console.log('FCM Single Dispatch Payload:', payload);
     return this.http.post(`${this.baseUrl}/usertoken/sendnotification`, payload);
+  }
+
+  // 🔹 3. NEW SEPARATE BULK NOTIFICATION
+  sendBulkNotification(payload: PushNotificationPayload): Observable<any> {
+    console.log('FCM Bulk Dispatch Payload:', payload);
+    return this.http.post(`${this.baseUrl}/usertoken/bulknotification`, payload);
+  }
+
+  // 👈 Backward Compatibility (Purana method fallback ke liye)
+  sendNotificationByIdKey(payload: PushNotificationPayload): Observable<any> {
+    return this.sendSingleNotification(payload);
   }
 }
