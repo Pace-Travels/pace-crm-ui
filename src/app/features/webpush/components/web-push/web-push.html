@@ -14,7 +14,7 @@
 
             <option value="" disabled selected>-- Select a registered device --</option>
 
-            <option *ngFor="let device of deviceList" [value]="device.idKey">
+            <option *ngFor="let device of deviceList" [value]="device.identityToken">
               {{ device.displayName || device.browser || 'Device' }}
               ({{ device.operatingSystem || 'OS' }})
               - [Status: {{ device.access ? '🟢 Access ON' : '🔴 Access OFF' }}]

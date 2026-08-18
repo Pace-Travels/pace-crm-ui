@@ -11,6 +11,7 @@ import { FcmWebpushService } from '../../services/fcm-webpush.service';
 // 🔹 Device Interface (Service mein na ho toh error se bachne ke liye)
 export interface DeviceItem {
   idKey: string;
+  identityToken: string;
   displayName?: string;
   operatingSystem?: string;
   browser?: string;
@@ -163,6 +164,10 @@ export class WebPush implements OnInit {
       icon: this.uploadedFile?.url || this.pushData.iconUrl || '/favicon.ico',
       clickUrl: this.pushData.clickUrl
     };
+    console.log('=====================>>>>')
+    console.log(payload)
+    console.log('=====================>>>>')
+
 
     this.fcmWebpushService.sendNotificationByIdKey(payload).subscribe({
       next: (res) => {

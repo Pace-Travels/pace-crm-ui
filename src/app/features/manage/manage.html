@@ -330,6 +330,15 @@
                 </button>
             </div>
         </div>
+        <div *ngIf="generatedSecretKey()" style="margin-top: 16px; padding: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; flex-direction: column; gap: 8px;">
+            <label style="font-size: 12px; font-weight: 700; color: #0b494d;">Secret Key:</label>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" class="form-control" [value]="generatedSecretKey()" readonly style="background: #ffffff; color: #334155; font-family: monospace; font-size: 12px;">
+                <button class="btn btn-primary" style="padding: 8px 16px; white-space: nowrap;" (click)="copySecretTokenToClipboard()">
+                    Copy Secret Key
+                </button>
+            </div>
+        </div>
 
     </div>
 </div>

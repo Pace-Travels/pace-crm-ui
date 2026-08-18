@@ -54,6 +54,7 @@ export class FcmWebpushService {
 
   // 2. Admin Form se Notification bhejna (Backend handles database lookup & FCM)
   sendNotificationByIdKey(payload: PushNotificationPayload): Observable<any> {
+    console.log(payload)
     return this.http.post(`${this.baseUrl}/usertoken/sendnotification`, payload);
   }
 }

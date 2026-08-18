@@ -60,8 +60,9 @@ export class Manage implements OnInit {
   fcmPreChatFieldsText = '';
   fcmCallPhoneNumber = '';
 
-  // Store newly generated token for copying
-  generatedToken = signal<string>('');
+  // Store newly generated values for copying
+  generatedToken = signal<string>(''); // Stores Identity Token
+  generatedSecretKey = signal<string>(''); // Stores identSecretKey
 
   constructor(private api: ApiService) {}
 
@@ -212,7 +213,7 @@ export class Manage implements OnInit {
     return `<script src="${apiHost}/sdk/widget.js" data-api-key="${apiKey || 'YOUR_KEY'}"></script>`;
   }
 
-  // --- FCM Token Generator Section ---
+  // --- FCM Token & Secret Key Generator Section ---
 
   saveToken() {
     if (!this.fcmName) {
@@ -236,15 +237,19 @@ export class Manage implements OnInit {
 
     this.api.post('usertoken/add', payload).subscribe({
       next: (res: any) => {
-        // Response me jo identityToken mila hai use signal me set karein
+        // Response se identityToken aur identSecretKey dono Signals me save karein
         const token = res?.data?.identityToken || '';
-        this.generatedToken.set(token);
+        const secretKey = res?.data?.identSecretKey || '';
 
-        Swal.fire('Success', 'FCM Token generated successfully!', 'success');
+        this.generatedToken.set(token);
+        this.generatedSecretKey.set(secretKey);
+
+        Swal.fire('Success', 'FCM Token and Secret Key generated successfully!', 'success');
       },
       error: (err: any) => {
-        Swal.fire('Error', 'Failed to generate token: ' + err.message, 'error');
-      }
+      const errorMessage = err?.error?.error || err?.message || 'Something went wrong!';
+      Swal.fire('Token Generate Failed', errorMessage, 'error');
+    }
     });
   }
 
@@ -257,12 +262,31 @@ export class Manage implements OnInit {
         toast: true,
         position: 'top-end',
         icon: 'success',
-        title: 'Token copied to clipboard!',
+        title: 'Identity Token copied to clipboard!',
         showConfirmButton: false,
         timer: 2000
       });
     }).catch(err => {
       console.error('Failed to copy: ', err);
+    });
+  }
+
+  // 👈 Secret Key Copy Function
+  copySecretTokenToClipboard() {
+    const secretKey = this.generatedSecretKey();
+    if (!secretKey) return;
+
+    navigator.clipboard.writeText(secretKey).then(() => {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: 'Secret Key copied to clipboard!',
+        showConfirmButton: false,
+        timer: 2000
+      });
+    }).catch(err => {
+      console.error('Failed to copy secret key: ', err);
     });
   }
 }
