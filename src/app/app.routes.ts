@@ -30,6 +30,7 @@ import { AIMarketingIntelligence } from './features/ai-marketing-intelligence/ai
 import { WebPush } from './features/webpush/components/web-push/web-push';
 import { Email } from './features/email/components/email/email';
 import { Templates } from './features/templates/templates';
+import { CreateTemplateView } from './features/templates/create-template-view/create-template-view';
 import { History } from './features/history/history';
 
 export const routes: Routes = [
@@ -115,8 +116,10 @@ export const routes: Routes = [
             },
             {
                 path: 'templates',
-                component: Templates,
-                title: 'Message Templates - Pace Messenger'
+                children: [
+                    { path: '', component: Templates, title: 'Message Templates - Pace Messenger' },
+                    { path: 'create', component: CreateTemplateView, title: 'Create Template - Pace Messenger' }
+                ]
             },
             {
                 path: 'contacts',

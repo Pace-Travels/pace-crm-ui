@@ -485,14 +485,7 @@ export class TemplatesView implements OnInit {
   }
 
   openCreateTemplate() {
-    this.editingTemplateId.set(null);
-    this.templateForm.reset({
-      category: 'MARKETING',
-      language: 'en_US',
-      headerFormat: 'NONE',
-      body: ''
-    });
-    this.showCreateModal.set(true);
+    this.router.navigate(['/templates/create']);
   }
 
   editTemplate(tpl: MessageTemplate) {
