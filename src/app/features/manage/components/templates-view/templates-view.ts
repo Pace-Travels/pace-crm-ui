@@ -551,8 +551,7 @@ export class TemplatesView implements OnInit {
 
   // --- AI Template Generator ---
   openAiGenerator() {
-    this.aiPrompt.set('');
-    this.showAiGenModal.set(true);
+    this.router.navigate(['/templates/generate-ai']);
   }
 
   closeAiGenerator() {

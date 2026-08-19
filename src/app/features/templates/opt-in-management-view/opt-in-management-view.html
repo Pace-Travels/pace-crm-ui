@@ -1,0 +1,184 @@
+<div class="opt-in-page">
+  <!-- Top Navigation Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <a routerLink="/templates" class="back-link">
+        <i class="ri-arrow-left-line"></i>
+      </a>
+      <div class="breadcrumb">
+        <span class="crumb-parent">Message Templates</span>
+        <i class="ri-chevron-right-line"></i>
+        <span class="crumb-active">Opt-in Management</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <h2 class="main-title">Opt-in Management</h2>
+
+    <!-- Opt-out Keywords & Auto Response Card -->
+    <div class="card-section mt-4">
+      <div class="card-grid">
+        <!-- Left: Opt-out Keywords -->
+        <div class="card-col">
+          <h3 class="col-title">Opt-out Keywords</h3>
+          <p class="col-desc">The user will have to type exactly one of these messages on which they should be automatically opted-out</p>
+
+          <div class="keywords-chips-container mt-3">
+            <span class="keyword-chip" *ngFor="let kw of optOutKeywords(); let i = index">
+              {{ kw }}
+              <i class="ri-close-line" (click)="removeOptOutKeyword(i)"></i>
+            </span>
+          </div>
+
+          <div class="add-kw-input-row mt-3">
+            <input 
+              type="text" 
+              [(ngModel)]="newOptOutKeyword" 
+              placeholder="e.g. Stop" 
+              (keyup.enter)="addOptOutKeyword()">
+            <button type="button" class="btn-add-kw" (click)="addOptOutKeyword()">+ Add more</button>
+          </div>
+
+          <button type="button" class="btn-dark-save mt-4" (click)="saveOptOutSettings()">Save Settings</button>
+        </div>
+
+        <!-- Right: Opt-out Response WhatsApp Bubble -->
+        <div class="card-col">
+          <div class="col-header-row">
+            <div>
+              <h3 class="col-title">Opt-out Response</h3>
+              <p class="col-desc">Setup a response message for opt-out user keywords</p>
+            </div>
+            
+            <div class="toggle-and-config">
+              <label class="switch">
+                <input type="checkbox" [(ngModel)]="optOutAutoReplyEnabled">
+                <span class="slider round"></span>
+              </label>
+              <button type="button" class="btn-outline-config" (click)="showConfigureOptOutModal.set(true)">
+                <i class="ri-edit-line"></i> Configure
+              </button>
+            </div>
+          </div>
+
+          <div class="whatsapp-bubble-preview mt-4">
+            <div class="wa-icon"><i class="ri-whatsapp-fill"></i></div>
+            <div class="bubble-content">
+              <p>{{ optOutResponseText() }}</p>
+            </div>
+          </div>
+          <span class="status-hint mt-2">
+            Auto response is {{ optOutAutoReplyEnabled() ? 'enabled' : 'disabled' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Opt-in Keywords & Auto Response Card -->
+    <div class="card-section mt-6">
+      <div class="card-grid">
+        <!-- Left: Opt-in Keywords -->
+        <div class="card-col">
+          <h3 class="col-title">Opt-in Keywords</h3>
+          <p class="col-desc">The user will have to type exactly one of these messages on which they should be automatically opted-in</p>
+
+          <div class="keywords-chips-container mt-3">
+            <span class="keyword-chip" *ngFor="let kw of optInKeywords(); let i = index">
+              {{ kw }}
+              <i class="ri-close-line" (click)="removeOptInKeyword(i)"></i>
+            </span>
+          </div>
+
+          <div class="add-kw-input-row mt-3">
+            <input 
+              type="text" 
+              [(ngModel)]="newOptInKeyword" 
+              placeholder="e.g. Allow" 
+              (keyup.enter)="addOptInKeyword()">
+            <button type="button" class="btn-add-kw" (click)="addOptInKeyword()">+ Add more</button>
+          </div>
+
+          <button type="button" class="btn-dark-save mt-4" (click)="saveOptInSettings()">Save Settings</button>
+        </div>
+
+        <!-- Right: Opt-in Response WhatsApp Bubble -->
+        <div class="card-col">
+          <div class="col-header-row">
+            <div>
+              <h3 class="col-title">Opt-in Response</h3>
+              <p class="col-desc">Setup a response message for opt-in user keywords</p>
+            </div>
+            
+            <div class="toggle-and-config">
+              <label class="switch">
+                <input type="checkbox" [(ngModel)]="optInAutoReplyEnabled">
+                <span class="slider round"></span>
+              </label>
+              <button type="button" class="btn-outline-config" (click)="showConfigureOptInModal.set(true)">
+                <i class="ri-edit-line"></i> Configure
+              </button>
+            </div>
+          </div>
+
+          <div class="whatsapp-bubble-preview mt-4">
+            <div class="wa-icon"><i class="ri-whatsapp-fill"></i></div>
+            <div class="bubble-content">
+              <p>{{ optInResponseText() }}</p>
+            </div>
+          </div>
+          <span class="status-hint mt-2">
+            Auto response is {{ optInAutoReplyEnabled() ? 'enabled' : 'disabled' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Download Report Card Section -->
+    <div class="card-section mt-6 p-5">
+      <div class="report-row">
+        <div>
+          <div class="title-with-badge">
+            <h3 class="col-title">Download Report</h3>
+            <span class="badge-premium"><i class="ri-sparkles-fill"></i> PREMIUM</span>
+          </div>
+          <p class="col-desc mt-1">Download Opt-in/out Reports for selected date range</p>
+        </div>
+
+        <button type="button" class="btn-secondary" (click)="downloadReport()">
+          <i class="ri-download-cloud-2-line"></i> Download Report
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configure Opt-Out Modal -->
+  <div class="modal-overlay" *ngIf="showConfigureOptOutModal()">
+    <div class="modal-card">
+      <h3 class="modal-title">Configure Opt-out Auto Response</h3>
+      <div class="form-group mt-3">
+        <label>Response Message Text</label>
+        <textarea [(ngModel)]="optOutResponseText" rows="3" class="input-text"></textarea>
+      </div>
+      <div class="modal-actions mt-4">
+        <button class="btn-secondary" (click)="showConfigureOptOutModal.set(false)">Cancel</button>
+        <button class="btn-primary" (click)="saveOptOutSettings(); showConfigureOptOutModal.set(false)">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configure Opt-In Modal -->
+  <div class="modal-overlay" *ngIf="showConfigureOptInModal()">
+    <div class="modal-card">
+      <h3 class="modal-title">Configure Opt-in Auto Response</h3>
+      <div class="form-group mt-3">
+        <label>Response Message Text</label>
+        <textarea [(ngModel)]="optInResponseText" rows="3" class="input-text"></textarea>
+      </div>
+      <div class="modal-actions mt-4">
+        <button class="btn-secondary" (click)="showConfigureOptInModal.set(false)">Cancel</button>
+        <button class="btn-primary" (click)="saveOptInSettings(); showConfigureOptInModal.set(false)">Save</button>
+      </div>
+    </div>
+  </div>
+</div>

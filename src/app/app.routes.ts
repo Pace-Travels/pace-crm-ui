@@ -31,6 +31,8 @@ import { WebPush } from './features/webpush/components/web-push/web-push';
 import { Email } from './features/email/components/email/email';
 import { Templates } from './features/templates/templates';
 import { CreateTemplateView } from './features/templates/create-template-view/create-template-view';
+import { AiTemplateGeneratorView } from './features/templates/ai-template-generator-view/ai-template-generator-view';
+import { OptInManagementView } from './features/templates/opt-in-management-view/opt-in-management-view';
 import { History } from './features/history/history';
 
 export const routes: Routes = [
@@ -118,7 +120,9 @@ export const routes: Routes = [
                 path: 'templates',
                 children: [
                     { path: '', component: Templates, title: 'Message Templates - Pace Messenger' },
-                    { path: 'create', component: CreateTemplateView, title: 'Create Template - Pace Messenger' }
+                    { path: 'create', component: CreateTemplateView, title: 'Create Template - Pace Messenger' },
+                    { path: 'generate-ai', component: AiTemplateGeneratorView, title: 'Generate Template with AI - Pace Messenger' },
+                    { path: 'opt-in', component: OptInManagementView, title: 'Opt-in Management - Pace Messenger' }
                 ]
             },
             {
