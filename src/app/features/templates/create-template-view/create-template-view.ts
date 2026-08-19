@@ -176,14 +176,34 @@ export class CreateTemplateView implements OnInit {
     const type = this.mediaHeaderType();
     if (type === 'NONE' || type === 'LOCATION') return;
 
-    // File Validation
-    if (type === 'IMAGE' && !file.type.startsWith('image/')) {
-      Swal.fire('Invalid File', 'Please select an image file (.jpg, .jpeg, .png).', 'warning');
-      return;
+    // File Type & Size Validation
+    if (type === 'IMAGE') {
+      if (!file.type.startsWith('image/')) {
+        Swal.fire('Invalid File', 'Please select an image file (.jpg, .jpeg, .png).', 'warning');
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        Swal.fire('File Too Large', 'Image file size exceeds the 5MB limit for Meta WhatsApp templates.', 'warning');
+        return;
+      }
     }
-    if (type === 'VIDEO' && !file.type.startsWith('video/')) {
-      Swal.fire('Invalid File', 'Please select a video file (.mp4, .3gp).', 'warning');
-      return;
+
+    if (type === 'VIDEO') {
+      if (!file.type.startsWith('video/')) {
+        Swal.fire('Invalid File', 'Please select a video file (.mp4, .3gp).', 'warning');
+        return;
+      }
+      if (file.size > 16 * 1024 * 1024) {
+        Swal.fire('File Too Large', 'Video file size exceeds the 16MB limit for Meta WhatsApp templates.', 'warning');
+        return;
+      }
+    }
+
+    if (type === 'DOCUMENT') {
+      if (file.size > 10 * 1024 * 1024) {
+        Swal.fire('File Too Large', 'Document file size exceeds the 10MB limit for Meta WhatsApp templates.', 'warning');
+        return;
+      }
     }
 
     const formData = new FormData();
@@ -210,7 +230,15 @@ export class CreateTemplateView implements OnInit {
       },
       error: (err: any) => {
         this.isUploadingMedia.set(false);
-        Swal.fire('Upload Failed', err.error?.message || err.message || 'Failed to upload media to server.', 'error');
+        let errorMsg = 'Failed to upload media to server.';
+        if (err.status === 413) {
+          errorMsg = 'File size is too large (413 Content Too Large). Please upload a smaller file.';
+        } else if (err.status === 0) {
+          errorMsg = 'Upload failed due to CORS or network error. Check Nginx client_max_body_size setting on your server.';
+        } else if (err.error?.message || err.error?.error) {
+          errorMsg = err.error?.message || err.error?.error;
+        }
+        Swal.fire('Upload Failed', errorMsg, 'error');
       }
     });
   }
