@@ -209,7 +209,7 @@
 
             <div class="form-group flex-1">
               <label>Media sample <span class="opt-tag">• Optional</span></label>
-              <select [(ngModel)]="mediaHeaderType">
+              <select [ngModel]="mediaHeaderType()" (ngModelChange)="onMediaHeaderTypeChange($event)">
                 <option value="NONE">None</option>
                 <option value="IMAGE">Image</option>
                 <option value="VIDEO">Video</option>
@@ -579,7 +579,7 @@
             </div>
 
             <div class="bubble-media-header" *ngIf="mediaHeaderType() === 'VIDEO'">
-              <video [src]="headerMediaUrl()" controls class="preview-media-video" *ngIf="headerMediaUrl()"></video>
+              <video [src]="headerMediaUrl()" controls preload="auto" playsinline muted class="preview-media-video" *ngIf="headerMediaUrl()"></video>
               <div class="media-placeholder video-placeholder" *ngIf="!headerMediaUrl()">
                 <i class="ri-play-circle-fill"></i>
               </div>

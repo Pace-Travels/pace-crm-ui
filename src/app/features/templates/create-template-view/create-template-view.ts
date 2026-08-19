@@ -275,6 +275,36 @@ export class CreateTemplateView implements OnInit {
     this.videoAnalysis.set(null);
   }
 
+  onMediaHeaderTypeChange(newType: string): void {
+    this.mediaHeaderType.set(newType as any);
+    this.imageAnalysis.set(null);
+    this.videoAnalysis.set(null);
+
+    const currentUrl = this.headerMediaUrl();
+    const isCurrentVideo = currentUrl.endsWith('.mp4') || currentUrl.includes('/videos/');
+    const isCurrentImage = currentUrl.endsWith('.png') || currentUrl.endsWith('.jpg') || currentUrl.endsWith('.jpeg') || currentUrl.includes('/images/');
+
+    if (newType === 'NONE' || newType === 'LOCATION') {
+      this.headerMediaUrl.set('');
+      this.uploadedFileName.set('');
+    } else if (newType === 'IMAGE') {
+      if (isCurrentVideo || !currentUrl) {
+        this.headerMediaUrl.set('https://messengerassets.quotedesks.com/templates/images/sample_image.png');
+        this.uploadedFileName.set('Sample_Header_Banner.png');
+      }
+    } else if (newType === 'VIDEO') {
+      if (isCurrentImage || !currentUrl) {
+        this.headerMediaUrl.set('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4');
+        this.uploadedFileName.set('Sample_Promo_Video.mp4');
+      }
+    } else if (newType === 'DOCUMENT') {
+      if (isCurrentVideo || isCurrentImage) {
+        this.headerMediaUrl.set('');
+        this.uploadedFileName.set('');
+      }
+    }
+  }
+
   // --- Gemini Vision AI Image Analysis & Crop Editor ---
   openImageEditor(): void {
     this.showImageEditorModal.set(true);
