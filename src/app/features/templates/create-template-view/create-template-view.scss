@@ -1012,9 +1012,105 @@
     &:hover { background: #dcfce7; }
   }
 
-  /* Image & Video Analysis Modals */
-  .modal-lg {
-    width: 800px !important;
+  /* Magic Pencil & Undo Badge Buttons */
+  .btn-magic-ai {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #a7f3d0;
+    color: #047857;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s ease;
+    &:hover { background: #bbf7d0; color: #065f46; }
+  }
+
+  .btn-revert-badge {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+    font-size: 11.5px;
+    font-weight: 600;
+    padding: 3px 9px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    &:hover { background: #fee2e2; }
+  }
+
+  .btn-reset-media {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    &:hover { background: #e2e8f0; color: #0f172a; }
+  }
+
+  /* Prompt Image Generator Box */
+  .prompt-gen-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    .prompt-label { font-size: 12px; font-weight: 700; color: #0f172a; margin-bottom: 6px; display: block; }
+    .prompt-input-row {
+      display: flex;
+      gap: 8px;
+      .prompt-input {
+        flex: 1;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 12.5px;
+        &:focus { outline: none; border-color: #0b494d; }
+      }
+      .btn-gen-prompt-img {
+        background: #0b494d;
+        color: #ffffff;
+        border: none;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 12.5px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        &:hover { background: #073437; }
+      }
+    }
+  }
+
+  .modal-dropzone-row {
+    .btn-modal-upload {
+      width: 100%;
+      background: #f0fdf4;
+      border: 1px dashed #86efac;
+      color: #166534;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      &:hover { background: #dcfce7; }
+    }
   }
 
   .modal-header-row {

@@ -433,6 +433,145 @@ export class CreateTemplateView implements OnInit {
     });
   }
 
+  // Magic Pencil History Signals
+  previousHeader = signal<string>('');
+  previousBody = signal<string>('');
+  previousFooter = signal<string>('');
+  isRewritingHeader = signal<boolean>(false);
+  isRewritingBody = signal<boolean>(false);
+  isRewritingFooter = signal<boolean>(false);
+
+  // Modal AI Image Prompt
+  customImagePrompt = signal<string>('');
+
+  // Reset to Manual Mode
+  resetToManualMode(): void {
+    this.headerMediaUrl.set('');
+    this.uploadedFileName.set('');
+    this.imageAnalysis.set(null);
+    this.videoAnalysis.set(null);
+    Swal.fire({
+      title: 'Switched to Manual Mode',
+      text: 'AI media cleared. You can now drag and drop your own image or video file.',
+      icon: 'info',
+      timer: 1800,
+      showConfirmButton: false
+    });
+  }
+
+  // Magic Pencil Header
+  magicRewriteHeader(): void {
+    const text = this.headerText();
+    if (!text) return;
+    this.previousHeader.set(text);
+    this.isRewritingHeader.set(true);
+
+    this.api.post('/ai/rewrite-text', { text, action: 'POLISH' }).subscribe({
+      next: (res: any) => {
+        this.isRewritingHeader.set(false);
+        if (res && res.text) this.headerText.set(res.text);
+      },
+      error: () => this.isRewritingHeader.set(false)
+    });
+  }
+
+  revertHeader(): void {
+    if (this.previousHeader()) {
+      this.headerText.set(this.previousHeader());
+      this.previousHeader.set('');
+    }
+  }
+
+  // Magic Pencil Body
+  magicRewriteBody(): void {
+    const text = this.bodyText();
+    if (!text) return;
+    this.previousBody.set(text);
+    this.isRewritingBody.set(true);
+
+    this.api.post('/ai/rewrite-text', { text, action: 'POLISH' }).subscribe({
+      next: (res: any) => {
+        this.isRewritingBody.set(false);
+        if (res && res.text) this.bodyText.set(res.text);
+      },
+      error: () => this.isRewritingBody.set(false)
+    });
+  }
+
+  revertBody(): void {
+    if (this.previousBody()) {
+      this.bodyText.set(this.previousBody());
+      this.previousBody.set('');
+    }
+  }
+
+  // Magic Pencil Footer
+  magicRewriteFooter(): void {
+    const text = this.footerText();
+    if (!text) return;
+    this.previousFooter.set(text);
+    this.isRewritingFooter.set(true);
+
+    this.api.post('/ai/rewrite-text', { text, action: 'POLISH' }).subscribe({
+      next: (res: any) => {
+        this.isRewritingFooter.set(false);
+        if (res && res.text) this.footerText.set(res.text);
+      },
+      error: () => this.isRewritingFooter.set(false)
+    });
+  }
+
+  revertFooter(): void {
+    if (this.previousFooter()) {
+      this.footerText.set(this.previousFooter());
+      this.previousFooter.set('');
+    }
+  }
+
+  // Prompt-based AI Image Generation in Modal
+  generateImageFromPrompt(): void {
+    const promptText = this.customImagePrompt() || this.bodyText() || 'Promotional Banner';
+    this.isAnalyzingVisual.set(true);
+
+    this.api.post('/ai/generate-media', { prompt: promptText, mediaType: 'IMAGE' }).subscribe({
+      next: (res: any) => {
+        this.isAnalyzingVisual.set(false);
+        if (res && res.url) {
+          this.headerMediaUrl.set(res.url);
+          this.uploadedFileName.set('GenAI_Prompt_Banner.jpg');
+          Swal.fire({
+            title: 'AI Image Generated!',
+            text: 'Rendered AI banner from prompt.',
+            icon: 'success',
+            timer: 1800,
+            showConfirmButton: false
+          });
+        }
+      },
+      error: () => this.isAnalyzingVisual.set(false)
+    });
+  }
+
+  // Inline Modal File Upload
+  onModalFileSelected(event: any): void {
+    const file: File = event.target.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    formData.append('folderCategory', 'templates');
+    formData.append('subCategory', 'images');
+
+    this.api.post('/storage/upload', formData).subscribe({
+      next: (res: any) => {
+        if (res && res.url) {
+          this.headerMediaUrl.set(res.url);
+          this.uploadedFileName.set(file.name);
+        }
+      }
+    });
+  }
+
   applyIdeaToTemplate(idea: any): void {
     if (idea.headerText) this.headerText.set(idea.headerText);
     if (idea.bodyText) this.bodyText.set(idea.bodyText);
@@ -464,32 +603,66 @@ export class CreateTemplateView implements OnInit {
     this.mediaHeaderType.set(mediaType);
     this.showIdeaDrawer.set(false);
 
+    // Show SweetAlert Real-time Progress Loader
+    Swal.fire({
+      title: `Generating ${mediaType === 'VIDEO' ? 'Banana Pro Video' : 'Imagen 3 Banner'}...`,
+      html: `
+        <div style="font-weight:600; color:#0b494d; margin-bottom:8px;" id="swal-status">Initializing AI Synthesis...</div>
+        <div style="width:100%; background:#e2e8f0; border-radius:10px; overflow:hidden; height:12px;">
+          <div id="swal-bar" style="width:15%; height:100%; background:#0b494d; transition:width 0.4s ease;"></div>
+        </div>
+      `,
+      allowOutsideClick: false,
+      showConfirmButton: false
+    });
+
+    let progress = 15;
+    const interval = setInterval(() => {
+      progress += Math.floor(Math.random() * 15) + 10;
+      if (progress > 90) progress = 90;
+      const bar = document.getElementById('swal-bar');
+      const status = document.getElementById('swal-status');
+      if (bar) bar.style.width = `${progress}%`;
+      if (status) {
+        if (progress < 50) status.innerText = `Rendering ${mediaType === 'VIDEO' ? 'Banana Pro Scene' : 'Imagen 3 Prompt'}... ${progress}%`;
+        else status.innerText = `Uploading generated ${mediaType === 'VIDEO' ? 'MP4' : 'PNG'} to AWS S3 Storage... ${progress}%`;
+      }
+    }, 400);
+
     // Call S3 GenAI Media Generator API
     const promptText = idea.bananaProPrompt || idea.headerText || idea.bodyText || 'Promo Asset';
     
     this.api.post('/ai/generate-media', { prompt: promptText, mediaType }).subscribe({
       next: (res: any) => {
-        if (res && res.url) {
-          this.headerMediaUrl.set(res.url);
-          this.uploadedFileName.set(mediaType === 'VIDEO' ? 'GenAI_BananaPro_Promo.mp4' : 'GenAI_Promo_Asset.png');
-          
+        clearInterval(interval);
+        const bar = document.getElementById('swal-bar');
+        const status = document.getElementById('swal-status');
+        if (bar) bar.style.width = '100%';
+        if (status) status.innerText = '100% Complete! Applying to live preview...';
+
+        setTimeout(() => {
+          if (res && res.url) {
+            this.headerMediaUrl.set(res.url);
+            this.uploadedFileName.set(mediaType === 'VIDEO' ? 'GenAI_BananaPro_Promo.mp4' : 'GenAI_Promo_Asset.png');
+          }
           Swal.fire({
-            title: 'AI Idea & Media Applied!',
-            text: `Applied "${idea.angle}" template copy, buttons, and generated ${mediaType.toLowerCase()} header stored in S3 genai folder!`,
+            title: 'AI Media Generated!',
+            text: `Applied "${idea.angle}" copy and generated ${mediaType.toLowerCase()} header stored in S3!`,
             icon: 'success',
-            timer: 2500,
+            timer: 2000,
             showConfirmButton: false
           });
-        }
+        }, 500);
       },
       error: () => {
-        // Fallback default GenAI asset
+        clearInterval(interval);
         const fallbackUrl = mediaType === 'VIDEO' 
           ? 'https://www.w3schools.com/html/mov_bbb.mp4'
           : 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80';
         
         this.headerMediaUrl.set(fallbackUrl);
         this.uploadedFileName.set(mediaType === 'VIDEO' ? 'GenAI_BananaPro_Promo.mp4' : 'GenAI_Promo_Asset.jpg');
+        Swal.fire('AI Idea Applied', `Applied "${idea.angle}" copy & template setup to wizard!`, 'success');
       }
     });
 

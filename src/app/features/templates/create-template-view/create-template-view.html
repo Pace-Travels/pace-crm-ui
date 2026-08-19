@@ -259,6 +259,9 @@
                 <button type="button" class="btn-ai-pill" *ngIf="mediaHeaderType() === 'VIDEO'" (click)="openVideoEditor()">
                   <i class="ri-film-line"></i> Video Analyser
                 </button>
+                <button type="button" class="btn-reset-media" (click)="resetToManualMode()" title="Reset to Manual Upload Mode">
+                  <i class="ri-refresh-line"></i> Reset to Manual Mode
+                </button>
                 <button class="remove-media-btn" (click)="removeUploadedMedia()" title="Remove file"><i class="ri-delete-bin-line"></i></button>
               </div>
             </div>
@@ -280,7 +283,17 @@
           <div class="form-group" *ngIf="mediaHeaderType() === 'NONE'">
             <div class="label-row">
               <label>Header <span class="opt-tag">• Optional</span></label>
-              <button class="add-var-btn" (click)="insertVariableToHeader()"><i class="ri-add-line"></i> Add variable</button>
+              <div class="label-actions-right">
+                <button type="button" class="btn-magic-ai" (click)="magicRewriteHeader()" [disabled]="isRewritingHeader()">
+                  <i class="ri-magic-line" *ngIf="!isRewritingHeader()"></i>
+                  <i class="ri-loader-4-line spin" *ngIf="isRewritingHeader()"></i>
+                  <span>Magic AI</span>
+                </button>
+                <button type="button" class="btn-revert-badge" *ngIf="previousHeader()" (click)="revertHeader()">
+                  <i class="ri-history-line"></i> Undo
+                </button>
+                <button class="add-var-btn" (click)="insertVariableToHeader()"><i class="ri-add-line"></i> Add variable</button>
+              </div>
             </div>
             <div class="input-with-counter">
               <input type="text" [(ngModel)]="headerText" placeholder="Add a short line of text to the header of your message" maxlength="60">
@@ -293,6 +306,14 @@
             <div class="label-row">
               <label>Body</label>
               <div class="label-actions-right">
+                <button type="button" class="btn-magic-ai" (click)="magicRewriteBody()" [disabled]="isRewritingBody()">
+                  <i class="ri-magic-line" *ngIf="!isRewritingBody()"></i>
+                  <i class="ri-loader-4-line spin" *ngIf="isRewritingBody()"></i>
+                  <span>Magic AI</span>
+                </button>
+                <button type="button" class="btn-revert-badge" *ngIf="previousBody()" (click)="revertBody()">
+                  <i class="ri-history-line"></i> Undo
+                </button>
                 <button type="button" class="btn-ai-ideas-pill" (click)="openIdeaDrawer()">
                   <i class="ri-sparkles-fill"></i> Get AI Creative Ideas
                 </button>
@@ -316,7 +337,19 @@
 
           <!-- Footer Field -->
           <div class="form-group">
-            <label>Footer <span class="opt-tag">• Optional</span></label>
+            <div class="label-row">
+              <label>Footer <span class="opt-tag">• Optional</span></label>
+              <div class="label-actions-right">
+                <button type="button" class="btn-magic-ai" (click)="magicRewriteFooter()" [disabled]="isRewritingFooter()">
+                  <i class="ri-magic-line" *ngIf="!isRewritingFooter()"></i>
+                  <i class="ri-loader-4-line spin" *ngIf="isRewritingFooter()"></i>
+                  <span>Magic AI</span>
+                </button>
+                <button type="button" class="btn-revert-badge" *ngIf="previousFooter()" (click)="revertFooter()">
+                  <i class="ri-history-line"></i> Undo
+                </button>
+              </div>
+            </div>
             <div class="input-with-counter">
               <input type="text" [(ngModel)]="footerText" placeholder="Add a short line of text to the bottom of your message" maxlength="60">
               <span class="counter">{{ footerTextLength() }}/60</span>
@@ -328,14 +361,6 @@
         <div class="card-section">
           <div class="header-with-action">
             <div>
-              <h3 class="card-title">Buttons <span class="opt-tag">• Optional</span></h3>
-              <p class="card-subtext">Create buttons that let customers respond to your message or take action. You can add up to ten buttons.</p>
-            </div>
-
-            <!-- Add Button Menu Dropdown -->
-            <div class="dropdown-wrapper">
-              <button class="btn-secondary" (click)="toggleButtonDropdown()">
-                <i class="ri-add-line"></i> Add button <i class="ri-arrow-down-s-line"></i>
               </button>
               <div class="dropdown-menu" *ngIf="showButtonDropdown()">
                 <button (click)="addButton('CUSTOM')"><i class="ri-reply-line"></i> Custom (Quick reply)</button>
@@ -683,17 +708,38 @@
       </div>
 
       <div class="modal-body-content">
+        <!-- Prompt AI Image Generator Input Row -->
+        <div class="prompt-gen-box mb-3">
+          <label class="prompt-label"><i class="ri-sparkles-fill text-green"></i> Generate AI Image from Prompt:</label>
+          <div class="prompt-input-row">
+            <input type="text" [(ngModel)]="customImagePrompt" placeholder="e.g. Modern luxury resort promo banner with sunset lighting" class="prompt-input">
+            <button class="btn-gen-prompt-img" (click)="generateImageFromPrompt()" [disabled]="isAnalyzingVisual()">
+              <i class="ri-sparkles-line" *ngIf="!isAnalyzingVisual()"></i>
+              <i class="ri-loader-4-line spin" *ngIf="isAnalyzingVisual()"></i>
+              <span>Generate</span>
+            </button>
+          </div>
+        </div>
+
         <div class="editor-grid">
           <!-- Image Preview & Crop Canvas -->
           <div class="preview-crop-column">
             <div class="crop-image-box" [style.aspect-ratio]="selectedAspectRatio() === 'SQUARE' ? '1/1' : '1.91/1'">
-              <img [src]="headerMediaUrl()" class="crop-target-img">
+              <img [src]="headerMediaUrl()" class="crop-target-img" *ngIf="headerMediaUrl()">
             </div>
 
             <div class="aspect-ratio-toolbar mt-3">
               <label>WhatsApp Ratio:</label>
               <button class="ratio-btn" [class.active]="selectedAspectRatio() === 'SQUARE'" (click)="selectedAspectRatio.set('SQUARE')">1:1 Square</button>
               <button class="ratio-btn" [class.active]="selectedAspectRatio() === 'LANDSCAPE'" (click)="selectedAspectRatio.set('LANDSCAPE')">1.91:1 Landscape</button>
+            </div>
+
+            <!-- Inline Modal File Upload Dropzone -->
+            <div class="modal-dropzone-row mt-3">
+              <input type="file" #modalFileInput (change)="onModalFileSelected($event)" accept="image/*" style="display:none;">
+              <button class="btn-modal-upload" (click)="modalFileInput.click()">
+                <i class="ri-upload-cloud-line"></i> Upload New Image File
+              </button>
             </div>
           </div>
 
