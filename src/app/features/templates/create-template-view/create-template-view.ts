@@ -40,12 +40,17 @@ export class CreateTemplateView implements OnInit {
   selectedLanguage = signal<string>('en_US');
   variableType = signal<'NUMBER' | 'NAME'>('NUMBER');
   
-  // Media Header
+  // Media Header & Upload State
   mediaHeaderType = signal<'NONE' | 'IMAGE' | 'VIDEO' | 'DOCUMENT' | 'LOCATION'>('NONE');
   headerText = signal<string>('');
   headerMediaUrl = signal<string>('');
   locationName = signal<string>('Jasper Market');
   locationAddress = signal<string>('123 Market St, City');
+
+  isDragging = signal<boolean>(false);
+  isUploadingMedia = signal<boolean>(false);
+  uploadedFileName = signal<string>('');
+  uploadProgress = signal<number>(0);
 
   // Body & Footer Content
   bodyText = signal<string>('Hello {{1}}, check out our latest offerings!');
@@ -133,6 +138,86 @@ export class CreateTemplateView implements OnInit {
     if (this.currentStep() > 1) {
       this.currentStep.set(this.currentStep() - 1);
     }
+  }
+
+  // Dropzone Drag & Drop File Upload Handlers
+  onDragOver(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(true);
+  }
+
+  onDragLeave(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+  }
+
+  onFileDrop(event: DragEvent): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.isDragging.set(false);
+
+    if (event.dataTransfer && event.dataTransfer.files.length > 0) {
+      const file = event.dataTransfer.files[0];
+      this.uploadMediaFile(file);
+    }
+  }
+
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input && input.files && input.files.length > 0) {
+      const file = input.files[0];
+      this.uploadMediaFile(file);
+    }
+  }
+
+  uploadMediaFile(file: File): void {
+    const type = this.mediaHeaderType();
+    if (type === 'NONE' || type === 'LOCATION') return;
+
+    // File Validation
+    if (type === 'IMAGE' && !file.type.startsWith('image/')) {
+      Swal.fire('Invalid File', 'Please select an image file (.jpg, .jpeg, .png).', 'warning');
+      return;
+    }
+    if (type === 'VIDEO' && !file.type.startsWith('video/')) {
+      Swal.fire('Invalid File', 'Please select a video file (.mp4, .3gp).', 'warning');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('folderCategory', 'templates');
+    formData.append('subCategory', type.toLowerCase() + 's');
+
+    this.isUploadingMedia.set(true);
+    this.uploadedFileName.set(file.name);
+
+    this.api.post('/storage/upload', formData).subscribe({
+      next: (res: any) => {
+        this.isUploadingMedia.set(false);
+        if (res && res.url) {
+          this.headerMediaUrl.set(res.url);
+          Swal.fire({
+            title: 'Media Uploaded',
+            text: `File "${file.name}" uploaded successfully to S3 storage!`,
+            icon: 'success',
+            timer: 2000,
+            showConfirmButton: false
+          });
+        }
+      },
+      error: (err: any) => {
+        this.isUploadingMedia.set(false);
+        Swal.fire('Upload Failed', err.error?.message || err.message || 'Failed to upload media to server.', 'error');
+      }
+    });
+  }
+
+  removeUploadedMedia(): void {
+    this.headerMediaUrl.set('');
+    this.uploadedFileName.set('');
   }
 
   // Body Rich Text Editing Actions

@@ -219,12 +219,42 @@
             </div>
           </div>
 
-          <!-- Dropzone if Media Header selected -->
-          <div class="dropzone-box" *ngIf="mediaHeaderType() === 'IMAGE' || mediaHeaderType() === 'VIDEO' || mediaHeaderType() === 'DOCUMENT'">
-            <i class="ri-upload-cloud-2-line"></i>
-            <p>Drag and drop to upload</p>
-            <span>Or <a href="javascript:void(0)">choose files on your device</a></span>
-          </div>
+          <!-- Interactive Dropzone if Media Header selected -->
+          <ng-container *ngIf="mediaHeaderType() === 'IMAGE' || mediaHeaderType() === 'VIDEO' || mediaHeaderType() === 'DOCUMENT'">
+            <!-- Hidden File Input -->
+            <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none;" [accept]="mediaHeaderType() === 'IMAGE' ? 'image/*' : (mediaHeaderType() === 'VIDEO' ? 'video/*' : '.pdf,.doc,.docx,.xlsx')">
+
+            <!-- Dropzone Box when no file uploaded yet -->
+            <div class="dropzone-box" 
+                 *ngIf="!headerMediaUrl() && !isUploadingMedia()"
+                 [class.drag-active]="isDragging()" 
+                 (dragover)="onDragOver($event)" 
+                 (dragleave)="onDragLeave($event)" 
+                 (drop)="onFileDrop($event)"
+                 (click)="fileInput.click()">
+              <i class="ri-upload-cloud-2-line"></i>
+              <p>Drag and drop {{ mediaHeaderType().toLowerCase() }} to upload to S3</p>
+              <span>Or <a href="javascript:void(0)">choose files on your device</a></span>
+            </div>
+
+            <!-- Uploading Spinner State -->
+            <div class="dropzone-box uploading" *ngIf="isUploadingMedia()">
+              <i class="ri-loader-4-line spin"></i>
+              <p>Uploading {{ uploadedFileName() }} to S3 storage...</p>
+            </div>
+
+            <!-- Uploaded File Badge State -->
+            <div class="file-success-card" *ngIf="headerMediaUrl() && !isUploadingMedia()">
+              <div class="file-info">
+                <i class="ri-checkbox-circle-fill text-green"></i>
+                <div>
+                  <strong>{{ uploadedFileName() || 'Header Media File' }}</strong>
+                  <span class="url-hint">{{ headerMediaUrl() }}</span>
+                </div>
+              </div>
+              <button class="remove-media-btn" (click)="removeUploadedMedia()" title="Remove file"><i class="ri-delete-bin-line"></i></button>
+            </div>
+          </ng-container>
 
           <!-- Location details if Location selected -->
           <div class="form-row" *ngIf="mediaHeaderType() === 'LOCATION'">
@@ -529,13 +559,15 @@
             
             <!-- Media Header Rendering -->
             <div class="bubble-media-header" *ngIf="mediaHeaderType() === 'IMAGE'">
-              <div class="media-placeholder image-placeholder">
+              <img [src]="headerMediaUrl()" class="preview-media-img" *ngIf="headerMediaUrl()">
+              <div class="media-placeholder image-placeholder" *ngIf="!headerMediaUrl()">
                 <i class="ri-image-2-line"></i>
               </div>
             </div>
 
             <div class="bubble-media-header" *ngIf="mediaHeaderType() === 'VIDEO'">
-              <div class="media-placeholder video-placeholder">
+              <video [src]="headerMediaUrl()" controls class="preview-media-video" *ngIf="headerMediaUrl()"></video>
+              <div class="media-placeholder video-placeholder" *ngIf="!headerMediaUrl()">
                 <i class="ri-play-circle-fill"></i>
               </div>
             </div>
@@ -543,6 +575,7 @@
             <div class="bubble-media-header" *ngIf="mediaHeaderType() === 'DOCUMENT'">
               <div class="media-placeholder doc-placeholder">
                 <i class="ri-file-text-line"></i>
+                <small *ngIf="headerMediaUrl()">Document Attached</small>
               </div>
             </div>
 
