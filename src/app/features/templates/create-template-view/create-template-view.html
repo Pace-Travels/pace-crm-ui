@@ -361,14 +361,22 @@
         <div class="card-section">
           <div class="header-with-action">
             <div>
+              <h2 class="section-title">Buttons <span class="opt-tag">• Optional</span></h2>
+              <p class="section-desc">Create buttons that let customers respond to your message or take action. You can add up to ten buttons.</p>
+            </div>
+
+            <!-- Add Button Menu Dropdown -->
+            <div class="dropdown-wrapper">
+              <button type="button" class="btn-secondary" (click)="toggleButtonDropdown()">
+                <i class="ri-add-line"></i> Add button <i class="ri-arrow-down-s-line"></i>
               </button>
               <div class="dropdown-menu" *ngIf="showButtonDropdown()">
-                <button (click)="addButton('CUSTOM')"><i class="ri-reply-line"></i> Custom (Quick reply)</button>
-                <button (click)="addButton('VISIT_WEBSITE')"><i class="ri-external-link-line"></i> Visit website</button>
-                <button (click)="addButton('CALL_WHATSAPP')"><i class="ri-whatsapp-line"></i> Call on WhatsApp</button>
-                <button (click)="addButton('CALL_PHONE')"><i class="ri-phone-line"></i> Call Phone Number</button>
-                <button (click)="addButton('COMPLETE_FLOW')"><i class="ri-flow-chart"></i> Complete flow</button>
-                <button (click)="addButton('COPY_OFFER_CODE')"><i class="ri-coupon-3-line"></i> Copy offer code</button>
+                <button type="button" (click)="addButton('CUSTOM')"><i class="ri-reply-line"></i> Custom (Quick reply)</button>
+                <button type="button" (click)="addButton('VISIT_WEBSITE')"><i class="ri-external-link-line"></i> Visit website</button>
+                <button type="button" (click)="addButton('CALL_WHATSAPP')"><i class="ri-whatsapp-line"></i> Call on WhatsApp</button>
+                <button type="button" (click)="addButton('CALL_PHONE')"><i class="ri-phone-line"></i> Call Phone Number</button>
+                <button type="button" (click)="addButton('COMPLETE_FLOW')"><i class="ri-flow-chart"></i> Complete flow</button>
+                <button type="button" (click)="addButton('COPY_OFFER_CODE')"><i class="ri-coupon-3-line"></i> Copy offer code</button>
               </div>
             </div>
           </div>
