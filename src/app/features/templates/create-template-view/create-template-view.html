@@ -674,7 +674,10 @@
               <ng-container *ngFor="let btn of buttons(); let i = index">
                 <button class="preview-action-btn" *ngIf="i < 2">
                   <i class="ri-external-link-line" *ngIf="btn.typeOfAction === 'VISIT_WEBSITE'"></i>
+                  <i class="ri-whatsapp-line" *ngIf="btn.typeOfAction === 'CALL_WHATSAPP'"></i>
                   <i class="ri-phone-line" *ngIf="btn.typeOfAction === 'CALL_PHONE'"></i>
+                  <i class="ri-flow-chart" *ngIf="btn.typeOfAction === 'COMPLETE_FLOW'"></i>
+                  <i class="ri-file-copy-line" *ngIf="btn.typeOfAction === 'COPY_OFFER_CODE'"></i>
                   <i class="ri-reply-line" *ngIf="btn.typeOfAction === 'CUSTOM'"></i>
                   <span>{{ btn.buttonText || 'Button' }}</span>
                 </button>
@@ -722,21 +725,6 @@
               <strong class="ios-sender">Pace Travels</strong>
               <p class="ios-header-line" *ngIf="headerText().trim()">{{ headerText() }}</p>
               <p class="ios-body-line">{{ bodyText() }}</p>
-            </div>
-          </div>
-        </div>
-                  <i class="ri-whatsapp-line" *ngIf="btn.typeOfAction === 'CALL_WHATSAPP'"></i>
-                  <i class="ri-phone-line" *ngIf="btn.typeOfAction === 'CALL_PHONE'"></i>
-                  <i class="ri-flow-chart" *ngIf="btn.typeOfAction === 'COMPLETE_FLOW'"></i>
-                  <i class="ri-file-copy-line" *ngIf="btn.typeOfAction === 'COPY_OFFER_CODE'"></i>
-                  <span>{{ btn.buttonText || 'Button Text' }}</span>
-                </button>
-              </ng-container>
-
-              <button class="preview-action-btn collapse-btn" *ngIf="buttons().length > 2">
-                <i class="ri-list-check-2"></i>
-                <span>See all options</span>
-              </button>
             </div>
           </div>
         </div>
