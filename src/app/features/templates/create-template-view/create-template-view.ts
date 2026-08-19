@@ -353,18 +353,63 @@ export class CreateTemplateView implements OnInit {
     if (idea.bodyText) this.bodyText.set(idea.bodyText);
     if (idea.footerText) this.footerText.set(idea.footerText);
 
+    // 1. Map Suggested Buttons to ActionButton objects
     if (idea.suggestedButtons && Array.isArray(idea.suggestedButtons)) {
-      this.buttons.set(idea.suggestedButtons);
+      const mappedButtons: ActionButton[] = idea.suggestedButtons.map((b: any) => {
+        let typeAction: any = 'QUICK_REPLY';
+        if (b.type === 'URL') typeAction = 'VISIT_WEBSITE';
+        if (b.type === 'PHONE_NUMBER') typeAction = 'CALL_PHONE';
+
+        return {
+          typeOfAction: typeAction,
+          buttonText: b.text || 'Action Button',
+          websiteUrl: b.url || 'https://quotedesks.com',
+          urlType: 'STATIC',
+          phoneNumber: b.phoneNumber || '+15552043548',
+          countryCode: '+1'
+        };
+      });
+      this.buttons.set(mappedButtons);
     }
 
+    // 2. Set Media Header Type & Generate S3 GenAI Video/Image Asset
+    const hasVideoConcept = idea.bananaProPrompt || (idea.angle && idea.angle.toLowerCase().includes('video'));
+    const mediaType = hasVideoConcept ? 'VIDEO' : 'IMAGE';
+    
+    this.mediaHeaderType.set(mediaType);
     this.showIdeaDrawer.set(false);
-    Swal.fire({
-      title: 'Idea Applied',
-      text: `Applied "${idea.angle}" template copy & buttons to wizard!`,
-      icon: 'success',
-      timer: 1800,
-      showConfirmButton: false
+
+    // Call S3 GenAI Media Generator API
+    const promptText = idea.bananaProPrompt || idea.headerText || idea.bodyText || 'Promo Asset';
+    
+    this.api.post('/ai/generate-media', { prompt: promptText, mediaType }).subscribe({
+      next: (res: any) => {
+        if (res && res.url) {
+          this.headerMediaUrl.set(res.url);
+          this.uploadedFileName.set(mediaType === 'VIDEO' ? 'GenAI_BananaPro_Promo.mp4' : 'GenAI_Promo_Asset.png');
+          
+          Swal.fire({
+            title: 'AI Idea & Media Applied!',
+            text: `Applied "${idea.angle}" template copy, buttons, and generated ${mediaType.toLowerCase()} header stored in S3 genai folder!`,
+            icon: 'success',
+            timer: 2500,
+            showConfirmButton: false
+          });
+        }
+      },
+      error: () => {
+        // Fallback default GenAI asset
+        const fallbackUrl = mediaType === 'VIDEO' 
+          ? 'https://messengerassets.quotedesks.com/templates/genai/videos/sample_promo.mp4'
+          : 'https://messengerassets.quotedesks.com/templates/genai/images/sample_image.png';
+        
+        this.headerMediaUrl.set(fallbackUrl);
+        this.uploadedFileName.set(mediaType === 'VIDEO' ? 'GenAI_BananaPro_Promo.mp4' : 'GenAI_Promo_Asset.png');
+      }
     });
+
+    // Scroll smoothly to top of workspace
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   applySuggestionToBody(text: string): void {
