@@ -279,8 +279,8 @@
             </div>
           </div>
 
-          <!-- Text Header Field -->
-          <div class="form-group" *ngIf="mediaHeaderType() === 'NONE'">
+          <!-- Header Text Input Field -->
+          <div class="form-group">
             <div class="label-row">
               <label>Header <span class="opt-tag">• Optional</span></label>
               <div class="label-actions-right">
@@ -321,10 +321,16 @@
               </div>
             </div>
             <div class="textarea-box">
-              <textarea [(ngModel)]="bodyText" rows="5" placeholder="Enter message body text" maxlength="1024"></textarea>
+              <textarea id="bodyTextarea" [(ngModel)]="bodyText" rows="5" placeholder="Enter message body text" maxlength="1024"></textarea>
               <div class="editor-toolbar">
                 <div class="formatting-btns">
-                  <button type="button" title="Emoji"><i class="ri-emotion-line"></i></button>
+                  <div class="emoji-picker-wrapper" style="position: relative;">
+                    <button type="button" title="Emoji" (click)="toggleEmojiPicker()"><i class="ri-emotion-line"></i></button>
+                    <!-- Emoji Picker Grid Popover -->
+                    <div class="emoji-popover-grid" *ngIf="showEmojiPicker()">
+                      <span class="emoji-item" *ngFor="let em of commonEmojis" (click)="insertEmoji(em)">{{ em }}</span>
+                    </div>
+                  </div>
                   <button type="button" title="Bold" (click)="applyFormatting('BOLD')"><b>B</b></button>
                   <button type="button" title="Italic" (click)="applyFormatting('ITALIC')"><i>I</i></button>
                   <button type="button" title="Strikethrough" (click)="applyFormatting('STRIKE')"><s>S</s></button>

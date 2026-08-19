@@ -695,16 +695,92 @@ export class CreateTemplateView implements OnInit {
     this.headerText.set(text + ` {{${nextNum}}}`);
   }
 
+  // Interactive Emoji Picker State
+  showEmojiPicker = signal<boolean>(false);
+  commonEmojis = [
+    '😊', '👋', '🔥', '🚀', '🎁', '🎉', '🌟', '📱', '✈️', '🏨',
+    '🏖️', '⚡', '💎', '🏷️', '📢', '💬', '🛍️', '📌', '✅', '❤️',
+    '😍', '👉', '💡', '⏰', '⭐', '👇', '🎯', '💯', '🏆', '🌐'
+  ];
+
+  toggleEmojiPicker(): void {
+    this.showEmojiPicker.set(!this.showEmojiPicker());
+  }
+
+  insertEmoji(emoji: string): void {
+    const textarea: HTMLTextAreaElement | null = document.querySelector('#bodyTextarea');
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const val = this.bodyText();
+      const newText = val.substring(0, start) + emoji + val.substring(end);
+      this.bodyText.set(newText);
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+      }, 50);
+    } else {
+      this.bodyText.set(this.bodyText() + emoji);
+    }
+    this.showEmojiPicker.set(false);
+  }
+
   applyFormatting(style: 'BOLD' | 'ITALIC' | 'STRIKE' | 'MONO'): void {
-    const current = this.bodyText();
-    let wrap = '';
+    let wrap = '*';
     if (style === 'BOLD') wrap = '*';
     if (style === 'ITALIC') wrap = '_';
     if (style === 'STRIKE') wrap = '~';
     if (style === 'MONO') wrap = '```';
 
-    this.bodyText.set(current + `${wrap}text${wrap}`);
+    const textarea: HTMLTextAreaElement | null = document.querySelector('#bodyTextarea');
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const val = this.bodyText();
+      const selected = val.substring(start, end);
+
+      const targetText = selected.length > 0 ? selected : 'text';
+      const replacement = `${wrap}${targetText}${wrap}`;
+
+      const newText = val.substring(0, start) + replacement + val.substring(end);
+      this.bodyText.set(newText);
+
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + wrap.length, start + wrap.length + targetText.length);
+      }, 50);
+    } else {
+      this.bodyText.set(this.bodyText() + ` ${wrap}text${wrap}`);
+    }
   }
+
+  // Rendered Body Preview WhatsApp formatting parser
+  parsedBodyText = computed(() => {
+    let text = this.bodyText() || '';
+
+    // 1. Escape HTML special characters
+    text = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // 2. Parse Monospace: ```text``` -> <code>text</code>
+    text = text.replace(/```([^`]+)```/g, '<code>$1</code>');
+
+    // 3. Parse Bold: *text* -> <b>text</b>
+    text = text.replace(/\*([^*]+)\*/g, '<b>$1</b>');
+
+    // 4. Parse Italic: _text_ -> <i>text</i>
+    text = text.replace(/_([^_]+)_/g, '<i>$1</i>');
+
+    // 5. Parse Strikethrough: ~text~ -> <s>text</s>
+    text = text.replace(/~([^~]+)~/g, '<s>$1</s>');
+
+    // 6. Highlight WhatsApp Variables: {{1}}, {{2}}
+    text = text.replace(/\{\{(\d+)\}\}/g, '<span class="preview-var-tag">{{$1}}</span>');
+
+    // 7. Linebreaks
+    text = text.replace(/\n/g, '<br>');
+
+    return text;
+  });
 
   // Button Management
   toggleButtonDropdown(): void {
@@ -751,14 +827,6 @@ export class CreateTemplateView implements OnInit {
       default: return 'Button';
     }
   }
-
-  // Rendered Body Preview formatting parser
-  parsedBodyText = computed(() => {
-    let raw = this.bodyText() || '';
-    // Highlight {{1}}, {{2}} tags
-    raw = raw.replace(/\{\{(\d+)\}\}/g, '<span class="preview-var-tag">{{$1}}</span>');
-    return raw;
-  });
 
   submitTemplate(): void {
     if (this.isSubmitting()) return;

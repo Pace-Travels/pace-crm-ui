@@ -529,6 +529,7 @@
       .formatting-btns {
         display: flex;
         gap: 4px;
+        position: relative;
         button {
           width: 28px;
           height: 28px;
@@ -541,6 +542,35 @@
           &:hover {
             background: #e2e8f0;
             color: #0f172a;
+          }
+        }
+
+        .emoji-popover-grid {
+          position: absolute;
+          bottom: 100%;
+          left: 0;
+          margin-bottom: 8px;
+          width: 220px;
+          background: #ffffff;
+          border: 1px solid #cbd5e1;
+          border-radius: 8px;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+          padding: 8px;
+          display: grid;
+          grid-template-columns: repeat(6, 1fr);
+          gap: 6px;
+          z-index: 99;
+
+          .emoji-item {
+            font-size: 18px;
+            text-align: center;
+            padding: 4px;
+            border-radius: 4px;
+            cursor: pointer;
+            user-select: none;
+            &:hover {
+              background: #f1f5f9;
+            }
           }
         }
       }
@@ -841,6 +871,17 @@
           line-height: 1.4;
           white-space: pre-wrap;
 
+          ::ng-deep b { font-weight: 700; color: #0f172a; }
+          ::ng-deep i { font-style: italic; }
+          ::ng-deep s { text-decoration: line-through; opacity: 0.8; }
+          ::ng-deep code {
+            font-family: monospace;
+            background: #e2e8f0;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: #0f172a;
+          }
           ::ng-deep .preview-var-tag {
             background: #dbeafe;
             color: #1d4ed8;
