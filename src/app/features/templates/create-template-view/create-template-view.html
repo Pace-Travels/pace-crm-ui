@@ -686,7 +686,7 @@
         <div class="editor-grid">
           <!-- Image Preview & Crop Canvas -->
           <div class="preview-crop-column">
-            <div class="crop-image-box">
+            <div class="crop-image-box" [style.aspect-ratio]="selectedAspectRatio() === 'SQUARE' ? '1/1' : '1.91/1'">
               <img [src]="headerMediaUrl()" class="crop-target-img">
             </div>
 
@@ -740,7 +740,7 @@
 
       <div class="modal-footer-row mt-4">
         <button class="btn-secondary" (click)="showImageEditorModal.set(false)">Close</button>
-        <button class="btn-primary" (click)="showImageEditorModal.set(false)">Save Image & Continue</button>
+        <button class="btn-primary" (click)="saveCroppedImage()">Save Image & Continue</button>
       </div>
     </div>
   </div>

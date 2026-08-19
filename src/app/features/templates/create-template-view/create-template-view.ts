@@ -310,6 +310,61 @@ export class CreateTemplateView implements OnInit {
     this.showImageEditorModal.set(true);
   }
 
+  saveCroppedImage(): void {
+    const currentUrl = this.headerMediaUrl();
+    if (!currentUrl) {
+      this.showImageEditorModal.set(false);
+      return;
+    }
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const ratio = this.selectedAspectRatio();
+
+      if (ratio === 'SQUARE') {
+        canvas.width = 800;
+        canvas.height = 800;
+      } else {
+        canvas.width = 800;
+        canvas.height = 418; // 1.91:1 Meta Landscape
+      }
+
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            const formData = new FormData();
+            formData.append('file', blob, `cropped_header_${Date.now()}.png`);
+            formData.append('folderCategory', 'templates');
+            formData.append('subCategory', 'images');
+
+            this.api.post('/storage/upload', formData).subscribe({
+              next: (res: any) => {
+                if (res && res.url) {
+                  this.headerMediaUrl.set(res.url);
+                  this.uploadedFileName.set(`cropped_header_${Date.now()}.png`);
+                }
+              }
+            });
+          }
+        }, 'image/png');
+      }
+    };
+    img.src = currentUrl;
+
+    this.showImageEditorModal.set(false);
+    Swal.fire({
+      title: 'Cropped Image Saved',
+      text: `Applied ${this.selectedAspectRatio() === 'SQUARE' ? '1:1 Square' : '1.91:1 Landscape'} crop to template header!`,
+      icon: 'success',
+      timer: 1800,
+      showConfirmButton: false
+    });
+  }
+
   analyzeImageWithGemini(): void {
     const mediaUrl = this.headerMediaUrl();
     if (!mediaUrl) {
