@@ -294,7 +294,7 @@ export class CreateTemplateView implements OnInit {
       }
     } else if (newType === 'VIDEO') {
       if (isCurrentImage || !currentUrl) {
-        this.headerMediaUrl.set('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4');
+        this.headerMediaUrl.set('https://www.w3schools.com/html/mov_bbb.mp4');
         this.uploadedFileName.set('Sample_Promo_Video.mp4');
       }
     } else if (newType === 'DOCUMENT') {
@@ -485,7 +485,7 @@ export class CreateTemplateView implements OnInit {
       error: () => {
         // Fallback default GenAI asset
         const fallbackUrl = mediaType === 'VIDEO' 
-          ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          ? 'https://www.w3schools.com/html/mov_bbb.mp4'
           : 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80';
         
         this.headerMediaUrl.set(fallbackUrl);
