@@ -208,7 +208,7 @@ export class CreateTemplateView implements OnInit {
         Swal.fire('Invalid File', 'Please select an image file (.jpg, .jpeg, .png).', 'warning');
         return;
       }
-      if (file.size > 5 * 1024 * 1024) {
+      if (file.size > 100 * 1024 * 1024) {
         Swal.fire('File Too Large', 'Image file size exceeds the 5MB limit for Meta WhatsApp templates.', 'warning');
         return;
       }
@@ -219,14 +219,14 @@ export class CreateTemplateView implements OnInit {
         Swal.fire('Invalid File', 'Please select a video file (.mp4, .3gp).', 'warning');
         return;
       }
-      if (file.size > 16 * 1024 * 1024) {
+      if (file.size > 300 * 1024 * 1024) {
         Swal.fire('File Too Large', 'Video file size exceeds the 16MB limit for Meta WhatsApp templates.', 'warning');
         return;
       }
     }
 
     if (type === 'DOCUMENT') {
-      if (file.size > 10 * 1024 * 1024) {
+      if (file.size > 100 * 1024 * 1024) {
         Swal.fire('File Too Large', 'Document file size exceeds the 10MB limit for Meta WhatsApp templates.', 'warning');
         return;
       }
