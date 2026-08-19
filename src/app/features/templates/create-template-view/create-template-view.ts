@@ -288,9 +288,9 @@ export class CreateTemplateView implements OnInit {
       this.headerMediaUrl.set('');
       this.uploadedFileName.set('');
     } else if (newType === 'IMAGE') {
-      if (isCurrentVideo || !currentUrl) {
-        this.headerMediaUrl.set('https://messengerassets.quotedesks.com/templates/images/sample_image.png');
-        this.uploadedFileName.set('Sample_Header_Banner.png');
+      if (isCurrentVideo || !currentUrl || currentUrl.includes('sample_image.png')) {
+        this.headerMediaUrl.set('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80');
+        this.uploadedFileName.set('Sample_Header_Banner.jpg');
       }
     } else if (newType === 'VIDEO') {
       if (isCurrentImage || !currentUrl) {
@@ -430,11 +430,11 @@ export class CreateTemplateView implements OnInit {
       error: () => {
         // Fallback default GenAI asset
         const fallbackUrl = mediaType === 'VIDEO' 
-          ? 'https://messengerassets.quotedesks.com/templates/genai/videos/sample_promo.mp4'
-          : 'https://messengerassets.quotedesks.com/templates/genai/images/sample_image.png';
+          ? 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'
+          : 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80';
         
         this.headerMediaUrl.set(fallbackUrl);
-        this.uploadedFileName.set(mediaType === 'VIDEO' ? 'GenAI_BananaPro_Promo.mp4' : 'GenAI_Promo_Asset.png');
+        this.uploadedFileName.set(mediaType === 'VIDEO' ? 'GenAI_BananaPro_Promo.mp4' : 'GenAI_Promo_Asset.jpg');
       }
     });
 
