@@ -523,25 +523,42 @@
             <button (click)="closeMetaLibrary()" style="background: #f1f5f9; border: none; font-size: 16px; cursor: pointer; color: #64748b; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">✕</button>
         </div>
 
-        <!-- Category Bar -->
-        <div style="background: #ffffff; padding: 12px 28px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
-            <div style="display: flex; gap: 8px;">
-                <button (click)="selectedMetaCategory.set('ALL')" [style.background]="selectedMetaCategory() === 'ALL' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedMetaCategory() === 'ALL' ? 'white' : '#475569'" style="border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;">
-                    All Templates ({{ metaLibraryTemplates().length }})
+        <!-- Category & Search Bar -->
+        <div style="background: #ffffff; padding: 14px 28px; border-bottom: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button (click)="selectedMetaCategory.set('ALL'); fetchMetaLibrary(metaLibrarySearch(), metaLibraryLanguage(), 'ALL')" [style.background]="selectedMetaCategory() === 'ALL' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedMetaCategory() === 'ALL' ? 'white' : '#475569'" style="border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    All Templates
                 </button>
-                <button (click)="selectedMetaCategory.set('UTILITY')" [style.background]="selectedMetaCategory() === 'UTILITY' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedMetaCategory() === 'UTILITY' ? 'white' : '#475569'" style="border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;">
-                    Utility (157)
+                <button (click)="selectedMetaCategory.set('UTILITY'); fetchMetaLibrary(metaLibrarySearch(), metaLibraryLanguage(), 'UTILITY')" [style.background]="selectedMetaCategory() === 'UTILITY' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedMetaCategory() === 'UTILITY' ? 'white' : '#475569'" style="border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    Utility
                 </button>
-                <button (click)="selectedMetaCategory.set('AUTHENTICATION')" [style.background]="selectedMetaCategory() === 'AUTHENTICATION' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedMetaCategory() === 'AUTHENTICATION' ? 'white' : '#475569'" style="border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;">
-                    Authentication (20)
+                <button (click)="selectedMetaCategory.set('AUTHENTICATION'); fetchMetaLibrary(metaLibrarySearch(), metaLibraryLanguage(), 'AUTHENTICATION')" [style.background]="selectedMetaCategory() === 'AUTHENTICATION' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedMetaCategory() === 'AUTHENTICATION' ? 'white' : '#475569'" style="border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    Authentication
                 </button>
-                <button (click)="selectedMetaCategory.set('MARKETING')" [style.background]="selectedMetaCategory() === 'MARKETING' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedMetaCategory() === 'MARKETING' ? 'white' : '#475569'" style="border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;">
-                    Marketing & Promos
+                <button (click)="selectedMetaCategory.set('MARKETING'); fetchMetaLibrary(metaLibrarySearch(), metaLibraryLanguage(), 'MARKETING')" [style.background]="selectedMetaCategory() === 'MARKETING' ? '#0b494d' : '#f1f5f9'" [style.color]="selectedMetaCategory() === 'MARKETING' ? 'white' : '#475569'" style="border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                    Marketing
                 </button>
             </div>
-            <span style="font-size: 12px; color: #64748b; font-weight: 600;">
-                <i class="fa-solid fa-circle-check" style="color: #16a34a;"></i> Meta Pre-Approved Specs
-            </span>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <!-- Live Substring Search Input -->
+                <div style="position: relative;">
+                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px;"></i>
+                    <input type="text" [(ngModel)]="metaLibrarySearch" (input)="fetchMetaLibrary()" placeholder="Search template library..." style="padding: 7px 12px 7px 32px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12.5px; width: 220px; outline: none;">
+                </div>
+
+                <!-- Language Selector -->
+                <select [(ngModel)]="metaLibraryLanguage" (change)="fetchMetaLibrary()" style="padding: 7px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 12.5px; background: white; outline: none; font-weight: 600; color: #334155;">
+                    <option value="en_US">English (US)</option>
+                    <option value="en_GB">English (UK)</option>
+                    <option value="hi">Hindi</option>
+                    <option value="es">Spanish</option>
+                    <option value="pt_BR">Portuguese (BR)</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="ar">Arabic</option>
+                </select>
+            </div>
         </div>
 
         <!-- Cards Grid Area -->

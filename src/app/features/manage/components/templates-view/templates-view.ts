@@ -67,6 +67,8 @@ export class TemplatesView implements OnInit {
   // Meta Template Library State
   metaLibraryTemplates = signal<any[]>([]);
   selectedMetaCategory = signal<string>('ALL');
+  metaLibrarySearch = signal<string>('');
+  metaLibraryLanguage = signal<string>('en_US');
   isLoadingMetaLibrary = signal<boolean>(false);
 
   guideTitle = signal<string>('');
@@ -433,8 +435,24 @@ export class TemplatesView implements OnInit {
 
   openMetaLibrary() {
     this.showMetaLibraryModal.set(true);
+    this.fetchMetaLibrary();
+  }
+
+  fetchMetaLibrary(searchQuery?: string, lang?: string, cat?: string) {
     this.isLoadingMetaLibrary.set(true);
-    this.api.get('/messagetemplates/meta-library').subscribe({
+
+    const qSearch = searchQuery !== undefined ? searchQuery : this.metaLibrarySearch();
+    const qLang = lang !== undefined ? lang : this.metaLibraryLanguage();
+    const qCat = cat !== undefined ? cat : this.selectedMetaCategory();
+
+    const params: string[] = [];
+    if (qSearch && qSearch.trim()) params.push(`search=${encodeURIComponent(qSearch.trim())}`);
+    if (qLang && qLang.trim()) params.push(`language=${encodeURIComponent(qLang.trim())}`);
+    if (qCat && qCat !== 'ALL') params.push(`category=${encodeURIComponent(qCat.trim())}`);
+
+    const queryString = params.length > 0 ? `?${params.join('&')}` : '';
+
+    this.api.get(`/messagetemplates/meta-library${queryString}`).subscribe({
       next: (res: any) => {
         this.isLoadingMetaLibrary.set(false);
         if (res.success && res.data) {
