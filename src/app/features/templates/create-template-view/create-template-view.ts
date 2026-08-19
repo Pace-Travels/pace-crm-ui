@@ -79,6 +79,7 @@ export class CreateTemplateView implements OnInit {
   videoAnalysis = signal<any>(null);
   aiIdeas = signal<any[]>([]);
   selectedAspectRatio = signal<'SQUARE' | 'LANDSCAPE'>('SQUARE');
+  previewDevice = signal<'IN_APP' | 'ANDROID' | 'IOS'>('IN_APP');
 
   // Available Languages
   languages = [

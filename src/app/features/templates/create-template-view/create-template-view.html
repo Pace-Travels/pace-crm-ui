@@ -603,10 +603,21 @@
       <div class="preview-card">
         <div class="preview-header">
           <span>Template preview</span>
-          <i class="ri-smartphone-line"></i>
+          <div class="device-switcher-pills">
+            <button type="button" [class.active]="previewDevice() === 'IN_APP'" (click)="previewDevice.set('IN_APP')" title="WhatsApp Chat">
+              <i class="ri-whatsapp-line"></i> Chat
+            </button>
+            <button type="button" [class.active]="previewDevice() === 'ANDROID'" (click)="previewDevice.set('ANDROID')" title="Android Lockscreen">
+              <i class="ri-android-line"></i> Android
+            </button>
+            <button type="button" [class.active]="previewDevice() === 'IOS'" (click)="previewDevice.set('IOS')" title="iOS Lockscreen">
+              <i class="ri-apple-line"></i> iOS
+            </button>
+          </div>
         </div>
 
-        <div class="phone-screen">
+        <!-- 1. IN_APP CHAT BUBBLE PREVIEW -->
+        <div class="phone-screen" *ngIf="previewDevice() === 'IN_APP'">
           <div class="whatsapp-bubble">
             
             <!-- Media Header Rendering -->
@@ -641,8 +652,8 @@
               </div>
             </div>
 
-            <!-- Text Header Rendering -->
-            <div class="bubble-text-header" *ngIf="mediaHeaderType() === 'NONE' && headerText().trim()">
+            <!-- Text Header Rendering (Always visible if entered) -->
+            <div class="bubble-text-header mb-1" *ngIf="headerText().trim()">
               <strong>{{ headerText() }}</strong>
             </div>
 
@@ -663,6 +674,57 @@
               <ng-container *ngFor="let btn of buttons(); let i = index">
                 <button class="preview-action-btn" *ngIf="i < 2">
                   <i class="ri-external-link-line" *ngIf="btn.typeOfAction === 'VISIT_WEBSITE'"></i>
+                  <i class="ri-phone-line" *ngIf="btn.typeOfAction === 'CALL_PHONE'"></i>
+                  <i class="ri-reply-line" *ngIf="btn.typeOfAction === 'CUSTOM'"></i>
+                  <span>{{ btn.buttonText || 'Button' }}</span>
+                </button>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. ANDROID NOTIFICATION PREVIEW -->
+        <div class="phone-screen android-screen" *ngIf="previewDevice() === 'ANDROID'">
+          <div class="android-notification-card">
+            <div class="notif-header">
+              <div class="notif-app-info">
+                <i class="ri-whatsapp-fill text-green-500"></i>
+                <span class="app-name">WhatsApp</span>
+                <span class="dot">•</span>
+                <span class="notif-time">now</span>
+              </div>
+              <i class="ri-arrow-up-s-line"></i>
+            </div>
+            <div class="notif-body-content mt-2">
+              <strong class="sender-title">Pace Travels</strong>
+              <p class="notif-header-text" *ngIf="headerText().trim()">{{ headerText() }}</p>
+              <p class="notif-body-text">{{ bodyText() }}</p>
+            </div>
+            <div class="notif-actions mt-2" *ngIf="buttons().length > 0">
+              <span class="notif-btn-action" *ngFor="let btn of buttons().slice(0, 2)">
+                {{ btn.buttonText || 'Action' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. IOS NOTIFICATION PREVIEW -->
+        <div class="phone-screen ios-screen" *ngIf="previewDevice() === 'IOS'">
+          <div class="ios-notification-card">
+            <div class="ios-notif-header">
+              <div class="ios-app-brand">
+                <div class="ios-wa-icon"><i class="ri-whatsapp-fill"></i></div>
+                <span class="ios-app-title">WHATSAPP</span>
+              </div>
+              <span class="ios-time">now</span>
+            </div>
+            <div class="ios-notif-content mt-1">
+              <strong class="ios-sender">Pace Travels</strong>
+              <p class="ios-header-line" *ngIf="headerText().trim()">{{ headerText() }}</p>
+              <p class="ios-body-line">{{ bodyText() }}</p>
+            </div>
+          </div>
+        </div>
                   <i class="ri-whatsapp-line" *ngIf="btn.typeOfAction === 'CALL_WHATSAPP'"></i>
                   <i class="ri-phone-line" *ngIf="btn.typeOfAction === 'CALL_PHONE'"></i>
                   <i class="ri-flow-chart" *ngIf="btn.typeOfAction === 'COMPLETE_FLOW'"></i>
