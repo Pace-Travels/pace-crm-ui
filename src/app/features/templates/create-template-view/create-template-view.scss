@@ -784,6 +784,27 @@
 
         .bubble-media-header {
           margin-bottom: 8px;
+          border-radius: 6px;
+          overflow: hidden;
+
+          .preview-media-img {
+            width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            background: #f8fafc;
+            display: block;
+            border-radius: 6px;
+          }
+
+          .preview-media-video {
+            width: 100%;
+            max-height: 200px;
+            object-fit: contain;
+            background: #000000;
+            display: block;
+            border-radius: 6px;
+          }
+
           .media-placeholder {
             height: 140px;
             background: #e2e8f0;

@@ -51,6 +51,7 @@ export class CreateTemplateView implements OnInit {
   isUploadingMedia = signal<boolean>(false);
   uploadedFileName = signal<string>('');
   uploadProgress = signal<number>(0);
+  tempUploadId = signal<string>('');
 
   // Body & Footer Content
   bodyText = signal<string>('Hello {{1}}, check out our latest offerings!');
@@ -244,6 +245,7 @@ export class CreateTemplateView implements OnInit {
         this.isUploadingMedia.set(false);
         if (res && res.url) {
           this.headerMediaUrl.set(res.url);
+          if (res.tempUploadId) this.tempUploadId.set(res.tempUploadId);
           Swal.fire({
             title: 'Media Uploaded',
             text: `File "${file.name}" uploaded successfully to S3 storage!`,
