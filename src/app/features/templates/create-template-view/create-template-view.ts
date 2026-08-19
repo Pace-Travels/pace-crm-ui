@@ -68,6 +68,17 @@ export class CreateTemplateView implements OnInit {
   showButtonDropdown = signal<boolean>(false);
   isSubmitting = signal<boolean>(false);
 
+  // AI Visual & Idea Generator Modal/Drawer Signals
+  showImageEditorModal = signal<boolean>(false);
+  showVideoEditorModal = signal<boolean>(false);
+  showIdeaDrawer = signal<boolean>(false);
+  isAnalyzingVisual = signal<boolean>(false);
+  isGeneratingIdeas = signal<boolean>(false);
+  imageAnalysis = signal<any>(null);
+  videoAnalysis = signal<any>(null);
+  aiIdeas = signal<any[]>([]);
+  selectedAspectRatio = signal<'SQUARE' | 'LANDSCAPE'>('SQUARE');
+
   // Available Languages
   languages = [
     { code: 'en_US', label: 'English (US)' },
@@ -246,6 +257,108 @@ export class CreateTemplateView implements OnInit {
   removeUploadedMedia(): void {
     this.headerMediaUrl.set('');
     this.uploadedFileName.set('');
+    this.imageAnalysis.set(null);
+    this.videoAnalysis.set(null);
+  }
+
+  // --- Gemini Vision AI Image Analysis & Crop Editor ---
+  openImageEditor(): void {
+    this.showImageEditorModal.set(true);
+  }
+
+  analyzeImageWithGemini(): void {
+    const mediaUrl = this.headerMediaUrl();
+    if (!mediaUrl) {
+      Swal.fire('No Media File', 'Please upload an image first to run Gemini AI analysis.', 'warning');
+      return;
+    }
+
+    this.isAnalyzingVisual.set(true);
+    // Send request to AI controller
+    this.api.post('/ai/analyze-image', { imageBase64: mediaUrl }).subscribe({
+      next: (res: any) => {
+        this.isAnalyzingVisual.set(false);
+        if (res && res.analysis) {
+          this.imageAnalysis.set(res.analysis);
+        }
+      },
+      error: () => {
+        this.isAnalyzingVisual.set(false);
+        Swal.fire('Notice', 'Using offline Gemini analysis fallback.', 'info');
+      }
+    });
+  }
+
+  // --- Gemini Video AI Analyser ---
+  openVideoEditor(): void {
+    this.showVideoEditorModal.set(true);
+  }
+
+  analyzeVideoWithGemini(): void {
+    this.isAnalyzingVisual.set(true);
+    this.api.post('/ai/analyze-video', { videoMetadata: { fileName: this.uploadedFileName() } }).subscribe({
+      next: (res: any) => {
+        this.isAnalyzingVisual.set(false);
+        if (res && res.analysis) {
+          this.videoAnalysis.set(res.analysis);
+        }
+      },
+      error: () => this.isAnalyzingVisual.set(false)
+    });
+  }
+
+  // --- Gemini Pro Idea Generator Engine ---
+  openIdeaDrawer(): void {
+    this.showIdeaDrawer.set(true);
+    if (this.aiIdeas().length === 0) {
+      this.generateCreativeIdeas();
+    }
+  }
+
+  generateCreativeIdeas(): void {
+    this.isGeneratingIdeas.set(true);
+    const payload = {
+      prompt: this.bodyText() || this.templateName() || 'Promotional sale for WhatsApp',
+      category: this.selectedCategory(),
+      type: this.selectedType()
+    };
+
+    this.api.post('/ai/generate-ideas', payload).subscribe({
+      next: (res: any) => {
+        this.isGeneratingIdeas.set(false);
+        if (res && res.ideas) {
+          this.aiIdeas.set(res.ideas);
+        }
+      },
+      error: () => this.isGeneratingIdeas.set(false)
+    });
+  }
+
+  applyIdeaToTemplate(idea: any): void {
+    if (idea.headerText) this.headerText.set(idea.headerText);
+    if (idea.bodyText) this.bodyText.set(idea.bodyText);
+    if (idea.footerText) this.footerText.set(idea.footerText);
+
+    if (idea.suggestedButtons && Array.isArray(idea.suggestedButtons)) {
+      this.buttons.set(idea.suggestedButtons);
+    }
+
+    this.showIdeaDrawer.set(false);
+    Swal.fire({
+      title: 'Idea Applied',
+      text: `Applied "${idea.angle}" template copy & buttons to wizard!`,
+      icon: 'success',
+      timer: 1800,
+      showConfirmButton: false
+    });
+  }
+
+  applySuggestionToBody(text: string): void {
+    this.bodyText.set(text);
+  }
+
+  applySuggestionToHeader(text: string): void {
+    this.headerText.set(text);
   }
 
   // Body Rich Text Editing Actions
