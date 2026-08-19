@@ -1,7 +1,7 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { ApiService } from '../../../shared/services/api.service';
 import Swal from 'sweetalert2';
 
@@ -105,11 +105,25 @@ export class CreateTemplateView implements OnInit {
 
   constructor(
     private api: ApiService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
-    // Default initial template state
+    // Check if coming from AI Generator page with queryParams
+    this.route.queryParams.subscribe(params => {
+      if (params['aiBody']) {
+        this.bodyText.set(params['aiBody']);
+        if (params['aiHeader']) {
+          this.headerText.set(params['aiHeader']);
+        }
+        if (params['aiFooter']) {
+          this.footerText.set(params['aiFooter']);
+        }
+        // Jump directly to Step 2 (Edit Template) so user sees prefilled AI copy!
+        this.currentStep.set(2);
+      }
+    });
   }
 
   setCategory(cat: 'MARKETING' | 'UTILITY' | 'AUTHENTICATION'): void {
