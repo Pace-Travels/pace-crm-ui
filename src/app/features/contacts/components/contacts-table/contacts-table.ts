@@ -362,12 +362,6 @@ export class ContactsTable implements OnInit {
       });
     }
   }
-          Swal.fire('Success', 'New contact added successfully!', 'success');
-        },
-        error: (err: any) => Swal.fire('Error', err.error?.error || err.error?.message || 'Failed to add contact', 'error')
-      });
-    }
-  }
 
   deleteContact(contact: Contact, event: Event) {
     event.stopPropagation();
