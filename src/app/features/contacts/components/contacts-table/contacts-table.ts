@@ -213,9 +213,61 @@ export class ContactsTable implements OnInit {
     return id !== undefined && this.selectedIds().includes(id);
   }
 
+  // Contact Owner Chip Input Signals & Computations
+  selectedFormOwners = signal<string[]>([]);
+  ownerSearchQuery = signal<string>('');
+  showOwnerDropdown = signal<boolean>(false);
+
+  presetAgents = ['Default Agent', 'Agent Alex', 'Agent Sarah', 'Agent Rahul', 'Agent Priyanka', 'Agent John'];
+
+  availableAgentOptions = computed(() => {
+    const set = new Set<string>(this.presetAgents);
+    this.contactService.contacts().forEach(c => {
+      const owners = this.contactService.getContactOwners(c);
+      owners.forEach(o => set.add(o));
+    });
+    return Array.from(set);
+  });
+
+  filteredAgentOptions = computed(() => {
+    const query = this.ownerSearchQuery().trim().toLowerCase();
+    const selected = this.selectedFormOwners();
+    return this.availableAgentOptions().filter(agent => 
+      !selected.includes(agent) && (query === '' || agent.toLowerCase().includes(query))
+    );
+  });
+
+  addFormOwner(ownerName: string) {
+    const clean = ownerName.trim();
+    if (!clean) return;
+    const current = this.selectedFormOwners();
+    if (!current.includes(clean)) {
+      this.selectedFormOwners.set([...current, clean]);
+    }
+    this.ownerSearchQuery.set('');
+    this.showOwnerDropdown.set(false);
+  }
+
+  removeFormOwner(ownerName: string) {
+    this.selectedFormOwners.set(this.selectedFormOwners().filter(o => o !== ownerName));
+  }
+
+  onOwnerInputKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter' || event.key === ',') {
+      event.preventDefault();
+      const query = this.ownerSearchQuery().replace(',', '').trim();
+      if (query) {
+        this.addFormOwner(query);
+      }
+    }
+  }
+
   openAddContact() {
     this.editingContactId.set(null);
     this.contactForm.reset({ source: 'ORGANIC' });
+    this.selectedFormOwners.set(['Default Agent']);
+    this.ownerSearchQuery.set('');
+    this.showOwnerDropdown.set(false);
     this.showAddContactModal.set(true);
   }
 
@@ -226,12 +278,12 @@ export class ContactsTable implements OnInit {
     let parsedTags = '';
     if (contact.tags) {
       if (Array.isArray(contact.tags)) {
-        parsedTags = contact.tags.join(', ');
+        parsedTags = contact.tags.filter(t => typeof t === 'string' && !t.startsWith('Agent:') && !t.startsWith('Owner:')).join(', ');
       } else if (typeof contact.tags === 'string') {
         try {
           const parsed = JSON.parse(contact.tags);
           if (Array.isArray(parsed)) {
-            parsedTags = parsed.join(', ');
+            parsedTags = parsed.filter((t: string) => typeof t === 'string' && !t.startsWith('Agent:') && !t.startsWith('Owner:')).join(', ');
           } else {
             parsedTags = contact.tags;
           }
@@ -240,6 +292,10 @@ export class ContactsTable implements OnInit {
         }
       }
     }
+
+    this.selectedFormOwners.set(this.contactService.getContactOwners(contact));
+    this.ownerSearchQuery.set('');
+    this.showOwnerDropdown.set(false);
 
     this.contactForm.patchValue({
       agencyName: contact.agencyName || '',
@@ -259,6 +315,7 @@ export class ContactsTable implements OnInit {
   closeAddContact() {
     this.showAddContactModal.set(false);
     this.editingContactId.set(null);
+    this.showOwnerDropdown.set(false);
   }
 
   onAddContactSubmit() {
@@ -278,7 +335,8 @@ export class ContactsTable implements OnInit {
       email: val.email || null,
       email2: val.email2 || null,
       userName: val.userName || null,
-      tags: val.tags ? val.tags.split(',').map((t: string) => t.trim()) : [],
+      tags: val.tags ? val.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
+      owners: this.selectedFormOwners(),
       source: val.source,
       leadStage: 'New'
     };
@@ -298,6 +356,12 @@ export class ContactsTable implements OnInit {
         next: () => {
           this.closeAddContact();
           this.contactService.fetchContacts();
+          Swal.fire('Success', 'Contact added successfully!', 'success');
+        },
+        error: (err: any) => Swal.fire('Error', err.error?.error || err.error?.message || 'Failed to add contact', 'error')
+      });
+    }
+  }
           Swal.fire('Success', 'New contact added successfully!', 'success');
         },
         error: (err: any) => Swal.fire('Error', err.error?.error || err.error?.message || 'Failed to add contact', 'error')

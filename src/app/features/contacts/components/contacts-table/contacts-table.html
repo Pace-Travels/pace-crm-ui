@@ -420,6 +420,32 @@
                 </div>
             </div>
 
+            <!-- Contact Owner(s) Searchable Multi-Select Chip Input -->
+            <div style="position: relative;">
+                <label style="font-size: 12px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Contact Owner(s)</label>
+                <div class="chip-input-box" (click)="showOwnerDropdown.set(true)" style="display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: white; min-height: 42px; cursor: text;">
+                    <span *ngFor="let owner of selectedFormOwners()" style="display: inline-flex; align-items: center; gap: 6px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 3px 10px; border-radius: 14px; font-size: 12px; font-weight: 600;">
+                        <i class="fa-solid fa-user-gear" style="font-size: 10px;"></i> {{ owner }}
+                        <button type="button" (click)="removeFormOwner(owner); $event.stopPropagation()" style="background: none; border: none; color: #0369a1; font-weight: 800; cursor: pointer; padding: 0 2px; font-size: 12px; line-height: 1;">✕</button>
+                    </span>
+                    <input type="text"
+                           [ngModel]="ownerSearchQuery()"
+                           [ngModelOptions]="{standalone: true}"
+                           (ngModelChange)="ownerSearchQuery.set($event); showOwnerDropdown.set(true)"
+                           (focus)="showOwnerDropdown.set(true)"
+                           (keydown)="onOwnerInputKeydown($event)"
+                           placeholder="{{ selectedFormOwners().length === 0 ? 'Search or add contact owner...' : '+ Add owner...' }}"
+                           style="border: none; outline: none; background: transparent; font-size: 13px; flex: 1; min-width: 140px; color: #0f172a;">
+                </div>
+
+                <!-- Owner Search Dropdown Menu -->
+                <div *ngIf="showOwnerDropdown() && filteredAgentOptions().length > 0" style="position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.12); z-index: 100; max-height: 180px; overflow-y: auto;">
+                    <div *ngFor="let opt of filteredAgentOptions()" (click)="addFormOwner(opt)" style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                        <i class="fa-solid fa-user-check" style="color: #0b494d; font-size: 12px;"></i> {{ opt }}
+                    </div>
+                </div>
+            </div>
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div>
                     <label style="font-size: 12px; font-weight: 700; color: #334155;">Tags (comma-separated)</label>
