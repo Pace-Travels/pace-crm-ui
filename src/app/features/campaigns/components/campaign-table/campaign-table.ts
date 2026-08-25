@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CampaignService, Campaign } from '../../services/campaign.service';
+import { ContactService } from '../../../contacts/services/contact.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -13,12 +14,20 @@ import Swal from 'sweetalert2';
 })
 export class CampaignTable implements OnInit {
   campaignService = inject(CampaignService);
+  contactService = inject(ContactService);
   
   activeTab = signal<string>('All');
   searchQuery = signal<string>('');
 
+  // Responses & CRM Sync Data Table Modal state
+  showResponsesModal = signal<boolean>(false);
+  selectedCampaign = signal<Campaign | null>(null);
+  recipientResponses = signal<any[]>([]);
+  isLoadingResponses = signal<boolean>(false);
+
   ngOnInit() {
     this.campaignService.fetchCampaigns();
+    this.contactService.fetchContacts();
   }
 
   get filteredCampaigns(): Campaign[] {
@@ -42,6 +51,69 @@ export class CampaignTable implements OnInit {
     }
 
     return list;
+  }
+
+  openResponsesModal(campaign: Campaign) {
+    this.selectedCampaign.set(campaign);
+    this.showResponsesModal.set(true);
+    this.isLoadingResponses.set(true);
+
+    this.campaignService.getCampaignResponses(campaign.id).subscribe({
+      next: (res: any) => {
+        this.recipientResponses.set(res.data || []);
+        this.isLoadingResponses.set(false);
+      },
+      error: (err: any) => {
+        this.isLoadingResponses.set(false);
+        Swal.fire('Error', 'Failed to fetch responses: ' + err.message, 'error');
+      }
+    });
+  }
+
+  closeResponsesModal() {
+    this.showResponsesModal.set(false);
+    this.selectedCampaign.set(null);
+    this.recipientResponses.set([]);
+  }
+
+  syncResponseToCrm(recipient: any) {
+    const payload = {
+      recipientId: recipient.id,
+      leadStage: recipient.responseReceived?.toLowerCase().includes('b2b') ? 'Qualified' : 'Interested',
+      appendTag: 'Campaign-Replied'
+    };
+
+    this.campaignService.syncResponseToCrm(payload).subscribe({
+      next: () => {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `Synced response for ${recipient.Contact?.name || 'Contact'} to CRM`,
+          timer: 2500,
+          showConfirmButton: false
+        });
+        recipient.crmSyncStatus = 'SYNCED';
+        this.contactService.fetchContacts();
+      },
+      error: (err: any) => {
+        Swal.fire('Error', 'Failed to sync to CRM: ' + err.message, 'error');
+      }
+    });
+  }
+
+  syncAllResponsesToCrm() {
+    const unsynced = this.recipientResponses().filter(r => r.crmSyncStatus !== 'SYNCED');
+    if (unsynced.length === 0) {
+      Swal.fire('All Synced', 'All campaign recipient responses are already synced to CRM.', 'info');
+      return;
+    }
+
+    let syncedCount = 0;
+    unsynced.forEach(recipient => {
+      this.syncResponseToCrm(recipient);
+      syncedCount++;
+    });
   }
 
   deleteCampaign(c: Campaign) {

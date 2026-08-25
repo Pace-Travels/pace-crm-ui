@@ -13,7 +13,8 @@ export interface Contact {
   email?: string;
   email2?: string;
   userName?: string;
-  tags?: string[];
+  tags?: string[] | string;
+  owners?: string[];
   source?: string;
   leadStage?: string;
   country?: string;
@@ -62,6 +63,25 @@ export class ContactService {
 
   constructor(private api: ApiService) { }
 
+  getContactOwners(contact: Contact): string[] {
+    let rawTags: any = contact.tags || [];
+    if (typeof rawTags === 'string') {
+      try { rawTags = JSON.parse(rawTags); }
+      catch (e) { rawTags = [rawTags]; }
+    }
+    if (!Array.isArray(rawTags)) rawTags = [];
+
+    const owners = rawTags
+      .filter((t: string) => typeof t === 'string' && (t.startsWith('Agent:') || t.startsWith('Owner:')))
+      .map((t: string) => t.replace(/^(Agent:|Owner:)\s*/i, '').trim());
+
+    if (owners.length === 0) {
+      if (contact.userName) return [contact.userName];
+      return ['Default Agent'];
+    }
+    return Array.from(new Set(owners));
+  }
+
   fetchContacts() {
     this.isLoading.set(true);
     this.api.get('/whatsappcontacts/list').subscribe({
@@ -85,10 +105,13 @@ export class ContactService {
     return this.api.delete(`/whatsappcontacts/delete/${id}`);
   }
 
-  importCsv(file: File, type: 'B2B' | 'B2C'): Observable<any> {
+  importCsv(file: File, type: 'B2B' | 'B2C', agentTag?: string): Observable<any> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('type', type);
+    if (agentTag) {
+      formData.append('agentTag', agentTag);
+    }
     return this.api.post('/whatsappcontacts/import', formData);
   }
 

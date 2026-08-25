@@ -31,7 +31,7 @@
         </div>
     </div>
 
-    <!-- Step 1: Campaign Details -->
+    <!-- Step 1: Campaign Details & Audience Data Table -->
     @if (currentStep === 1) {
         <div class="step-content">
             <div class="step-actions top-right">
@@ -41,21 +41,21 @@
             <div class="form-group mb-24">
                 <label>Campaign Name <span class="text-red">*</span></label>
                 <p class="help-text">Pick something that describes your audience & goals.</p>
-                <input type="text" class="form-control" [(ngModel)]="campaignName" placeholder="Enter campaign name">
+                <input type="text" class="form-control" [(ngModel)]="campaignName" placeholder="Enter campaign name e.g. Q3 B2B Marketing Blitz">
             </div>
 
             <div class="form-group mb-24">
-                <label>Target Audience <span class="text-red">*</span></label>
-                <p class="help-text">Choose who will receive this campaign message.</p>
+                <label>Target Audience Filter <span class="text-red">*</span></label>
+                <p class="help-text">Select audience segments or filter directly in the data table.</p>
                 <div class="audience-options" style="display: flex; gap: 16px; margin-top: 8px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="radio" name="audience" value="ALL" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> All Contacts
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="audience" value="B2C" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> All B2C (Pace Travels)
+                        <input type="radio" name="audience" value="B2C" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> B2C Contacts (Pace Travels)
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="audience" value="B2B" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> All B2B (Pace Tourism)
+                        <input type="radio" name="audience" value="B2B" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> B2B Contacts (Pace Tourism)
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="radio" name="audience" value="GROUP" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> Contact Group
@@ -63,7 +63,7 @@
                 </div>
 
                 @if (audienceType() === 'GROUP') {
-                    <div style="margin-top: 16px; max-width: 300px;">
+                    <div style="margin-top: 16px; max-width: 340px;">
                         <label>Select Group</label>
                         <select class="form-control" [ngModel]="selectedGroupId()" (ngModelChange)="selectedGroupId.set($event)">
                             <option [value]="null">-- Select Group --</option>
@@ -75,43 +75,124 @@
                 }
             </div>
 
-            <div class="audience-grid">
-                <h4>Targeted Contacts ({{ getAudienceContacts().length }})</h4>
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Mobile Number</th>
-                            <th>Type</th>
-                            <th>Source</th>
-                            <th>Location</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (contactService.isLoading()) {
-                            <tr><td colspan="5" class="text-center">Loading...</td></tr>
-                        } @else if (contactService.contacts().length === 0) {
-                            <tr><td colspan="5" class="text-center empty-state">No contacts found.</td></tr>
-                        } @else {
-                            @for(contact of contactService.contacts(); track contact.id) {
-                                <tr (click)="openProfilePanel(contact)" style="cursor: pointer;">
-                                    <td class="font-bold">{{ contact.name || 'UNKNOWN' }}</td>
-                                    <td>{{ contact.phone }}</td>
-                                    <td>
-                                        <span class="tag-badge">{{ contact.type }}</span>
-                                    </td>
-                                    <td>{{ contact.source }}</td>
-                                    <td>{{ contact.location || '-' }}</td>
-                                </tr>
+            <!-- Audience Standard Data Table -->
+            <div class="audience-grid-card">
+                <div class="datatable-toolbar">
+                    <div class="toolbar-left">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" class="search-input" placeholder="Search contacts by name, phone, agency..." [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)">
+                        </div>
+
+                        <!-- Agent Owner Filter -->
+                        <div class="filter-dropdown">
+                            <select class="select-control" [ngModel]="selectedAgentOwner()" (ngModelChange)="selectedAgentOwner.set($event)">
+                                <option value="">Filter by Contact Owner (All Agents)</option>
+                                @for (agent of availableAgentOwners(); track agent) {
+                                    <option [value]="agent">Agent: {{ agent }}</option>
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="toolbar-right">
+                        <!-- Group Action Button -->
+                        <button class="btn btn-outline btn-sm" (click)="createGroupFromSelected()" [disabled]="selectedContactIds().length === 0">
+                            <i class="fa-solid fa-layer-group"></i> Create Group from Selected ({{ selectedContactIds().length }})
+                        </button>
+
+                        <div class="page-size-selector">
+                            <span>Per Page:</span>
+                            <select [value]="pageSize()" (change)="onPageSizeChange($event)">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th class="checkbox-col">
+                                    <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()">
+                                </th>
+                                <th (click)="setSortColumn('name')" class="sortable">
+                                    Name 
+                                    @if (sortColumn() === 'name') { <i class="fa-solid" [class.fa-arrow-up]="sortDirection() === 'asc'" [class.fa-arrow-down]="sortDirection() === 'desc'"></i> }
+                                </th>
+                                <th (click)="setSortColumn('phone')" class="sortable">Mobile Number</th>
+                                <th>Contact Owner(s)</th>
+                                <th>Type</th>
+                                <th>Source</th>
+                                <th>Location</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (contactService.isLoading()) {
+                                <tr><td colspan="8" class="text-center py-16">Loading contacts...</td></tr>
+                            } @else if (filteredAudienceContacts().length === 0) {
+                                <tr><td colspan="8" class="text-center empty-state py-16">No contacts match the current filters.</td></tr>
+                            } @else {
+                                @for(contact of paginatedAudienceContacts(); track contact.id) {
+                                    <tr [class.row-selected]="contact.id && selectedContactIds().includes(contact.id)">
+                                        <td class="checkbox-col">
+                                            <input type="checkbox" [checked]="contact.id && selectedContactIds().includes(contact.id)" (change)="toggleSelectContact(contact.id!)">
+                                        </td>
+                                        <td class="font-bold cursor-pointer" (click)="openProfilePanel(contact)">
+                                            {{ contact.name || 'UNKNOWN' }}
+                                        </td>
+                                        <td>{{ contact.phone }}</td>
+                                        <td>
+                                            <!-- Multi-agent owner chips -->
+                                            <div class="owner-chips-container">
+                                                @for (owner of contactService.getContactOwners(contact); track owner) {
+                                                    <span class="owner-chip"><i class="fa-solid fa-user-gear"></i> {{ owner }}</span>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="tag-badge" [class.badge-b2b]="contact.type === 'B2B'">{{ contact.type || 'B2C' }}</span>
+                                        </td>
+                                        <td>{{ contact.source || 'IMPORT' }}</td>
+                                        <td>{{ contact.location || '-' }}</td>
+                                        <td>
+                                            <button class="btn-icon" (click)="openProfilePanel(contact)" title="View Profile"><i class="fa-regular fa-eye"></i></button>
+                                        </td>
+                                    </tr>
+                                }
                             }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Data Table Pagination Footer -->
+                <div class="datatable-pagination">
+                    <div class="pagination-info">
+                        Showing {{ (currentPage() - 1) * pageSize() + 1 }} to {{ getMathMin(currentPage() * pageSize(), filteredAudienceContacts().length) }} of {{ filteredAudienceContacts().length }} contacts
+                        @if (selectedContactIds().length > 0) {
+                            <span class="selection-badge">({{ selectedContactIds().length }} selected)</span>
                         }
-                    </tbody>
-                </table>
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="btn-page" [disabled]="currentPage() === 1" (click)="setPage(currentPage() - 1)">
+                            <i class="fa-solid fa-chevron-left"></i> Prev
+                        </button>
+                        <span class="page-indicator">Page {{ currentPage() }} of {{ totalPages() }}</span>
+                        <button class="btn-page" [disabled]="currentPage() >= totalPages()" (click)="setPage(currentPage() + 1)">
+                            Next <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
             </div>
         </div>
     }
 
-    <!-- Step 2: Create Message -->
+    <!-- Step 2: Create Message & Conversational Setup -->
     @if (currentStep === 2) {
         <div class="step-content">
             <div class="step-actions split">
@@ -119,15 +200,48 @@
                 <button class="btn btn-dark" [disabled]="!selectedTemplate()" (click)="nextStep()">Next</button>
             </div>
             
+            <!-- Message Mode Switcher -->
+            <div class="mode-tabs-container mb-24">
+                <button class="mode-tab" [class.active]="campaignMode() === 'STANDARD'" (click)="campaignMode.set('STANDARD')">
+                    <i class="fa-solid fa-paper-plane"></i> Standard Broadcast Template
+                </button>
+                <button class="mode-tab" [class.active]="campaignMode() === 'CONVERSATIONAL'" (click)="campaignMode.set('CONVERSATIONAL')">
+                    <i class="fa-solid fa-comments"></i> Conversational Interactive Campaign
+                </button>
+            </div>
+
+            <!-- Platform Base Campaign Blueprints Grid (For Conversational Mode) -->
+            @if (campaignMode() === 'CONVERSATIONAL') {
+                <div class="blueprints-section mb-24">
+                    <h4>Platform Base Campaign Blueprints</h4>
+                    <p class="help-text">Select a pre-defined campaign blueprint with mapped CRM input structures.</p>
+                    
+                    <div class="blueprints-grid">
+                        @for (bp of blueprints; track bp.key) {
+                            <div class="blueprint-card" [class.selected]="selectedBlueprintKey() === bp.key" (click)="selectBlueprint(bp)">
+                                <div class="bp-icon"><i class="fa-solid" [class]="bp.icon"></i></div>
+                                <div class="bp-info">
+                                    <h5 class="bp-title">{{ bp.name }}</h5>
+                                    <p class="bp-desc">{{ bp.description }}</p>
+                                </div>
+                                <div class="bp-check">
+                                    <i class="fa-solid" [class.fa-circle-check]="selectedBlueprintKey() === bp.key" [class.fa-circle]="selectedBlueprintKey() !== bp.key"></i>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
             <div class="create-message-layout">
-                <!-- Left Side: Message Configuration -->
+                <!-- Left Side: Message & Quick Reply Configuration -->
                 <div class="message-config">
                     <div class="form-group mb-24">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <label style="margin-bottom: 0;">Template Name <span class="text-red">*</span></label>
                             <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;" (click)="syncTemplates()"><i class="fa-solid fa-rotate"></i> Sync Templates</button>
                         </div>
-                        <p class="help-text">Search and select an approved template.</p>
+                        <p class="help-text">Select an approved WhatsApp message template.</p>
                         <select class="form-control" [ngModel]="selectedTemplate()" (ngModelChange)="selectTemplate($event)">
                             @if (templates().length === 0) {
                                 <option [value]="null">No templates found. Click sync templates.</option>
@@ -139,8 +253,8 @@
                     </div>
 
                     @if (selectedTemplate()) {
-                        <div class="config-section">
-                            <h4>Parameters ({{ getTemplateParamKeys().length }} parameters)</h4>
+                        <div class="config-section mb-24">
+                            <h4>Template Variables ({{ getTemplateParamKeys().length }})</h4>
                             @if (getTemplateParamKeys().length === 0) {
                                 <p class="help-text">This template has no variable parameters.</p>
                             } @else {
@@ -148,16 +262,61 @@
                                     <div class="parameter-row" style="margin-bottom: 12px;">
                                         <div class="param-label">{{ '{{' + key + '}}' }}</div>
                                         <div class="param-inputs">
-                                            <input type="text" class="form-control" placeholder="Fallback value" [value]="templateParams()[key]" (input)="onParamChange(key, $event)">
+                                            <input type="text" class="form-control" placeholder="Value fallback" [value]="templateParams()[key]" (input)="onParamChange(key, $event)">
                                         </div>
                                     </div>
                                 }
                             }
                         </div>
                     }
+
+                    <!-- Conversational Interactive Quick Reply Builder -->
+                    @if (campaignMode() === 'CONVERSATIONAL') {
+                        <div class="config-section interactive-builder-card">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <h4>Interactive Quick Reply Buttons & CRM Auto-Mapping</h4>
+                                <button class="btn btn-outline btn-sm" (click)="addQuickReplyOption()"><i class="fa-solid fa-plus"></i> Add Option</button>
+                            </div>
+                            <p class="help-text">Define user response buttons and how the CRM contact record updates when clicked.</p>
+
+                            <div class="quick-replies-list">
+                                @for (option of quickReplyOptions(); track $index) {
+                                    <div class="quick-reply-card">
+                                        <div class="qr-header">
+                                            <span>Button {{ $index + 1 }}</span>
+                                            <button class="btn-icon text-red" (click)="removeQuickReplyOption($index)"><i class="fa-solid fa-trash"></i></button>
+                                        </div>
+                                        <div class="qr-grid">
+                                            <div>
+                                                <label class="label-sm">Button Text (User Sees)</label>
+                                                <input type="text" class="form-control" [value]="option.text" (input)="updateQuickReplyOption($index, 'text', $any($event.target).value)" placeholder="e.g. Confirm Yes">
+                                            </div>
+                                            <div>
+                                                <label class="label-sm">Auto Bot Response</label>
+                                                <input type="text" class="form-control" [value]="option.autoReplyText" (input)="updateQuickReplyOption($index, 'autoReplyText', $any($event.target).value)" placeholder="e.g. Thanks! Slot confirmed.">
+                                            </div>
+                                            <div>
+                                                <label class="label-sm">CRM Field to Update</label>
+                                                <select class="form-control" [value]="option.crmField || 'leadStage'" (change)="updateQuickReplyOption($index, 'crmField', $any($event.target).value)">
+                                                    <option value="leadStage">Lead Stage</option>
+                                                    <option value="readinessStatus">Readiness Status</option>
+                                                    <option value="type">Contact Type (B2B/B2C)</option>
+                                                    <option value="tags">Add Tag</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label class="label-sm">Value to Save</label>
+                                                <input type="text" class="form-control" [value]="option.crmValue || ''" (input)="updateQuickReplyOption($index, 'crmValue', $any($event.target).value)" placeholder="e.g. Qualified">
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
                 </div>
 
-                <!-- Right Side: Live Preview -->
+                <!-- Right Side: Live Mockup -->
                 <div class="message-preview">
                     <div class="whatsapp-mockup">
                         <div class="wa-header">
@@ -167,12 +326,34 @@
                             </div>
                         </div>
                         <div class="wa-body">
+                            <!-- Broadcast Message Bubble -->
                             <div class="wa-message-bubble">
-                                <div class="wa-text">
-                                    {{ getPreviewText() }}
-                                </div>
-                                <div class="wa-footer">Live Mockup</div>
+                                <div class="wa-text">{{ getPreviewText() }}</div>
+                                <div class="wa-footer">10:45 AM</div>
                             </div>
+
+                            <!-- Interactive Buttons Preview -->
+                            @if (campaignMode() === 'CONVERSATIONAL') {
+                                <div class="wa-quick-replies-preview">
+                                    @for (opt of quickReplyOptions(); track opt.text) {
+                                        <div class="wa-reply-btn">
+                                            <i class="fa-solid fa-reply"></i> {{ opt.text }}
+                                        </div>
+                                    }
+                                </div>
+
+                                @if (quickReplyOptions().length > 0) {
+                                    <!-- Simulated Incoming Reply & Bot Response -->
+                                    <div class="wa-message-bubble wa-incoming mt-12">
+                                        <div class="wa-text font-bold">{{ quickReplyOptions()[0].text }}</div>
+                                        <div class="wa-footer">Simulated User Reply</div>
+                                    </div>
+                                    <div class="wa-message-bubble mt-8">
+                                        <div class="wa-text">{{ quickReplyOptions()[0].autoReplyText }}</div>
+                                        <div class="wa-footer">Auto Bot Response • Syncs CRM field: {{ quickReplyOptions()[0].crmField }} = "{{ quickReplyOptions()[0].crmValue }}"</div>
+                                    </div>
+                                }
+                            }
                         </div>
                     </div>
                 </div>
@@ -190,13 +371,32 @@
             
             <div class="test-preview-section">
                 <h3>Ready to Launch?</h3>
-                <p>You can send a test template message to a specific number before launching to your entire audience.</p>
+                <p>Review your campaign setup and test the message flow before broadcasting.</p>
                 
+                <div class="summary-cards-grid mt-24 mb-24">
+                    <div class="summary-card">
+                        <div class="s-label">Campaign Name</div>
+                        <div class="s-val">{{ campaignName }}</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="s-label">Campaign Mode</div>
+                        <div class="s-val"><span class="tag-badge">{{ campaignMode() }}</span></div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="s-label">Target Audience</div>
+                        <div class="s-val">{{ filteredAudienceContacts().length }} Contacts</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="s-label">Template</div>
+                        <div class="s-val">{{ selectedTemplate()?.templateName || '-' }}</div>
+                    </div>
+                </div>
+
                 <div class="form-group mt-24">
-                    <label>Test Number (with country code, e.g. 919876543210)</label>
+                    <label>Send Test Message (Phone with Country Code)</label>
                     <div class="test-input-group" style="display: flex; gap: 12px; margin-top: 8px;">
                         <input type="text" class="form-control" style="max-width: 300px;" [(ngModel)]="testPhoneNumber" placeholder="e.g. 919876543210">
-                        <button class="btn btn-dark" (click)="sendTestMessage()">Send Test</button>
+                        <button class="btn btn-dark" (click)="sendTestMessage()"><i class="fa-solid fa-vial"></i> Send Test</button>
                     </div>
                 </div>
             </div>
@@ -210,3 +410,31 @@
     [contact]="selectedProfileContact"
     (closePanel)="closeProfilePanel()">
 </app-contact-profile-panel>
+
+<!-- Create Group Modal Dialog -->
+@if (showCreateGroupModal()) {
+    <div class="modal-backdrop">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3>Create New Contact Group</h3>
+                <button class="btn-icon" (click)="showCreateGroupModal.set(false)"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group mb-16">
+                    <label>Group Name <span class="text-red">*</span></label>
+                    <input type="text" class="form-control" [ngModel]="newGroupName()" (ngModelChange)="newGroupName.set($event)">
+                </div>
+                <div class="form-group mb-16">
+                    <label>Description</label>
+                    <textarea class="form-control" [ngModel]="newGroupDescription()" (ngModelChange)="newGroupDescription.set($event)" rows="3"></textarea>
+                </div>
+                <p class="help-text">Will include {{ selectedContactIds().length }} selected contacts from the data table.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" (click)="showCreateGroupModal.set(false)">Cancel</button>
+                <button class="btn btn-dark" (click)="confirmCreateGroup()"><i class="fa-solid fa-check"></i> Create Group</button>
+            </div>
+        </div>
+    </div>
+}
+

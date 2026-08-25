@@ -51,6 +51,9 @@
                         </td>
                         <td style="font-size: 13px; color: #334155;">{{ campaign.audience }}</td>
                         <td style="text-align: right;">
+                            <button (click)="openResponsesModal(campaign)" class="icon-btn" style="background: #e6f4f1; border: 1px solid #0b494d; color: #0b494d; cursor: pointer; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; margin-right: 6px;" title="View Responses & Sync to CRM">
+                                <i class="fa-solid fa-comments"></i> Responses & CRM Sync
+                            </button>
                             <button (click)="deleteCampaign(campaign)" class="icon-btn" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 6px 10px; font-size: 14px;" title="Delete Campaign">
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
@@ -60,4 +63,91 @@
             }
         </tbody>
     </table>
+</div>
+
+<!-- Responses & CRM Sync Data Table Modal -->
+<div *ngIf="showResponsesModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1050; font-family: 'Inter', sans-serif;">
+    <div style="background: white; width: 900px; max-width: 95vw; border-radius: 12px; padding: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); max-height: 90vh; display: flex; flex-direction: column;">
+        
+        <!-- Modal Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 16px;">
+            <div>
+                <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-comments" style="color: #0b494d;"></i> Conversational Responses & CRM Sync — {{ selectedCampaign()?.campaignName }}
+                </h3>
+                <span style="font-size: 12px; color: #64748b; margin-top: 4px; display: block;">Track incoming WhatsApp replies and sync user responses directly to contact CRM profiles.</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button (click)="syncAllResponsesToCrm()" style="background: #0b494d; color: white; border: none; padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-arrows-rotate"></i> Sync All to CRM
+                </button>
+                <button (click)="closeResponsesModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
+            </div>
+        </div>
+
+        <!-- Data Table Container -->
+        <div style="flex: 1; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13px;">
+                <thead style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-weight: 700; color: #475569; position: sticky; top: 0; z-index: 10;">
+                    <tr>
+                        <th style="padding: 10px 14px;">RECIPIENT</th>
+                        <th style="padding: 10px 14px;">MOBILE NUMBER</th>
+                        <th style="padding: 10px 14px;">CONTACT OWNER(S)</th>
+                        <th style="padding: 10px 14px;">RESPONSE RECEIVED</th>
+                        <th style="padding: 10px 14px;">RESPONDED AT</th>
+                        <th style="padding: 10px 14px;">CRM SYNC STATUS</th>
+                        <th style="padding: 10px 14px; text-align: right;">ACTION</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr *ngIf="isLoadingResponses()">
+                        <td colspan="7" style="padding: 40px; text-align: center; color: #64748b;">Loading recipient response logs...</td>
+                    </tr>
+                    <tr *ngIf="!isLoadingResponses() && recipientResponses().length === 0">
+                        <td colspan="7" style="padding: 40px; text-align: center; color: #64748b;">No recipient response records found for this campaign yet.</td>
+                    </tr>
+                    <ng-container *ngIf="!isLoadingResponses()">
+                        <tr *ngFor="let item of recipientResponses(); let idx = index" [style.background]="idx % 2 === 0 ? 'white' : '#fafafa'" style="border-bottom: 1px solid #f1f5f9; color: #1e293b;">
+                            <td style="padding: 12px 14px; font-weight: 700; color: #0f172a;">
+                                {{ item.Contact?.name || 'UNKNOWN' }}
+                            </td>
+                            <td style="padding: 12px 14px; font-family: monospace; font-size: 12.5px;">
+                                {{ item.Contact?.phone || '-' }}
+                            </td>
+                            <td style="padding: 12px 14px;">
+                                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
+                                    <span *ngFor="let owner of contactService.getContactOwners(item.Contact || {})" style="display: inline-flex; align-items: center; gap: 4px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">
+                                        <i class="fa-solid fa-user-gear" style="font-size: 10px;"></i> {{ owner }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td style="padding: 12px 14px; font-weight: 600;" [style.color]="item.responseReceived ? '#047857' : '#94a3b8'">
+                                {{ item.responseReceived || 'No Response Yet' }}
+                            </td>
+                            <td style="padding: 12px 14px; font-size: 12px; color: #64748b;">
+                                {{ item.respondedAt ? (item.respondedAt | date:'short') : '-' }}
+                            </td>
+                            <td style="padding: 12px 14px;">
+                                <span [style.background]="item.crmSyncStatus === 'SYNCED' ? '#dcfce7' : '#fef3c7'" [style.color]="item.crmSyncStatus === 'SYNCED' ? '#166534' : '#b45309'" style="padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">
+                                    {{ item.crmSyncStatus || 'PENDING' }}
+                                </span>
+                            </td>
+                            <td style="padding: 12px 14px; text-align: right;">
+                                <button (click)="syncResponseToCrm(item)" [disabled]="item.crmSyncStatus === 'SYNCED'" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 11.5px; cursor: pointer;" [style.opacity]="item.crmSyncStatus === 'SYNCED' ? 0.6 : 1">
+                                    {{ item.crmSyncStatus === 'SYNCED' ? 'Synced' : 'Sync to CRM' }}
+                                </button>
+                            </td>
+                        </tr>
+                    </ng-container>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div style="display: flex; justify-content: flex-end; margin-top: 16px;">
+            <button (click)="closeResponsesModal()" style="background: #0f172a; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">
+                Close
+            </button>
+        </div>
+    </div>
 </div>
