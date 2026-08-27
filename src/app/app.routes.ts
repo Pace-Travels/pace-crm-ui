@@ -34,6 +34,7 @@ import { CreateTemplateView } from './features/templates/create-template-view/cr
 import { AiTemplateGeneratorView } from './features/templates/ai-template-generator-view/ai-template-generator-view';
 import { OptInManagementView } from './features/templates/opt-in-management-view/opt-in-management-view';
 import { History } from './features/history/history';
+import { CsvGraphs } from './features/graphs/components/csv-graphs/csv-graphs';
 
 export const routes: Routes = [
     {
@@ -169,6 +170,9 @@ export const routes: Routes = [
             },
             {
                 path:'email', component:Email, title: 'E-mail'
+            },
+            {
+                path:'csvdata', component:CsvGraphs, title: 'CSV Data'
             },
             {
                 path: 'market-intelligence',

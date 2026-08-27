@@ -54,6 +54,7 @@ export class Sidebar implements OnInit {
     { icon: 'fa-solid fa-gear', title: 'Manage', route: '/manage' },
     { icon: 'fa-solid fa-plug', title: 'Integrations', route: '/integrations' },
     { icon: 'fa-solid fa-users', title: 'Agents', route: '/agents' },
+    { icon: 'fa-solid fa-file', title: 'CSV Data', route: '/csvdata' },
     { icon: 'fa-solid fa-code', title: 'Developer', route: '/developer' },
     { icon: 'fa-solid fa-folder-open', title: 'All Projects', route: '/projects' }
   ];
