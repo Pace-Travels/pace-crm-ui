@@ -1,79 +1,98 @@
-<div class="overlay" *ngIf="mobileOpen()" (click)="toggleSidebar()">
-</div>
+<div class="overlay" *ngIf="mobileOpen()" (click)="toggleSidebar()"></div>
 
 <aside class="sidebar" [class.collapsed]="collapsed()" [class.mobile-open]="mobileOpen()">
 
-    <!-- Logo -->
+    <!-- Logo & Brand Header -->
     <div class="logo">
-        <div class="logo-icon">P</div>
-
-        @if(!collapsed()){
-        <div class="logo-text">
-            <h2>Pace</h2>
-            <span>CRM</span>
+        <div class="logo-icon">
+            <i class="fa-solid fa-layer-group"></i>
         </div>
+
+        @if (!collapsed()) {
+            <div class="logo-text">
+                <h2>Quote Desks</h2>
+                <span>Pace Travels Platform</span>
+            </div>
         }
     </div>
 
-    <!-- Project Selector Dropdown -->
+    <!-- Search Bar (Cmd+K) -->
     @if (!collapsed()) {
-        <div class="project-selector-wrapper" style="padding: 12px 24px; border-bottom: 1px solid #eaeaea; width: 100%; box-sizing: border-box;">
-            <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px;">Active Brand Project</div>
-            <select class="form-control" style="padding: 6px 10px; font-size: 12px; font-weight: 600; border-color: #cbd5e1; width: 100%; border-radius: 6px; outline: none; background: white;" 
+        <div class="sidebar-search-container">
+            <div class="sidebar-search-btn">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <span class="search-text">Search (Cmd+K)</span>
+            </div>
+        </div>
+    }
+
+    <!-- Active Brand Project Selector Dropdown -->
+    @if (!collapsed()) {
+        <div class="project-selector-wrapper">
+            <div class="project-label">Active Workspace</div>
+            <select class="project-select" 
                     [ngModel]="projectService.currentProject()?.id" 
                     (ngModelChange)="onProjectSelectChange($event)">
                 @if (projectService.projects().length === 0) {
                     <option [value]="0">No projects active</option>
                 }
-                @for(p of projectService.projects(); track p.id) {
+                @for (p of projectService.projects(); track p.id) {
                     <option [value]="p.id">{{ p.name }}</option>
                 }
             </select>
         </div>
     }
 
-    <!-- Scrollable Menu -->
-
+    <!-- Categorized Menu Sections -->
     <div class="sidebar-menu">
-
-        <ul>
-
-            @for(item of menu;track item.title){
-
-            <li>
-
-                <a [routerLink]="item.route" routerLinkActive="active">
-
-                    <div class="menu-item-content">
-                        <i [class]="item.icon"></i>
-                        <span>{{item.title}}</span>
+        @for (sec of menuSections; track sec.title) {
+            <div class="menu-category">
+                @if (!collapsed()) {
+                    <div class="category-header" (click)="toggleSection(sec)">
+                        <span>{{ sec.title }}</span>
+                        <i class="fa-solid" [class.fa-angle-down]="sec.expanded" [class.fa-angle-right]="!sec.expanded"></i>
                     </div>
+                }
 
-                </a>
+                @if (sec.expanded || collapsed()) {
+                    <ul>
+                        @for (item of sec.items; track item.title) {
+                            <li>
+                                <a [routerLink]="item.route" routerLinkActive="active" [title]="collapsed() ? item.title : ''">
+                                    <div class="menu-item-content">
+                                        <i [class]="item.icon"></i>
+                                        <span>{{ item.title }}</span>
 
-            </li>
-
-            }
-
-        </ul>
-
+                                        @if (!collapsed() && item.badge) {
+                                            <span class="menu-badge" [style.background-color]="item.badgeColor || '#EF4444'">
+                                                {{ item.badge }}
+                                            </span>
+                                        }
+                                    </div>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </div>
+        }
     </div>
 
-    <!-- Account section at the bottom -->
+    <!-- Sidebar Bottom / Account -->
     <div class="sidebar-bottom">
         <ul>
             <li>
-                <a routerLink="/account" routerLinkActive="active">
+                <a routerLink="/account" routerLinkActive="active" title="Account">
                     <div class="menu-item-content">
-                        <i class="fa-solid fa-circle-user"></i>
+                        <i class="fa-regular fa-circle-user"></i>
                         <span>Account</span>
                     </div>
                 </a>
             </li>
             <li>
-                <a (click)="logout()" style="cursor: pointer; color: #ef4444;">
+                <a (click)="logout()" class="logout-link" title="Sign Out">
                     <div class="menu-item-content">
-                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <i class="fa-solid fa-arrow-right-from-bracket"></i>
                         <span>Logout</span>
                     </div>
                 </a>

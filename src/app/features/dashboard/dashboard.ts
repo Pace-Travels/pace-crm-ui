@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, inject, effect } from '@angular/core';
+import { Component, OnInit, signal, computed, inject, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -6,6 +6,8 @@ import { ApiService } from '../../shared/services/api.service';
 import { ChecklistWidgetComponent } from '../../shared/components/checklist-widget/checklist-widget';
 import { OnboardingService } from '../../shared/services/onboarding.service';
 import { ProjectService } from '../projects/services/project.service';
+
+import { AuthService } from '../../shared/services/auth.service';
 
 declare var Swal: any;
 
@@ -18,15 +20,30 @@ declare var Swal: any;
 })
 export class Dashboard implements OnInit {
   api = inject(ApiService);
+  authService = inject(AuthService);
   router = inject(Router);
   onboardingService = inject(OnboardingService);
   projectService = inject(ProjectService);
 
   selectedDateRange = '7_DAYS';
+  selectedYearFilter = 'This Year';
+
+  userName = computed(() => {
+    try {
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        return user.name || user.username || user.email?.split('@')[0] || 'Shadab';
+      }
+    } catch (e) {}
+    return 'Shadab';
+  });
+
   analytics = signal<any>({
-    totalMessagesSent: 12450,
-    totalDelivered: 11920,
-    totalRead: 8400,
+    totalMessagesSent: 1240,
+    totalDelivered: 980,
+    totalRead: 750,
+    cancelledCount: 14,
     activeAiSessions: 142,
     deliverySuccessRate: 95.7,
     readRate: 70.4,

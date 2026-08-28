@@ -2,14 +2,44 @@
 
 @use './styles/styles.scss';
 
+:root {
+    --sidebar-bg: #161928;
+    --sidebar-text: #94A3B8;
+    --sidebar-text-hover: #F8FAFC;
+    --sidebar-active-bg: #4F46E5;
+    --sidebar-active-text: #FFFFFF;
+    --sidebar-border: #23273A;
+    --sidebar-section-title: #64748B;
+
+    --app-bg: #F6F7FB;
+    --card-bg: #FFFFFF;
+    --card-border: #E2E8F0;
+    --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+    --card-radius: 14px;
+    --text-primary: #1E293B;
+    --text-secondary: #64748B;
+    --text-muted: #94A3B8;
+
+    --color-purple: #7C3AED;
+    --color-purple-bg: #F3E8FF;
+    --color-amber: #D97706;
+    --color-amber-bg: #FEF3C7;
+    --color-mint: #059669;
+    --color-mint-bg: #D1FAE5;
+    --color-coral: #DC2626;
+    --color-coral-bg: #FEE2E2;
+}
+
 html,
-body{
-    margin:0;
-    padding:0;
-    width:100%;
-    height:100%;
-    font-family:Inter,sans-serif;
-    background:#f6f8fb;
+body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--app-bg);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
 }
 
 *{
@@ -99,6 +129,8 @@ textarea {
 .sidebar-inner {
     height: 100%;
     padding: 16px 12px;
+    background: #ffffff;
+    border-right: 1px solid var(--card-border);
     overflow-y: auto;
 
     .sidebar-section {
@@ -108,36 +140,217 @@ textarea {
             margin: 0;
 
             li {
-                padding: 10px 12px;
-                border-radius: 6px;
+                padding: 10px 14px;
+                border-radius: 8px;
                 cursor: pointer;
                 font-size: 13px;
-                color: #333;
+                font-weight: 500;
+                color: var(--text-secondary);
                 display: flex;
                 align-items: center;
                 gap: 12px;
-                margin-bottom: 2px;
+                margin-bottom: 3px;
                 transition: all 0.2s ease;
 
                 i {
                     font-size: 15px;
-                    color: #555;
+                    color: var(--text-muted);
                     width: 20px;
                     text-align: center;
                 }
 
                 &:hover {
-                    background: #f5f6f6;
+                    background: #f1f5f9;
+                    color: var(--text-primary);
                 }
 
                 &.active {
-                    background: #e8f4f4;
-                    color: #0b494d;
-                    font-weight: 500;
-                    
-                    i { color: #0b494d; }
+                    background: var(--sidebar-active-bg);
+                    color: #ffffff;
+                    font-weight: 600;
+                    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+
+                    i { color: #ffffff; }
                 }
             }
+        }
+    }
+}
+
+/* Quote Desks Primary & Secondary Button Overrides */
+.btn-primary,
+button.btn-primary,
+button.primary {
+    background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 9px 18px !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+
+    &:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 16px rgba(79, 70, 229, 0.35) !important;
+    }
+}
+
+.btn-secondary,
+button.btn-secondary {
+    background: #ffffff !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--card-border) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 13px !important;
+    padding: 8px 16px !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+
+    &:hover {
+        background: #f8fafc !important;
+        border-color: #cbd5e1 !important;
+    }
+}
+
+/* Quote Desks Form Field Overrides */
+input:not([type="checkbox"]):not([type="radio"]),
+select,
+textarea,
+.form-control {
+    border-radius: 8px !important;
+    border: 1px solid var(--card-border) !important;
+    padding: 9px 13px !important;
+    font-size: 13px !important;
+    color: var(--text-primary) !important;
+    background-color: #ffffff !important;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+
+    &:focus {
+        border-color: #6366F1 !important;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15) !important;
+    }
+}
+
+/* Quote Desks Universal Table Styling */
+table:not(.custom-no-style),
+.qd-table,
+.p-datatable-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    color: var(--text-primary);
+
+    thead th, th {
+        background: #f8fafc;
+        color: var(--text-secondary);
+        font-size: 10.5px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.6px;
+        padding: 10px 14px;
+        border-bottom: 1px solid var(--card-border);
+        border-top: 1px solid var(--card-border);
+    }
+
+    tbody td, td {
+        padding: 13px 14px;
+        border-bottom: 1px solid #f1f5f9;
+        font-weight: 500;
+        vertical-align: middle;
+    }
+
+    tbody tr:hover {
+        background-color: #f8fafc;
+    }
+}
+
+/* Quote Desks Card Utilities */
+.qd-card,
+.card,
+.panel,
+.manage-card {
+    background: #ffffff;
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+    box-shadow: var(--card-shadow);
+    padding: 20px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    overflow: hidden;
+    box-shadow: var(--card-shadow);
+
+    .kpi-content {
+        display: flex;
+        flex-direction: column;
+
+        .kpi-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.1;
+            margin-bottom: 6px;
+        }
+
+        .kpi-trend {
+            font-size: 11px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+
+            &.up { color: #059669; }
+            &.down { color: #DC2626; }
+        }
+    }
+
+    .kpi-icon-tab {
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex-shrink: 0;
+
+        &.purple {
+            background-color: var(--color-purple-bg);
+            color: var(--color-purple);
+        }
+        &.amber {
+            background-color: var(--color-amber-bg);
+            color: var(--color-amber);
+        }
+        &.mint {
+            background-color: var(--color-mint-bg);
+            color: var(--color-mint);
+        }
+        &.coral {
+            background-color: var(--color-coral-bg);
+            color: var(--color-coral);
         }
     }
 }
