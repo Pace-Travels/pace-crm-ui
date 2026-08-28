@@ -1,0 +1,181 @@
+<div class="ai-generator-page">
+  <!-- Top Header Navigation -->
+  <header class="page-header">
+    <div class="header-left">
+      <a routerLink="/templates" class="back-link">
+        <i class="ri-arrow-left-line"></i>
+      </a>
+      <div class="breadcrumb">
+        <span class="crumb-parent">Message Templates</span>
+        <i class="ri-chevron-right-line"></i>
+        <span class="crumb-active">Generate with AI</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-body">
+    <!-- AI Prompt & Parameter Card -->
+    <div class="card-section generator-card">
+      <div class="card-header-row">
+        <div class="title-with-icon">
+          <div class="ai-sparkle-icon">
+            <i class="ri-sparkles-fill"></i>
+          </div>
+          <div>
+            <h2 class="card-title">Generate with AI</h2>
+            <p class="card-subtext">Create customized variations with AI</p>
+          </div>
+        </div>
+
+        <button class="btn-outline history-btn" (click)="togglePromptHistory()">
+          <i class="ri-history-line"></i> Previous prompts
+        </button>
+      </div>
+
+      <!-- Prompt Textarea Area -->
+      <div class="form-group mt-4">
+        <label>Write your prompt*</label>
+        <div class="prompt-input-wrapper">
+          <textarea 
+            [(ngModel)]="promptText" 
+            rows="4" 
+            placeholder="eg. Please generate a promotional message to give a discount of 20% off on our product line."
+            maxlength="1024">
+          </textarea>
+          <span class="char-counter">{{ promptLength() }}/1024</span>
+        </div>
+      </div>
+
+      <!-- Message Style / Emotion Selector -->
+      <div class="form-group mt-4">
+        <label>Choose your message style:</label>
+        <div class="pill-options-group">
+          <button 
+            type="button" 
+            class="style-pill" 
+            [class.active]="selectedStyle() === 'NORMAL'"
+            (click)="setStyle('NORMAL')">
+            😃 Normal
+          </button>
+          <button 
+            type="button" 
+            class="style-pill" 
+            [class.active]="selectedStyle() === 'POETIC'"
+            (click)="setStyle('POETIC')">
+            ✍️ Poetic
+          </button>
+          <button 
+            type="button" 
+            class="style-pill" 
+            [class.active]="selectedStyle() === 'EXCITING'"
+            (click)="setStyle('EXCITING')">
+            😍 Exciting
+          </button>
+          <button 
+            type="button" 
+            class="style-pill" 
+            [class.active]="selectedStyle() === 'FUNNY'"
+            (click)="setStyle('FUNNY')">
+            😜 Funny
+          </button>
+        </div>
+      </div>
+
+      <!-- Optimization Goal Selector -->
+      <div class="form-group mt-4">
+        <label>Optimize your message for:</label>
+        <div class="pill-options-group">
+          <button 
+            type="button" 
+            class="style-pill" 
+            [class.active]="selectedObjective() === 'CLICK_RATE'"
+            (click)="setObjective('CLICK_RATE')">
+            🎯 Click Rate
+          </button>
+          <button 
+            type="button" 
+            class="style-pill" 
+            [class.active]="selectedObjective() === 'REPLY_RATE'"
+            (click)="setObjective('REPLY_RATE')">
+            ↩️ Reply Rate
+          </button>
+        </div>
+      </div>
+
+      <!-- Generate Action Button (No WCC bracket as requested) -->
+      <button 
+        type="button" 
+        class="btn-generate mt-6" 
+        (click)="generateTemplateVariations()" 
+        [disabled]="isGenerating()">
+        <i class="ri-sparkles-line" *ngIf="!isGenerating()"></i>
+        <i class="ri-loader-4-line spin" *ngIf="isGenerating()"></i>
+        <span>Generate</span>
+      </button>
+    </div>
+
+    <!-- AI Generated Results Variations List -->
+    <div class="results-section mt-6" *ngIf="generatedVariations().length > 0">
+      <h3 class="results-heading"><i class="ri-magic-line"></i> AI Generated Variations</h3>
+      
+      <div class="variations-grid">
+        <div class="variation-card" *ngFor="let item of generatedVariations()">
+          <div class="var-header">
+            <span class="var-title">{{ item.title }}</span>
+            <span class="score-tag"><i class="ri-bar-chart-fill"></i> {{ item.score }}% Match</span>
+          </div>
+
+          <div class="whatsapp-mini-bubble">
+            <div class="bubble-header-text" *ngIf="item.headerText">
+              <strong>{{ item.headerText }}</strong>
+            </div>
+            <div class="bubble-body-text">{{ item.bodyText }}</div>
+            <div class="bubble-footer-text" *ngIf="item.footerText">{{ item.footerText }}</div>
+          </div>
+
+          <div class="var-actions">
+            <button class="btn-secondary copy-btn" (click)="copyPromptToClipboard(item.bodyText)">
+              <i class="ri-file-copy-line"></i> Copy Text
+            </button>
+            <button class="btn-primary use-btn" (click)="useVariationInWizard(item)">
+              <i class="ri-arrow-right-line"></i> Use in Creator Wizard
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Previous Prompts Drawer Overlay -->
+  <div class="drawer-overlay" *ngIf="showPromptHistoryDrawer()" (click)="togglePromptHistory()">
+    <div class="history-drawer" (click)="$event.stopPropagation()">
+      <div class="drawer-header">
+        <h3><i class="ri-history-line"></i> Previous Prompts History</h3>
+        <button class="close-btn" (click)="togglePromptHistory()">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <p class="drawer-sub">Pick any previous prompt to re-populate into the generator textarea or copy to clipboard.</p>
+
+        <div class="history-list mt-4">
+          <div class="history-item" *ngFor="let h of promptHistory()">
+            <p class="history-text">"{{ h.promptText }}"</p>
+            <div class="history-meta">
+              <span class="badge-style">{{ h.style }}</span>
+              <span class="badge-obj">{{ h.objective }}</span>
+              <span class="time-ago">{{ h.timestamp | date:'short' }}</span>
+            </div>
+            <div class="item-actions mt-2">
+              <button class="btn-chip" (click)="copyPromptToClipboard(h.promptText)">
+                <i class="ri-file-copy-line"></i> Copy
+              </button>
+              <button class="btn-chip active" (click)="usePrompt(h.promptText, h.style, h.objective)">
+                <i class="ri-add-circle-line"></i> Pick & Put In
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

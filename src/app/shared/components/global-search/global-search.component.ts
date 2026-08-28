@@ -47,7 +47,7 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
             </div>
 
             <!-- Contacts -->
-            <div class="result-group" *ngIf="searchService.searchResults().contacts?.length">
+            <div class="result-group" *ngIf="searchService.searchResults().contacts.length">
                 <div class="group-title">Contacts</div>
                 <a class="result-item" *ngFor="let c of searchService.searchResults().contacts" routerLink="/contacts">
                     <i class="fa-regular fa-address-book item-icon"></i>
@@ -59,7 +59,7 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
             </div>
 
             <!-- Users -->
-            <div class="result-group" *ngIf="searchService.searchResults().users?.length">
+            <div class="result-group" *ngIf="searchService.searchResults().users.length">
                 <div class="group-title">Team Members</div>
                 <a class="result-item" *ngFor="let u of searchService.searchResults().users" routerLink="/agents">
                     <i class="fa-solid fa-user item-icon"></i>
@@ -71,7 +71,7 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
             </div>
 
             <!-- Campaigns -->
-            <div class="result-group" *ngIf="searchService.searchResults().campaigns?.length">
+            <div class="result-group" *ngIf="searchService.searchResults().campaigns.length">
                 <div class="group-title">Campaigns</div>
                 <a class="result-item" *ngFor="let camp of searchService.searchResults().campaigns" routerLink="/campaigns">
                     <i class="fa-solid fa-bullhorn item-icon"></i>
@@ -83,7 +83,7 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
             </div>
 
             <!-- Messages -->
-            <div class="result-group" *ngIf="searchService.searchResults().messages?.length">
+            <div class="result-group" *ngIf="searchService.searchResults().messages.length">
                 <div class="group-title">Messages</div>
                 <a class="result-item" *ngFor="let m of searchService.searchResults().messages" routerLink="/chat">
                     <i class="fa-regular fa-comment-dots item-icon"></i>

@@ -59,4 +59,12 @@ export class CampaignService {
   deleteCampaign(id: number) {
     return this.api.delete<any>(`campaigns/delete/${id}`);
   }
+
+  getCampaignResponses(id: number) {
+    return this.api.get<any>(`campaigns/responses/${id}`);
+  }
+
+  syncResponseToCrm(payload: { recipientId: number; leadStage?: string; readinessStatus?: string; appendTag?: string; targetField?: string; targetValue?: any }) {
+    return this.api.post<any>('campaigns/sync-response', payload);
+  }
 }

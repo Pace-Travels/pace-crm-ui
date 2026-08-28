@@ -1,0 +1,74 @@
+<section class="workspace">
+  <!-- Header & CSV Selector -->
+  <div class="page-title-bar">
+    <div>
+      <h1 class="page-title">📉 Dynamic CSV Seaborn Analytics</h1>
+      <p class="page-subtitle">Upload CSV to extract fields and render Seaborn graphs instantly.</p>
+    </div>
+    <div class="action-buttons">
+      <label for="csvFileInput" class="btn btn-primary">
+        📁 Choose CSV
+      </label>
+      <input type="file" id="csvFileInput" accept=".csv" hidden (change)="handleFileSelect($event)">
+      
+      <button class="btn btn-secondary" (click)="uploadAndAnalyze()" [disabled]="!selectedFile || isLoading">
+        🚀 {{ isLoading ? 'Analyzing...' : 'Analyze Data' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- File Details -->
+  @if (selectedFile) {
+    <div class="file-status-card">
+      <span class="file-name">📄 Selected File: <strong>{{ selectedFile.name }}</strong></span>
+      @if (analysisResult) {
+        <span class="row-badge">Total Records: {{ analysisResult.row_count }}</span>
+      }
+    </div>
+  }
+
+  <!-- Clickable Column Field Chips -->
+  @if (analysisResult && analysisResult.columns && analysisResult.columns.length > 0) {
+    <div class="fields-container">
+      <h3>Clickable CSV Fields/Columns:</h3>
+      <p>Click any field below to update the Seaborn chart live:</p>
+      <div class="fields-grid">
+        @for (col of analysisResult.columns; track col) {
+          <button 
+            class="field-chip" 
+            [class.active]="col === activeColumn"
+            [disabled]="isLoading"
+            (click)="selectColumnAndAnalyze(col)">
+            📌 {{ col }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Main View Area: Loader OR Graph Image -->
+  @if (isLoading) {
+    <!-- Pace CRM Style Loading State -->
+    <div class="loader-container">
+      <div class="spinner"></div>
+      <p class="loader-text">Generating Seaborn Graph...</p>
+      <small>Processing request via Flask Backend</small>
+    </div>
+  } @else if (safeGraphUrl) {
+    <!-- Seaborn Graph Output (Using Sanitized Safe URL) -->
+    <div class="chart-wrapper">
+      <div class="chart-header">
+        <h3 class="chart-title">Seaborn Graph View: [ {{ activeColumn }} ]</h3>
+        <span class="tag">Jupyter / Seaborn Plot</span>
+      </div>
+      <div class="chart-body">
+        <img [src]="safeGraphUrl" alt="Dynamic Seaborn Chart" class="seaborn-graph">
+      </div>
+    </div>
+  } @else {
+    <!-- Initial Empty State -->
+    <div class="empty-state">
+      <p>Upload a CSV file using the <strong>"Choose CSV"</strong> button above to view dynamic graphs.</p>
+    </div>
+  }
+</section>

@@ -1,0 +1,934 @@
+<div class="template-creator-page">
+  <!-- Top Navigation & Stepper Header -->
+  <header class="wizard-header">
+    <div class="header-left">
+      <a routerLink="/templates" class="back-link">
+        <i class="ri-arrow-left-line"></i>
+      </a>
+      <div class="breadcrumb">
+        <span class="crumb-parent">Message Templates</span>
+        <i class="ri-chevron-right-line"></i>
+        <span class="crumb-active">Create template</span>
+      </div>
+    </div>
+
+    <!-- Step Progress Stepper -->
+    <div class="stepper-nav">
+      <div class="step-item" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1">
+        <div class="step-circle">
+          <i class="ri-check-line" *ngIf="currentStep() > 1"></i>
+          <span *ngIf="currentStep() <= 1">1</span>
+        </div>
+        <span class="step-label">Set up template</span>
+      </div>
+
+      <div class="step-line" [class.completed]="currentStep() > 1"></div>
+
+      <div class="step-item" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2">
+        <div class="step-circle">
+          <i class="ri-check-line" *ngIf="currentStep() > 2"></i>
+          <span *ngIf="currentStep() <= 2">2</span>
+        </div>
+        <span class="step-label">Edit template</span>
+      </div>
+
+      <div class="step-line" [class.completed]="currentStep() > 2"></div>
+
+      <div class="step-item" [class.active]="currentStep() === 3">
+        <div class="step-circle">3</div>
+        <span class="step-label">Submit for Review</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Wizard Workspace Layout -->
+  <div class="wizard-body">
+    <!-- Left Configuration Panel -->
+    <div class="form-container">
+      
+      <!-- ================= STEP 1: SET UP TEMPLATE ================= -->
+      <div class="step-content" *ngIf="currentStep() === 1">
+        <div class="card-section">
+          <h2 class="section-title">Set up your template</h2>
+          <p class="section-desc">Choose the category that best describes your message template. Then, select the type of message that you want to send.</p>
+
+          <!-- Category Selection Tabs -->
+          <div class="category-tabs">
+            <button class="cat-tab" [class.active]="selectedCategory() === 'MARKETING'" (click)="setCategory('MARKETING')">
+              <i class="ri-megaphone-line"></i>
+              <span>Marketing</span>
+            </button>
+            <button class="cat-tab" [class.active]="selectedCategory() === 'UTILITY'" (click)="setCategory('UTILITY')">
+              <i class="ri-notification-3-line"></i>
+              <span>Utility</span>
+            </button>
+            <button class="cat-tab" [class.active]="selectedCategory() === 'AUTHENTICATION'" (click)="setCategory('AUTHENTICATION')">
+              <i class="ri-key-2-line"></i>
+              <span>Authentication</span>
+            </button>
+          </div>
+
+          <!-- Template Type Radio List -->
+          <div class="type-selection-list">
+            <!-- MARKETING TYPES -->
+            <ng-container *ngIf="selectedCategory() === 'MARKETING'">
+              <label class="type-option-card" [class.selected]="selectedType() === 'DEFAULT'" (click)="setType('DEFAULT')">
+                <input type="radio" name="templateType" [checked]="selectedType() === 'DEFAULT'">
+                <div class="type-info">
+                  <div class="type-title">Default</div>
+                  <div class="type-sub">Send messages with media and customized buttons to engage your customers.</div>
+                </div>
+              </label>
+
+              <label class="type-option-card" [class.selected]="selectedType() === 'CATALOGUE'" (click)="setType('CATALOGUE')">
+                <input type="radio" name="templateType" [checked]="selectedType() === 'CATALOGUE'">
+                <div class="type-info">
+                  <div class="type-title">Catalogue</div>
+                  <div class="type-sub">Send messages that drive sales by connecting your product catalogue.</div>
+                </div>
+              </label>
+
+              <label class="type-option-card" [class.selected]="selectedType() === 'FLOWS'" (click)="setType('FLOWS')">
+                <input type="radio" name="templateType" [checked]="selectedType() === 'FLOWS'">
+                <div class="type-info">
+                  <div class="type-title">Flows</div>
+                  <div class="type-sub">Send a form to capture customer interests, appointment requests or run surveys.</div>
+                </div>
+              </label>
+
+              <label class="type-option-card" [class.selected]="selectedType() === 'CALL_PERMISSIONS'" (click)="setType('CALL_PERMISSIONS')">
+                <input type="radio" name="templateType" [checked]="selectedType() === 'CALL_PERMISSIONS'">
+                <div class="type-info">
+                  <div class="type-title">Calling permissions request</div>
+                  <div class="type-sub">Ask customers if you can call them on WhatsApp.</div>
+                </div>
+              </label>
+            </ng-container>
+
+            <!-- UTILITY TYPES -->
+            <ng-container *ngIf="selectedCategory() === 'UTILITY'">
+              <label class="type-option-card" [class.selected]="selectedType() === 'DEFAULT'" (click)="setType('DEFAULT')">
+                <input type="radio" name="templateType" [checked]="selectedType() === 'DEFAULT'">
+                <div class="type-info">
+                  <div class="type-title">Default</div>
+                  <div class="type-sub">Send messages about an existing order or account.</div>
+                </div>
+              </label>
+
+              <label class="type-option-card" [class.selected]="selectedType() === 'FLOWS'" (click)="setType('FLOWS')">
+                <input type="radio" name="templateType" [checked]="selectedType() === 'FLOWS'">
+                <div class="type-info">
+                  <div class="type-title">Flows</div>
+                  <div class="type-sub">Send a form to collect feedback, send reminders or manage orders.</div>
+                </div>
+              </label>
+
+              <label class="type-option-card" [class.selected]="selectedType() === 'CALL_PERMISSIONS'" (click)="setType('CALL_PERMISSIONS')">
+                <input type="radio" name="templateType" [checked]="selectedType() === 'CALL_PERMISSIONS'">
+                <div class="type-info">
+                  <div class="type-title">Calling permissions request</div>
+                  <div class="type-sub">Ask customers if you can call them on WhatsApp.</div>
+                </div>
+              </label>
+            </ng-container>
+
+            <!-- AUTHENTICATION TYPES -->
+            <ng-container *ngIf="selectedCategory() === 'AUTHENTICATION'">
+              <label class="type-option-card selected">
+                <input type="radio" name="templateType" checked>
+                <div class="type-info">
+                  <div class="type-title">One-time passcode</div>
+                  <div class="type-sub">Send codes to verify a transaction or login.</div>
+                </div>
+              </label>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Pre-approved Templates Library Banner -->
+        <div class="library-banner">
+          <div class="banner-icon">
+            <i class="ri-layout-grid-line"></i>
+          </div>
+          <div class="banner-text">
+            <h4>Start with pre-approved templates</h4>
+            <p>Save time and effort by using pre-approved templates from our template library. You can quickly build professional-looking templates without starting from scratch.</p>
+          </div>
+          <button class="btn-secondary" routerLink="/templates">Go to template library</button>
+        </div>
+      </div>
+
+      <!-- ================= STEP 2: EDIT TEMPLATE ================= -->
+      <div class="step-content" *ngIf="currentStep() === 2">
+        
+        <!-- Header Category Badge -->
+        <div class="template-header-badge">
+          <div class="badge-icon">
+            <i class="ri-flashlight-line"></i>
+          </div>
+          <div class="badge-details">
+            <span class="tpl-name-title">{{ templateName() || 'your_template_name' }} • {{ selectedLanguage() }}</span>
+            <span class="tpl-cat-sub">{{ selectedCategory() }} • {{ selectedType() }}</span>
+          </div>
+        </div>
+
+        <!-- Template Name & Language Card -->
+        <div class="card-section">
+          <h3 class="card-title">Template name and language</h3>
+          <div class="form-row">
+            <div class="form-group flex-2">
+              <label>Name your template</label>
+              <div class="input-with-counter">
+                <input type="text" [(ngModel)]="templateName" placeholder="Enter a template name" maxlength="512">
+                <span class="counter">{{ templateNameLength() }}/512</span>
+              </div>
+            </div>
+
+            <div class="form-group flex-1">
+              <label>Select language</label>
+              <select [(ngModel)]="selectedLanguage">
+                <option *ngFor="let lang of languages" [value]="lang.code">{{ lang.label }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content Card -->
+        <div class="card-section">
+          <h3 class="card-title">Content</h3>
+          <p class="card-subtext">Add a header, body and footer for your template. Cloud API hosted by Meta will review the template variables and content to protect security and integrity.</p>
+
+          <div class="form-row">
+            <div class="form-group flex-1">
+              <label>Type of variable <i class="ri-information-line" title="Choose format for template parameters"></i></label>
+              <select [(ngModel)]="variableType">
+                <option value="NUMBER">Number</option>
+                <option value="NAME">Name</option>
+              </select>
+            </div>
+
+            <div class="form-group flex-1">
+              <label>Media sample <span class="opt-tag">• Optional</span></label>
+              <select [ngModel]="mediaHeaderType()" (ngModelChange)="onMediaHeaderTypeChange($event)">
+                <option value="NONE">None</option>
+                <option value="IMAGE">Image</option>
+                <option value="VIDEO">Video</option>
+                <option value="DOCUMENT">Document</option>
+                <option value="LOCATION">Location</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Interactive Dropzone if Media Header selected -->
+          <ng-container *ngIf="mediaHeaderType() === 'IMAGE' || mediaHeaderType() === 'VIDEO' || mediaHeaderType() === 'DOCUMENT'">
+            <!-- Hidden File Input -->
+            <input type="file" #fileInput (change)="onFileSelected($event)" style="display: none;" [accept]="mediaHeaderType() === 'IMAGE' ? 'image/*' : (mediaHeaderType() === 'VIDEO' ? 'video/*' : '.pdf,.doc,.docx,.xlsx')">
+
+            <!-- Dropzone Box when no file uploaded yet -->
+            <div class="dropzone-box" 
+                 *ngIf="!headerMediaUrl() && !isUploadingMedia()"
+                 [class.drag-active]="isDragging()" 
+                 (dragover)="onDragOver($event)" 
+                 (dragleave)="onDragLeave($event)" 
+                 (drop)="onFileDrop($event)"
+                 (click)="fileInput.click()">
+              <i class="ri-upload-cloud-2-line"></i>
+              <p>Drag and drop {{ mediaHeaderType().toLowerCase() }} to upload to S3</p>
+              <span>Or <a href="javascript:void(0)">choose files on your device</a></span>
+            </div>
+
+            <!-- Uploading Spinner State -->
+            <div class="dropzone-box uploading" *ngIf="isUploadingMedia()">
+              <i class="ri-loader-4-line spin"></i>
+              <p>Uploading {{ uploadedFileName() }} to S3 storage...</p>
+            </div>
+
+            <!-- Uploaded File Badge State -->
+            <div class="file-success-card" *ngIf="headerMediaUrl() && !isUploadingMedia()">
+              <div class="file-info">
+                <i class="ri-checkbox-circle-fill text-green"></i>
+                <div>
+                  <strong>{{ uploadedFileName() || 'Header Media File' }}</strong>
+                  <span class="url-hint">{{ headerMediaUrl() }}</span>
+                </div>
+              </div>
+              <div class="media-ai-actions">
+                <button type="button" class="btn-ai-pill" *ngIf="mediaHeaderType() === 'IMAGE'" (click)="openImageEditor()">
+                  <i class="ri-crop-line"></i> Crop & Analyze
+                </button>
+                <button type="button" class="btn-ai-pill" *ngIf="mediaHeaderType() === 'VIDEO'" (click)="openVideoEditor()">
+                  <i class="ri-film-line"></i> Video Analyser
+                </button>
+                <button type="button" class="btn-reset-media" (click)="resetToManualMode()" title="Reset to Manual Upload Mode">
+                  <i class="ri-refresh-line"></i> Reset to Manual Mode
+                </button>
+                <button class="remove-media-btn" (click)="removeUploadedMedia()" title="Remove file"><i class="ri-delete-bin-line"></i></button>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Location details if Location selected -->
+          <div class="form-row" *ngIf="mediaHeaderType() === 'LOCATION'">
+            <div class="form-group flex-1">
+              <label>Location Name Placeholder</label>
+              <input type="text" [(ngModel)]="locationName" placeholder="e.g. Jasper Market">
+            </div>
+            <div class="form-group flex-1">
+              <label>Address Placeholder</label>
+              <input type="text" [(ngModel)]="locationAddress" placeholder="e.g. 123 Main Street">
+            </div>
+          </div>
+
+          <!-- Header Text Input Field -->
+          <div class="form-group">
+            <div class="label-row">
+              <label>Header <span class="opt-tag">• Optional</span></label>
+              <div class="label-actions-right">
+                <button type="button" class="btn-magic-ai" (click)="magicRewriteHeader()" [disabled]="isRewritingHeader()">
+                  <i class="ri-magic-line" *ngIf="!isRewritingHeader()"></i>
+                  <i class="ri-loader-4-line spin" *ngIf="isRewritingHeader()"></i>
+                  <span>Magic AI</span>
+                </button>
+                <button type="button" class="btn-revert-badge" *ngIf="previousHeader()" (click)="revertHeader()">
+                  <i class="ri-history-line"></i> Undo
+                </button>
+                <button class="add-var-btn" (click)="insertVariableToHeader()"><i class="ri-add-line"></i> Add variable</button>
+              </div>
+            </div>
+            <div class="input-with-counter">
+              <input type="text" [(ngModel)]="headerText" placeholder="Add a short line of text to the header of your message" maxlength="60">
+              <span class="counter">{{ headerTextLength() }}/60</span>
+            </div>
+          </div>
+
+          <!-- Body Textarea Field with Toolbar -->
+          <div class="form-group">
+            <div class="label-row">
+              <label>Body</label>
+              <div class="label-actions-right">
+                <button type="button" class="btn-magic-ai" (click)="magicRewriteBody()" [disabled]="isRewritingBody()">
+                  <i class="ri-magic-line" *ngIf="!isRewritingBody()"></i>
+                  <i class="ri-loader-4-line spin" *ngIf="isRewritingBody()"></i>
+                  <span>Magic AI</span>
+                </button>
+                <button type="button" class="btn-revert-badge" *ngIf="previousBody()" (click)="revertBody()">
+                  <i class="ri-history-line"></i> Undo
+                </button>
+                <button type="button" class="btn-ai-ideas-pill" (click)="openIdeaDrawer()">
+                  <i class="ri-sparkles-fill"></i> Get AI Creative Ideas
+                </button>
+                <button class="add-var-btn" (click)="insertVariableToBody()"><i class="ri-add-line"></i> Add variable</button>
+              </div>
+            </div>
+            <div class="textarea-box">
+              <textarea id="bodyTextarea" [(ngModel)]="bodyText" rows="5" placeholder="Enter message body text" maxlength="1024"></textarea>
+              <div class="editor-toolbar">
+                <div class="formatting-btns">
+                  <div class="emoji-picker-wrapper" style="position: relative;">
+                    <button type="button" title="Emoji" (click)="toggleEmojiPicker()"><i class="ri-emotion-line"></i></button>
+                    <!-- Emoji Picker Grid Popover -->
+                    <div class="emoji-popover-grid" *ngIf="showEmojiPicker()">
+                      <span class="emoji-item" *ngFor="let em of commonEmojis" (click)="insertEmoji(em)">{{ em }}</span>
+                    </div>
+                  </div>
+                  <button type="button" title="Bold" (click)="applyFormatting('BOLD')"><b>B</b></button>
+                  <button type="button" title="Italic" (click)="applyFormatting('ITALIC')"><i>I</i></button>
+                  <button type="button" title="Strikethrough" (click)="applyFormatting('STRIKE')"><s>S</s></button>
+                  <button type="button" title="Monospace" (click)="applyFormatting('MONO')"><code>&lt;/&gt;</code></button>
+                </div>
+                <span class="counter">{{ bodyTextLength() }}/1024</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer Field -->
+          <div class="form-group">
+            <div class="label-row">
+              <label>Footer <span class="opt-tag">• Optional</span></label>
+              <div class="label-actions-right">
+                <button type="button" class="btn-magic-ai" (click)="magicRewriteFooter()" [disabled]="isRewritingFooter()">
+                  <i class="ri-magic-line" *ngIf="!isRewritingFooter()"></i>
+                  <i class="ri-loader-4-line spin" *ngIf="isRewritingFooter()"></i>
+                  <span>Magic AI</span>
+                </button>
+                <button type="button" class="btn-revert-badge" *ngIf="previousFooter()" (click)="revertFooter()">
+                  <i class="ri-history-line"></i> Undo
+                </button>
+              </div>
+            </div>
+            <div class="input-with-counter">
+              <input type="text" [(ngModel)]="footerText" placeholder="Add a short line of text to the bottom of your message" maxlength="60">
+              <span class="counter">{{ footerTextLength() }}/60</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Buttons Customization Engine Card -->
+        <div class="card-section">
+          <div class="header-with-action">
+            <div>
+              <h2 class="section-title">Buttons <span class="opt-tag">• Optional</span></h2>
+              <p class="section-desc">Create buttons that let customers respond to your message or take action. You can add up to ten buttons.</p>
+            </div>
+
+            <!-- Add Button Menu Dropdown -->
+            <div class="dropdown-wrapper">
+              <button type="button" class="btn-secondary" (click)="toggleButtonDropdown()">
+                <i class="ri-add-line"></i> Add button <i class="ri-arrow-down-s-line"></i>
+              </button>
+              <div class="dropdown-menu" *ngIf="showButtonDropdown()">
+                <button type="button" (click)="addButton('CUSTOM')"><i class="ri-reply-line"></i> Custom (Quick reply)</button>
+                <button type="button" (click)="addButton('VISIT_WEBSITE')"><i class="ri-external-link-line"></i> Visit website</button>
+                <button type="button" (click)="addButton('CALL_WHATSAPP')"><i class="ri-whatsapp-line"></i> Call on WhatsApp</button>
+                <button type="button" (click)="addButton('CALL_PHONE')"><i class="ri-phone-line"></i> Call Phone Number</button>
+                <button type="button" (click)="addButton('COMPLETE_FLOW')"><i class="ri-flow-chart"></i> Complete flow</button>
+                <button type="button" (click)="addButton('COPY_OFFER_CODE')"><i class="ri-coupon-3-line"></i> Copy offer code</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Duplicate Warning Banner -->
+          <div class="validation-banner" *ngIf="hasDuplicateButtonTexts()">
+            <i class="ri-error-warning-line"></i>
+            <span>You can't enter the same text for multiple buttons</span>
+          </div>
+
+          <!-- Configured Buttons List -->
+          <div class="button-config-list">
+            <div class="button-config-row" *ngFor="let btn of buttons(); let i = index">
+              <div class="drag-handle"><i class="ri-drag-move-2-fill"></i></div>
+
+              <div class="btn-config-fields">
+                
+                <!-- VISIT WEBSITE BUTTON -->
+                <ng-container *ngIf="btn.typeOfAction === 'VISIT_WEBSITE'">
+                  <div class="field-grid gap-4">
+                    <div class="field-col">
+                      <label>Type of action</label>
+                      <input type="text" value="Visit website" disabled class="input-disabled">
+                    </div>
+                    <div class="field-col">
+                      <label>Button text</label>
+                      <input type="text" [(ngModel)]="btn.buttonText" placeholder="Visit website" maxlength="40">
+                    </div>
+                    <div class="field-col">
+                      <label>URL type</label>
+                      <select [(ngModel)]="btn.urlType">
+                        <option value="STATIC">Static</option>
+                        <option value="DYNAMIC">Dynamic</option>
+                      </select>
+                    </div>
+                    <div class="field-col flex-2">
+                      <label>Website URL</label>
+                      <input type="text" [(ngModel)]="btn.websiteUrl" placeholder="https://www.example.com">
+                    </div>
+                  </div>
+                  <label class="checkbox-label mt-2">
+                    <input type="checkbox" [(ngModel)]="btn.trackConversions">
+                    <span>Track app conversions (Marketing Messages API for WhatsApp only)</span>
+                  </label>
+                </ng-container>
+
+                <!-- CALL ON WHATSAPP BUTTON -->
+                <ng-container *ngIf="btn.typeOfAction === 'CALL_WHATSAPP'">
+                  <div class="field-grid gap-3">
+                    <div class="field-col">
+                      <label>Type of action</label>
+                      <input type="text" value="Call on WhatsApp" disabled class="input-disabled">
+                    </div>
+                    <div class="field-col">
+                      <label>Button text</label>
+                      <input type="text" [(ngModel)]="btn.buttonText" placeholder="Call on WhatsApp" maxlength="40">
+                    </div>
+                    <div class="field-col">
+                      <label>Active for</label>
+                      <select [(ngModel)]="btn.activeForDays">
+                        <option [value]="7">7 days</option>
+                        <option [value]="14">14 days</option>
+                        <option [value]="30">30 days</option>
+                      </select>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- CALL PHONE NUMBER BUTTON -->
+                <ng-container *ngIf="btn.typeOfAction === 'CALL_PHONE'">
+                  <div class="field-grid gap-3">
+                    <div class="field-col">
+                      <label>Type of action</label>
+                      <input type="text" value="Call Phone Number" disabled class="input-disabled">
+                    </div>
+                    <div class="field-col">
+                      <label>Button text</label>
+                      <input type="text" [(ngModel)]="btn.buttonText" placeholder="Call phone number" maxlength="40">
+                    </div>
+                    <div class="field-col">
+                      <label>Country</label>
+                      <select [(ngModel)]="btn.countryCode">
+                        <option value="+91">IN +91</option>
+                        <option value="+1">US +1</option>
+                        <option value="+44">UK +44</option>
+                        <option value="+971">AE +971</option>
+                      </select>
+                    </div>
+                    <div class="field-col flex-2">
+                      <label>Phone number</label>
+                      <input type="text" [(ngModel)]="btn.phoneNumber" placeholder="Enter phone number" [class.input-error]="!btn.phoneNumber">
+                      <span class="error-hint" *ngIf="!btn.phoneNumber">You need to enter a phone number.</span>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- COMPLETE FLOW BUTTON -->
+                <ng-container *ngIf="btn.typeOfAction === 'COMPLETE_FLOW'">
+                  <div class="field-grid gap-3">
+                    <div class="field-col">
+                      <label>Type of action</label>
+                      <input type="text" value="Complete flow" disabled class="input-disabled">
+                    </div>
+                    <div class="field-col">
+                      <label>Button icon</label>
+                      <select [(ngModel)]="btn.buttonIcon">
+                        <option value="Default">Default</option>
+                      </select>
+                    </div>
+                    <div class="field-col flex-2">
+                      <label>Button text</label>
+                      <input type="text" [(ngModel)]="btn.buttonText" placeholder="View flow" maxlength="40">
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- COPY OFFER CODE BUTTON -->
+                <ng-container *ngIf="btn.typeOfAction === 'COPY_OFFER_CODE'">
+                  <div class="field-grid gap-3">
+                    <div class="field-col">
+                      <label>Type of action</label>
+                      <input type="text" value="Copy offer code" disabled class="input-disabled">
+                    </div>
+                    <div class="field-col">
+                      <label>Button text</label>
+                      <input type="text" [(ngModel)]="btn.buttonText" placeholder="Copy offer code">
+                    </div>
+                    <div class="field-col flex-2">
+                      <label>Offer code</label>
+                      <input type="text" [(ngModel)]="btn.offerCode" placeholder="Enter sample code" [class.input-error]="!btn.offerCode">
+                      <span class="error-hint" *ngIf="!btn.offerCode">Add sample text</span>
+                    </div>
+                  </div>
+                </ng-container>
+
+                <!-- CUSTOM QUICK REPLY BUTTON -->
+                <ng-container *ngIf="btn.typeOfAction === 'CUSTOM'">
+                  <div class="field-grid gap-3">
+                    <div class="field-col">
+                      <label>Type of action</label>
+                      <input type="text" value="Quick reply" disabled class="input-disabled">
+                    </div>
+                    <div class="field-col flex-2">
+                      <label>Button text</label>
+                      <input type="text" [(ngModel)]="btn.buttonText" placeholder="Enter custom reply text" maxlength="25">
+                    </div>
+                  </div>
+                </ng-container>
+
+              </div>
+
+              <button class="remove-btn" (click)="removeButton(i)" title="Remove button">
+                <i class="ri-close-line"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Validity Period Card -->
+        <div class="card-section">
+          <h3 class="card-title">Message validity period</h3>
+          <p class="card-subtext">You can set a custom validity period that your marketing message must be delivered by before it expires.</p>
+
+          <div class="toggle-row mt-3">
+            <label class="switch">
+              <input type="checkbox" [(ngModel)]="enableCustomValidity">
+              <span class="slider round"></span>
+            </label>
+            <div class="toggle-label">
+              <strong>Set custom validity period for your message</strong>
+              <p>If you don't set a custom validity period, the standard 12 hours WhatsApp message validity period will be applied.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= STEP 3: SUBMIT FOR REVIEW ================= -->
+      <div class="step-content" *ngIf="currentStep() === 3">
+        <div class="card-section text-center p-6">
+          <div class="submit-icon-wrap">
+            <i class="ri-send-plane-fill"></i>
+          </div>
+          <h2 class="section-title mt-3">Ready to Submit</h2>
+          <p class="section-desc max-w-lg mx-auto">Please review your template details before submitting to Meta. Once submitted, Meta typically takes between a few minutes to 24 hours to review and approve templates.</p>
+
+          <div class="summary-box text-left mt-4">
+            <div class="sum-row">
+              <span class="sum-label">Template Name:</span>
+              <span class="sum-val font-bold">{{ templateName() }}</span>
+            </div>
+            <div class="sum-row">
+              <span class="sum-label">Category:</span>
+              <span class="sum-val">{{ selectedCategory() }}</span>
+            </div>
+            <div class="sum-row">
+              <span class="sum-label">Language:</span>
+              <span class="sum-val">{{ selectedLanguage() }}</span>
+            </div>
+            <div class="sum-row">
+              <span class="sum-label">Buttons Configured:</span>
+              <span class="sum-val">{{ buttons().length }} buttons</span>
+            </div>
+          </div>
+
+          <div class="action-buttons-group mt-6">
+            <button class="btn-secondary" (click)="saveDraft()">Save as Draft</button>
+            <button class="btn-primary" (click)="submitTemplate()" [disabled]="isSubmitting()">
+              <i class="ri-loader-4-line spin" *ngIf="isSubmitting()"></i>
+              <span>Submit to Meta for Review</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side Sticky WhatsApp Live Phone Preview Panel -->
+    <div class="preview-container">
+      <div class="preview-card">
+        <div class="preview-header">
+          <span>Template preview</span>
+          <div class="device-switcher-pills">
+            <button type="button" [class.active]="previewDevice() === 'IN_APP'" (click)="previewDevice.set('IN_APP')" title="WhatsApp Chat">
+              <i class="ri-whatsapp-line"></i> Chat
+            </button>
+            <button type="button" [class.active]="previewDevice() === 'ANDROID'" (click)="previewDevice.set('ANDROID')" title="Android Lockscreen">
+              <i class="ri-android-line"></i> Android
+            </button>
+            <button type="button" [class.active]="previewDevice() === 'IOS'" (click)="previewDevice.set('IOS')" title="iOS Lockscreen">
+              <i class="ri-apple-line"></i> iOS
+            </button>
+          </div>
+        </div>
+
+        <!-- 1. IN_APP CHAT BUBBLE PREVIEW -->
+        <div class="phone-screen" *ngIf="previewDevice() === 'IN_APP'">
+          <div class="whatsapp-bubble">
+            
+            <!-- Media Header Rendering -->
+            <div class="bubble-media-header" *ngIf="mediaHeaderType() === 'IMAGE'">
+              <img [src]="headerMediaUrl()" class="preview-media-img" *ngIf="headerMediaUrl()">
+              <div class="media-placeholder image-placeholder" *ngIf="!headerMediaUrl()">
+                <i class="ri-image-2-line"></i>
+              </div>
+            </div>
+
+            <div class="bubble-media-header" *ngIf="mediaHeaderType() === 'VIDEO'">
+              <video [src]="headerMediaUrl()" controls preload="auto" playsinline muted class="preview-media-video" *ngIf="headerMediaUrl()"></video>
+              <div class="media-placeholder video-placeholder" *ngIf="!headerMediaUrl()">
+                <i class="ri-play-circle-fill"></i>
+              </div>
+            </div>
+
+            <div class="bubble-media-header" *ngIf="mediaHeaderType() === 'DOCUMENT'">
+              <div class="media-placeholder doc-placeholder">
+                <i class="ri-file-text-line"></i>
+                <small *ngIf="headerMediaUrl()">Document Attached</small>
+              </div>
+            </div>
+
+            <div class="bubble-media-header" *ngIf="mediaHeaderType() === 'LOCATION'">
+              <div class="media-placeholder location-placeholder">
+                <i class="ri-map-pin-2-fill"></i>
+                <div class="loc-details">
+                  <strong>{{ locationName() }}</strong>
+                  <small>{{ locationAddress() }}</small>
+                </div>
+              </div>
+            </div>
+
+            <!-- Text Header Rendering (Always visible if entered) -->
+            <div class="bubble-text-header mb-1" *ngIf="headerText().trim()">
+              <strong>{{ headerText() }}</strong>
+            </div>
+
+            <!-- Message Body Rendering -->
+            <div class="bubble-body" [innerHTML]="parsedBodyText()"></div>
+
+            <!-- Message Footer Rendering -->
+            <div class="bubble-footer" *ngIf="footerText().trim()">
+              {{ footerText() }}
+            </div>
+
+            <div class="bubble-timestamp">
+              11:59
+            </div>
+
+            <!-- Action Buttons Rendering -->
+            <div class="bubble-buttons-stack" *ngIf="buttons().length > 0">
+              <ng-container *ngFor="let btn of buttons(); let i = index">
+                <button class="preview-action-btn" *ngIf="i < 2">
+                  <i class="ri-external-link-line" *ngIf="btn.typeOfAction === 'VISIT_WEBSITE'"></i>
+                  <i class="ri-whatsapp-line" *ngIf="btn.typeOfAction === 'CALL_WHATSAPP'"></i>
+                  <i class="ri-phone-line" *ngIf="btn.typeOfAction === 'CALL_PHONE'"></i>
+                  <i class="ri-flow-chart" *ngIf="btn.typeOfAction === 'COMPLETE_FLOW'"></i>
+                  <i class="ri-file-copy-line" *ngIf="btn.typeOfAction === 'COPY_OFFER_CODE'"></i>
+                  <i class="ri-reply-line" *ngIf="btn.typeOfAction === 'CUSTOM'"></i>
+                  <span>{{ btn.buttonText || 'Button' }}</span>
+                </button>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. ANDROID NOTIFICATION PREVIEW -->
+        <div class="phone-screen android-screen" *ngIf="previewDevice() === 'ANDROID'">
+          <div class="android-notification-card">
+            <div class="notif-header">
+              <div class="notif-app-info">
+                <i class="ri-whatsapp-fill text-green-500"></i>
+                <span class="app-name">WhatsApp</span>
+                <span class="dot">•</span>
+                <span class="notif-time">now</span>
+              </div>
+              <i class="ri-arrow-up-s-line"></i>
+            </div>
+            <div class="notif-body-content mt-2">
+              <strong class="sender-title">Pace Travels</strong>
+              <p class="notif-header-text" *ngIf="headerText().trim()">{{ headerText() }}</p>
+              <p class="notif-body-text">{{ bodyText() }}</p>
+            </div>
+            <div class="notif-actions mt-2" *ngIf="buttons().length > 0">
+              <span class="notif-btn-action" *ngFor="let btn of buttons().slice(0, 2)">
+                {{ btn.buttonText || 'Action' }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. IOS NOTIFICATION PREVIEW -->
+        <div class="phone-screen ios-screen" *ngIf="previewDevice() === 'IOS'">
+          <div class="ios-notification-card">
+            <div class="ios-notif-header">
+              <div class="ios-app-brand">
+                <div class="ios-wa-icon"><i class="ri-whatsapp-fill"></i></div>
+                <span class="ios-app-title">WHATSAPP</span>
+              </div>
+              <span class="ios-time">now</span>
+            </div>
+            <div class="ios-notif-content mt-1">
+              <strong class="ios-sender">Pace Travels</strong>
+              <p class="ios-header-line" *ngIf="headerText().trim()">{{ headerText() }}</p>
+              <p class="ios-body-line">{{ bodyText() }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category Info Callout -->
+        <div class="preview-info-footer">
+          <div class="info-block">
+            <span class="info-title">This template is good for</span>
+            <span class="info-body">
+              <ng-container *ngIf="selectedCategory() === 'MARKETING'">Welcome messages, promotions, offers, coupons, newsletters, announcements</ng-container>
+              <ng-container *ngIf="selectedCategory() === 'UTILITY'">Order confirmations, account updates, receipts, appointment reminders, billing</ng-container>
+              <ng-container *ngIf="selectedCategory() === 'AUTHENTICATION'">One-time password, account recovery code, account verification</ng-container>
+            </span>
+          </div>
+
+          <div class="info-block mt-3">
+            <span class="info-title">Template areas that you can customise</span>
+            <span class="info-body">Header, body, footer, buttons, media parameters</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Wizard Fixed Bottom Navigation Bar -->
+  <footer class="wizard-footer-bar">
+    <button class="btn-outline" (click)="saveDraft()">Discard</button>
+
+    <div class="right-nav-btns">
+      <button class="btn-secondary" (click)="previousStep()" *ngIf="currentStep() > 1">Previous</button>
+      <button class="btn-primary" (click)="nextStep()" *ngIf="currentStep() < 3">Next</button>
+      <button class="btn-success" (click)="submitTemplate()" *ngIf="currentStep() === 3" [disabled]="isSubmitting()">
+        Submit for Review
+      </button>
+    </div>
+  </footer>
+
+  <!-- ================= IMAGE CROP EDITOR & GEMINI VISION ANALYSER MODAL ================= -->
+  <div class="modal-overlay" *ngIf="showImageEditorModal()">
+    <div class="modal-card modal-lg">
+      <div class="modal-header-row">
+        <h3><i class="ri-crop-2-line"></i> Image Crop & Gemini Vision AI Analyser</h3>
+        <button class="close-btn" (click)="showImageEditorModal.set(false)">✕</button>
+      </div>
+
+      <div class="modal-body-content">
+        <!-- Prompt AI Image Generator Input Row -->
+        <div class="prompt-gen-box mb-3">
+          <label class="prompt-label"><i class="ri-sparkles-fill text-green"></i> Generate AI Image from Prompt:</label>
+          <div class="prompt-input-row">
+            <input type="text" [(ngModel)]="customImagePrompt" placeholder="e.g. Modern luxury resort promo banner with sunset lighting" class="prompt-input">
+            <button class="btn-gen-prompt-img" (click)="generateImageFromPrompt()" [disabled]="isAnalyzingVisual()">
+              <i class="ri-sparkles-line" *ngIf="!isAnalyzingVisual()"></i>
+              <i class="ri-loader-4-line spin" *ngIf="isAnalyzingVisual()"></i>
+              <span>Generate</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="editor-grid">
+          <!-- Image Preview & Crop Canvas -->
+          <div class="preview-crop-column">
+            <div class="crop-image-box" [style.aspect-ratio]="selectedAspectRatio() === 'SQUARE' ? '1/1' : '1.91/1'">
+              <img [src]="headerMediaUrl()" class="crop-target-img" *ngIf="headerMediaUrl()">
+            </div>
+
+            <div class="aspect-ratio-toolbar mt-3">
+              <label>WhatsApp Ratio:</label>
+              <button class="ratio-btn" [class.active]="selectedAspectRatio() === 'SQUARE'" (click)="selectedAspectRatio.set('SQUARE')">1:1 Square</button>
+              <button class="ratio-btn" [class.active]="selectedAspectRatio() === 'LANDSCAPE'" (click)="selectedAspectRatio.set('LANDSCAPE')">1.91:1 Landscape</button>
+            </div>
+
+            <!-- Inline Modal File Upload Dropzone -->
+            <div class="modal-dropzone-row mt-3">
+              <input type="file" #modalFileInput (change)="onModalFileSelected($event)" accept="image/*" style="display:none;">
+              <button class="btn-modal-upload" (click)="modalFileInput.click()">
+                <i class="ri-upload-cloud-line"></i> Upload New Image File
+              </button>
+            </div>
+          </div>
+
+          <!-- Gemini Vision AI Analysis Side Column -->
+          <div class="analysis-side-column">
+            <button class="btn-ai-analyze" (click)="analyzeImageWithGemini()" [disabled]="isAnalyzingVisual()">
+              <i class="ri-sparkles-fill" *ngIf="!isAnalyzingVisual()"></i>
+              <i class="ri-loader-4-line spin" *ngIf="isAnalyzingVisual()"></i>
+              <span>Analyze Image with Gemini AI</span>
+            </button>
+
+            <!-- Analysis Output -->
+            <div class="analysis-results-card mt-3" *ngIf="imageAnalysis()">
+              <div class="metric-row">
+                <span class="m-label">Subject:</span>
+                <span class="m-val">{{ imageAnalysis().subject }}</span>
+              </div>
+              <div class="metric-row">
+                <span class="m-label">Detected Text:</span>
+                <span class="m-val">{{ imageAnalysis().detectedText || 'None' }}</span>
+              </div>
+              <div class="metric-row">
+                <span class="m-label">Meta WABA Check:</span>
+                <span class="m-val text-green font-bold">{{ imageAnalysis().whatsappCompliance }}</span>
+              </div>
+
+              <div class="suggestions-box mt-3" *ngIf="imageAnalysis().headerTextSuggestions">
+                <h4>Suggested Header Copy:</h4>
+                <div class="sugg-chip" *ngFor="let h of imageAnalysis().headerTextSuggestions" (click)="applySuggestionToHeader(h)">
+                  "{{ h }}" <i class="ri-add-line"></i>
+                </div>
+              </div>
+
+              <div class="suggestions-box mt-3" *ngIf="imageAnalysis().bodyCopySuggestions">
+                <h4>Suggested Body Copy:</h4>
+                <div class="sugg-chip" *ngFor="let b of imageAnalysis().bodyCopySuggestions" (click)="applySuggestionToBody(b)">
+                  "{{ b }}" <i class="ri-add-line"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer-row mt-4">
+        <button class="btn-secondary" (click)="showImageEditorModal.set(false)">Close</button>
+        <button class="btn-primary" (click)="saveCroppedImage()">Save Image & Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= VIDEO EDITOR & GEMINI ANALYSER MODAL ================= -->
+  <div class="modal-overlay" *ngIf="showVideoEditorModal()">
+    <div class="modal-card">
+      <div class="modal-header-row">
+        <h3><i class="ri-film-line"></i> Video Inspector & Gemini Analyser</h3>
+        <button class="close-btn" (click)="showVideoEditorModal.set(false)">✕</button>
+      </div>
+
+      <div class="modal-body-content mt-3">
+        <video [src]="headerMediaUrl()" controls class="video-preview-player"></video>
+
+        <button class="btn-ai-analyze mt-3" (click)="analyzeVideoWithGemini()" [disabled]="isAnalyzingVisual()">
+          <i class="ri-sparkles-fill" *ngIf="!isAnalyzingVisual()"></i>
+          <i class="ri-loader-4-line spin" *ngIf="isAnalyzingVisual()"></i>
+          <span>Analyze Video with Gemini AI</span>
+        </button>
+
+        <div class="analysis-results-card mt-3" *ngIf="videoAnalysis()">
+          <p><strong>Summary:</strong> {{ videoAnalysis().videoSummary }}</p>
+          <p><strong>Suggested Header:</strong> "{{ videoAnalysis().suggestedHeader }}"</p>
+          <div class="banana-pro-prompt-box mt-2">
+            <span class="b-title"><i class="ri-clapperboard-line"></i> Banana Pro / Veo Animation Prompt:</span>
+            <p>"{{ videoAnalysis().bananaProPrompt }}"</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer-row mt-4">
+        <button class="btn-secondary" (click)="showVideoEditorModal.set(false)">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= GEMINI PRO IDEA GENERATOR DRAWER ================= -->
+  <div class="drawer-overlay" *ngIf="showIdeaDrawer()" (click)="showIdeaDrawer.set(false)">
+    <div class="idea-drawer" (click)="$event.stopPropagation()">
+      <div class="drawer-header">
+        <h3><i class="ri-sparkles-fill text-green"></i> Gemini Pro AI Creative Idea Generator</h3>
+        <button class="close-btn" (click)="showIdeaDrawer.set(false)">✕</button>
+      </div>
+
+      <div class="drawer-body">
+        <p class="drawer-sub">Gemini Pro AI generates creative promotional angles, short video concepts (Banana Pro prompts), and call-to-action button setups tailored to your template.</p>
+
+        <button class="btn-primary w-full mt-3" (click)="generateCreativeIdeas()" [disabled]="isGeneratingIdeas()">
+          <i class="ri-refresh-line" *ngIf="!isGeneratingIdeas()"></i>
+          <i class="ri-loader-4-line spin" *ngIf="isGeneratingIdeas()"></i>
+          <span>Generate Fresh Marketing Angles</span>
+        </button>
+
+        <div class="ideas-list mt-4">
+          <div class="idea-card-item" *ngFor="let item of aiIdeas()">
+            <div class="idea-header-bar">
+              <span class="angle-badge">{{ item.angle }}</span>
+            </div>
+
+            <div class="idea-content-box">
+              <strong *ngIf="item.headerText">Header: {{ item.headerText }}</strong>
+              <p class="idea-body-text">{{ item.bodyText }}</p>
+              <small *ngIf="item.footerText">Footer: {{ item.footerText }}</small>
+            </div>
+
+            <!-- Banana Pro / Veo Video Concept Prompt -->
+            <div class="banana-concept-box mt-2" *ngIf="item.bananaProPrompt">
+              <span class="concept-tag"><i class="ri-vidicon-fill"></i> Banana Pro Short Video Concept:</span>
+              <p>"{{ item.bananaProPrompt }}"</p>
+            </div>
+
+            <button class="btn-apply-idea mt-3" (click)="applyIdeaToTemplate(item)">
+              <i class="ri-magic-line"></i> Apply Idea to Wizard
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

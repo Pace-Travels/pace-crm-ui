@@ -48,6 +48,7 @@ export class Sidebar implements OnInit {
     }
   }
 
+<<<<<<< HEAD
   // Exact 19 original menu items categorized for Quote Desks theme
   menuSections: MenuSection[] = [
     {
@@ -93,6 +94,29 @@ export class Sidebar implements OnInit {
         { icon: 'fa-solid fa-folder-open', title: 'All Projects', route: '/projects' }
       ]
     }
+=======
+  menu = [
+    { icon: 'fa-solid fa-table-cells-large', title: 'Dashboard', route: '/dashboard' },
+    { icon: 'fa-solid fa-brain', title: 'AI Marketing Intelligence', route: '/ai-marketing-intelligence' },
+    { icon: 'fa-solid fa-radar', title: 'Event Radar', route: '/events-radar' },
+    { icon: 'fa-solid fa-chart-line', title: 'Market Intelligence', route: '/market-intelligence' },
+    { icon: 'fa-regular fa-comment-dots', title: 'Live Chat', route: '/chat' },
+    { icon: 'fa-solid fa-clock-rotate-left', title: 'History', route: '/history' },
+    { icon: 'fa-regular fa-address-book', title: 'Contacts', route: '/contacts' },
+    { icon: 'fa-solid fa-bullhorn', title: 'Campaigns', route: '/campaigns' },
+    { icon: 'fa-solid fa-layer-group', title: 'Templates', route: '/templates' },
+    { icon: 'fa-solid fa-rectangle-ad', title: 'Ads Manager', route: '/ads' },
+    { icon: 'fa-solid fa-share-nodes', title: 'Flows', route: '/flows' },
+    { icon: 'fa-solid fa-indian-rupee-sign', title: 'WA Payments', route: '/payments' },
+    { icon: 'fa-brands fa-chrome', title: 'Web Push', route: '/webpush' },
+    { icon: 'fa-solid fa-square-envelope', title: 'E-mail', route: '/email' },
+    { icon: 'fa-solid fa-gear', title: 'Manage', route: '/manage' },
+    { icon: 'fa-solid fa-plug', title: 'Integrations', route: '/integrations' },
+    { icon: 'fa-solid fa-users', title: 'Agents', route: '/agents' },
+    { icon: 'fa-solid fa-file', title: 'CSV Data', route: '/csvdata' },
+    { icon: 'fa-solid fa-code', title: 'Developer', route: '/developer' },
+    { icon: 'fa-solid fa-folder-open', title: 'All Projects', route: '/projects' }
+>>>>>>> 1c6f64b3d8ce439f32979f2250fdc7cb0e8794db
   ];
 
   toggleSection(section: any) {
