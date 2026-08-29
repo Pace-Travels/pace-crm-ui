@@ -53,7 +53,7 @@ export class Sidebar implements OnInit {
     {
       title: 'CORE WORKSPACE',
       expanded: true,
-      items: [
+      items: [   
         { icon: 'fa-solid fa-table-cells-large', title: 'Dashboard', route: '/dashboard' },
         { icon: 'fa-regular fa-comment-dots', title: 'Live Chat', route: '/chat' },
         { icon: 'fa-solid fa-clock-rotate-left', title: 'History', route: '/history' }
