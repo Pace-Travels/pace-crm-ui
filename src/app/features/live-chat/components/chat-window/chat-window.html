@@ -51,49 +51,57 @@
         <!-- Chat Messages Area -->
         <div #messagesArea class="messages-area" style="display: flex; flex-direction: column; gap: 12px; padding: 20px; overflow-y: auto; background: #f8fafc; flex: 1;">
             @for(msg of chatService.messages$ | async; track msg.id) {
-                <div class="message-wrapper" style="display: flex; flex-direction: column; width: 100%;" [style.align-items]="msg.direction === 'INBOUND' ? 'flex-start' : 'flex-end'">
-                    <div class="message-bubble" [class.inbound]="msg.direction === 'INBOUND'" [class.outbound]="msg.direction === 'OUTBOUND'" style="max-width: 70%; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 4px;">
-                        
-                        <!-- Rich media renderer -->
-                        @if (msg.messageType === 'IMAGE') {
-                            <img [src]="getMediaUrl(msg.content || msg.mediaUrl)" style="max-width: 100%; border-radius: 6px; margin-bottom: 8px; display: block; max-height: 200px; object-fit: contain;" />
-                        } @else if (msg.messageType === 'AUDIO') {
-                            <audio controls [src]="getMediaUrl(msg.content || msg.mediaUrl)" style="max-width: 100%; margin-bottom: 8px; display: block;"></audio>
-                        } @else if (msg.messageType === 'PDF') {
-                            <div style="background: #f1f5f9; padding: 10px; border-radius: 6px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; max-width: 250px;">
-                                <i class="fa-solid fa-file-pdf" style="font-size: 24px; color: #ef4444;"></i>
-                                <div style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                    <a [href]="getMediaUrl(msg.content || msg.mediaUrl)" target="_blank" style="font-size: 12px; font-weight: 600; color: #2563eb; text-decoration: none;">Download PDF</a>
-                                </div>
-                            </div>
-                        }
-
-                        @if (msg.messageType === 'INTERACTIVE') {
-                            <div style="background: rgba(11, 73, 77, 0.08); border-left: 3px solid #0b494d; padding: 6px 10px; border-radius: 6px; font-weight: 600; color: #0b494d; display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 4px;">
-                                <i class="fa-solid fa-list-check" style="color: #0b494d;"></i>
-                                <span>{{ getInteractiveLabel(msg.textContent || msg.content) }}</span>
-                            </div>
-                        } @else {
-                            <div>{{ msg.textContent || msg.content }}</div>
-                        }
-                        
-                        <!-- Read receipts & timestamp -->
-                        <div style="font-size: 9px; color: #64748b; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-bottom: 0;">
-                            <span>{{ msg.createdAt | date:'shortTime' }}</span>
-                            @if (msg.direction === 'OUTBOUND') {
-                                @if (msg.status === 'READ') {
-                                    <i class="fa-solid fa-check-double" style="color: #3b82f6;"></i>
-                                } @else if (msg.status === 'DELIVERED') {
-                                    <i class="fa-solid fa-check-double" style="color: #94a3b8;"></i>
-                                } @else if (msg.status === 'FAILED') {
-                                    <i class="fa-solid fa-circle-exclamation" style="color: #ef4444;" [title]="msg.errorMessage || 'Failed to send message'"></i>
-                                } @else {
-                                    <i class="fa-solid fa-check" style="color: #94a3b8;"></i>
-                                }
-                            }
+                @if (msg.senderType === 'SYSTEM') {
+                    <div style="display: flex; justify-content: center; width: 100%; margin: 4px 0;">
+                        <div style="background: #e2e8f0; color: #475569; padding: 4px 14px; border-radius: 12px; font-size: 11px; font-weight: 600; box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-align: center;">
+                            {{ msg.textContent || msg.content }}
                         </div>
                     </div>
-                </div>
+                } @else {
+                    <div class="message-wrapper" style="display: flex; flex-direction: column; width: 100%;" [style.align-items]="msg.direction === 'INBOUND' ? 'flex-start' : 'flex-end'">
+                        <div class="message-bubble" [class.inbound]="msg.direction === 'INBOUND'" [class.outbound]="msg.direction === 'OUTBOUND'" style="max-width: 70%; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 4px;">
+                            
+                            <!-- Rich media renderer -->
+                            @if (msg.messageType === 'IMAGE') {
+                                <img [src]="getMediaUrl(msg.content || msg.mediaUrl)" style="max-width: 100%; border-radius: 6px; margin-bottom: 8px; display: block; max-height: 200px; object-fit: contain;" />
+                            } @else if (msg.messageType === 'AUDIO') {
+                                <audio controls [src]="getMediaUrl(msg.content || msg.mediaUrl)" style="max-width: 100%; margin-bottom: 8px; display: block;"></audio>
+                            } @else if (msg.messageType === 'PDF') {
+                                <div style="background: #f1f5f9; padding: 10px; border-radius: 6px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; max-width: 250px;">
+                                    <i class="fa-solid fa-file-pdf" style="font-size: 24px; color: #ef4444;"></i>
+                                    <div style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        <a [href]="getMediaUrl(msg.content || msg.mediaUrl)" target="_blank" style="font-size: 12px; font-weight: 600; color: #2563eb; text-decoration: none;">Download PDF</a>
+                                    </div>
+                                </div>
+                            }
+
+                            @if (msg.messageType === 'INTERACTIVE') {
+                                <div style="background: rgba(11, 73, 77, 0.08); border-left: 3px solid #0b494d; padding: 6px 10px; border-radius: 6px; font-weight: 600; color: #0b494d; display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 4px;">
+                                    <i class="fa-solid fa-list-check" style="color: #0b494d;"></i>
+                                    <span>{{ getInteractiveLabel(msg.textContent || msg.content) }}</span>
+                                </div>
+                            } @else {
+                                <div>{{ msg.textContent || msg.content }}</div>
+                            }
+                            
+                            <!-- Read receipts & timestamp -->
+                            <div style="font-size: 9px; color: #64748b; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-bottom: 0;">
+                                <span>{{ msg.createdAt | date:'shortTime' }}</span>
+                                @if (msg.direction === 'OUTBOUND') {
+                                    @if (msg.status === 'READ') {
+                                        <i class="fa-solid fa-check-double" style="color: #3b82f6;"></i>
+                                    } @else if (msg.status === 'DELIVERED') {
+                                        <i class="fa-solid fa-check-double" style="color: #94a3b8;"></i>
+                                    } @else if (msg.status === 'FAILED') {
+                                        <i class="fa-solid fa-circle-exclamation" style="color: #ef4444;" [title]="msg.errorMessage || 'Failed to send message'"></i>
+                                    } @else {
+                                        <i class="fa-solid fa-check" style="color: #94a3b8;"></i>
+                                    }
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
             }
         </div>
 

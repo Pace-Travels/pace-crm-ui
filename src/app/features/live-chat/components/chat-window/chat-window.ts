@@ -156,75 +156,172 @@ export class ChatWindow implements AfterViewChecked {
 
   // Action 1: Add User Attributes
   onAddUserAttribute() {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) {
+      this.showAlert('No Conversation', 'Please select a conversation first.', 'warning');
+      return;
+    }
+
     Swal.fire({
       title: 'Add Contact Attribute',
-      html: `<input id="swal-key" class="swal2-input" placeholder="Attribute Key (e.g. City, VIP, LeadScore)">
-             <input id="swal-val" class="swal2-input" placeholder="Attribute Value (e.g. Mumbai, High)">`,
+      html: `
+        <div style="text-align: left;">
+          <input id="swal-key" class="swal2-input" placeholder="Attribute Key (e.g. City, VIP, LeadScore)">
+          <input id="swal-val" class="swal2-input" placeholder="Attribute Value (e.g. Mumbai, High)">
+        </div>
+      `,
       focusConfirm: false,
       showCancelButton: true,
       confirmButtonText: 'Save Attribute',
       preConfirm: () => {
-        const key = (document.getElementById('swal-key') as HTMLInputElement).value;
-        const val = (document.getElementById('swal-val') as HTMLInputElement).value;
+        const key = (document.getElementById('swal-key') as HTMLInputElement).value.trim();
+        const val = (document.getElementById('swal-val') as HTMLInputElement).value.trim();
         if (!key || !val) {
           Swal.showValidationMessage('Both key and value are required!');
+          return false;
         }
         return { key, val };
       }
     }).then((result: any) => {
-      if (result.isConfirmed) {
-        this.showAlert('Attribute Added', `Attribute "${result.value.key}: ${result.value.val}" saved to contact.`, 'success');
+      if (result.isConfirmed && result.value) {
+        const { key, val } = result.value;
+        this.api.post<any>('messages/add', {
+          conversationId: conv.id,
+          senderType: 'SYSTEM',
+          messageType: 'TEXT',
+          content: `📌 Attribute added: ${key} = ${val}`,
+          textContent: `📌 Attribute added: ${key} = ${val}`
+        }).subscribe({
+          next: (mRes: any) => {
+            const newMsg = mRes.data || mRes;
+            if (newMsg && newMsg.id) {
+              const current = this.chatService.messagesSubject.value;
+              this.chatService.messagesSubject.next([...current, newMsg]);
+            }
+          }
+        });
+
+        this.showAlert('Attribute Added', `Attribute "${key}: ${val}" saved.`, 'success');
       }
     });
   }
 
   // Action 2: Add/Remove Tag
   onAddRemoveTag() {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) {
+      this.showAlert('No Conversation', 'Please select a conversation first.', 'warning');
+      return;
+    }
+
     Swal.fire({
-      title: 'Add/Remove Contact Tag',
+      title: 'Apply Contact Tag',
       input: 'text',
-      inputPlaceholder: 'Enter tag name (e.g. HotLead, Purchased, Support)',
+      inputPlaceholder: 'Enter tag name (e.g. HotLead, VIP, Support, Booked)',
       showCancelButton: true,
       confirmButtonText: 'Apply Tag',
       inputValidator: (value: string) => {
-        if (!value) return 'Tag name cannot be empty!';
+        if (!value || !value.trim()) return 'Tag name cannot be empty!';
         return null;
       }
     }).then((result: any) => {
-      if (result.isConfirmed) {
-        this.showAlert('Tag Applied', `Tag "${result.value}" updated on contact profile.`, 'success');
+      if (result.isConfirmed && result.value) {
+        const tag = result.value.trim();
+        const contactId = conv.contactId || (conv.Contact as any)?.id || conv.id;
+
+        // 1. Save ContactTag in Database
+        this.api.post('contacttags/add', { contactId, tag }).subscribe({
+          next: () => {
+            // 2. Post System notification message to Live Chat stream
+            this.api.post<any>('messages/add', {
+              conversationId: conv.id,
+              senderType: 'SYSTEM',
+              messageType: 'TEXT',
+              content: `🏷️ Tag "${tag}" added to contact profile`,
+              textContent: `🏷️ Tag "${tag}" added to contact profile`
+            }).subscribe({
+              next: (mRes: any) => {
+                const newMsg = mRes.data || mRes;
+                if (newMsg && newMsg.id) {
+                  const current = this.chatService.messagesSubject.value;
+                  this.chatService.messagesSubject.next([...current, newMsg]);
+                }
+              }
+            });
+
+            this.showAlert('Tag Applied', `Tag "${tag}" updated on contact profile.`, 'success');
+          },
+          error: (err: any) => {
+            this.showAlert('Error', err.error?.error || err.message || 'Failed to save tag', 'error');
+          }
+        });
       }
     });
   }
 
-  // Action 3: Send & Generate Media Link
+  // Action 3: Send & Share Rich Media Link/Attachment
   onSendMediaLink() {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) {
+      this.showAlert('No Conversation', 'Please select a conversation first.', 'warning');
+      return;
+    }
+
     Swal.fire({
-      title: 'Generate & Share Media Link',
-      input: 'url',
-      inputPlaceholder: 'Paste Image, PDF, or Document URL',
+      title: 'Share Media Attachment',
+      html: `
+        <div style="text-align: left; font-size: 13px;">
+          <label style="font-weight: bold; margin-bottom: 4px; display: block; color: #334155;">Select Media Type:</label>
+          <select id="swal-media-type" class="swal2-select" style="width: 100%; margin-bottom: 12px; padding: 8px; font-size: 13px;">
+            <option value="IMAGE">📷 Image (JPG, PNG, WebP)</option>
+            <option value="PDF">📄 PDF Document</option>
+            <option value="AUDIO">🎵 Audio Track (MP3, OGG)</option>
+          </select>
+          <label style="font-weight: bold; margin-bottom: 4px; display: block; color: #334155;">Media URL:</label>
+          <input id="swal-media-url" class="swal2-input" placeholder="Paste Image, PDF, or Audio URL" style="width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 13px;">
+          <label style="font-weight: bold; margin-bottom: 4px; display: block; color: #334155;">Caption / Description (Optional):</label>
+          <input id="swal-media-caption" class="swal2-input" placeholder="Enter optional caption..." style="width: 100%; box-sizing: border-box; font-size: 13px;">
+        </div>
+      `,
+      focusConfirm: false,
       showCancelButton: true,
-      confirmButtonText: 'Send Media Link',
-      inputValidator: (value: string) => {
-        if (!value) return 'Please paste a valid URL!';
-        return null;
+      confirmButtonText: 'Attach & Share Media',
+      preConfirm: () => {
+        const type = (document.getElementById('swal-media-type') as HTMLSelectElement).value;
+        const url = (document.getElementById('swal-media-url') as HTMLInputElement).value.trim();
+        const caption = (document.getElementById('swal-media-caption') as HTMLInputElement).value.trim();
+        if (!url) {
+          Swal.showValidationMessage('Please provide a valid Media URL!');
+          return false;
+        }
+        return { type, url, caption };
       }
     }).then((result: any) => {
-      if (result.isConfirmed) {
-        const conv = this.chatService.selectedConversation();
-        if (conv) {
-          this.api.post('messages/send', {
-            conversationId: conv.id,
-            textContent: `[Media Attachment Link]: ${result.value}`
-          }).subscribe({
-            next: () => {
-              this.chatService.selectConversation(conv);
-              this.showAlert('Media Sent', 'Media link shared in conversation.', 'success');
+      if (result.isConfirmed && result.value) {
+        const { type, url, caption } = result.value;
+        const payload = {
+          conversationId: conv.id,
+          senderType: 'HUMAN',
+          messageType: type,
+          content: url,
+          mediaUrl: url,
+          textContent: caption || `[Media Attachment: ${type}]`,
+          direction: 'OUTBOUND'
+        };
+
+        this.api.post<any>('messages/add', payload).subscribe({
+          next: (res: any) => {
+            const newMsg = res.data || res;
+            if (newMsg && newMsg.id) {
+              const current = this.chatService.messagesSubject.value;
+              this.chatService.messagesSubject.next([...current, newMsg]);
             }
-          });
-        } else {
-          this.showAlert('Notice', 'Media link generated: ' + result.value, 'info');
-        }
+            this.showAlert('Media Shared', `${type} attachment added to conversation.`, 'success');
+          },
+          error: (err: any) => {
+            this.showAlert('Error', err.error?.error || err.message || 'Failed to attach media', 'error');
+          }
+        });
       }
     });
   }
