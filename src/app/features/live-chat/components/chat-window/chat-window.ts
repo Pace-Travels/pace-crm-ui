@@ -54,6 +54,13 @@ export class ChatWindow implements AfterViewChecked {
     return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
   }
 
+  getInteractiveLabel(text: string | undefined): string {
+    if (!text) return 'Interactive Button Selection';
+    if (text === '[Interactive Selection]') return '🔘 Interactive Quick Reply Selected';
+    if (text.includes('[Interactive Selection]')) return text.replace('[Interactive Selection]', '🔘 Quick Reply Selection');
+    return text;
+  }
+
   sendMessage() {
     const text = this.chatService.chatInputMessage().trim();
     const conv = this.chatService.selectedConversation();

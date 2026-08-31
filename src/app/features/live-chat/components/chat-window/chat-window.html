@@ -68,7 +68,14 @@
                             </div>
                         }
 
-                        <div>{{ msg.textContent || msg.content }}</div>
+                        @if (msg.messageType === 'INTERACTIVE') {
+                            <div style="background: rgba(11, 73, 77, 0.08); border-left: 3px solid #0b494d; padding: 6px 10px; border-radius: 6px; font-weight: 600; color: #0b494d; display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 4px;">
+                                <i class="fa-solid fa-list-check" style="color: #0b494d;"></i>
+                                <span>{{ getInteractiveLabel(msg.textContent || msg.content) }}</span>
+                            </div>
+                        } @else {
+                            <div>{{ msg.textContent || msg.content }}</div>
+                        }
                         
                         <!-- Read receipts & timestamp -->
                         <div style="font-size: 9px; color: #64748b; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-bottom: 0;">
