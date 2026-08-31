@@ -1,5 +1,6 @@
 import { Injectable, signal } from '@angular/core';
 import { ApiService } from '../../../shared/services/api.service';
+import { environment } from '../../../../environments/environment';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
@@ -44,14 +45,28 @@ export class LiveChatService {
   }
 
   private initSocket() {
-    // Establish connection to backend WebSocket server
-    this.socket = io('https://messengerapi.quotedesks.com');
+    // Establish connection to backend WebSocket server dynamically based on environment API URL
+    const apiUrl = environment.apiUrl || 'http://localhost:3000/api/v1';
+    const socketUrl = apiUrl.replace(/\/api\/v1\/?$/, '');
+    this.socket = io(socketUrl);
+
+    this.socket.on('connect', () => {
+      const active = this.selectedConversation();
+      if (active) {
+        this.socket.emit('join_conversation', active.id);
+      }
+    });
 
     this.socket.on('new_message', (data: any) => {
       const active = this.selectedConversation();
-      if (active && data.conversationId === active.id) {
+      if (active && (data.conversationId === active.id || Number(data.conversationId) === Number(active.id))) {
         const current = this.messagesSubject.value;
-        if (!current.find((m: any) => m.id === data.id)) {
+        const existingIndex = current.findIndex((m: any) => m.id === data.id);
+        if (existingIndex > -1) {
+          const updated = [...current];
+          updated[existingIndex] = { ...updated[existingIndex], ...data };
+          this.messagesSubject.next(updated);
+        } else {
           this.messagesSubject.next([...current, data]);
         }
       }
@@ -60,7 +75,7 @@ export class LiveChatService {
     this.socket.on('message_status_update', (data: any) => {
       // data format: { messageId, status, errorMessage? }
       const current = this.messagesSubject.value.map((m: any) => {
-        if (m.id === data.messageId) {
+        if (m.id === data.messageId || Number(m.id) === Number(data.messageId)) {
           return { ...m, status: data.status, errorMessage: data.errorMessage };
         }
         return m;
@@ -87,6 +102,10 @@ export class LiveChatService {
             };
           });
           this.activeConversations.set(list);
+
+          if (!this.selectedConversation() && list.length > 0) {
+            this.selectConversation(list[0]);
+          }
         }
       },
       error: () => {
@@ -96,6 +115,9 @@ export class LiveChatService {
           { id: 2, contactId: 102, platform: 'WHATSAPP', status: 'OPEN', assignedToType: 'HUMAN', Contact: { name: 'John travels', firstName: 'John', lastName: 'travels', phone: '919876543210' }, Messages: [] }
         ];
         this.activeConversations.set(mockData);
+        if (!this.selectedConversation() && mockData.length > 0) {
+          this.selectConversation(mockData[0]);
+        }
       }
     });
   }
@@ -109,15 +131,17 @@ export class LiveChatService {
     this.selectedConversation.set(conv);
     this.socket.emit('join_conversation', conv.id);
     
-    // Fetch live messages
-    this.api.get<any>('messages/list').subscribe({
+    // Fetch live messages chronologically (ASC)
+    this.api.get<any>(`messages/list?conversationId=${conv.id}`).subscribe({
       next: (res: any) => {
         const all = res.data || [];
-        const filtered = all.filter((m: any) => m.conversationId === conv.id);
+        const filtered = all.filter((m: any) => m.conversationId === conv.id || Number(m.conversationId) === Number(conv.id));
+        filtered.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
         this.messagesSubject.next(filtered);
       },
       error: () => {
-        this.messagesSubject.next(conv.Messages || []);
+        const fallback = (conv.Messages || []).slice().sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        this.messagesSubject.next(fallback);
       }
     });
   }

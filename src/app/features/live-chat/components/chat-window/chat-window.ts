@@ -1,4 +1,4 @@
-import { Component, signal, inject } from '@angular/core';
+import { Component, signal, inject, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LiveChatService } from '../../services/live-chat.service';
@@ -13,9 +13,11 @@ declare var Swal: any;
   templateUrl: './chat-window.html',
   styleUrl: './chat-window.scss',
 })
-export class ChatWindow {
+export class ChatWindow implements AfterViewChecked {
   chatService = inject(LiveChatService);
   api = inject(ApiService);
+
+  @ViewChild('messagesArea') private messagesArea!: ElementRef;
 
   showInteractiveModal = signal(false);
   interactiveBody = '';
@@ -33,20 +35,55 @@ export class ChatWindow {
   tagName = '';
   mediaUrlInput = '';
 
+  ngAfterViewChecked() {
+    this.scrollToBottom();
+  }
+
+  private scrollToBottom() {
+    try {
+      if (this.messagesArea) {
+        this.messagesArea.nativeElement.scrollTop = this.messagesArea.nativeElement.scrollHeight;
+      }
+    } catch (err) {}
+  }
+
+  getMediaUrl(url: string | undefined): string {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    const base = this.api.baseUrl.replace(/\/api\/v1\/?$/, '');
+    return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
   sendMessage() {
     const text = this.chatService.chatInputMessage().trim();
     const conv = this.chatService.selectedConversation();
     if (!text || !conv) return;
+
+    // Clear input box immediately for high responsiveness
+    this.chatService.chatInputMessage.set('');
 
     const payload = {
       conversationId: conv.id,
       textContent: text
     };
 
-    this.api.post('messages/send', payload).subscribe({
-      next: () => {
-        this.chatService.chatInputMessage.set('');
-        this.chatService.selectConversation(conv);
+    this.api.post<any>('messages/send', payload).subscribe({
+      next: (res: any) => {
+        const newMsg = res.data || res;
+        if (newMsg && newMsg.id) {
+          const current = this.chatService.messagesSubject.value;
+          const existingIdx = current.findIndex((m: any) => m.id === newMsg.id);
+          if (existingIdx > -1) {
+            const updated = [...current];
+            updated[existingIdx] = { ...updated[existingIdx], ...newMsg };
+            this.chatService.messagesSubject.next(updated);
+          } else {
+            this.chatService.messagesSubject.next([...current, newMsg]);
+          }
+        }
+        if (newMsg?.status === 'FAILED') {
+          this.showAlert('Delivery Failed', newMsg.errorMessage || 'WhatsApp message failed to deliver', 'warning');
+        }
       },
       error: (err: any) => {
         this.showAlert('Delivery Failed', err.error?.error || err.message || 'Failed to send message', 'error');
@@ -82,14 +119,26 @@ export class ChatWindow {
       buttons
     };
 
-    this.api.post('messages/send-interactive', payload).subscribe({
-      next: () => {
+    this.api.post<any>('messages/send-interactive', payload).subscribe({
+      next: (res: any) => {
         this.interactiveBody = '';
         this.btn1 = '';
         this.btn2 = '';
         this.btn3 = '';
         this.showInteractiveModal.set(false);
-        this.chatService.selectConversation(conv);
+
+        const newMsg = res.data || res;
+        if (newMsg && newMsg.id) {
+          const current = this.chatService.messagesSubject.value;
+          const existingIdx = current.findIndex((m: any) => m.id === newMsg.id);
+          if (existingIdx > -1) {
+            const updated = [...current];
+            updated[existingIdx] = { ...updated[existingIdx], ...newMsg };
+            this.chatService.messagesSubject.next(updated);
+          } else {
+            this.chatService.messagesSubject.next([...current, newMsg]);
+          }
+        }
         this.showAlert('Sent!', 'Quick reply interactive buttons delivered.', 'success');
       },
       error: (err: any) => {

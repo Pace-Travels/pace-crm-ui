@@ -41,7 +41,7 @@
                         }
                     </div>
                     <div class="chat-preview" [style.color]="conv.Messages?.[0]?.status === 'FAILED' ? '#ef4444' : ''" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px;">
-                        {{ conv.Messages?.[0]?.textContent || 'No messages' }}
+                        {{ conv.Messages?.[0]?.textContent || conv.Messages?.[0]?.content || 'No messages' }}
                     </div>
                 </div>
             </div>
