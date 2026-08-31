@@ -883,6 +883,60 @@ export class CreateTemplateView implements OnInit {
     }
   }
 
+  mapButtonToMetaComponent(b: ActionButton): any {
+    switch (b.typeOfAction) {
+      case 'VISIT_WEBSITE': {
+        const btnObj: any = {
+          type: 'URL',
+          text: b.buttonText.trim() || 'Visit website',
+          url: b.websiteUrl ? b.websiteUrl.trim() : 'https://quotedesks.com'
+        };
+        if (b.urlType === 'DYNAMIC' || btnObj.url.includes('{{1}}')) {
+          btnObj.example = ['https://quotedesks.com'];
+        }
+        return btnObj;
+      }
+      case 'CALL_PHONE': {
+        const fullPhone = b.countryCode && b.phoneNumber
+          ? `${b.countryCode}${b.phoneNumber.trim()}`
+          : '+919876543210';
+        return {
+          type: 'PHONE_NUMBER',
+          text: b.buttonText.trim() || 'Call phone number',
+          phone_number: fullPhone.replace(/\s+/g, '')
+        };
+      }
+      case 'CALL_WHATSAPP': {
+        return {
+          type: 'QUICK_REPLY',
+          text: b.buttonText.trim() || 'Call on WhatsApp'
+        };
+      }
+      case 'COMPLETE_FLOW': {
+        return {
+          type: 'FLOW',
+          text: b.buttonText.trim() || 'View flow',
+          flow_id: b.flowId || '1000000000',
+          flow_action: 'navigate',
+          navigate_screen: 'DETAILS'
+        };
+      }
+      case 'COPY_OFFER_CODE': {
+        return {
+          type: 'COPY_CODE',
+          example: b.offerCode?.trim() || 'OFFER50'
+        };
+      }
+      case 'CUSTOM':
+      default: {
+        return {
+          type: 'QUICK_REPLY',
+          text: b.buttonText.trim() || 'Quick reply'
+        };
+      }
+    }
+  }
+
   submitTemplate(): void {
     if (this.isSubmitting()) return;
 
@@ -941,13 +995,7 @@ export class CreateTemplateView implements OnInit {
     if (this.buttons().length > 0) {
       componentsPayload.push({
         type: 'BUTTONS',
-        buttons: this.buttons().map(b => ({
-          type: b.typeOfAction,
-          text: b.buttonText,
-          url: b.websiteUrl,
-          phone_number: b.countryCode && b.phoneNumber ? `${b.countryCode}${b.phoneNumber}` : undefined,
-          code: b.offerCode
-        }))
+        buttons: this.buttons().map(b => this.mapButtonToMetaComponent(b))
       });
     }
 
