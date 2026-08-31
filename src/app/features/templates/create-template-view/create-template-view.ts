@@ -55,8 +55,8 @@ export class CreateTemplateView implements OnInit {
         this.headerMediaUrl.set('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80');
         this.uploadedFileName.set('Sample_Flyer_Banner.jpg');
       }
-      if (!this.bodyText() || this.bodyText() === 'Hello {{1}}, check out our latest offerings!') {
-        this.bodyText.set('Flyer Image');
+      if (this.bodyText() === 'Hello {{1}}, check out our latest offerings!') {
+        this.bodyText.set('');
       }
     } else if (format === 'FLYER_TEXT') {
       this.mediaHeaderType.set('IMAGE');
@@ -70,8 +70,8 @@ export class CreateTemplateView implements OnInit {
         this.headerMediaUrl.set('https://www.w3schools.com/html/mov_bbb.mp4');
         this.uploadedFileName.set('Sample_Video_Promo.mp4');
       }
-      if (!this.bodyText() || this.bodyText() === 'Hello {{1}}, check out our latest offerings!') {
-        this.bodyText.set('Video Promo');
+      if (this.bodyText() === 'Hello {{1}}, check out our latest offerings!') {
+        this.bodyText.set('');
       }
     } else if (format === 'VIDEO_TEXT') {
       this.mediaHeaderType.set('VIDEO');
@@ -946,29 +946,33 @@ export class CreateTemplateView implements OnInit {
       return;
     }
 
-    if ((fmt === 'FLYER_IMAGE' || fmt === 'FLYER_TEXT') && !this.headerMediaUrl()) {
+    if ((fmt === 'FLYER_IMAGE' || fmt === 'FLYER_TEXT' || this.mediaHeaderType() === 'IMAGE') && !this.headerMediaUrl()) {
       Swal.fire('Missing Flyer Image', 'Please upload or generate a flyer image for Meta approval.', 'warning');
       return;
     }
 
-    if ((fmt === 'SINGLE_VIDEO' || fmt === 'VIDEO_TEXT') && !this.headerMediaUrl()) {
+    if ((fmt === 'SINGLE_VIDEO' || fmt === 'VIDEO_TEXT' || this.mediaHeaderType() === 'VIDEO') && !this.headerMediaUrl()) {
       Swal.fire('Missing Video Asset', 'Please upload or generate a video for Meta approval.', 'warning');
       return;
     }
 
-    if (!this.bodyText().trim()) {
+    // Body text is ONLY mandatory if there is no media header (Image or Video)
+    if (this.mediaHeaderType() === 'NONE' && !this.bodyText().trim()) {
       Swal.fire('Required Field', 'Please enter message body text.', 'warning');
       return;
     }
 
     this.isSubmitting.set(true);
 
-    const componentsPayload: any[] = [
-      {
+    const componentsPayload: any[] = [];
+
+    // Include BODY component if body text is provided
+    if (this.bodyText().trim()) {
+      componentsPayload.push({
         type: 'BODY',
         text: this.bodyText().trim()
-      }
-    ];
+      });
+    }
 
     if (this.mediaHeaderType() !== 'NONE' || this.headerText().trim()) {
       const headerComp: any = {
