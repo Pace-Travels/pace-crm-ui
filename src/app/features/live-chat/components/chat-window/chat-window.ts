@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LiveChatService } from '../../services/live-chat.service';
 import { ApiService } from '../../../../shared/services/api.service';
-
-declare var Swal: any;
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-chat-window',

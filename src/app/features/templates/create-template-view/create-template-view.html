@@ -168,7 +168,84 @@
           </div>
           <div class="badge-details">
             <span class="tpl-name-title">{{ templateName() || 'your_template_name' }} • {{ selectedLanguage() }}</span>
-            <span class="tpl-cat-sub">{{ selectedCategory() }} • {{ selectedType() }}</span>
+            <span class="tpl-cat-sub">{{ selectedCategory() }} • {{ selectedType() }} • {{ templateApprovalFormatLabel() }}</span>
+          </div>
+        </div>
+
+        <!-- Format Selection Bar for Meta Template Approvals -->
+        <div class="card-section approval-format-card" style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1px solid #a7f3d0; border-radius: 12px; padding: 18px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <h3 style="margin: 0; font-size: 15px; color: #065f46; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                <i class="ri-checkbox-circle-fill" style="color: #059669;"></i> Template Approval Format
+              </h3>
+              <p style="margin: 2px 0 0 0; font-size: 12.5px; color: #047857;">Select one of the 5 allowed formats for Meta WhatsApp template verification:</p>
+            </div>
+            <span style="background: #059669; color: white; padding: 3px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;">
+              FORMAT: {{ templateApprovalFormatLabel() }}
+            </span>
+          </div>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px;">
+            <!-- 1. Single Flyer Image -->
+            <div class="format-option-btn" 
+                 [style.border]="templateApprovalFormat() === 'FLYER_IMAGE' ? '2px solid #059669' : '1px solid #cbd5e1'"
+                 [style.background]="templateApprovalFormat() === 'FLYER_IMAGE' ? '#ffffff' : '#f8fafc'"
+                 (click)="setApprovalFormat('FLYER_IMAGE')"
+                 style="padding: 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+              <div style="font-weight: 700; font-size: 13px; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                🖼️ Single Flyer Image
+              </div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Flyer image banner approval format</div>
+            </div>
+
+            <!-- 2. Flyer Image + Text -->
+            <div class="format-option-btn" 
+                 [style.border]="templateApprovalFormat() === 'FLYER_TEXT' ? '2px solid #059669' : '1px solid #cbd5e1'"
+                 [style.background]="templateApprovalFormat() === 'FLYER_TEXT' ? '#ffffff' : '#f8fafc'"
+                 (click)="setApprovalFormat('FLYER_TEXT')"
+                 style="padding: 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+              <div style="font-weight: 700; font-size: 13px; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                🖼️📝 Flyer Image + Text
+              </div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Flyer image banner with full text copy</div>
+            </div>
+
+            <!-- 3. Single Video -->
+            <div class="format-option-btn" 
+                 [style.border]="templateApprovalFormat() === 'SINGLE_VIDEO' ? '2px solid #059669' : '1px solid #cbd5e1'"
+                 [style.background]="templateApprovalFormat() === 'SINGLE_VIDEO' ? '#ffffff' : '#f8fafc'"
+                 (click)="setApprovalFormat('SINGLE_VIDEO')"
+                 style="padding: 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+              <div style="font-weight: 700; font-size: 13px; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                🎥 Single Video
+              </div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Video promo header approval format</div>
+            </div>
+
+            <!-- 4. Single Video + Text -->
+            <div class="format-option-btn" 
+                 [style.border]="templateApprovalFormat() === 'VIDEO_TEXT' ? '2px solid #059669' : '1px solid #cbd5e1'"
+                 [style.background]="templateApprovalFormat() === 'VIDEO_TEXT' ? '#ffffff' : '#f8fafc'"
+                 (click)="setApprovalFormat('VIDEO_TEXT')"
+                 style="padding: 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+              <div style="font-weight: 700; font-size: 13px; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                🎥📝 Single Video + Text
+              </div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Video header with body message</div>
+            </div>
+
+            <!-- 5. Single Text -->
+            <div class="format-option-btn" 
+                 [style.border]="templateApprovalFormat() === 'SINGLE_TEXT' ? '2px solid #059669' : '1px solid #cbd5e1'"
+                 [style.background]="templateApprovalFormat() === 'SINGLE_TEXT' ? '#ffffff' : '#f8fafc'"
+                 (click)="setApprovalFormat('SINGLE_TEXT')"
+                 style="padding: 12px; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+              <div style="font-weight: 700; font-size: 13px; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                💬 Single Text
+              </div>
+              <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Standard text-only message</div>
+            </div>
           </div>
         </div>
 
@@ -620,6 +697,11 @@
         <div class="phone-screen" *ngIf="previewDevice() === 'IN_APP'">
           <div class="whatsapp-bubble">
             
+            <!-- Active Meta Approval Format Badge -->
+            <div style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; margin-bottom: 8px; display: inline-flex; align-items: center; gap: 6px; border: 1px solid #bae6fd;">
+              <i class="ri-shield-check-fill" style="color: #0284c7;"></i> Meta Approval Format: {{ templateApprovalFormatLabel() }}
+            </div>
+
             <!-- Media Header Rendering -->
             <div class="bubble-media-header" *ngIf="mediaHeaderType() === 'IMAGE'">
               <img [src]="headerMediaUrl()" class="preview-media-img" *ngIf="headerMediaUrl()">
