@@ -46,6 +46,7 @@ export class ProjectsView implements OnInit {
       phoneNumberId: ['', Validators.required],
       wabaId: ['', Validators.required],
       accessToken: ['', Validators.required],
+      webhookVerifyToken: ['pace_messenger_verify_token'],
       testPhoneNumber: ['']
     });
   }
@@ -74,6 +75,7 @@ export class ProjectsView implements OnInit {
       phoneNumberId: project.phoneNumberId || '',
       wabaId: project.wabaId || '',
       accessToken: project.accessToken || '',
+      webhookVerifyToken: project.webhookVerifyToken || 'pace_messenger_verify_token',
       testPhoneNumber: project.testPhoneNumber || ''
     });
 
@@ -105,6 +107,7 @@ export class ProjectsView implements OnInit {
       phoneNumberId: val.phoneNumberId,
       wabaId: val.wabaId,
       accessToken: val.accessToken,
+      webhookVerifyToken: val.webhookVerifyToken || 'pace_messenger_verify_token',
       testPhoneNumber: val.testPhoneNumber || null
     };
 
