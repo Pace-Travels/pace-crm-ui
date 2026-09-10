@@ -206,16 +206,36 @@ export class ProjectsView implements OnInit {
   promptFacebookLogin() {
     if (typeof FB === 'undefined') return;
 
-    FB.login((response: any) => {
-      if (response.status === 'connected' && response.authResponse) {
-        const token = response.authResponse.accessToken;
-        this.metaAccessToken.set(token);
-        this.fetchMetaAccounts(token);
-      } else {
-        Swal.fire('Facebook Connection', 'Please log in and authorize Pace Messenger to connect your WhatsApp Business accounts.', 'info');
+    this.api.get('/config/public').subscribe({
+      next: (res: any) => {
+        const loginOptions: any = {
+          scope: 'business_management,whatsapp_business_management,whatsapp_business_messaging',
+          response_type: 'token',
+          extras: {
+            feature: 'whatsapp_embedded_signup',
+            version: 2,
+            sessionInfoVersion: '3',
+            setup: {} // User creates WABA and Phone in popup
+          }
+        };
+
+        if (res.metaEmbeddedSignupConfigId) {
+          loginOptions.config_id = res.metaEmbeddedSignupConfigId;
+        }
+
+        FB.login((response: any) => {
+          if (response.status === 'connected' && response.authResponse) {
+            const token = response.authResponse.accessToken;
+            this.metaAccessToken.set(token);
+            this.fetchMetaAccounts(token);
+          } else {
+            Swal.fire('Facebook Connection', 'Please log in and authorize Pace Messenger to connect your WhatsApp Business accounts.', 'info');
+          }
+        }, loginOptions);
+      },
+      error: () => {
+        Swal.fire('Error', 'Failed to fetch Meta configuration from backend.', 'error');
       }
-    }, {
-      scope: 'business_management,whatsapp_business_management,whatsapp_business_messaging'
     });
   }
 

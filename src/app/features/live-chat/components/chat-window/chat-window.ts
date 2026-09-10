@@ -325,6 +325,81 @@ export class ChatWindow implements AfterViewChecked {
     });
   }
 
+  // Action 4: Request Payment
+  onRequestPayment() {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) {
+      this.showAlert('No Conversation', 'Please select a conversation first.', 'warning');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Request Payment',
+      html: `
+        <div style="text-align: left; font-size: 13px;">
+          <label style="font-weight: bold; margin-bottom: 4px; display: block; color: #334155;">Amount (₹):</label>
+          <input id="swal-pay-amount" type="number" class="swal2-input" placeholder="e.g. 1500" style="width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 13px;">
+          <label style="font-weight: bold; margin-bottom: 4px; display: block; color: #334155;">Description:</label>
+          <input id="swal-pay-desc" class="swal2-input" placeholder="e.g. Booking Advance" style="width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 13px;">
+        </div>
+      `,
+      focusConfirm: false,
+      showCancelButton: true,
+      confirmButtonText: 'Generate & Send Link',
+      preConfirm: () => {
+        const amountStr = (document.getElementById('swal-pay-amount') as HTMLInputElement).value;
+        const amount = parseFloat(amountStr);
+        const desc = (document.getElementById('swal-pay-desc') as HTMLInputElement).value.trim();
+        
+        if (!amount || amount <= 0) {
+          Swal.showValidationMessage('Please enter a valid amount!');
+          return false;
+        }
+        return { amount, desc: desc || 'Payment Request' };
+      }
+    }).then((result: any) => {
+      if (result.isConfirmed && result.value) {
+        const { amount, desc } = result.value;
+
+        // 1. Create Order
+        this.api.post<any>('payments/create-order', {
+          amount,
+          gateway: 'RAZORPAY',
+          currency: 'INR'
+        }).subscribe({
+          next: (orderRes: any) => {
+            const orderId = orderRes.gatewayData?.orderId || orderRes.payment?.transactionId;
+            // The payment page URL is typically hosted on the frontend or backend.
+            // Assuming frontend handles /payment/:orderId
+            const paymentUrl = `${window.location.origin}/pay/${orderId}`;
+            
+            // 2. Send Payment Link Message
+            this.api.post<any>('messages/send-payment-link', {
+              conversationId: conv.id,
+              textContent: `Hi! Here is your payment link for ${desc} (₹${amount}).`,
+              paymentUrl: paymentUrl
+            }).subscribe({
+              next: (mRes: any) => {
+                const newMsg = mRes.data || mRes;
+                if (newMsg && newMsg.id) {
+                  const current = this.chatService.messagesSubject.value;
+                  this.chatService.messagesSubject.next([...current, newMsg]);
+                }
+                this.showAlert('Payment Link Sent', `Requested ₹${amount} successfully.`, 'success');
+              },
+              error: (err: any) => {
+                this.showAlert('Error', err.error?.error || 'Failed to send payment link', 'error');
+              }
+            });
+          },
+          error: (err: any) => {
+            this.showAlert('Error', err.error?.error || 'Failed to generate order', 'error');
+          }
+        });
+      }
+    });
+  }
+
   private showAlert(title: string, text: string, icon: string) {
     Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
   }
