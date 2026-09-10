@@ -36,12 +36,144 @@ import { OptInManagementView } from './features/templates/opt-in-management-view
 import { History } from './features/history/history';
 import { CsvGraphs } from './features/graphs/components/csv-graphs/csv-graphs';
 
-// Public Marketing Pages
+// Public Marketing & Legal Pages
 import { FeaturesView } from './features/public/features-view/features-view';
 import { AboutView } from './features/public/about-view/about-view';
 import { BlogView } from './features/public/blog-view/blog-view';
 import { ContactView } from './features/public/contact-view/contact-view';
 import { PricingView } from './features/public/pricing-view/pricing-view';
+import { PrivacyPolicyView } from './features/public/privacy-policy-view/privacy-policy-view';
+import { TermsOfServiceView } from './features/public/terms-of-service-view/terms-of-service-view';
+import { DataDeletionView } from './features/public/data-deletion-view/data-deletion-view';
+
+const mainAppChildren: Routes = [
+    {
+        path: 'dashboard',
+        component: Dashboard,
+        title: 'Dashboard - QuoteDesks Messenger'
+    },
+    {
+        path: 'projects',
+        component: ProjectsView,
+        title: 'Projects - QuoteDesks Messenger'
+    },
+    {
+        path: 'events-radar',
+        component: EventsRadar,
+        title: 'Event Intelligence Radar - QuoteDesks Messenger'
+    },
+    {
+        path: 'account',
+        component: AccountLayout,
+        children: [
+            { path: '', component: ProfileView, title: 'Profile - QuoteDesks Messenger' }
+        ]
+    },
+    {
+        path: 'agents',
+        component: AgentsView,
+        title: 'Agents - QuoteDesks Messenger'
+    },
+    {
+        path: 'developer',
+        component: DeveloperView,
+        title: 'Developer - QuoteDesks Messenger'
+    },
+    {
+        path: 'live-chat',
+        component: LiveChat,
+        title: 'Live Chat - QuoteDesks Messenger'
+    },
+    {
+        path: 'chat',
+        component: LiveChat,
+        title: 'Live Chat - QuoteDesks Messenger'
+    },
+    {
+        path: 'history',
+        component: History,
+        title: 'Communication History - QuoteDesks Messenger'
+    },
+    {
+        path: 'campaigns',
+        children: [
+            { path: '', component: Campaigns, title: 'Campaigns - QuoteDesks Messenger' },
+            { path: 'create', component: CreateCampaignView, title: 'Create Campaign - QuoteDesks Messenger' }
+        ]
+    },
+    {
+        path: 'templates',
+        children: [
+            { path: '', component: Templates, title: 'Message Templates - QuoteDesks Messenger' },
+            { path: 'create', component: CreateTemplateView, title: 'Create Template - QuoteDesks Messenger' },
+            { path: 'generate-ai', component: AiTemplateGeneratorView, title: 'Generate Template with AI - QuoteDesks Messenger' },
+            { path: 'opt-in', component: OptInManagementView, title: 'Opt-in Management - QuoteDesks Messenger' }
+        ]
+    },
+    {
+        path: 'contacts',
+        component: Contacts,
+        title: 'Contacts - QuoteDesks Messenger'
+    },
+    {
+        path: 'flows',
+        children: [
+            { path: '', component: Flows, title: 'Flows - QuoteDesks Messenger' },
+            { path: 'builder', component: FlowCanvasView, title: 'Flow Builder - QuoteDesks Messenger' },
+            { path: 'canvas', component: FlowCanvasView, title: 'Flow Canvas Builder - QuoteDesks Messenger' },
+            { path: 'canvas/:id', component: FlowCanvasView, title: 'Edit Flow Canvas - QuoteDesks Messenger' }
+        ]
+    },
+    {
+        path: 'ads-manager',
+        component: AdsManager,
+        title: 'Ads Manager - QuoteDesks Messenger'
+    },
+    {
+        path: 'ads',
+        component: AdsManager,
+        title: 'Ads Manager - QuoteDesks Messenger'
+    },
+    {
+        path: 'payments',
+        component: Payments,
+        title: 'Payments - QuoteDesks Messenger'
+    },
+    {
+        path: 'integrations',
+        component: Integrations,
+        title: 'Integrations - QuoteDesks Messenger'
+    },
+    {
+        path: 'manage',
+        component: Manage,
+        title: 'Manage - QuoteDesks Messenger'
+    },
+    {
+        path: 'docs',
+        component: DocsViewer,
+        title: 'Documentation - QuoteDesks Messenger'
+    },
+    {
+        path: 'webpush', component: WebPush, title: 'Web Push - QuoteDesks Messenger'
+    },
+    {
+        path: 'email', component: Email, title: 'E-mail - QuoteDesks Messenger'
+    },
+    {
+        path: 'csvdata', component: CsvGraphs, title: 'CSV Data - QuoteDesks Messenger'
+    },
+    {
+        path: 'market-intelligence',
+        component: MarketIntelligence,
+        title: 'Market Intelligence Cloud - QuoteDesks Messenger'
+    },
+    {
+        path: 'ai-marketing-intelligence',
+        component: AIMarketingIntelligence,
+        title: 'AI Marketing Intelligence Platform - QuoteDesks Messenger'
+    }
+];
 
 export const routes: Routes = [
     {
@@ -76,6 +208,21 @@ export const routes: Routes = [
         title: 'Pricing - QuoteDesks Messenger'
     },
     {
+        path: 'privacy-policy',
+        component: PrivacyPolicyView,
+        title: 'Privacy Policy - QuoteDesks Messenger'
+    },
+    {
+        path: 'terms-of-service',
+        component: TermsOfServiceView,
+        title: 'Terms of Service - QuoteDesks Messenger'
+    },
+    {
+        path: 'data-deletion-instructions',
+        component: DataDeletionView,
+        title: 'User Data Deletion Instructions - QuoteDesks Messenger'
+    },
+    {
         path: 'login',
         component: AuthLayout,
         children: [
@@ -99,123 +246,11 @@ export const routes: Routes = [
     {
         path: 'app',
         component: MainLayout,
-        children: [
-            {
-                path: 'projects',
-                component: ProjectsView,
-                title: 'Projects - QuoteDesks Messenger'
-            },
-            {
-                path: 'events-radar',
-                component: EventsRadar,
-                title: 'Event Intelligence Radar - QuoteDesks Messenger'
-            },
-            {
-                path: 'dashboard',
-                component: Dashboard,
-                title: 'Dashboard - QuoteDesks Messenger'
-            },
-            {
-                path: 'account',
-                component: AccountLayout,
-                children: [
-                    { path: '', component: ProfileView, title: 'Profile - QuoteDesks Messenger' }
-                ]
-            },
-            {
-                path: 'agents',
-                component: AgentsView,
-                title: 'Agents - QuoteDesks Messenger'
-            },
-            {
-                path: 'developer',
-                component: DeveloperView,
-                title: 'Developer - QuoteDesks Messenger'
-            },
-            {
-                path: 'live-chat',
-                component: LiveChat,
-                title: 'Live Chat - QuoteDesks Messenger'
-            },
-            {
-                path: 'history',
-                component: History,
-                title: 'Communication History - QuoteDesks Messenger'
-            },
-            {
-                path: 'campaigns',
-                children: [
-                    { path: '', component: Campaigns, title: 'Campaigns - QuoteDesks Messenger' },
-                    { path: 'create', component: CreateCampaignView, title: 'Create Campaign - QuoteDesks Messenger' }
-                ]
-            },
-            {
-                path: 'templates',
-                children: [
-                    { path: '', component: Templates, title: 'Message Templates - QuoteDesks Messenger' },
-                    { path: 'create', component: CreateTemplateView, title: 'Create Template - QuoteDesks Messenger' },
-                    { path: 'generate-ai', component: AiTemplateGeneratorView, title: 'Generate Template with AI - QuoteDesks Messenger' },
-                    { path: 'opt-in', component: OptInManagementView, title: 'Opt-in Management - QuoteDesks Messenger' }
-                ]
-            },
-            {
-                path: 'contacts',
-                component: Contacts,
-                title: 'Contacts - QuoteDesks Messenger'
-            },
-            {
-                path: 'flows',
-                children: [
-                    { path: '', component: Flows, title: 'Flows - QuoteDesks Messenger' },
-                    { path: 'builder', component: FlowCanvasView, title: 'Flow Builder - QuoteDesks Messenger' },
-                    { path: 'canvas', component: FlowCanvasView, title: 'Flow Canvas Builder - QuoteDesks Messenger' },
-                    { path: 'canvas/:id', component: FlowCanvasView, title: 'Edit Flow Canvas - QuoteDesks Messenger' }
-                ]
-            },
-            {
-                path: 'ads-manager',
-                component: AdsManager,
-                title: 'Ads Manager - QuoteDesks Messenger'
-            },
-            {
-                path: 'payments',
-                component: Payments,
-                title: 'Payments - QuoteDesks Messenger'
-            },
-            {
-                path: 'integrations',
-                component: Integrations,
-                title: 'Integrations - QuoteDesks Messenger'
-            },
-            {
-                path: 'manage',
-                component: Manage,
-                title: 'Manage - QuoteDesks Messenger'
-            },
-            {
-                path: 'docs',
-                component: DocsViewer,
-                title: 'Documentation - QuoteDesks Messenger'
-            },
-            {
-                path: 'webpush', component: WebPush, title: 'Web Push - QuoteDesks Messenger'
-            },
-            {
-                path: 'email', component: Email, title: 'E-mail - QuoteDesks Messenger'
-            },
-            {
-                path: 'csvdata', component: CsvGraphs, title: 'CSV Data - QuoteDesks Messenger'
-            },
-            {
-                path: 'market-intelligence',
-                component: MarketIntelligence,
-                title: 'Market Intelligence Cloud - QuoteDesks Messenger'
-            },
-            {
-                path: 'ai-marketing-intelligence',
-                component: AIMarketingIntelligence,
-                title: 'AI Marketing Intelligence Platform - QuoteDesks Messenger'
-            }
-        ]
+        children: mainAppChildren
+    },
+    {
+        path: '',
+        component: MainLayout,
+        children: mainAppChildren
     }
 ];

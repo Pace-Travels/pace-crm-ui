@@ -1,0 +1,84 @@
+<div class="public-page-container">
+  
+  <!-- NAV HEADER -->
+  <header class="public-header">
+    <div class="header-inner">
+      <a routerLink="/" class="brand-logo">
+        <span class="logo-icon"><i class="fa-solid fa-comments"></i></span>
+        <span class="logo-text">QuoteDesks <span class="logo-accent">Messenger</span></span>
+      </a>
+      <nav class="nav-links">
+        <a routerLink="/" class="nav-item">Home</a>
+        <a routerLink="/features" class="nav-item">Features</a>
+        <a routerLink="/pricing" class="nav-item">Pricing</a>
+        <a routerLink="/about" class="nav-item">About Us</a>
+        <a routerLink="/blog" class="nav-item">Blog</a>
+        <a routerLink="/contact" class="nav-item">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <a routerLink="/login" class="btn-login">Sign In</a>
+        <a routerLink="/signup" class="btn-signup">Get Started Free</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- DATA DELETION INSTRUCTIONS CONTENT (Required by Meta App Audit) -->
+  <section class="legal-content-section">
+    <div class="legal-card">
+      <span class="last-updated">Meta Platform Compliance</span>
+      <h1>User Data Deletion Instructions</h1>
+      <p class="lead-text">QuoteDesks Messenger is a certified Meta Business Integration. In compliance with Facebook Platform Terms, you have full control over your connected Meta accounts and data retention.</p>
+
+      <h2>How to Delete Your Data & Revoke Meta Authorization</h2>
+      
+      <div class="step-box">
+        <div class="step-num">1</div>
+        <div class="step-text">
+          <h3>Option A: Disconnect via QuoteDesks Messenger Settings</h3>
+          <p>Log in to your QuoteDesks Messenger account, go to <strong>Manage -> Integrations -> WhatsApp / Meta Hub</strong>, and click <strong>Disconnect WABA Account</strong>. This immediately clears your access tokens and revokes real-time webhook listeners.</p>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <div class="step-num">2</div>
+        <div class="step-text">
+          <h3>Option B: Revoke Authorization Directly via Facebook Settings</h3>
+          <p>Go to your Facebook Profile -> <strong>Settings & Privacy -> Settings -> Business Integrations</strong>. Locate <strong>QuoteDesks Messenger</strong> and click <strong>Remove</strong>. Facebook will automatically dispatch an automated Data Deletion Callback request to our server.</p>
+        </div>
+      </div>
+
+      <div class="step-box">
+        <div class="step-num">3</div>
+        <div class="step-text">
+          <h3>Option C: Submit a Formal Data Wipe Request</h3>
+          <p>Send an email to <strong>admin@quotedesks.com</strong> with the subject line <code>Data Deletion Request</code>. Our compliance team will permanently purge your contact directory, agency records, and conversation logs within 24 hours.</p>
+        </div>
+      </div>
+
+      <h2>Automated Meta Callback Response</h2>
+      <p>When Meta dispatches a data deletion request to our callback endpoint (<code>https://messengerapi.quotedesks.com/api/v1/auth/facebook/data-deletion</code>), our system generates a unique confirmation code and status URL allowing you to track data purge completion.</p>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="public-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="logo">QuoteDesks <span>Messenger</span></div>
+        <p>The complete WhatsApp CRM & Conversational Sales Suite for QuoteDesks.</p>
+      </div>
+      <div class="footer-links">
+        <a routerLink="/features">Features</a>
+        <a routerLink="/pricing">Pricing</a>
+        <a routerLink="/privacy-policy">Privacy Policy</a>
+        <a routerLink="/terms-of-service">Terms of Service</a>
+        <a routerLink="/data-deletion-instructions">Data Deletion</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2026 QuoteDesks Messenger. All rights reserved.
+    </div>
+  </footer>
+
+</div>
