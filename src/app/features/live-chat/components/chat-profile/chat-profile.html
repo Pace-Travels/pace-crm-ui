@@ -13,18 +13,34 @@
             <span style="font-size: 12px; color: #64748b;">{{ chatService.selectedConversation()?.Contact?.phone }}</span>
         </div>
 
-        <!-- Assignment controller toggle -->
-        <div class="assignment-section" style="background: #f8fafc; padding: 12px; border-radius: 6px; display: flex; justify-content: space-between; align-items: center;">
-            <div>
-                <span style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">Bot Auto-responder</span>
-                <div style="font-size: 13px; font-weight: 600; color: #1e293b; margin-top: 2px;">
-                    Assigned to: {{ chatService.selectedConversation()?.assignedToType || 'AI' }}
-                </div>
+        <!-- Dynamic Account Agent Assignment Selector -->
+        <div class="assignment-section" style="background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 10.5px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <i class="fa-solid fa-user-gear" style="color: #7c3aed; margin-right: 4px;"></i> Assigned Staff / Agent
+                </span>
+                <span style="font-size: 10px; font-weight: 700; background: #f3e8ff; color: #7c3aed; padding: 2px 6px; border-radius: 4px;">
+                    {{ chatService.selectedConversation()?.assignedToType === 'AI' ? 'AI AUTOPILOT' : 'HUMAN HANDOFF' }}
+                </span>
             </div>
-            <button class="btn btn-outline" style="padding: 6px 12px; font-size: 11px; font-weight: 600; background: white; border: 1px solid #cbd5e1; cursor: pointer; border-radius: 4px;" (click)="toggleAssignedType()">
-                Switch to {{ chatService.selectedConversation()?.assignedToType === 'AI' ? 'Human' : 'AI Bot' }}
-            </button>
+
+            <select 
+                style="width: 100%; padding: 8px 10px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 13px; color: #1e293b; font-weight: 600; background: white; cursor: pointer; outline: none;"
+                [value]="chatService.selectedConversation()?.assignedToType === 'AI' ? 'AI' : (chatService.selectedConversation()?.assignedToUserId || 'AI')"
+                (change)="onAgentChange($event)">
+                
+                <option value="AI">🤖 QuoteDesks AI Assistant (Autopilot)</option>
+                
+                <optgroup label="Account Users & Team Staff">
+                    @for (agent of agentService.accountAgents(); track agent.id) {
+                        <option [value]="agent.id">
+                            👤 {{ agent.name }} ({{ agent.roleName || 'Agent' }})
+                        </option>
+                    }
+                </optgroup>
+            </select>
         </div>
+
 
         <!-- AI Co-pilot Suggestion -->
         <div class="ai-co-pilot-card" style="border: 1px solid #a7f3d0; background: #f0fdf4; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 10px;">

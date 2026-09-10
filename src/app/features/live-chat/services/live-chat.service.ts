@@ -10,6 +10,7 @@ export interface Conversation {
   platform: string;
   status: string;
   assignedToType?: string;
+  assignedToUserId?: number | null;
   Contact?: {
     name?: string;
     phone?: string;

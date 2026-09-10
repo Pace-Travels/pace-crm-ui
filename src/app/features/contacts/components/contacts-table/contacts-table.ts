@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ContactService, Contact } from '../../services/contact.service';
+import { AgentService } from '../../../agents/services/agent.service';
 import { ApiService } from '../../../../shared/services/api.service';
 import { PhoneInputComponent } from '../../../../shared/components/phone-input/phone-input';
 import Swal from 'sweetalert2';
@@ -19,6 +20,7 @@ import { firstValueFrom } from 'rxjs';
 export class ContactsTable implements OnInit {
   @ViewChild('fileInput') fileInput!: ElementRef;
   contactService = inject(ContactService);
+  agentService = inject(AgentService);
   private fb = inject(FormBuilder);
   private api = inject(ApiService);
   private router = inject(Router);
@@ -109,6 +111,7 @@ export class ContactsTable implements OnInit {
 
   ngOnInit() {
     this.contactService.fetchContacts();
+    this.agentService.fetchAccountAgents();
   }
 
   // Filtered & Sorted Contacts computation
@@ -218,14 +221,26 @@ export class ContactsTable implements OnInit {
   ownerSearchQuery = signal<string>('');
   showOwnerDropdown = signal<boolean>(false);
 
-  presetAgents = ['Default Agent', 'Agent Alex', 'Agent Sarah', 'Agent Rahul', 'Agent Priyanka', 'Agent John'];
-
   availableAgentOptions = computed(() => {
-    const set = new Set<string>(this.presetAgents);
+    const set = new Set<string>();
+    
+    // 1. Load real account users (Admins, Sub-Admins, Sales Agents)
+    const accountUsers = this.agentService.accountAgents();
+    if (accountUsers && accountUsers.length > 0) {
+      accountUsers.forEach(u => {
+        const displayName = `${u.name} (${u.roleName || 'Agent'})`;
+        set.add(displayName);
+      });
+    } else {
+      set.add('Unassigned Account Owner');
+    }
+
+    // 2. Load existing contact owners from saved database contacts
     this.contactService.contacts().forEach(c => {
       const owners = this.contactService.getContactOwners(c);
       owners.forEach(o => set.add(o));
     });
+
     return Array.from(set);
   });
 

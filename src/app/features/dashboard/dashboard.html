@@ -95,7 +95,7 @@
 
             <div class="chart-body">
                 <div class="conversion-summary">
-                    <div class="rate-large">68.4%</div>
+                    <div class="rate-large">{{ analytics().conversionRate || '68.4' }}%</div>
                     <div class="rate-subtitle">Average Inquiry to Paid Quotation Ratio</div>
                 </div>
 
@@ -139,34 +139,24 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td><strong style="color: #4F46E5;">#ENQ-8901</strong></td>
-                            <td>Shadab Khatib</td>
-                            <td>Oct 15, 2026</td>
+                        <tr *ngFor="let item of (analytics().upcomingPackages || [])">
+                            <td><strong style="color: #4F46E5;">{{ item.id }}</strong></td>
+                            <td>{{ item.guestName }}</td>
+                            <td>{{ item.checkIn }}</td>
                             <td style="text-align: right;">
                                 <a routerLink="/chat" class="btn-table-action"><i class="fa-regular fa-comment-dots"></i> Chat</a>
                             </td>
                         </tr>
-                        <tr>
-                            <td><strong style="color: #4F46E5;">#ENQ-8902</strong></td>
-                            <td>Priya Sharma</td>
-                            <td>Nov 02, 2026</td>
-                            <td style="text-align: right;">
-                                <a routerLink="/chat" class="btn-table-action"><i class="fa-regular fa-comment-dots"></i> Chat</a>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td><strong style="color: #4F46E5;">#ENQ-8903</strong></td>
-                            <td>Rahul Verma</td>
-                            <td>Dec 10, 2026</td>
-                            <td style="text-align: right;">
-                                <a routerLink="/chat" class="btn-table-action"><i class="fa-regular fa-comment-dots"></i> Chat</a>
+                        <tr *ngIf="!analytics().upcomingPackages || analytics().upcomingPackages.length === 0">
+                            <td colspan="4" style="text-align: center; color: #64748b; padding: 20px;">
+                                No recent enquiries found.
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
         </div>
+
 
     </div>
 
