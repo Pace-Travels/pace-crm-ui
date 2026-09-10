@@ -1,107 +1,233 @@
 <div class="landing-container">
-  <!-- Navbar -->
+  
+  <!-- NAVBAR -->
   <nav class="navbar">
-    <div class="navbar-brand">
-      <span class="logo-icon">P</span>
-      <span class="logo-text">Pace <span class="logo-text-light">Messenger</span></span>
-    </div>
+    <a routerLink="/" class="navbar-brand">
+      <span class="logo-icon"><i class="fa-solid fa-comments"></i></span>
+      <span class="logo-text">QuoteDesks <span class="logo-text-accent">Messenger</span></span>
+    </a>
     <div class="navbar-menu">
-      <a href="#">Platform</a>
-      <a href="#">Solutions</a>
-      <a href="#">Resources</a>
-      <a href="#">Pricing</a>
+      <a routerLink="/" class="nav-link active">Home</a>
+      <a routerLink="/features" class="nav-link">Features</a>
+      <a routerLink="/pricing" class="nav-link">Pricing</a>
+      <a routerLink="/about" class="nav-link">About Us</a>
+      <a routerLink="/blog" class="nav-link">Blog</a>
+      <a routerLink="/contact" class="nav-link">Contact</a>
     </div>
     <div class="navbar-actions">
       <a routerLink="/login" class="btn-login">Sign In</a>
-      <a routerLink="/signup" class="btn-signup">Sign Up for Free</a>
+      <a routerLink="/signup" class="btn-signup">Get Started Free</a>
     </div>
   </nav>
 
-  <!-- Hero Section -->
+  <!-- HERO SECTION WITH INTERACTIVE CHATBOT SIMULATOR -->
   <section class="hero-section">
-    <div class="hero-badge">Pace Messenger is an Official WhatsApp Partner</div>
-    <h1 class="hero-title">5X Your Revenue <br>with the Power of WhatsApp</h1>
-    <p class="hero-subtitle">Engage audiences, boost sales, and drive growth with Pace Messenger. The ultimate CRM tool for modern marketing.</p>
-    <div class="hero-cta">
-      <a routerLink="/signup" class="btn-primary">Start for free</a>
-      <a href="#" class="btn-secondary">Book a Demo</a>
+    <div class="hero-header">
+      <div class="hero-badge"><i class="fa-solid fa-bolt"></i> Official QuoteDesks WhatsApp Partner Platform</div>
+      <h1 class="hero-title">5X Your Conversion & Sales <br>with <span class="gradient-text">QuoteDesks Messenger</span></h1>
+      <p class="hero-subtitle">The complete Conversational WhatsApp CRM for QuoteDesks agencies. Engage leads, automate broadcast marketing, and empower agents with Gemini AI bots.</p>
+      
+      <div class="hero-cta">
+        <a routerLink="/signup" class="btn-primary"><i class="fa-solid fa-rocket"></i> Start Free Trial</a>
+        <a routerLink="/features" class="btn-secondary"><i class="fa-solid fa-circle-play"></i> Explore Features</a>
+      </div>
     </div>
+
+    <!-- INTERACTIVE AI CHATBOT PREVIEW SIMULATOR -->
     <div class="hero-image-container">
-      <div class="dashboard-mockup">
-        <div class="mockup-header">
-          <div class="dots">
-            <span></span><span></span><span></span>
+      <div class="chatbot-simulator-card">
+        
+        <div class="simulator-header">
+          <div class="bot-info">
+            <div class="bot-avatar"><i class="fa-solid fa-robot"></i></div>
+            <div class="bot-meta">
+              <span class="bot-name">QuoteDesks Gemini AI Bot</span>
+              <span class="bot-status"><i class="fa-solid fa-circle"></i> Live WhatsApp Auto-Responder</span>
+            </div>
           </div>
+          <span class="badge-tag">INTERACTIVE DEMO</span>
         </div>
-        <div class="mockup-body">
-          <div class="sidebar"></div>
-          <div class="content">
-            <div class="card"></div>
-            <div class="card wide"></div>
-            <div class="card"></div>
+
+        <div class="simulator-body">
+          <div class="chat-timeline">
+            @for (msg of chatHistory(); track msg.text) {
+              <div class="message-bubble" [class.user]="msg.sender === 'user'" [class.bot]="msg.sender === 'bot'">
+                <div class="bubble-content">{{ msg.text }}</div>
+                <span class="time">{{ msg.time }}</span>
+              </div>
+            }
+
+            @if (isTyping()) {
+              <div class="message-bubble bot typing">
+                <div class="bubble-content">
+                  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                </div>
+              </div>
+            }
           </div>
+
+          <!-- SAMPLE PROMPTS CHIPS -->
+          <div class="prompts-bar">
+            <span class="prompt-label">Try clicking a sample question:</span>
+            <div class="chips-wrapper">
+              @for (prompt of samplePrompts; track prompt) {
+                <button type="button" class="prompt-chip" (click)="sendSamplePrompt(prompt)">
+                  <i class="fa-solid fa-sparkles"></i> {{ prompt }}
+                </button>
+              }
+            </div>
+          </div>
+
+          <!-- INPUT COMPOSER -->
+          <div class="simulator-composer">
+            <input 
+              type="text" 
+              [(ngModel)]="userInput" 
+              (keyup.enter)="sendMessage()" 
+              placeholder="Ask QuoteDesks AI anything about WhatsApp CRM..." 
+            />
+            <button type="button" class="send-btn" (click)="sendMessage()">
+              <i class="fa-solid fa-paper-plane"></i>
+            </button>
+          </div>
+
         </div>
+
       </div>
     </div>
   </section>
 
-  <!-- Logos Section -->
+  <!-- LOGOS / TRUST BANNER -->
   <section class="logos-section">
-    <p>Founders & Marketers Love Us</p>
+    <p class="trust-label">TRUSTED BY HIGH-GROWTH AGENCIES & TRAVEL BRANDS</p>
     <div class="logos-grid">
-      <span>Pace</span>
-      <span>TechCorp</span>
+      <span>QuoteDesks</span>
+      <span>Pace Travels</span>
       <span>GlobalNet</span>
-      <span>Innovate</span>
+      <span>TechCorp</span>
       <span>MarketPro</span>
     </div>
   </section>
 
-  <!-- Features Section -->
+  <!-- FEATURES SHOWCASE -->
   <section class="features-section">
     <div class="feature-row">
       <div class="feature-content">
-        <h2>Broadcast Marketing Messages on WhatsApp</h2>
-        <ul>
-          <li>Broadcast messages to unlimited users</li>
-          <li>High conversion rates with rich media</li>
-          <li>Automated campaigns and smart routing</li>
+        <span class="feature-badge">BROADCAST MARKETING</span>
+        <h2>High-Yield WhatsApp Broadcast Campaigns</h2>
+        <p>Deliver targeted promotions and rich media brochures to your entire customer list with 98%+ open rates.</p>
+        <ul class="feature-list">
+          <li><i class="fa-solid fa-circle-check"></i> Meta Verified Template Messages</li>
+          <li><i class="fa-solid fa-circle-check"></i> Automated Schedule & Batch Delivery</li>
+          <li><i class="fa-solid fa-circle-check"></i> Audience Segmentation (B2B vs B2C)</li>
         </ul>
-        <a routerLink="/signup" class="btn-primary">Get Started</a>
+        <a routerLink="/signup" class="btn-primary">Launch Broadcasts</a>
       </div>
       <div class="feature-image">
-        <div class="phone-mockup">
-          <div class="screen">
-            <div class="chat-bubble left">Hi! Are you running the sale?</div>
-            <div class="chat-bubble right">Yes! Use code PACE50 for 50% off.</div>
+        <div class="mockup-card">
+          <div class="mockup-header"><i class="fa-solid fa-paper-plane"></i> Campaign Analytics</div>
+          <div class="stat-row">
+            <div class="stat-box">
+              <span class="val">25,000</span>
+              <span class="lbl">Sent</span>
+            </div>
+            <div class="stat-box">
+              <span class="val text-green">98.4%</span>
+              <span class="lbl">Read Rate</span>
+            </div>
+            <div class="stat-box">
+              <span class="val text-purple">4.2X</span>
+              <span class="lbl">ROI Boost</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feature-row reverse">
+      <div class="feature-content">
+        <span class="feature-badge">DATA ISOLATION & RBAC</span>
+        <h2>Multi-Tenant Agent Walling Out</h2>
+        <p>Protect account data and keep sales agents focused by strictly isolating contacts and chat histories to assigned team members.</p>
+        <ul class="feature-list">
+          <li><i class="fa-solid fa-circle-check"></i> Sub-user Walled-Out Contact Access</li>
+          <li><i class="fa-solid fa-circle-check"></i> Agency Admin Global Visibility</li>
+          <li><i class="fa-solid fa-circle-check"></i> QuoteDesks Tiered Seat Allocations</li>
+        </ul>
+        <a routerLink="/pricing" class="btn-secondary">View Seat Plans</a>
+      </div>
+      <div class="feature-image">
+        <div class="mockup-card">
+          <div class="mockup-header"><i class="fa-solid fa-shield-halved"></i> QuoteDesks RBAC Meter</div>
+          <div class="seat-progress">
+            <div class="lbl-row">
+              <span>Standard Plan</span>
+              <span>2 / 2 Seats Allocated</span>
+            </div>
+            <div class="bar-track"><div class="bar-fill" style="width: 100%;"></div></div>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Footer -->
+  <!-- PRICING TIERS -->
+  <section class="pricing-preview-section">
+    <div class="section-title">
+      <h2>QuoteDesks Tiered License Plans</h2>
+      <p>Flexible seat allocations designed to scale with your team.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="price-card">
+        <h3>STARTER</h3>
+        <div class="price">$29<span>/mo</span></div>
+        <p class="seat-info">1 Total Seat (0 sub-users)</p>
+        <a routerLink="/signup" class="btn-outline">Start Trial</a>
+      </div>
+      <div class="price-card popular">
+        <span class="pop-badge">POPULAR</span>
+        <h3>STANDARD</h3>
+        <div class="price">$59<span>/mo</span></div>
+        <p class="seat-info">2 Total Seats (1 sub-user seat)</p>
+        <a routerLink="/signup" class="btn-primary">Get Standard</a>
+      </div>
+      <div class="price-card">
+        <h3>PREMIUM</h3>
+        <div class="price">$119<span>/mo</span></div>
+        <p class="seat-info">3 Total Seats (2 sub-user seats)</p>
+        <a routerLink="/signup" class="btn-outline">Get Premium</a>
+      </div>
+      <div class="price-card">
+        <h3>ENTERPRISE</h3>
+        <div class="price">$239<span>/mo</span></div>
+        <p class="seat-info">5 Total Seats (4 sub-user seats)</p>
+        <a routerLink="/contact" class="btn-outline">Contact Us</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-content">
       <div class="footer-col">
-        <h3>Pace Messenger</h3>
-        <p>Your complete WhatsApp CRM solution.</p>
+        <h3>QuoteDesks Messenger</h3>
+        <p>The complete WhatsApp CRM & Conversational Sales Suite for QuoteDesks.</p>
       </div>
       <div class="footer-col">
         <h4>Product</h4>
-        <a href="#">Features</a>
-        <a href="#">Pricing</a>
-        <a href="#">Integrations</a>
+        <a routerLink="/features">Features</a>
+        <a routerLink="/pricing">Pricing</a>
+        <a routerLink="/about">About Us</a>
       </div>
       <div class="footer-col">
-        <h4>Company</h4>
-        <a href="#">About Us</a>
-        <a href="#">Careers</a>
-        <a href="#">Contact</a>
+        <h4>Resources</h4>
+        <a routerLink="/blog">Blog</a>
+        <a routerLink="/contact">Contact Sales</a>
       </div>
     </div>
     <div class="footer-bottom">
-      &copy; 2024 Pace Messenger. All rights reserved.
+      &copy; 2026 QuoteDesks Messenger. All rights reserved.
     </div>
   </footer>
+
 </div>

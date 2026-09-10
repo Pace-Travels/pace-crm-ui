@@ -1,0 +1,115 @@
+<div class="public-page-container">
+  
+  <!-- NAV HEADER -->
+  <header class="public-header">
+    <div class="header-inner">
+      <a routerLink="/" class="brand-logo">
+        <span class="logo-icon"><i class="fa-solid fa-comments"></i></span>
+        <span class="logo-text">QuoteDesks <span class="logo-accent">Messenger</span></span>
+      </a>
+      <nav class="nav-links">
+        <a routerLink="/" class="nav-item">Home</a>
+        <a routerLink="/features" class="nav-item">Features</a>
+        <a routerLink="/pricing" class="nav-item">Pricing</a>
+        <a routerLink="/about" class="nav-item">About Us</a>
+        <a routerLink="/blog" class="nav-item">Blog</a>
+        <a routerLink="/contact" class="nav-item active">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <a routerLink="/login" class="btn-login">Sign In</a>
+        <a routerLink="/signup" class="btn-signup">Get Started Free</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTACT HERO -->
+  <section class="contact-hero">
+    <div class="hero-content">
+      <span class="pill-tag"><i class="fa-solid fa-headset"></i> Contact Sales & Support</span>
+      <h1>Get in Touch with <br><span class="purple-gradient">QuoteDesks Messenger</span></h1>
+      <p>Have questions about custom seat allocations, Meta API setup, or enterprise onboarding? We're here to help.</p>
+    </div>
+  </section>
+
+  <!-- CONTACT FORM & INFO -->
+  <section class="content-section">
+    <div class="contact-grid">
+      
+      <div class="contact-card form-card">
+        <h3>Send Us a Message</h3>
+        <form (ngSubmit)="submitForm()" class="contact-form">
+          <div class="form-group">
+            <label for="fullName">Full Name *</label>
+            <input id="fullName" type="text" [(ngModel)]="fullName" name="fullName" placeholder="Jane Doe" />
+          </div>
+          <div class="form-group">
+            <label for="email">Work Email *</label>
+            <input id="email" type="email" [(ngModel)]="email" name="email" placeholder="jane@company.com" />
+          </div>
+          <div class="form-group">
+            <label for="company">Company / Agency Name</label>
+            <input id="company" type="text" [(ngModel)]="company" name="company" placeholder="Acme Travels" />
+          </div>
+          <div class="form-group">
+            <label for="message">How can we help? *</label>
+            <textarea id="message" rows="4" [(ngModel)]="message" name="message" placeholder="Tell us about your team size, broadcast needs, or questions..."></textarea>
+          </div>
+          <button type="submit" class="submit-btn" [disabled]="isSubmitting()">
+            <span *ngIf="!isSubmitting()">Send Message</span>
+            <span *ngIf="isSubmitting()"><i class="fa-solid fa-spinner fa-spin"></i> Submitting...</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="contact-card info-card">
+        <h3>Direct Support Details</h3>
+        
+        <div class="info-item">
+          <div class="icon purple"><i class="fa-solid fa-envelope"></i></div>
+          <div>
+            <h4>Email Support & Invites</h4>
+            <p>admin@quotedesks.com</p>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="icon indigo"><i class="fa-solid fa-globe"></i></div>
+          <div>
+            <h4>QuoteDesks Platform</h4>
+            <p>https://quotedesks.com</p>
+          </div>
+        </div>
+
+        <div class="info-item">
+          <div class="icon mint"><i class="fa-solid fa-clock"></i></div>
+          <div>
+            <h4>Support Hours</h4>
+            <p>Monday – Friday: 9am – 6pm EST</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="public-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="logo">QuoteDesks <span>Messenger</span></div>
+        <p>The complete WhatsApp CRM & Conversational Sales Suite for QuoteDesks.</p>
+      </div>
+      <div class="footer-links">
+        <a routerLink="/features">Features</a>
+        <a routerLink="/pricing">Pricing</a>
+        <a routerLink="/about">About Us</a>
+        <a routerLink="/blog">Blog</a>
+        <a routerLink="/contact">Contact Us</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2026 QuoteDesks Messenger. All rights reserved.
+    </div>
+  </footer>
+
+</div>

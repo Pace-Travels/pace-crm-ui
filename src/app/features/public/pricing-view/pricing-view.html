@@ -1,0 +1,162 @@
+<div class="public-page-container">
+  
+  <!-- NAV HEADER -->
+  <header class="public-header">
+    <div class="header-inner">
+      <a routerLink="/" class="brand-logo">
+        <span class="logo-icon"><i class="fa-solid fa-comments"></i></span>
+        <span class="logo-text">QuoteDesks <span class="logo-accent">Messenger</span></span>
+      </a>
+      <nav class="nav-links">
+        <a routerLink="/" class="nav-item">Home</a>
+        <a routerLink="/features" class="nav-item">Features</a>
+        <a routerLink="/pricing" class="nav-item active">Pricing</a>
+        <a routerLink="/about" class="nav-item">About Us</a>
+        <a routerLink="/blog" class="nav-item">Blog</a>
+        <a routerLink="/contact" class="nav-item">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <a routerLink="/login" class="btn-login">Sign In</a>
+        <a routerLink="/signup" class="btn-signup">Get Started Free</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- PRICING HERO -->
+  <section class="pricing-hero">
+    <div class="hero-content">
+      <span class="pill-tag"><i class="fa-solid fa-tags"></i> Transparent Seat Pricing</span>
+      <h1>Predictable Pricing Tiered for <br><span class="purple-gradient">Every QuoteDesks Agency</span></h1>
+      <p>Scale your WhatsApp marketing and agent seat allocations with zero hidden fees.</p>
+
+      <div class="billing-toggle">
+        <span [class.active]="!isAnnual()">Monthly</span>
+        <button type="button" class="toggle-btn" (click)="toggleBilling()">
+          <span class="slider" [class.on]="isAnnual()"></span>
+        </button>
+        <span [class.active]="isAnnual()">Annual <span class="save-badge">Save 20%</span></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING TIERS MATRIX -->
+  <section class="content-section">
+    <div class="pricing-grid">
+      
+      <!-- STARTER -->
+      <div class="pricing-card">
+        <div class="card-header">
+          <span class="tier-name">STARTER</span>
+          <div class="price">
+            <span class="currency">$</span>
+            <span class="amount">{{ isAnnual() ? '29' : '39' }}</span>
+            <span class="period">/mo</span>
+          </div>
+          <p class="tier-desc">Ideal for solo founders & micro agencies.</p>
+        </div>
+        <div class="seat-quota-box">
+          <i class="fa-solid fa-user"></i> <b>1 Total Seat</b> (0 sub-users)
+        </div>
+        <ul class="tier-features">
+          <li><i class="fa-solid fa-check"></i> Unlimited WhatsApp Contacts</li>
+          <li><i class="fa-solid fa-check"></i> 5,000 Marketing Broadcasts/mo</li>
+          <li><i class="fa-solid fa-check"></i> Shared Team Inbox</li>
+          <li><i class="fa-solid fa-check"></i> Gemini AI Copilot</li>
+        </ul>
+        <a routerLink="/signup" class="plan-btn outline">Choose Starter</a>
+      </div>
+
+      <!-- STANDARD -->
+      <div class="pricing-card featured">
+        <div class="popular-badge">MOST POPULAR</div>
+        <div class="card-header">
+          <span class="tier-name">STANDARD</span>
+          <div class="price">
+            <span class="currency">$</span>
+            <span class="amount">{{ isAnnual() ? '59' : '79' }}</span>
+            <span class="period">/mo</span>
+          </div>
+          <p class="tier-desc">For growing travel agencies with sales reps.</p>
+        </div>
+        <div class="seat-quota-box featured">
+          <i class="fa-solid fa-users"></i> <b>2 Total Seats</b> (1 Sub-user seat)
+        </div>
+        <ul class="tier-features">
+          <li><i class="fa-solid fa-check"></i> Multi-tenant RBAC Contact Isolation</li>
+          <li><i class="fa-solid fa-check"></i> 25,000 Marketing Broadcasts/mo</li>
+          <li><i class="fa-solid fa-check"></i> AWS SES Team Invites (admin@quotedesks.com)</li>
+          <li><i class="fa-solid fa-check"></i> Meta Click-to-WhatsApp Ads Sync</li>
+        </ul>
+        <a routerLink="/signup" class="plan-btn primary">Choose Standard</a>
+      </div>
+
+      <!-- PREMIUM -->
+      <div class="pricing-card">
+        <div class="card-header">
+          <span class="tier-name">PREMIUM</span>
+          <div class="price">
+            <span class="currency">$</span>
+            <span class="amount">{{ isAnnual() ? '119' : '149' }}</span>
+            <span class="period">/mo</span>
+          </div>
+          <p class="tier-desc">Designed for established teams & agencies.</p>
+        </div>
+        <div class="seat-quota-box">
+          <i class="fa-solid fa-users-gear"></i> <b>3 Total Seats</b> (2 Sub-user seats)
+        </div>
+        <ul class="tier-features">
+          <li><i class="fa-solid fa-check"></i> Everything in Standard</li>
+          <li><i class="fa-solid fa-check"></i> 100,000 Marketing Broadcasts/mo</li>
+          <li><i class="fa-solid fa-check"></i> Visual Automation Flow Builder</li>
+          <li><i class="fa-solid fa-check"></i> Custom Gemini AI Persona Prompts</li>
+        </ul>
+        <a routerLink="/signup" class="plan-btn outline">Choose Premium</a>
+      </div>
+
+      <!-- ENTERPRISE -->
+      <div class="pricing-card">
+        <div class="card-header">
+          <span class="tier-name">ENTERPRISE</span>
+          <div class="price">
+            <span class="currency">$</span>
+            <span class="amount">{{ isAnnual() ? '239' : '299' }}</span>
+            <span class="period">/mo</span>
+          </div>
+          <p class="tier-desc">High-scale operations requiring maximum capacity.</p>
+        </div>
+        <div class="seat-quota-box">
+          <i class="fa-solid fa-building-user"></i> <b>5 Total Seats</b> (4 Sub-user seats)
+        </div>
+        <ul class="tier-features">
+          <li><i class="fa-solid fa-check"></i> Unlimited Broadcast Messages</li>
+          <li><i class="fa-solid fa-check"></i> Priority AWS SES Gateway</li>
+          <li><i class="fa-solid fa-check"></i> Custom Web Push SDK Loader</li>
+          <li><i class="fa-solid fa-check"></i> Dedicated Onboarding Manager</li>
+        </ul>
+        <a routerLink="/contact" class="plan-btn outline">Contact Enterprise</a>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="public-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="logo">QuoteDesks <span>Messenger</span></div>
+        <p>The complete WhatsApp CRM & Conversational Sales Suite for QuoteDesks.</p>
+      </div>
+      <div class="footer-links">
+        <a routerLink="/features">Features</a>
+        <a routerLink="/pricing">Pricing</a>
+        <a routerLink="/about">About Us</a>
+        <a routerLink="/blog">Blog</a>
+        <a routerLink="/contact">Contact Us</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2026 QuoteDesks Messenger. All rights reserved.
+    </div>
+  </footer>
+
+</div>

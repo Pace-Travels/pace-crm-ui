@@ -36,153 +36,185 @@ import { OptInManagementView } from './features/templates/opt-in-management-view
 import { History } from './features/history/history';
 import { CsvGraphs } from './features/graphs/components/csv-graphs/csv-graphs';
 
+// Public Marketing Pages
+import { FeaturesView } from './features/public/features-view/features-view';
+import { AboutView } from './features/public/about-view/about-view';
+import { BlogView } from './features/public/blog-view/blog-view';
+import { ContactView } from './features/public/contact-view/contact-view';
+import { PricingView } from './features/public/pricing-view/pricing-view';
+
 export const routes: Routes = [
     {
         path: '',
         component: LandingView,
         pathMatch: 'full',
-        title: 'Pace Messenger - AI Enabled Multi Messenger Platform'
+        title: 'QuoteDesks Messenger - Conversational WhatsApp CRM'
+    },
+    {
+        path: 'features',
+        component: FeaturesView,
+        title: 'Features - QuoteDesks Messenger'
+    },
+    {
+        path: 'about',
+        component: AboutView,
+        title: 'About Us - QuoteDesks Messenger'
+    },
+    {
+        path: 'blog',
+        component: BlogView,
+        title: 'Blog & Insights - QuoteDesks Messenger'
+    },
+    {
+        path: 'contact',
+        component: ContactView,
+        title: 'Contact Us - QuoteDesks Messenger'
+    },
+    {
+        path: 'pricing',
+        component: PricingView,
+        title: 'Pricing - QuoteDesks Messenger'
     },
     {
         path: 'login',
         component: AuthLayout,
         children: [
-            { path: '', component: LoginView, title: 'Login - Pace Messenger' }
+            { path: '', component: LoginView, title: 'Login - QuoteDesks Messenger' }
         ]
     },
     {
         path: 'signup',
         component: AuthLayout,
         children: [
-            { path: '', component: SignupView, title: 'Sign Up - Pace Messenger' }
+            { path: '', component: SignupView, title: 'Sign Up - QuoteDesks Messenger' }
         ]
     },
     {
         path: 'forgot-password',
         component: AuthLayout,
         children: [
-            { path: '', component: ForgotPasswordView, title: 'Forgot Password - Pace Messenger' }
+            { path: '', component: ForgotPasswordView, title: 'Forgot Password - QuoteDesks Messenger' }
         ]
     },
     {
-        path: '',
+        path: 'app',
         component: MainLayout,
         children: [
             {
                 path: 'projects',
                 component: ProjectsView,
-                title: 'Projects - Pace Messenger'
+                title: 'Projects - QuoteDesks Messenger'
             },
             {
                 path: 'events-radar',
                 component: EventsRadar,
-                title: 'Event Intelligence Radar - Pace Messenger'
+                title: 'Event Intelligence Radar - QuoteDesks Messenger'
             },
             {
                 path: 'dashboard',
                 component: Dashboard,
-                title: 'Dashboard - Pace Messenger'
+                title: 'Dashboard - QuoteDesks Messenger'
             },
             {
                 path: 'account',
                 component: AccountLayout,
                 children: [
-                    { path: '', component: ProfileView, title: 'Profile - Pace Messenger' }
+                    { path: '', component: ProfileView, title: 'Profile - QuoteDesks Messenger' }
                 ]
             },
             {
                 path: 'agents',
                 component: AgentsView,
-                title: 'Agents - Pace Messenger'
+                title: 'Agents - QuoteDesks Messenger'
             },
             {
                 path: 'developer',
                 component: DeveloperView,
-                title: 'Developer - Pace Messenger'
+                title: 'Developer - QuoteDesks Messenger'
             },
             {
-                path: 'chat',
+                path: 'live-chat',
                 component: LiveChat,
-                title: 'Live Chat - Pace Messenger'
+                title: 'Live Chat - QuoteDesks Messenger'
             },
             {
                 path: 'history',
                 component: History,
-                title: 'Communication History - Pace Messenger'
+                title: 'Communication History - QuoteDesks Messenger'
             },
             {
                 path: 'campaigns',
                 children: [
-                    { path: '', component: Campaigns, title: 'Campaigns - Pace Messenger' },
-                    { path: 'create', component: CreateCampaignView, title: 'Create Campaign - Pace Messenger' }
+                    { path: '', component: Campaigns, title: 'Campaigns - QuoteDesks Messenger' },
+                    { path: 'create', component: CreateCampaignView, title: 'Create Campaign - QuoteDesks Messenger' }
                 ]
             },
             {
                 path: 'templates',
                 children: [
-                    { path: '', component: Templates, title: 'Message Templates - Pace Messenger' },
-                    { path: 'create', component: CreateTemplateView, title: 'Create Template - Pace Messenger' },
-                    { path: 'generate-ai', component: AiTemplateGeneratorView, title: 'Generate Template with AI - Pace Messenger' },
-                    { path: 'opt-in', component: OptInManagementView, title: 'Opt-in Management - Pace Messenger' }
+                    { path: '', component: Templates, title: 'Message Templates - QuoteDesks Messenger' },
+                    { path: 'create', component: CreateTemplateView, title: 'Create Template - QuoteDesks Messenger' },
+                    { path: 'generate-ai', component: AiTemplateGeneratorView, title: 'Generate Template with AI - QuoteDesks Messenger' },
+                    { path: 'opt-in', component: OptInManagementView, title: 'Opt-in Management - QuoteDesks Messenger' }
                 ]
             },
             {
                 path: 'contacts',
                 component: Contacts,
-                title: 'Contacts - Pace Messenger'
+                title: 'Contacts - QuoteDesks Messenger'
             },
             {
                 path: 'flows',
                 children: [
-                    { path: '', component: Flows, title: 'Flows - Pace Messenger' },
-                    { path: 'builder', component: FlowCanvasView, title: 'Flow Builder - Pace Messenger' },
-                    { path: 'canvas', component: FlowCanvasView, title: 'Flow Canvas Builder - Pace Messenger' },
-                    { path: 'canvas/:id', component: FlowCanvasView, title: 'Edit Flow Canvas - Pace Messenger' }
+                    { path: '', component: Flows, title: 'Flows - QuoteDesks Messenger' },
+                    { path: 'builder', component: FlowCanvasView, title: 'Flow Builder - QuoteDesks Messenger' },
+                    { path: 'canvas', component: FlowCanvasView, title: 'Flow Canvas Builder - QuoteDesks Messenger' },
+                    { path: 'canvas/:id', component: FlowCanvasView, title: 'Edit Flow Canvas - QuoteDesks Messenger' }
                 ]
             },
             {
-                path: 'ads',
+                path: 'ads-manager',
                 component: AdsManager,
-                title: 'Ads Manager - Pace Messenger'
+                title: 'Ads Manager - QuoteDesks Messenger'
             },
             {
                 path: 'payments',
                 component: Payments,
-                title: 'Payments - Pace Messenger'
+                title: 'Payments - QuoteDesks Messenger'
             },
             {
                 path: 'integrations',
                 component: Integrations,
-                title: 'Integrations - Pace Messenger'
+                title: 'Integrations - QuoteDesks Messenger'
             },
             {
                 path: 'manage',
                 component: Manage,
-                title: 'Manage - Pace Messenger'
+                title: 'Manage - QuoteDesks Messenger'
             },
             {
                 path: 'docs',
                 component: DocsViewer,
-                title: 'Documentation - Pace Messenger'
+                title: 'Documentation - QuoteDesks Messenger'
             },
             {
-                path:'webpush', component:WebPush, title: 'Web Push'
+                path: 'webpush', component: WebPush, title: 'Web Push - QuoteDesks Messenger'
             },
             {
-                path:'email', component:Email, title: 'E-mail'
+                path: 'email', component: Email, title: 'E-mail - QuoteDesks Messenger'
             },
             {
-                path:'csvdata', component:CsvGraphs, title: 'CSV Data'
+                path: 'csvdata', component: CsvGraphs, title: 'CSV Data - QuoteDesks Messenger'
             },
             {
                 path: 'market-intelligence',
                 component: MarketIntelligence,
-                title: 'Market Intelligence Cloud - Pace Messenger'
+                title: 'Market Intelligence Cloud - QuoteDesks Messenger'
             },
             {
                 path: 'ai-marketing-intelligence',
                 component: AIMarketingIntelligence,
-                title: 'AI Marketing Intelligence Platform - Pace Messenger'
+                title: 'AI Marketing Intelligence Platform - QuoteDesks Messenger'
             }
         ]
     }
