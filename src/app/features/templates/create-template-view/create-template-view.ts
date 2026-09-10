@@ -20,6 +20,8 @@ export interface ActionButton {
   offerCode?: string;
 }
 
+export type ApprovalFormat = 'FLYER_IMAGE' | 'FLYER_TEXT' | 'SINGLE_VIDEO' | 'VIDEO_TEXT' | 'SINGLE_TEXT';
+
 @Component({
   selector: 'app-create-template-view',
   standalone: true,
@@ -30,6 +32,58 @@ export interface ActionButton {
 export class CreateTemplateView implements OnInit {
   // Wizard steps: 1 = Set up template, 2 = Edit template, 3 = Submit for Review
   currentStep = signal<number>(1);
+
+  // 5 Meta Template Approval Formats
+  templateApprovalFormat = signal<ApprovalFormat>('FLYER_TEXT');
+
+  templateApprovalFormatLabel = computed(() => {
+    switch (this.templateApprovalFormat()) {
+      case 'FLYER_IMAGE': return 'Single Flyer Image';
+      case 'FLYER_TEXT': return 'Flyer Image + Text';
+      case 'SINGLE_VIDEO': return 'Single Video';
+      case 'VIDEO_TEXT': return 'Single Video + Text';
+      case 'SINGLE_TEXT': return 'Single Text';
+      default: return 'Custom Format';
+    }
+  });
+
+  setApprovalFormat(format: ApprovalFormat): void {
+    this.templateApprovalFormat.set(format);
+    if (format === 'FLYER_IMAGE') {
+      this.mediaHeaderType.set('IMAGE');
+      if (!this.headerMediaUrl()) {
+        this.headerMediaUrl.set('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80');
+        this.uploadedFileName.set('Sample_Flyer_Banner.jpg');
+      }
+      if (this.bodyText() === 'Hello {{1}}, check out our latest offerings!') {
+        this.bodyText.set('');
+      }
+    } else if (format === 'FLYER_TEXT') {
+      this.mediaHeaderType.set('IMAGE');
+      if (!this.headerMediaUrl()) {
+        this.headerMediaUrl.set('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=800&q=80');
+        this.uploadedFileName.set('Sample_Flyer_Banner.jpg');
+      }
+    } else if (format === 'SINGLE_VIDEO') {
+      this.mediaHeaderType.set('VIDEO');
+      if (!this.headerMediaUrl() || !this.headerMediaUrl().includes('.mp4')) {
+        this.headerMediaUrl.set('https://www.w3schools.com/html/mov_bbb.mp4');
+        this.uploadedFileName.set('Sample_Video_Promo.mp4');
+      }
+      if (this.bodyText() === 'Hello {{1}}, check out our latest offerings!') {
+        this.bodyText.set('');
+      }
+    } else if (format === 'VIDEO_TEXT') {
+      this.mediaHeaderType.set('VIDEO');
+      if (!this.headerMediaUrl() || !this.headerMediaUrl().includes('.mp4')) {
+        this.headerMediaUrl.set('https://www.w3schools.com/html/mov_bbb.mp4');
+        this.uploadedFileName.set('Sample_Video_Promo.mp4');
+      }
+    } else if (format === 'SINGLE_TEXT') {
+      this.mediaHeaderType.set('NONE');
+      this.headerMediaUrl.set('');
+    }
+  }
 
   // Step 1: Configuration
   selectedCategory = signal<'MARKETING' | 'UTILITY' | 'AUTHENTICATION'>('MARKETING');
@@ -829,17 +883,96 @@ export class CreateTemplateView implements OnInit {
     }
   }
 
+  mapButtonToMetaComponent(b: ActionButton): any {
+    switch (b.typeOfAction) {
+      case 'VISIT_WEBSITE': {
+        const btnObj: any = {
+          type: 'URL',
+          text: b.buttonText.trim() || 'Visit website',
+          url: b.websiteUrl ? b.websiteUrl.trim() : 'https://quotedesks.com'
+        };
+        if (b.urlType === 'DYNAMIC' || btnObj.url.includes('{{1}}')) {
+          btnObj.example = ['https://quotedesks.com'];
+        }
+        return btnObj;
+      }
+      case 'CALL_PHONE': {
+        const fullPhone = b.countryCode && b.phoneNumber
+          ? `${b.countryCode}${b.phoneNumber.trim()}`
+          : '+919876543210';
+        return {
+          type: 'PHONE_NUMBER',
+          text: b.buttonText.trim() || 'Call phone number',
+          phone_number: fullPhone.replace(/\s+/g, '')
+        };
+      }
+      case 'CALL_WHATSAPP': {
+        return {
+          type: 'QUICK_REPLY',
+          text: b.buttonText.trim() || 'Call on WhatsApp'
+        };
+      }
+      case 'COMPLETE_FLOW': {
+        return {
+          type: 'FLOW',
+          text: b.buttonText.trim() || 'View flow',
+          flow_id: b.flowId || '1000000000',
+          flow_action: 'navigate',
+          navigate_screen: 'DETAILS'
+        };
+      }
+      case 'COPY_OFFER_CODE': {
+        return {
+          type: 'COPY_CODE',
+          example: b.offerCode?.trim() || 'OFFER50'
+        };
+      }
+      case 'CUSTOM':
+      default: {
+        return {
+          type: 'QUICK_REPLY',
+          text: b.buttonText.trim() || 'Quick reply'
+        };
+      }
+    }
+  }
+
   submitTemplate(): void {
     if (this.isSubmitting()) return;
 
+    const fmt = this.templateApprovalFormat();
+    if (!this.templateName().trim()) {
+      Swal.fire('Required Field', 'Please enter a template name.', 'warning');
+      return;
+    }
+
+    if ((fmt === 'FLYER_IMAGE' || fmt === 'FLYER_TEXT' || this.mediaHeaderType() === 'IMAGE') && !this.headerMediaUrl()) {
+      Swal.fire('Missing Flyer Image', 'Please upload or generate a flyer image for Meta approval.', 'warning');
+      return;
+    }
+
+    if ((fmt === 'SINGLE_VIDEO' || fmt === 'VIDEO_TEXT' || this.mediaHeaderType() === 'VIDEO') && !this.headerMediaUrl()) {
+      Swal.fire('Missing Video Asset', 'Please upload or generate a video for Meta approval.', 'warning');
+      return;
+    }
+
+    // Body text is ONLY mandatory if there is no media header (Image or Video)
+    if (this.mediaHeaderType() === 'NONE' && !this.bodyText().trim()) {
+      Swal.fire('Required Field', 'Please enter message body text.', 'warning');
+      return;
+    }
+
     this.isSubmitting.set(true);
 
-    const componentsPayload: any[] = [
-      {
+    const componentsPayload: any[] = [];
+
+    // Include BODY component if body text is provided
+    if (this.bodyText().trim()) {
+      componentsPayload.push({
         type: 'BODY',
-        text: this.bodyText()
-      }
-    ];
+        text: this.bodyText().trim()
+      });
+    }
 
     if (this.mediaHeaderType() !== 'NONE' || this.headerText().trim()) {
       const headerComp: any = {
@@ -847,7 +980,11 @@ export class CreateTemplateView implements OnInit {
         format: this.mediaHeaderType() !== 'NONE' ? this.mediaHeaderType() : 'TEXT'
       };
       if (headerComp.format === 'TEXT') {
-        headerComp.text = this.headerText();
+        headerComp.text = this.headerText().trim();
+      } else if (this.headerMediaUrl()) {
+        headerComp.example = {
+          header_handle: [this.headerMediaUrl()]
+        };
       }
       componentsPayload.push(headerComp);
     }
@@ -862,13 +999,7 @@ export class CreateTemplateView implements OnInit {
     if (this.buttons().length > 0) {
       componentsPayload.push({
         type: 'BUTTONS',
-        buttons: this.buttons().map(b => ({
-          type: b.typeOfAction,
-          text: b.buttonText,
-          url: b.websiteUrl,
-          phone_number: b.countryCode && b.phoneNumber ? `${b.countryCode}${b.phoneNumber}` : undefined,
-          code: b.offerCode
-        }))
+        buttons: this.buttons().map(b => this.mapButtonToMetaComponent(b))
       });
     }
 

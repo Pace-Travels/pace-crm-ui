@@ -21,4 +21,13 @@ export class ChatList {
   getAvatarInitial(name: string | undefined): string {
     return name ? name.charAt(0).toUpperCase() : 'U';
   }
+
+  formatPreview(msg: any): string {
+    if (!msg) return 'No messages';
+    const text = msg.textContent || msg.content || '';
+    if (!text) return 'No messages';
+    if (text === '[Interactive Selection]') return '🔘 Quick Reply Selection';
+    if (text.includes('[Interactive Selection]')) return text.replace('[Interactive Selection]', '🔘 Quick Reply Selection');
+    return text;
+  }
 }

@@ -12,13 +12,34 @@
         display: flex;
         flex-direction: column;
         flex-shrink: 0;
+        height: 100%;
+
+        app-chat-list {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            flex: 1;
+            overflow: hidden;
+        }
     }
 
     .panel-middle {
         flex: 1;
         display: flex;
         flex-direction: column;
+        height: 100%;
         position: relative;
+        overflow: hidden;
+
+        app-chat-window {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            flex: 1;
+            overflow: hidden;
+        }
     }
 
     .panel-right {
@@ -28,5 +49,15 @@
         display: flex;
         flex-direction: column;
         flex-shrink: 0;
+        height: 100%;
+
+        app-chat-profile {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            width: 100%;
+            flex: 1;
+            overflow: hidden;
+        }
     }
 }

@@ -2,8 +2,7 @@ import { Component, OnInit, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LiveChatService, Conversation } from '../../services/live-chat.service';
 import { ApiService } from '../../../../shared/services/api.service';
-
-declare var Swal: any;
+import Swal from 'sweetalert2';
 
 interface AISuggestion {
   intent: string;

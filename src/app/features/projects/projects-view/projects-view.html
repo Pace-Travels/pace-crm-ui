@@ -86,10 +86,17 @@
                 </div>
             </div>
 
-            <div>
-                <label style="font-size: 12px; font-weight: 700; color: #334155;">Meta Permanent Access Token *</label>
-                <input type="password" formControlName="accessToken" placeholder="EAAB..."
-                    style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-family: monospace;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Meta Permanent Access Token (PAT) *</label>
+                    <input type="password" formControlName="accessToken" placeholder="EAAG..."
+                        style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-family: monospace;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Webhook Verify Token (Per Project)</label>
+                    <input type="text" formControlName="webhookVerifyToken" placeholder="pace_messenger_verify_token"
+                        style="width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none; font-family: monospace;">
+                </div>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
