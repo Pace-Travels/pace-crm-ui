@@ -1,11 +1,14 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { ButtonModule } from 'primeng/button';
+import { ApiService } from '../../../../shared/services/api.service';
+import Swal from 'sweetalert2';
 
 interface EmailTemplate {
+  id?: number;
   name: string;
   subject: string;
   body: string;
@@ -17,12 +20,13 @@ interface EmailTemplate {
   templateUrl: './email.html',
   styleUrl: './email.scss',
 })
-export class Email {
-
+export class Email implements OnInit {
+  private api: ApiService = inject(ApiService);
   constructor(private cdr: ChangeDetectorRef) {}
 
   activeTab: 'email' | 'whatsapp' | 'webpush' = 'email';
   showTemplateSelector: boolean = false;
+  isSending: boolean = false;
 
   user = {
     recipient: 'Alex Rivera (Booking #PT-8832A)',
@@ -44,26 +48,25 @@ export class Email {
     body: `The new departure time is 14:30 PM (previously 13:00 PM). Please ensure you arrive at the airport at least 3 hours before the new departure time.\n\nIf you need any assistance with airport transfers due to this change, please reply to this email.\n\nSafe travels,\nThe Pace Travels Team`
   };
 
-  // Pre-built email templates
-  templates: EmailTemplate[] = [
-    {
-      name: 'Flight Schedule Change',
-      subject: 'Flight Schedule Change: Bali Retreat (GA882)',
-      body: `Hi Alex,\n\nWe wanted to inform you that there has been a slight change in the departure time for your flight to Bali (Flight GA882) on Oct 12.\n\nThe new departure time is 14:30 PM (previously 13:00 PM). Please ensure you arrive at the airport at least 3 hours before the new departure time.\n\nIf you need any assistance with airport transfers due to this change, please reply to this email.\n\nSafe travels,\nThe Pace Travels Team`
-    },
-    {
-      name: 'Booking Confirmation',
-      subject: 'Booking Confirmed: Bali Retreat (7 Days)',
-      body: `Hi Alex,\n\nYour booking #PT-8832A for Bali Retreat (7 Days) is confirmed!\n\nFlight Details:\nJFK → DPS (GA882)\nDates: Oct 12 - Oct 19, 2026\n\nPlease find your e-tickets attached below.\n\nWarm regards,\nThe Pace Travels Team`
-    },
-    {
-      name: 'Payment Reminder',
-      subject: 'Payment Pending for Booking #PT-8832A',
-      body: `Hi Alex,\n\nThis is a quick reminder regarding your upcoming trip to Bali. Please complete your balance payment to ensure your reservation remains active.\n\nIf you have already made the payment, please ignore this email.\n\nBest regards,\nThe Pace Travels Team`
-    }
-  ];
+  templates: EmailTemplate[] = [];
 
   uploadedFile: { name: string; type: string; url: string } | null = null;
+
+  ngOnInit(): void {
+    this.fetchEmailTemplates();
+  }
+
+  fetchEmailTemplates(): void {
+    this.api.get<any>('/email/templates').subscribe({
+      next: (res: any) => {
+        if (res && res.success && res.data) {
+          this.templates = res.data;
+          this.cdr.detectChanges();
+        }
+      },
+      error: (err: any) => console.warn('Failed to load email templates from API', err)
+    });
+  }
 
   get isFormValid(): boolean {
     return (
@@ -103,4 +106,35 @@ export class Email {
     }
   }
 
+  sendEmail(): void {
+    if (!this.isFormValid || this.isSending) return;
+
+    this.isSending = true;
+
+    const payload = {
+      recipient: this.user.email || this.user.recipient,
+      subject: this.emailData.subject,
+      body: this.emailData.body,
+      replyTo: 'admin@quotedesks.com'
+    };
+
+    this.api.post<any>('/email/send', payload).subscribe({
+      next: (res: any) => {
+        this.isSending = false;
+        Swal.fire({
+          title: 'Email Sent!',
+          html: `<p>${res.message || 'Email dispatched successfully via SES'}</p>
+                 <p style="font-size: 12px; color: #64748b;"><b>Reply Tunnel:</b> admin@quotedesks.com</p>`,
+          icon: 'success'
+        });
+        this.cdr.detectChanges();
+      },
+      error: (err: any) => {
+        this.isSending = false;
+        const msg = err.error?.error || err.message || 'Failed to send email';
+        Swal.fire('Email Dispatch Error', msg, 'error');
+        this.cdr.detectChanges();
+      }
+    });
+  }
 }

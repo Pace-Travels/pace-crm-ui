@@ -2,8 +2,8 @@ import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { AgenticApiService } from '../services/agentic-api.service';
-
-declare var Swal: any;
+import { AgentService } from '../services/agent.service';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-agents-view',
@@ -14,6 +14,7 @@ declare var Swal: any;
 })
 export class AgentsView implements OnInit {
   agenticApi = inject(AgenticApiService);
+  agentService = inject(AgentService);
   fb = inject(FormBuilder);
 
   activeTab = 'autopilot';
@@ -83,6 +84,24 @@ export class AgentsView implements OnInit {
   ngOnInit() {
     this.agenticApi.fetchAutopilotStatus().subscribe();
     this.agenticApi.fetchRFMSegments().subscribe();
+    this.agentService.fetchAgents().subscribe({
+      next: (res: any) => {
+        if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const apiAgents = res.data.map((a: any) => ({
+            id: a.id,
+            name: a.name,
+            role: a.role || 'Customer Concierge',
+            model: a.modelName || 'Gemini 1.5 Flash',
+            status: a.status || 'Active',
+            icon: '🤖',
+            color: '#10b981',
+            description: a.systemPrompt || 'AI Assistant',
+            assignedGroup: 'B2C (Pace Travels)'
+          }));
+          this.agentsList.set([...apiAgents, ...this.agentsList()]);
+        }
+      }
+    });
   }
 
   openCreateAgentModal() {
@@ -100,22 +119,38 @@ export class AgentsView implements OnInit {
     }
 
     const val = this.agentForm.value;
-    const newAgent = {
-      id: Date.now(),
+    const payload = {
       name: val.name,
       role: val.role,
-      model: val.model,
-      status: 'Active',
-      icon: '🤖',
-      color: '#10b981',
-      description: val.personaPrompt,
-      assignedGroup: val.assignedGroup
+      modelName: val.model,
+      systemPrompt: val.personaPrompt,
+      status: 'ACTIVE'
     };
 
-    this.agentsList.set([newAgent, ...this.agentsList()]);
-    this.agentForm.reset({ model: 'Gemini 1.5 Flash', role: 'Customer Concierge', assignedGroup: 'B2C (Pace Travels)' });
-    this.closeCreateAgentModal();
-    this.showAlert('Agent Created!', `AI Agent "${val.name}" has been registered and activated.`, 'success');
+    this.agentService.createAgent(payload).subscribe({
+      next: (res: any) => {
+        const created = res.agent || payload;
+        const newAgent = {
+          id: created.id || Date.now(),
+          name: val.name,
+          role: val.role,
+          model: val.model,
+          status: 'Active',
+          icon: '🤖',
+          color: '#10b981',
+          description: val.personaPrompt,
+          assignedGroup: val.assignedGroup
+        };
+
+        this.agentsList.set([newAgent, ...this.agentsList()]);
+        this.agentForm.reset({ model: 'Gemini 1.5 Flash', role: 'Customer Concierge', assignedGroup: 'B2C (Pace Travels)' });
+        this.closeCreateAgentModal();
+        this.showAlert('Agent Created!', `AI Agent "${val.name}" has been registered and activated.`, 'success');
+      },
+      error: (err: any) => {
+        this.showAlert('Creation Failed', err.error?.error || 'Failed to register AI agent', 'error');
+      }
+    });
   }
 
   toggleAutopilotState(enabled: boolean) {

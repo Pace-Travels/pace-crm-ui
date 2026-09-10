@@ -2,6 +2,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TemplatesView } from './components/templates-view/templates-view';
+import { TeamManagement } from './components/team-management/team-management';
 import { ApiService } from '../../shared/services/api.service';
 
 import Swal from 'sweetalert2';
@@ -23,7 +24,7 @@ interface Widget {
 @Component({
   selector: 'app-manage',
   standalone: true,
-  imports: [CommonModule, FormsModule, TemplatesView],
+  imports: [CommonModule, FormsModule, TemplatesView, TeamManagement],
   templateUrl: './manage.html',
   styleUrl: './manage.scss',
 })

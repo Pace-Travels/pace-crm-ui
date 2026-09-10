@@ -12,6 +12,8 @@
                             class="fa-solid fa-code"></i> Web Widget SDK</li>
                     <li [class.active]="activeTab() === 'fcm-sdk'" (click)="activeTab.set('fcm-sdk')"><i
                             class="fa-solid fa-code"></i>FCM SDK</li>
+                    <li [class.active]="activeTab() === 'team'" (click)="activeTab.set('team')"><i
+                            class="fa-solid fa-user-group"></i> Team & Seat Allocations</li>
                 </ul>
             </div>
         </div>
@@ -342,6 +344,8 @@
 
     </div>
 </div>
+        } @else if (activeTab() === 'team') {
+        <app-team-management></app-team-management>
         }
     </div>
 </div>

@@ -116,6 +116,7 @@ export class EventsRadar implements OnInit, AfterViewInit, OnDestroy {
   ngOnInit() {
     this.fetchEventsAndRender();
     this.eventsService.fetchCities();
+    this.eventsService.fetchTriggers();
 
     // Debounce map movement stream (300ms) to prevent API hammering
     this.boundsSub = this.mapBoundsSubject.pipe(debounceTime(300)).subscribe(bounds => {
@@ -373,18 +374,25 @@ export class EventsRadar implements OnInit, AfterViewInit, OnDestroy {
     const sender = this.whatsappNumbers().find(n => n.id === formVal.senderNumber);
     const group = this.contactGroups().find(g => g.id === formVal.contactGroup);
 
-    const newRule = {
-      id: Date.now(),
+    const payload = {
       ...formVal,
       projectName: project ? project.name : 'Pace Travels Official',
       senderNumber: sender ? sender.label : formVal.senderNumber,
-      contactGroupName: group ? group.name : formVal.contactGroup,
-      status: 'ACTIVE'
+      contactGroupName: group ? group.name : formVal.contactGroup
     };
 
-    this.triggersList.set([newRule, ...this.triggersList()]);
-    this.closeTriggerModal();
-    this.showAlert('Trigger Activated!', `Automated campaign trigger "${newRule.ruleName}" created successfully.`, 'success');
+    this.eventsService.createTrigger(payload).subscribe({
+      next: (res: any) => {
+        if (res.success && res.trigger) {
+          this.triggersList.set([res.trigger, ...this.triggersList()]);
+        }
+        this.closeTriggerModal();
+        this.showAlert('Trigger Activated!', `Automated campaign trigger "${payload.ruleName}" created successfully.`, 'success');
+      },
+      error: (err: any) => {
+        this.showAlert('Error', err.error?.error || 'Failed to create trigger rule.', 'error');
+      }
+    });
   }
 
   private showAlert(title: string, text: string, icon: string) {

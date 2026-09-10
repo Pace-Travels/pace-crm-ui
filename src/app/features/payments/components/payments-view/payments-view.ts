@@ -77,8 +77,9 @@ export class PaymentsView implements OnInit {
     }).subscribe({
       next: (res) => {
         this.closeTopupModal();
-        if (res.success && res.order) {
-          this.simulateGatewayCheckout(res.order);
+        const order = res.payment || res.order;
+        if (res.success && order) {
+          this.simulateGatewayCheckout(order);
         }
       },
       error: (err) => this.showAlert('Order Error', err.error?.error || 'Failed to create order', 'error')

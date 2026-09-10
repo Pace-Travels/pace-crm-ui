@@ -1,0 +1,142 @@
+<div class="team-management-container">
+  
+  <!-- TOP CARD: RBAC & LICENSE METER -->
+  <div class="license-banner-card">
+    <div class="banner-info">
+      <div class="badge-row">
+        <span class="plan-badge">{{ tierName() }}</span>
+        <span class="status-badge active"><i class="fa-solid fa-circle"></i> Active</span>
+      </div>
+      <h2>Agency RBAC & License Allocation</h2>
+      <p>Manage roles, access permissions, and allocate seat licenses for your travel agency staff.</p>
+    </div>
+
+    <!-- SEAT ALLOCATION METER (From Screenshot 2) -->
+    <div class="seat-allocation-box">
+      <div class="meter-header">
+        <span class="meter-label">SEAT ALLOCATION</span>
+        <span class="meter-value"><b>{{ allocatedSeats() }} / {{ maxSeats() }}</b> SEATS ALLOCATED</span>
+      </div>
+      <div class="progress-bar-track">
+        <div class="progress-bar-fill" [style.width.%]="allocationPercentage"></div>
+      </div>
+      <div class="meter-footer">
+        <span>Available: <b>{{ availableSeats() }} seats</b></span>
+        <span>Status: <b style="color: #10b981;">Healthy</b></span>
+      </div>
+    </div>
+
+    <button type="button" class="allocate-seat-btn" (click)="openInviteModal()">
+      <i class="fa-solid fa-user-plus"></i> Allocate New Seat
+    </button>
+  </div>
+
+  <!-- TEAM MEMBERS LIST TABLE -->
+  <div class="team-table-card">
+    <div class="table-header-row">
+      <h3>Allocated Team Members</h3>
+      <span class="sub-text">Staff members currently holding login credentials and role assignments.</span>
+    </div>
+
+    <div class="table-container">
+      <table class="team-table">
+        <thead>
+          <tr>
+            <th>TEAM MEMBER</th>
+            <th>ASSIGNED RBAC ROLE</th>
+            <th>LOGIN STATUS</th>
+            <th>ACCESS ACTIONS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let member of teamMembers()">
+            <td class="member-cell">
+              <div class="avatar">{{ member.name ? member.name.charAt(0).toUpperCase() : 'U' }}</div>
+              <div class="member-info">
+                <span class="member-name">{{ member.name }}</span>
+                <span class="member-email">{{ member.email }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="role-chip" [class.admin]="member.roleId === 1">
+                {{ member.roleId === 1 ? 'Agency Admin' : 'Sales Agent (Walled Out)' }}
+              </span>
+            </td>
+            <td>
+              <span class="status-pill" [class.active]="member.isActive">
+                <i class="fa-solid fa-circle"></i> {{ member.isActive ? 'Active Access' : 'Pending Invite' }}
+              </span>
+            </td>
+            <td class="actions-cell">
+              <button type="button" class="icon-btn" title="Manage Permissions"><i class="fa-solid fa-gear"></i></button>
+              <button type="button" class="icon-btn danger" title="Revoke Seat Access"><i class="fa-solid fa-user-xmark"></i></button>
+            </td>
+          </tr>
+          <tr *ngIf="teamMembers().length === 0">
+            <td colspan="4" class="empty-state">
+              No additional team members allocated yet. Click "Allocate New Seat" to invite staff.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- MODAL: ALLOCATE SEAT & INVITE MEMBER (From Screenshot 2) -->
+  <div class="modal-overlay" *ngIf="showInviteModal()">
+    <div class="invite-modal-card">
+      <div class="modal-header">
+        <div class="title-row">
+          <div class="icon-wrap"><i class="fa-solid fa-user-plus"></i></div>
+          <h3>Allocate Seat & Invite Member</h3>
+        </div>
+        <button type="button" class="close-btn" (click)="closeInviteModal()">&times;</button>
+      </div>
+
+      <form [formGroup]="inviteForm" (ngSubmit)="submitInvite()" class="modal-body">
+        
+        <div class="name-grid">
+          <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input id="firstName" type="text" formControlName="firstName" placeholder="John" />
+          </div>
+          <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input id="lastName" type="text" formControlName="lastName" placeholder="Doe" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="inviteEmail">Email Address</label>
+          <input id="inviteEmail" type="email" formControlName="email" placeholder="agent@company.com" />
+        </div>
+
+        <div class="form-group">
+          <label for="rbacRole">RBAC Role Assignment</label>
+          <select id="rbacRole" formControlName="rbacRole">
+            <option value="Sales Agent">Sales Agent (Sub-User - Walled Out Access)</option>
+            <option value="Marketing Specialist">Marketing Specialist (Sub-User)</option>
+            <option value="Agency Admin">Agency Admin (Full Visibility)</option>
+          </select>
+          <span class="field-hint">Role determines view and edit permissions across CRM itineraries, billing, and contacts.</span>
+        </div>
+
+        <div class="form-group">
+          <label for="initialStatus">Initial Seat Status</label>
+          <select id="initialStatus" formControlName="initialStatus">
+            <option value="Allocated (Active Seat Access)">Allocated (Active Seat Access)</option>
+          </select>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="submit-invite-btn" [disabled]="isInviting()">
+            <span *ngIf="!isInviting()">Send Invitation & Allocate Seat</span>
+            <span *ngIf="isInviting()"><i class="fa-solid fa-spinner fa-spin"></i> Dispatched via SES...</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>

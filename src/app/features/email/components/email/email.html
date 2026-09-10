@@ -100,9 +100,10 @@
         pButton 
         type="button" 
         class="btn-ses" 
-        [disabled]="!isFormValid">
-        <span>Send via SES</span>
-        <i class="fa-solid fa-paper-plane"></i>
+        [disabled]="!isFormValid || isSending"
+        (click)="sendEmail()">
+        <span>{{ isSending ? 'Sending via SES...' : 'Send via SES' }}</span>
+        <i class="fa-solid" [class.fa-spinner]="isSending" [class.fa-spin]="isSending" [class.fa-paper-plane]="!isSending"></i>
       </button>
     </div>
 

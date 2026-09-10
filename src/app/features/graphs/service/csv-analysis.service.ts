@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
 export interface AnalysisResponse {
   status: string;
@@ -16,7 +17,8 @@ export interface AnalysisResponse {
   providedIn: 'root'
 })
 export class CsvAnalysisService {
-  private apiUrl = 'http://localhost:5000/upload_and_analyze';
+  private primaryUrl = `${environment.apiUrl}/system/csv-analyze`;
+  private fallbackUrl = 'http://localhost:5000/upload_and_analyze';
 
   constructor(private http: HttpClient) {}
 
@@ -29,6 +31,10 @@ export class CsvAnalysisService {
       formData.append('selected_column', selectedColumn);
     }
 
-    return this.http.post<AnalysisResponse>(this.apiUrl, formData);
+    return this.http.post<AnalysisResponse>(this.primaryUrl, formData).pipe(
+      catchError(() => {
+        return this.http.post<AnalysisResponse>(this.fallbackUrl, formData);
+      })
+    );
   }
 }

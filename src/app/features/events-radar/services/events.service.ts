@@ -51,6 +51,7 @@ export class EventsService {
     selectedCity: 'Mumbai'
   });
   cities = signal<CitySummary[]>([]);
+  triggers = signal<any[]>([]);
 
   constructor(private api: ApiService) {}
 
@@ -92,5 +93,21 @@ export class EventsService {
       }
     });
     return obs;
+  }
+
+  fetchTriggers(): Observable<any> {
+    const obs = this.api.get<any>('events/triggers');
+    obs.subscribe({
+      next: (res) => {
+        if (res.success) {
+          this.triggers.set(res.data || []);
+        }
+      }
+    });
+    return obs;
+  }
+
+  createTrigger(payload: any): Observable<any> {
+    return this.api.post<any>('events/triggers', payload);
   }
 }
