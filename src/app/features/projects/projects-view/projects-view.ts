@@ -210,18 +210,19 @@ export class ProjectsView implements OnInit {
       next: (res: any) => {
         const loginOptions: any = {
           scope: 'business_management,whatsapp_business_management,whatsapp_business_messaging',
-          response_type: 'token',
-          extras: {
-            feature: 'whatsapp_embedded_signup',
-            version: 2,
-            sessionInfoVersion: '3',
-            setup: {} // User creates WABA and Phone in popup
-          }
+          response_type: 'token'
+          // Commented out embedded signup to allow standard Meta login for non-BSP apps
+          // extras: {
+          //   feature: 'whatsapp_embedded_signup',
+          //   version: 2,
+          //   sessionInfoVersion: '3',
+          //   setup: {} 
+          // }
         };
 
-        if (res.metaEmbeddedSignupConfigId) {
-          loginOptions.config_id = res.metaEmbeddedSignupConfigId;
-        }
+        // if (res.metaEmbeddedSignupConfigId) {
+        //   loginOptions.config_id = res.metaEmbeddedSignupConfigId;
+        // }
 
         FB.login((response: any) => {
           if (response.status === 'connected' && response.authResponse) {
