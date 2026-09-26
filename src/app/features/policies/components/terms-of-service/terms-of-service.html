@@ -1,0 +1,255 @@
+<div class="tos-page-wrapper">
+
+    <!-- DOCUMENT TOP BAR -->
+    <header class="tos-header">
+        <div class="header-left">
+            <span class="badge-legal">LEGAL AGREEMENT</span>
+            <h1>Master Terms of Service (ToS)</h1>
+            <p class="effective-date"><i class="fa-regular fa-calendar"></i> Effective Date: September 23, 2026</p>
+        </div>
+        <div class="header-right">
+            <button class="btn-outline" (click)="printPage()"><i class="fa-solid fa-print"></i> Print / PDF</button>
+        </div>
+    </header>
+
+    <!-- MAIN DOCUMENT CONTAINER -->
+    <div class="tos-body">
+
+        <!-- LEFT STICKY NAVIGATION -->
+        <aside class="tos-toc">
+            <div class="toc-title">TABLE OF CONTENTS</div>
+            <nav class="toc-nav">
+                <button type="button" class="toc-btn" [class.active]="activeSection === 'intro'"
+                    (click)="scrollToSection('intro')">
+                    1. Introduction & Platform Structure
+                </button>
+
+                <button type="button" class="toc-btn" [class.active]="activeSection === 'meta-compliance'"
+                    (click)="scrollToSection('meta-compliance')">
+                    2. Meta & WhatsApp Compliance
+                </button>
+
+                <button type="button" class="toc-btn" [class.active]="activeSection === 'ai-processing'"
+                    (click)="scrollToSection('ai-processing')">
+                    3. Generative AI Processing
+                </button>
+
+                <button type="button" class="toc-btn" [class.active]="activeSection === 'subscription-fees'"
+                    (click)="scrollToSection('subscription-fees')">
+                    4. Subscription Fees & Licensing
+                </button>
+
+                <button type="button" class="toc-btn" [class.active]="activeSection === 'intellectual-property'"
+                    (click)="scrollToSection('intellectual-property')">
+                    5. Intellectual Property
+                </button>
+
+                <button type="button" class="toc-btn" [class.active]="activeSection === 'limitation-liability'"
+                    (click)="scrollToSection('limitation-liability')">
+                    6. Limitation of Liability & Indemnity
+                </button>
+
+                <button type="button" class="toc-btn" [class.active]="activeSection === 'termination'"
+                    (click)="scrollToSection('termination')">
+                    7. Termination & Suspension
+                </button>
+            </nav>
+
+            <div class="toc-footer">
+                <p>Questions about terms?</p>
+                <a href="mailto:legal@quotedesks.com" class="legal-email"><i class="fa-regular fa-envelope"></i>
+                    legal@quotedesks.com</a>
+            </div>
+        </aside>
+
+        <!-- RIGHT DOCUMENT READABLE CONTENT -->
+        <main class="tos-content">
+
+            <!-- SECTION 1 -->
+            <section id="intro" class="tos-section">
+                <h2>1. Introduction and Platform Structure</h2>
+                <p>
+                    These Master Terms of Service (“Terms”) govern your access to and use of the <strong>Quote
+                        Desks</strong> multi-tenant travel CRM, AI-assisted quotation platform, and messaging services.
+                </p>
+                <p>
+                    Quote Desks operates as a technology provider and may provide integrations that enable you to access
+                    and manage customer data and perform actions on behalf of your end-users (the “Data Principals”)
+                    through supported communication platforms, including the WhatsApp Business Platform and Facebook
+                    Messenger.
+                </p>
+                <p>
+                    By accessing or using Quote Desks, you agree to comply with these Terms and all applicable laws and
+                    third-party platform policies.
+                </p>
+            </section>
+
+            <hr class="section-divider" />
+
+            <!-- SECTION 2 -->
+            <section id="meta-compliance" class="tos-section">
+                <h2>2. Meta and WhatsApp Compliance</h2>
+
+                <div class="summary-box purple-box">
+                    <strong><i class="fa-brands fa-whatsapp"></i> In Short:</strong> You must follow WhatsApp and Meta
+                    policies when messaging customers through our platform. Make sure you have clear customer consent
+                    before reaching out.
+                </div>
+
+                <p>
+                    Because Quote Desks may integrate with Meta Platforms and WhatsApp services, your use of relevant
+                    Quote Desks features is subject to applicable Meta and WhatsApp terms and policies, including the
+                    Meta Terms for WhatsApp Business, WhatsApp Business Messaging Policy, and Meta Business Tools Terms.
+                </p>
+
+                <ul class="legal-list">
+                    <li>
+                        <strong>Lawful Basis:</strong> You represent and warrant that you have all necessary rights,
+                        permissions, notices, and lawful bases to transmit end-user data through Quote Desks and its
+                        integrations to Meta or other third-party platforms.
+                    </li>
+                    <li>
+                        <strong>Restricted Data:</strong> You must not solicit, collect, or transmit highly sensitive
+                        personal data through Quote Desks where such processing is prohibited by applicable law or
+                        third-party platform policies.
+                    </li>
+                    <li>
+                        <strong>Messaging Requirements:</strong> You are responsible for complying with applicable
+                        messaging windows, consent requirements, message-template requirements, and other rules imposed
+                        by WhatsApp, Meta, SMS providers, email providers, or other communication platforms.
+                    </li>
+                </ul>
+            </section>
+
+            <hr class="section-divider" />
+
+            <!-- SECTION 3 -->
+            <section id="ai-processing" class="tos-section">
+                <h2>3. Generative AI Processing and Disclosures</h2>
+
+                <div class="summary-box green-box">
+                    <strong><i class="fa-solid fa-sparkles"></i> In Short:</strong> Quote Desks uses AI to help generate
+                    itineraries and quotes. Always double-check pricing and booking details before offering them to
+                    clients.
+                </div>
+
+                <p>
+                    Quote Desks may use Generative AI, automated processing, search technologies, and related systems to
+                    assist in creating travel itineraries, quotations, recommendations, and conversational responses.
+                </p>
+
+                <ul class="legal-list">
+                    <li>
+                        <strong>AI Disclosure:</strong> Where required by applicable law or third-party platform
+                        policies, Quote Desks may provide disclosures indicating that a user is interacting with an AI
+                        or automated system. You must not disable, remove, or obscure any mandatory disclosure.
+                    </li>
+                    <li>
+                        <strong>Verification Obligation:</strong> AI-generated content may contain inaccuracies,
+                        omissions, outdated information, or errors. You are solely responsible for reviewing and
+                        verifying the accuracy, pricing, availability, terms, and other details of AI-generated travel
+                        content before presenting it to customers as a commercial offer or confirmed service.
+                    </li>
+                </ul>
+                <p class="note-text">
+                    <em>Quote Desks does not guarantee the accuracy or availability of AI-generated content or
+                        third-party travel inventory.</em>
+                </p>
+            </section>
+
+            <hr class="section-divider" />
+
+            <!-- SECTION 4 -->
+            <section id="subscription-fees" class="tos-section">
+                <h2>4. Subscription Fees and SaaS Licensing</h2>
+                <p>
+                    <strong>Billing:</strong> Platform fees, subscription charges, agent-seat licenses, API access, and
+                    other applicable service fees will be charged according to the subscription plan or commercial
+                    agreement applicable to your account.
+                </p>
+                <p>
+                    <strong>Usage Charges:</strong> Additional charges may apply for usage exceeding the limits of your
+                    subscription, including applicable AI, API, messaging, or communication usage.
+                </p>
+                <p>
+                    <strong>Third-Party Charges:</strong> Charges imposed by third-party platforms or service providers,
+                    including applicable WhatsApp, SMS, email, payment, or API charges, may be passed through to you
+                    where applicable.
+                </p>
+                <p>
+                    Fees and applicable taxes are payable according to the billing terms communicated to you.
+                </p>
+            </section>
+
+            <hr class="section-divider" />
+
+            <!-- SECTION 5 -->
+            <section id="intellectual-property" class="tos-section">
+                <h2>5. Intellectual Property</h2>
+                <p>
+                    Quote Desks and its licensors retain all rights, title, and interest in the Quote Desks platform,
+                    source code, software architecture, AI systems, search technologies, prompts, workflows, designs,
+                    interfaces, trademarks, documentation, and other proprietary technology.
+                </p>
+                <p>
+                    You retain ownership of your proprietary travel inventory, customer information, business data,
+                    content, and other materials that you submit to Quote Desks.
+                </p>
+                <p>
+                    You grant Quote Desks the limited rights necessary to host, process, transmit, and otherwise use
+                    your data solely to provide and operate the services in accordance with these Terms and applicable
+                    agreements.
+                </p>
+            </section>
+
+            <hr class="section-divider" />
+
+            <!-- SECTION 6 -->
+            <section id="limitation-liability" class="tos-section">
+                <h2>6. Limitation of Liability and Indemnification</h2>
+                <p>
+                    To the maximum extent permitted by applicable law, Quote Desks shall not be liable for indirect,
+                    incidental, special, consequential, or punitive damages, including loss of profits, business
+                    opportunities, goodwill, or data arising from third-party service interruptions, API outages,
+                    communication-platform restrictions, or customer configuration errors.
+                </p>
+                <p>
+                    To the extent permitted by applicable law, Quote Desks’ maximum aggregate liability arising from or
+                    relating to the services shall be limited to the total fees actually paid by you to Quote Desks
+                    during the twelve (12) months immediately preceding the event giving rise to the claim.
+                </p>
+                <p>You agree to indemnify and hold harmless Quote Desks from claims, penalties, losses, or damages
+                    arising from:</p>
+
+                <ul class="legal-list">
+                    <li>Your failure to obtain required customer consent or other lawful authorization.</li>
+                    <li>Your violation of applicable privacy or data protection laws.</li>
+                    <li>Your misuse of the Quote Desks platform.</li>
+                    <li>Your violation of Meta, WhatsApp, SMS, email, or other third-party platform policies.</li>
+                    <li>Content or data submitted by you or your users.</li>
+                </ul>
+            </section>
+
+            <hr class="section-divider" />
+
+            <!-- SECTION 7 -->
+            <section id="termination" class="tos-section">
+                <h2>7. Termination and Suspension</h2>
+                <p>Quote Desks may suspend or terminate your access to the services if you:</p>
+                <ul class="legal-list">
+                    <li>Breach these Terms.</li>
+                    <li>Violate applicable laws or data protection requirements.</li>
+                    <li>Violate applicable third-party platform policies.</li>
+                    <li>Engage in activities that may create security, legal, regulatory, or operational risks.</li>
+                </ul>
+                <p>
+                    Upon termination, your access to the Quote Desks platform may be revoked. Personal data will be
+                    handled, retained, or deleted in accordance with the applicable Data Processing Agreement, Privacy
+                    Policy, legal requirements, and contractual obligations.
+                </p>
+            </section>
+
+        </main>
+
+    </div>
+</div>

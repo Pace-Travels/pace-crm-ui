@@ -1,0 +1,362 @@
+<!-- MAIN CONTAINER ONLY (Renders inside your Main Dashboard Layout) -->
+<div class="privacy-container">
+
+    <!-- TOP HEADER BANNER CARD -->
+    <header class="legal-header-card">
+        <div class="header-main">
+            <div class="badge-group">
+                <span class="badge-tag">LEGAL & COMPLIANCE</span>
+                <span class="badge-updated">Updated: Sep 23, 2026</span>
+            </div>
+            <h1>Privacy Policy for Quote Desks</h1>
+            <p class="subtitle">
+                Learn how Quote Desks & Quote Desks Messenger process, store, and protect your platform and customer
+                data.
+            </p>
+        </div>
+        <div class="header-actions">
+            <button type="button" class="btn-action-outline" (click)="printPolicy()">
+                <i class="fa-solid fa-print"></i> Print / Save PDF
+            </button>
+        </div>
+    </header>
+
+    <!-- WORKSPACE GRID (LEFT STICKY TOC + RIGHT READABLE CONTENT) -->
+    <div class="legal-body-grid">
+
+        <!-- LEFT STICKY NAVIGATION (TOC) -->
+        <aside class="toc-sidebar">
+            <div class="toc-header">
+                <i class="fa-solid fa-list-ul"></i> TABLE OF CONTENTS
+            </div>
+            <nav class="toc-menu">
+                <button type="button" class="toc-item" [class.active]="activeSection === 'sec-1'"
+                    (click)="scrollTo('sec-1')">
+                    1. About Quote Desks
+                </button>
+                <button type="button" class="toc-item" [class.active]="activeSection === 'sec-2'"
+                    (click)="scrollTo('sec-2')">
+                    2. Introduction & Compliance
+                </button>
+                <button type="button" class="toc-item" [class.active]="activeSection === 'sec-3'"
+                    (click)="scrollTo('sec-3')">
+                    3. Processor & Controller Roles
+                </button>
+                <button type="button" class="toc-item" [class.active]="activeSection === 'sec-4'"
+                    (click)="scrollTo('sec-4')">
+                    4. Information We Collect
+                </button>
+                <button type="button" class="toc-item" [class.active]="activeSection === 'sec-5'"
+                    (click)="scrollTo('sec-5')">
+                    5. Lawful Basis & Purpose
+                </button>
+                <button type="button" class="toc-item" [class.active]="activeSection === 'sec-6'"
+                    (click)="scrollTo('sec-6')">
+                    6. WhatsApp, Meta & Messaging
+                </button>
+                <button type="button" class="toc-item" [class.active]="activeSection === 'sec-7'"
+                    (click)="scrollTo('sec-7')">
+                    7. Data Sharing & Transfers
+                </button>
+                <button type="button" class="toc-item" [class.active]="activeSection === 'sec-8'"
+                    (click)="scrollTo('sec-8')">
+                    8. Retention, Security & Deletion
+                </button>
+                <button type="button" class="toc-item" [class.active]="activeSection === 'sec-9'"
+                    (click)="scrollTo('sec-9')">
+                    9. Your Privacy Rights
+                </button>
+                <button type="button" class="toc-item" [class.active]="activeSection === 'sec-10'"
+                    (click)="scrollTo('sec-10')">
+                    10. Data Breach Protocol
+                </button>
+                <button type="button" class="toc-item" [class.active]="activeSection === 'sec-11'"
+                    (click)="scrollTo('sec-11')">
+                    11. Contact & Grievance
+                </button>
+                <button type="button" class="toc-item" [class.active]="activeSection === 'sec-12'"
+                    (click)="scrollTo('sec-12')">
+                    12. Changes to Policy
+                </button>
+            </nav>
+
+            <div class="toc-support-box">
+                <p class="support-title">Privacy Assistance</p>
+                <p class="support-desc">Have questions about data privacy or DPDP compliance?</p>
+                <a href="mailto:privacy@quotedesks.com" class="support-link">
+                    <i class="fa-regular fa-envelope"></i> privacy@quotedesks.com
+                </a>
+            </div>
+        </aside>
+
+        <!-- RIGHT DOCUMENT CONTENT CARD -->
+        <main class="document-card">
+
+            <!-- SECTION 1 -->
+            <section id="sec-1" class="doc-section">
+                <div class="section-badge">SECTION 1</div>
+                <h2>About Quote Desks and Quote Desks Messenger</h2>
+                <p>
+                    <strong>Quote Desks</strong> is a multi-tenant travel CRM and quotation management platform designed
+                    for travel agencies, DMCs, tour operators, and travel professionals. It helps businesses manage
+                    leads, customers, travel quotations, itineraries, communications, workflows, and related travel
+                    operations through a centralized platform.
+                </p>
+                <p>
+                    <strong>Quote Desks Messenger</strong> is a communication and engagement service within the Quote
+                    Desks ecosystem. It enables businesses to communicate with their customers through supported
+                    channels such as WhatsApp, SMS, and email, including customer notifications, transactional
+                    communications, marketing communications, and other business messages.
+                </p>
+                <p>
+                    Quote Desks and Quote Desks Messenger may integrate with third-party services, including
+                    communication platforms, cloud infrastructure providers, payment services, analytics services, and
+                    AI or technology providers, to deliver and support these services.
+                </p>
+            </section>
+
+            <hr class="doc-divider" />
+
+            <!-- SECTION 2 -->
+            <section id="sec-2" class="doc-section">
+                <div class="section-badge">SECTION 2</div>
+                <h2>Introduction</h2>
+                <p>
+                    This Privacy Policy explains how Quote Desks (“we,” “us,” or “our”) collects, uses, processes, and
+                    protects personal data through Quote Desks and Quote Desks Messenger.
+                </p>
+                <p>
+                    We may process personal data on behalf of travel agencies, DMCs, tour operators, and other business
+                    customers. We aim to comply with applicable privacy laws, including the <strong>EU General Data
+                        Protection Regulation (GDPR)</strong> and <strong>India’s Digital Personal Data Protection Act,
+                        2023 (DPDP Act)</strong>.
+                </p>
+
+                <div class="info-callout blue-callout">
+                    <i class="fa-solid fa-shield-halved callout-icon"></i>
+                    <div>
+                        <strong>Compliance Standard:</strong> All data workflows operate in alignment with standard
+                        multi-tenant cloud isolation protocols and international privacy practices.
+                    </div>
+                </div>
+            </section>
+
+            <hr class="doc-divider" />
+
+            <!-- SECTION 3 -->
+            <section id="sec-3" class="doc-section">
+                <div class="section-badge">SECTION 3</div>
+                <h2>Our Role as Processor and Controller</h2>
+                <p>Depending on the circumstances, Quote Desks operates under two distinct legal capacities:</p>
+
+                <div class="role-grid">
+                    <div class="role-card">
+                        <h4><i class="fa-solid fa-gears"></i> Data Processor</h4>
+                        <p>Processing customer data on behalf of our business customers for messaging, quotations,
+                            itineraries, CRM operations, and related services.</p>
+                    </div>
+                    <div class="role-card">
+                        <h4><i class="fa-solid fa-user-shield"></i> Data Controller / Fiduciary</h4>
+                        <p>Processing information directly provided by our business customers for account management,
+                            service delivery, platform security, and platform improvement.</p>
+                    </div>
+                </div>
+            </section>
+
+            <hr class="doc-divider" />
+
+            <!-- SECTION 4 -->
+            <section id="sec-4" class="doc-section">
+                <div class="section-badge">SECTION 4</div>
+                <h2>Information We Collect</h2>
+                <p>We process the following categories of information to maintain platform functionality:</p>
+
+                <ul class="styled-list">
+                    <li><strong>Contact Details:</strong> Names, phone numbers, email addresses, and communication
+                        preferences.</li>
+                    <li><strong>Travel & Quotation Data:</strong> Travel preferences, itinerary details, travel
+                        quotations, and booking-related information.</li>
+                    <li><strong>Communication Logs:</strong> Messages and communication data submitted through WhatsApp,
+                        Facebook Messenger, SMS, email, or other integrated services.</li>
+                    <li><strong>Technical Metadata:</strong> Platform identifiers, timestamps, preferred language,
+                        timezone, and device/browser info.</li>
+                    <li><strong>Security & Diagnostics:</strong> System logs and diagnostic information required for
+                        platform security, troubleshooting, and service maintenance.</li>
+                </ul>
+
+                <div class="info-callout amber-callout">
+                    <i class="fa-solid fa-triangle-exclamation callout-icon"></i>
+                    <div>
+                        <strong>Sensitive Data Note:</strong> We do not intentionally collect sensitive personal data
+                        unless it is voluntarily provided by users or strictly required for a specific travel booking
+                        service.
+                    </div>
+                </div>
+            </section>
+
+            <hr class="doc-divider" />
+
+            <!-- SECTION 5 -->
+            <section id="sec-5" class="doc-section">
+                <div class="section-badge">SECTION 5</div>
+                <h2>Lawful Basis and Purpose</h2>
+                <p>We process personal data where permitted by applicable law, on the following legal bases:</p>
+
+                <ul class="styled-list">
+                    <li><strong>Consent:</strong> Explicit authorization granted by users or business accounts.</li>
+                    <li><strong>Contract Performance:</strong> Necessary for delivering requested quotations, travel
+                        itineraries, and CRM features.</li>
+                    <li><strong>Legitimate Business Interests:</strong> Maintaining platform stability, preventing
+                        fraud, and optimizing workflows.</li>
+                </ul>
+                <p>
+                    Data is used strictly to provide services, process quotations and itineraries, facilitate
+                    communications, maintain user accounts, improve platform functionality, prevent misuse, and satisfy
+                    regulatory obligations.
+                </p>
+            </section>
+
+            <hr class="doc-divider" />
+
+            <!-- SECTION 6 -->
+            <section id="sec-6" class="doc-section">
+                <div class="section-badge">SECTION 6</div>
+                <h2>WhatsApp, Meta, SMS and Email Data</h2>
+
+                <div class="info-callout green-callout">
+                    <i class="fa-brands fa-whatsapp callout-icon"></i>
+                    <div>
+                        <strong>Messaging Integrations:</strong> Messages routed via third-party channels strictly
+                        follow provider privacy guidelines, including Meta’s Business Messaging Policies.
+                    </div>
+                </div>
+
+                <p>
+                    Where Quote Desks Messenger integrates with third-party communication platforms such as WhatsApp,
+                    Meta services, SMS providers, or email services, relevant data may be processed through those
+                    platforms in accordance with their respective privacy policies and service terms.
+                </p>
+            </section>
+
+            <hr class="doc-divider" />
+
+            <!-- SECTION 7 -->
+            <section id="sec-7" class="doc-section">
+                <div class="section-badge">SECTION 7</div>
+                <h2>Data Sharing and International Transfers</h2>
+                <p>Personal data may be shared under strict operational safeguards with:</p>
+
+                <ul class="styled-list">
+                    <li>Business customers utilizing Quote Desks.</li>
+                    <li>Verified communication, cloud hosting, payment gateway, analytics, and AI technology service
+                        providers.</li>
+                    <li>Government or regulatory authorities where legally mandated by court order or statute.</li>
+                </ul>
+                <p>
+                    Where applicable, international data transfers are protected through appropriate legal safeguards,
+                    including standard contractual protections or recognized adequacy mechanisms.
+                </p>
+            </section>
+
+            <hr class="doc-divider" />
+
+            <!-- SECTION 8 -->
+            <section id="sec-8" class="doc-section">
+                <div class="section-badge">SECTION 8</div>
+                <h2>Data Retention, Security and Deletion</h2>
+                <p>
+                    We retain personal data only for as long as reasonably necessary to fulfill the purposes described
+                    in this Policy or as required by statutory law.
+                </p>
+                <p>
+                    We employ multi-layered technical and organizational security measures, including end-to-end
+                    encryption in transit and at rest, role-based access control (RBAC), multi-tenant system isolation,
+                    and continuous threat monitoring.
+                </p>
+                <p>
+                    Where applicable, users or business customers may request deletion of personal data, subject to
+                    legal and contractual compliance requirements.
+                </p>
+            </section>
+
+            <hr class="doc-divider" />
+
+            <!-- SECTION 9 -->
+            <section id="sec-9" class="doc-section">
+                <div class="section-badge">SECTION 9</div>
+                <h2>Your Privacy Rights</h2>
+                <p>Depending on applicable privacy legislation (such as GDPR or India’s DPDP Act), you may exercise the
+                    following rights:</p>
+
+                <div class="rights-grid">
+                    <div class="right-pill"><i class="fa-solid fa-eye"></i> Right to Access</div>
+                    <div class="right-pill"><i class="fa-solid fa-pen-to-square"></i> Right to Rectification</div>
+                    <div class="right-pill"><i class="fa-solid fa-trash-can"></i> Right to Erasure</div>
+                    <div class="right-pill"><i class="fa-solid fa-ban"></i> Restrict Processing</div>
+                    <div class="right-pill"><i class="fa-solid fa-file-export"></i> Data Portability</div>
+                    <div class="right-pill"><i class="fa-solid fa-headset"></i> Grievance Redressal</div>
+                </div>
+
+                <p class="mt-3">
+                    Under the DPDP Act, applicable rights specifically include access to summary information,
+                    correction, erasure, and grievance redressal through our designated officer.
+                </p>
+            </section>
+
+            <hr class="doc-divider" />
+
+            <!-- SECTION 10 -->
+            <section id="sec-10" class="doc-section">
+                <div class="section-badge">SECTION 10</div>
+                <h2>Data Breach</h2>
+                <p>
+                    In the event of a confirmed personal data breach, Quote Desks will immediately execute its Incident
+                    Response Plan to investigate, contain, and remediate the incident, providing formal notifications to
+                    regulatory bodies and affected users as mandated by applicable law.
+                </p>
+            </section>
+
+            <hr class="doc-divider" />
+
+            <!-- SECTION 11 -->
+            <section id="sec-11" class="doc-section">
+                <div class="section-badge">SECTION 11</div>
+                <h2>Contact and Grievance Redressal</h2>
+                <p>For privacy queries, data subject requests, or grievance complaints, please contact our Legal &
+                    Privacy desk:</p>
+
+                <div class="contact-card">
+                    <div class="contact-item">
+                        <span class="label">Privacy / Grievance Contact:</span>
+                        <span class="value link-val">privacy@quotedesks.com</span>
+                    </div>
+                    <div class="contact-item">
+                        <span class="label">Company / Legal Entity:</span>
+                        <span class="value">Quote Desks Technologies Pvt. Ltd.</span>
+                    </div>
+                    <div class="contact-item">
+                        <span class="label">Official Address:</span>
+                        <span class="value">Quote Desks HQ, Tech Park, India</span>
+                    </div>
+                </div>
+            </section>
+
+            <hr class="doc-divider" />
+
+            <!-- SECTION 12 -->
+            <section id="sec-12" class="doc-section">
+                <div class="section-badge">SECTION 12</div>
+                <h2>Changes to This Policy</h2>
+                <p>
+                    We may update this Privacy Policy periodically to reflect operational, legal, or regulatory updates.
+                    Any revised version will be published on the platform with an updated effective date.
+                </p>
+                <footer class="doc-copyright">
+                    © 2026 Quote Desks. All Rights Reserved.
+                </footer>
+            </section>
+
+        </main>
+
+    </div>
+</div>

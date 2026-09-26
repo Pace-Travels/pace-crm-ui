@@ -45,6 +45,14 @@ import { PricingView } from './features/public/pricing-view/pricing-view';
 import { PrivacyPolicyView } from './features/public/privacy-policy-view/privacy-policy-view';
 import { TermsOfServiceView } from './features/public/terms-of-service-view/terms-of-service-view';
 import { DataDeletionView } from './features/public/data-deletion-view/data-deletion-view';
+import { TermsOfService } from './features/policies/components/terms-of-service/terms-of-service';
+import { PrivicyPolicy } from './features/policies/components/privicy-policy/privicy-policy';
+import { DataPolicy } from './features/policies/components/data-policy/data-policy';
+
+
+// polices pages
+
+
 
 const mainAppChildren: Routes = [
     {
@@ -172,7 +180,17 @@ const mainAppChildren: Routes = [
         path: 'ai-marketing-intelligence',
         component: AIMarketingIntelligence,
         title: 'AI Marketing Intelligence Platform - QuoteDesks Messenger'
+    },
+    {
+        path: 'privacy-policy-1', component:PrivicyPolicy, title:'Privacy Policy'
+    },
+    {
+        path:'tos', component:TermsOfService, title:'Terms Of Service'
+    },
+    {
+        path: 'dpa', component:DataPolicy, title : 'Data Processing Agreement'
     }
+    
 ];
 
 export const routes: Routes = [
