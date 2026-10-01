@@ -53,6 +53,7 @@ export class ProjectsView implements OnInit {
 
   ngOnInit() {
     this.projectService.fetchProjects();
+    this.setupMetaMessageListener();
     const userStr = localStorage.getItem('user');
     if (userStr) {
       try {
@@ -64,6 +65,62 @@ export class ProjectsView implements OnInit {
         console.error('Error parsing user data', e);
       }
     }
+  }
+
+  setupMetaMessageListener() {
+    window.addEventListener('message', (event) => {
+      if (event.origin && (event.origin.includes('facebook.com') || event.origin.includes('meta.com') || event.origin.includes('quotedesks.com'))) {
+        try {
+          const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+          if (data && (data.type === 'WA_EMBEDDED_SIGNUP' || data.event === 'WA_EMBEDDED_SIGNUP')) {
+            console.log('Meta Embedded Signup Event Received:', data);
+            if (data.data && data.data.waba_id) {
+              const wabaId = data.data.waba_id;
+              const phoneId = data.data.phone_number_id;
+              this.projectForm.patchValue({
+                wabaId: wabaId,
+                phoneNumberId: phoneId || ''
+              });
+              Swal.fire('Meta Onboarding Completed', `WhatsApp Business Account (${wabaId}) connected successfully!`, 'success');
+            }
+          }
+        } catch (e) {
+          // ignore non-JSON event messages
+        }
+      }
+    });
+  }
+
+  launchMetaHostedOnboarding() {
+    this.api.get('/config/public').subscribe({
+      next: (res: any) => {
+        const appId = res?.metaAppId || '2672336826519627';
+        const configId = res?.metaEmbeddedSignupConfigId || '1814525033066211';
+        const onboardingUrl = `https://business.facebook.com/messaging/whatsapp/onboard/?app_id=${appId}&config_id=${configId}&extras=%7B%22version%22%3A%22v4%22%2C%22sessionInfoVersion%22%3A%223%22%2C%22featureType%22%3A%22whatsapp_business_app_onboarding%22%7D`;
+        
+        const width = 760;
+        const height = 760;
+        const left = (window.screen.width - width) / 2;
+        const top = (window.screen.height - height) / 2;
+
+        Swal.fire({
+          title: 'Opening Meta Embedded Signup',
+          text: 'Complete your WhatsApp Business Onboarding in the Meta window.',
+          icon: 'info',
+          timer: 2500,
+          showConfirmButton: false
+        });
+
+        window.open(
+          onboardingUrl,
+          'MetaHostedOnboarding',
+          `width=${width},height=${height},top=${top},left=${left},scrollbars=yes,status=yes`
+        );
+      },
+      error: (err: any) => {
+        Swal.fire('Error', 'Failed to load Meta Onboarding configuration: ' + (err.error?.message || err.message), 'error');
+      }
+    });
   }
 
   editProject(project: any) {
