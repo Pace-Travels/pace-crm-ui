@@ -260,6 +260,19 @@ export class ProjectsView implements OnInit {
     }
   }
 
+  loadMetaTestCredentials() {
+    this.projectForm.patchValue({
+      name: 'Meta Test Account (Sandbox)',
+      phoneNumber: '918095844097',
+      phoneNumberId: '1384310928093515',
+      wabaId: '1384310928093515',
+      accessToken: 'EAAlZBeedD0EsBSgamc9mbWNTZAIALyFQe07ZAeTxORycfxEXaiEIhaKj4LHhIQ64tkJiQyHVIuvCrEiTU2OcrgJ2RqnVgcVCDnWWzy8VZCJGpDJZB0yaNfiwYwx3CIzSlcDl80T4xr3OBKYAXFb5XKnrb2gaKTzsdaPRsXSy6lk54PjO3XZBNRn61FqZCuxAw2c99SxD6CjNHKApFUuyfQFgoSTlNM5yChgYMfxTZAFSef8gFbP672FyZC9qZBd3t3DzpRaAOE3WsZArSN9c23wqiZBKgOzJ',
+      webhookVerifyToken: 'pace_messenger_verify_token',
+      testPhoneNumber: '918095844097'
+    });
+    Swal.fire('Test Credentials Loaded', 'Meta Sandbox Test Account credentials pre-filled successfully!', 'success');
+  }
+
   promptFacebookLogin() {
     if (typeof FB === 'undefined') return;
 

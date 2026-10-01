@@ -31,7 +31,12 @@
                     or use Facebook Quick Setup.</p>
             </div>
 
-            <div style="display: flex; gap: 12px; align-items: center;">
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                <button type="button" (click)="loadMetaTestCredentials()"
+                    style="background: #0369a1; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;"
+                    title="Fill Form with Meta Test Account Credentials">
+                    <i class="fa-solid fa-vial" style="font-size: 15px;"></i> Fill Meta Test Credentials
+                </button>
                 <button type="button" (click)="launchMetaHostedOnboarding()"
                     style="background: #047857; color: white; border: none; padding: 10px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px;"
                     title="1-Click WhatsApp Onboarding via Meta Hosted Portal">
