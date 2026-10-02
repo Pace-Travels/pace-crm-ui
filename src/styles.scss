@@ -3,13 +3,14 @@
 @use './styles/styles.scss';
 
 :root {
-    --sidebar-bg: #161928;
-    --sidebar-text: #94A3B8;
-    --sidebar-text-hover: #F8FAFC;
-    --sidebar-active-bg: #4F46E5;
+    --sidebar-bg: #111422;
+    --sidebar-text: #CBD5E1;
+    --sidebar-text-hover: #FFFFFF;
+    --sidebar-icon-color: #818CF8;
+    --sidebar-active-bg: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
     --sidebar-active-text: #FFFFFF;
-    --sidebar-border: #23273A;
-    --sidebar-section-title: #64748B;
+    --sidebar-border: #1E2338;
+    --sidebar-section-title: #94A3B8;
 
     --app-bg: #F6F7FB;
     --card-bg: #FFFFFF;
