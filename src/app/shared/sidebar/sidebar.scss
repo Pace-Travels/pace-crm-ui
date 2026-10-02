@@ -254,17 +254,20 @@
                         }
 
                         &.active {
-                            background: var(--sidebar-active-bg, linear-gradient(135deg, #6366F1 0%, #4F46E5 100%));
-                            color: #FFFFFF;
-                            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+                            background: var(--sidebar-active-bg, linear-gradient(135deg, #5B3E96 0%, #7C53C5 100%)) !important;
+                            color: #FFFFFF !important;
+                            box-shadow: 0 4px 14px rgba(91, 62, 150, 0.4) !important;
 
                             .menu-item-content i {
-                                color: #FFFFFF;
+                                color: #FFFFFF !important;
+                                background: transparent !important;
+                                border-radius: 0 !important;
+                                box-shadow: none !important;
                             }
 
                             span {
-                                font-weight: 600;
-                                color: #FFFFFF;
+                                font-weight: 600 !important;
+                                color: #FFFFFF !important;
                             }
                         }
                     }
