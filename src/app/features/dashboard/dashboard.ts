@@ -40,15 +40,15 @@ export class Dashboard implements OnInit {
   });
 
   analytics = signal<any>({
-    totalMessagesSent: 1240,
-    totalDelivered: 980,
-    totalRead: 750,
-    cancelledCount: 14,
-    activeAiSessions: 142,
-    deliverySuccessRate: 95.7,
-    readRate: 70.4,
-    averageResponseTimeSec: 14,
-    conversationCostINR: '425.50'
+    totalEnquiries: 0,
+    quotationsSent: 0,
+    confirmedBookings: 0,
+    cancelledCount: 0,
+    totalMessagesSent: 0,
+    totalDelivered: 0,
+    totalRead: 0,
+    conversionRate: '0.0',
+    upcomingPackages: []
   });
 
   constructor() {

@@ -24,7 +24,7 @@
         <div class="kpi-card">
             <div class="kpi-content">
                 <span class="kpi-title">TOTAL ENQUIRIES</span>
-                <div class="kpi-value">{{ analytics().totalMessagesSent || 0 }}</div>
+                <div class="kpi-value">{{ analytics().totalEnquiries ?? analytics().totalMessagesSent ?? 0 }}</div>
                 <div class="kpi-trend up">
                     <i class="fa-solid fa-arrow-up"></i> +0% from last week
                 </div>
@@ -38,7 +38,7 @@
         <div class="kpi-card">
             <div class="kpi-content">
                 <span class="kpi-title">QUOTATIONS SENT</span>
-                <div class="kpi-value">{{ analytics().totalDelivered || 0 }}</div>
+                <div class="kpi-value">{{ analytics().quotationsSent ?? analytics().totalDelivered ?? 0 }}</div>
                 <div class="kpi-trend up">
                     <i class="fa-solid fa-arrow-up"></i> +0% from last week
                 </div>
@@ -52,7 +52,7 @@
         <div class="kpi-card">
             <div class="kpi-content">
                 <span class="kpi-title">CONFIRMED BOOKINGS</span>
-                <div class="kpi-value">{{ analytics().totalRead || 0 }}</div>
+                <div class="kpi-value">{{ analytics().confirmedBookings ?? analytics().totalRead ?? 0 }}</div>
                 <div class="kpi-trend up">
                     <i class="fa-solid fa-arrow-up"></i> +0% from last week
                 </div>
@@ -66,7 +66,7 @@
         <div class="kpi-card">
             <div class="kpi-content">
                 <span class="kpi-title">CANCELLED</span>
-                <div class="kpi-value">{{ analytics().cancelledCount || 0 }}</div>
+                <div class="kpi-value">{{ analytics().cancelledCount ?? 0 }}</div>
                 <div class="kpi-trend down">
                     <i class="fa-solid fa-arrow-down"></i> -0% from last week
                 </div>
@@ -95,7 +95,7 @@
 
             <div class="chart-body">
                 <div class="conversion-summary">
-                    <div class="rate-large">{{ analytics().conversionRate || '68.4' }}%</div>
+                    <div class="rate-large">{{ analytics().conversionRate || '0.0' }}%</div>
                     <div class="rate-subtitle">Average Inquiry to Paid Quotation Ratio</div>
                 </div>
 
