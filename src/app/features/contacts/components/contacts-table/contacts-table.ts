@@ -261,9 +261,14 @@ export class ContactsTable implements OnInit {
     if (userStr) {
       try {
         const u = JSON.parse(userStr);
-        if (u && u.name) return u.name;
+        if (u) {
+          const name = u.name || u.displayName || u.username || u.email;
+          if (name) return name;
+        }
       } catch (e) {}
     }
+    const nameStr = localStorage.getItem('userName');
+    if (nameStr) return nameStr;
     return 'Shadab Khatib';
   }
 
@@ -286,7 +291,7 @@ export class ContactsTable implements OnInit {
     this.contactService.contacts().forEach(c => {
       const owners = this.contactService.getContactOwners(c);
       owners.forEach(o => {
-        if (o && o !== 'Default Agent') set.add(o);
+        if (o && o !== 'Default Agent' && o !== 'Unassigned Account Owner') set.add(o);
       });
     });
 

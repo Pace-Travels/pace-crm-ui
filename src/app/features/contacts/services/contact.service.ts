@@ -73,11 +73,20 @@ export class ContactService {
 
     const owners = rawTags
       .filter((t: string) => typeof t === 'string' && (t.startsWith('Agent:') || t.startsWith('Owner:')))
-      .map((t: string) => t.replace(/^(Agent:|Owner:)\s*/i, '').trim());
+      .map((t: string) => t.replace(/^(Agent:|Owner:)\s*/i, '').trim())
+      .filter((t: string) => t && t !== 'Default Agent' && t !== 'Unassigned Account Owner');
 
     if (owners.length === 0) {
       if (contact.userName) return [contact.userName];
-      return ['Default Agent'];
+      const userStr = localStorage.getItem('user');
+      if (userStr) {
+        try {
+          const u = JSON.parse(userStr);
+          const name = u ? (u.name || u.displayName || u.username || u.email) : null;
+          if (name) return [name];
+        } catch (e) {}
+      }
+      return ['Shadab Khatib'];
     }
     return Array.from(new Set(owners));
   }
