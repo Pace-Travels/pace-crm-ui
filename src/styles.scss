@@ -2,17 +2,24 @@
 
 @use './styles/styles.scss';
 
-:root {
-    --sidebar-bg: #111422;
+:root,
+[data-theme="light"] {
+    --brand-primary: #5B3E96;
+    --brand-accent: #8B5CF6;
+    --brand-lavender: #D8B4F8;
+    --brand-navy: #16192B;
+
+    --sidebar-bg: #16192B;
     --sidebar-text: #CBD5E1;
     --sidebar-text-hover: #FFFFFF;
-    --sidebar-icon-color: #818CF8;
-    --sidebar-active-bg: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+    --sidebar-icon-color: #8B5CF6;
+    --sidebar-active-bg: linear-gradient(135deg, #5B3E96 0%, #7C53C5 100%);
     --sidebar-active-text: #FFFFFF;
-    --sidebar-border: #1E2338;
+    --sidebar-border: #23283E;
     --sidebar-section-title: #94A3B8;
 
-    --app-bg: #F6F7FB;
+    --app-bg: #F8FAFC;
+    --header-bg: #FFFFFF;
     --card-bg: #FFFFFF;
     --card-border: #E2E8F0;
     --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
@@ -20,8 +27,10 @@
     --text-primary: #1E293B;
     --text-secondary: #64748B;
     --text-muted: #94A3B8;
+    --input-bg: #FFFFFF;
+    --input-border: #CBD5E1;
 
-    --color-purple: #7C3AED;
+    --color-purple: #5B3E96;
     --color-purple-bg: #F3E8FF;
     --color-amber: #D97706;
     --color-amber-bg: #FEF3C7;
@@ -29,6 +38,43 @@
     --color-mint-bg: #D1FAE5;
     --color-coral: #DC2626;
     --color-coral-bg: #FEE2E2;
+}
+
+[data-theme="dark"] {
+    --brand-primary: #8B5CF6;
+    --brand-accent: #C084FC;
+    --brand-lavender: #E9D5FF;
+    --brand-navy: #0B0E17;
+
+    --sidebar-bg: #0F121D;
+    --sidebar-text: #CBD5E1;
+    --sidebar-text-hover: #FFFFFF;
+    --sidebar-icon-color: #C084FC;
+    --sidebar-active-bg: linear-gradient(135deg, #7C53C5 0%, #5B3E96 100%);
+    --sidebar-active-text: #FFFFFF;
+    --sidebar-border: #1E2436;
+    --sidebar-section-title: #94A3B8;
+
+    --app-bg: #0B0E17;
+    --header-bg: #111524;
+    --card-bg: #161A2B;
+    --card-border: #23283E;
+    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    --card-radius: 14px;
+    --text-primary: #F8FAFC;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --input-bg: #1A1F33;
+    --input-border: #2B324D;
+
+    --color-purple: #C084FC;
+    --color-purple-bg: rgba(192, 132, 252, 0.15);
+    --color-amber: #FBBF24;
+    --color-amber-bg: rgba(251, 191, 36, 0.15);
+    --color-mint: #34D399;
+    --color-mint-bg: rgba(52, 211, 153, 0.15);
+    --color-coral: #F87171;
+    --color-coral-bg: rgba(248, 113, 113, 0.15);
 }
 
 html,

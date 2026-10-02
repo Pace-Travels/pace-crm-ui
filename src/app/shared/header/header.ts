@@ -8,6 +8,7 @@ import { OnboardingService } from '../services/onboarding.service';
 import { ProjectService } from '../../features/projects/services/project.service';
 import { ApiService } from '../services/api.service';
 import { SearchService } from '../services/search.service';
+import { ThemeService } from '../services/theme.service';
 
 import { AuthService } from '../services/auth.service';
 
@@ -31,6 +32,7 @@ export class Header implements OnInit {
   api = inject(ApiService);
   router = inject(Router);
   searchService = inject(SearchService);
+  themeService = inject(ThemeService);
 
   userName = '';
   userEmail = '';
