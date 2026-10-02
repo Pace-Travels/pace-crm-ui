@@ -1,5 +1,39 @@
 <div class="contacts-wrapper" (click)="closeDropdowns()" style="font-family: 'Inter', sans-serif;">
     
+    <!-- Account Owner Section Tabs & Filter -->
+    <div style="display: flex; justify-content: space-between; align-items: center; background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 16px; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.03);">
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-right: 4px;">Contacts Section:</span>
+            <button (click)="filterOwnerMode.set('ALL'); currentPage.set(1)"
+                [style.background]="filterOwnerMode() === 'ALL' ? '#0b494d' : '#f1f5f9'"
+                [style.color]="filterOwnerMode() === 'ALL' ? 'white' : '#475569'"
+                style="border: none; padding: 7px 16px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer; transition: all 0.2s ease;">
+                All Contacts
+            </button>
+            <button (click)="filterOwnerMode.set('MY_CONTACTS'); currentPage.set(1)"
+                [style.background]="filterOwnerMode() === 'MY_CONTACTS' ? '#0b494d' : '#f1f5f9'"
+                [style.color]="filterOwnerMode() === 'MY_CONTACTS' ? 'white' : '#475569'"
+                style="border: none; padding: 7px 16px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                <i class="fa-solid fa-user-check"></i> My Contacts ({{ myContactsCount() }})
+            </button>
+            <button (click)="filterOwnerMode.set('UNASSIGNED'); currentPage.set(1)"
+                [style.background]="filterOwnerMode() === 'UNASSIGNED' ? '#0b494d' : '#f1f5f9'"
+                [style.color]="filterOwnerMode() === 'UNASSIGNED' ? 'white' : '#475569'"
+                style="border: none; padding: 7px 16px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer; transition: all 0.2s ease;">
+                Unassigned
+            </button>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 12px; font-weight: 700; color: #64748b;">Account Owner Filter:</span>
+            <select [ngModel]="selectedOwnerFilter()" (ngModelChange)="selectedOwnerFilter.set($event); filterOwnerMode.set($event ? 'SPECIFIC' : 'ALL'); currentPage.set(1)"
+                style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12.5px; outline: none; background: white; font-weight: 600; color: #0f172a;">
+                <option value="">All Account Owners</option>
+                <option *ngFor="let agent of availableAgentOptions()" [value]="agent">👤 {{ agent }}</option>
+            </select>
+        </div>
+    </div>
+
     <!-- Top Header Bar -->
     <div class="top-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 16px; flex-wrap: wrap;">
         <ng-container *ngIf="isPreviewMode()">

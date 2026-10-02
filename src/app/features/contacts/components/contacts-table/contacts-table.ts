@@ -40,8 +40,21 @@ export class ContactsTable implements OnInit {
   filterLocation = signal('');
   filterSource = signal('');
   filterCountry = signal('');
+  filterOwnerMode = signal<'ALL' | 'MY_CONTACTS' | 'UNASSIGNED' | 'SPECIFIC'>('ALL');
+  selectedOwnerFilter = signal<string>('');
   sortColumn = signal<string>('name');
   sortDirection = signal<'asc' | 'desc'>('asc');
+
+  myContactsCount = computed(() => {
+    const user = this.getLoggedInUserName().toLowerCase();
+    const type = this.contactService.activeType();
+    return this.contactService.contacts().filter(c => {
+      const cType = (c.type || 'B2C').toUpperCase();
+      if (cType !== type) return false;
+      const owners = this.contactService.getContactOwners(c);
+      return owners.some(o => o.toLowerCase().includes(user));
+    }).length;
+  });
   
   currentPage = signal(1);
   pageSize = signal(10);
@@ -149,6 +162,28 @@ export class ContactsTable implements OnInit {
       list = list.filter(c => c.country && c.country.toLowerCase().includes(country));
     }
 
+    // 3.8. Account Owner Filter Section
+    const ownerMode = this.filterOwnerMode();
+    const currentUserName = this.getLoggedInUserName();
+
+    if (ownerMode === 'MY_CONTACTS') {
+      list = list.filter(c => {
+        const owners = this.contactService.getContactOwners(c);
+        return owners.some(o => o.toLowerCase().includes(currentUserName.toLowerCase()));
+      });
+    } else if (ownerMode === 'UNASSIGNED') {
+      list = list.filter(c => {
+        const owners = this.contactService.getContactOwners(c);
+        return owners.length === 0 || owners.includes('Unassigned Account Owner') || owners.includes('Default Agent');
+      });
+    } else if (ownerMode === 'SPECIFIC' && this.selectedOwnerFilter()) {
+      const targetOwner = this.selectedOwnerFilter().toLowerCase();
+      list = list.filter(c => {
+        const owners = this.contactService.getContactOwners(c);
+        return owners.some(o => o.toLowerCase().includes(targetOwner));
+      });
+    }
+
     // 4. Sorting
     const col = this.sortColumn();
     const dir = this.sortDirection() === 'asc' ? 1 : -1;
@@ -221,24 +256,38 @@ export class ContactsTable implements OnInit {
   ownerSearchQuery = signal<string>('');
   showOwnerDropdown = signal<boolean>(false);
 
+  getLoggedInUserName(): string {
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const u = JSON.parse(userStr);
+        if (u && u.name) return u.name;
+      } catch (e) {}
+    }
+    return 'Shadab Khatib';
+  }
+
   availableAgentOptions = computed(() => {
     const set = new Set<string>();
     
+    // Always include logged in user
+    const loggedIn = this.getLoggedInUserName();
+    if (loggedIn) set.add(loggedIn);
+
     // 1. Load real account users (Admins, Sub-Admins, Sales Agents)
     const accountUsers = this.agentService.accountAgents();
     if (accountUsers && accountUsers.length > 0) {
       accountUsers.forEach(u => {
-        const displayName = `${u.name} (${u.roleName || 'Agent'})`;
-        set.add(displayName);
+        if (u.name) set.add(u.name);
       });
-    } else {
-      set.add('Unassigned Account Owner');
     }
 
     // 2. Load existing contact owners from saved database contacts
     this.contactService.contacts().forEach(c => {
       const owners = this.contactService.getContactOwners(c);
-      owners.forEach(o => set.add(o));
+      owners.forEach(o => {
+        if (o && o !== 'Default Agent') set.add(o);
+      });
     });
 
     return Array.from(set);
@@ -280,7 +329,8 @@ export class ContactsTable implements OnInit {
   openAddContact() {
     this.editingContactId.set(null);
     this.contactForm.reset({ source: 'ORGANIC' });
-    this.selectedFormOwners.set(['Default Agent']);
+    const loggedInUser = this.getLoggedInUserName();
+    this.selectedFormOwners.set([loggedInUser]);
     this.ownerSearchQuery.set('');
     this.showOwnerDropdown.set(false);
     this.showAddContactModal.set(true);
