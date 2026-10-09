@@ -166,32 +166,38 @@
                     <th (click)="changeSort('id')" style="padding: 14px 16px; cursor: pointer;">
                         S.No <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
                     </th>
+                    <th (click)="changeSort('name')" style="padding: 14px 16px; cursor: pointer;">
+                        {{ contactService.activeType() === 'B2B' ? 'Agent Name' : 'Customer Name' }} <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th *ngIf="contactService.activeType() === 'B2B'" (click)="changeSort('chapter')" style="padding: 14px 16px; cursor: pointer;">
+                        BNI Chapter <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
                     <th *ngIf="contactService.activeType() === 'B2B'" (click)="changeSort('agencyName')" style="padding: 14px 16px; cursor: pointer;">
                         Agency Name <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
                     </th>
-                    <th (click)="changeSort('name')" style="padding: 14px 16px; cursor: pointer;">
-                        {{ contactService.activeType() === 'B2B' ? 'Agent Name' : 'Customer Name' }} <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    <th (click)="changeSort('location')" style="padding: 14px 16px; cursor: pointer;">
+                        City / Location <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th *ngIf="contactService.activeType() === 'B2B'" (click)="changeSort('categories')" style="padding: 14px 16px; cursor: pointer;">
+                        Categories <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
                     </th>
                     <th (click)="changeSort('phone')" style="padding: 14px 16px; cursor: pointer;">
                         Phone Number <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
                     </th>
+                    <th (click)="changeSort('email')" style="padding: 14px 16px; cursor: pointer;">
+                        Email <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px;">
+                        Website
+                    </th>
+                    <th *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px;">
+                        Outreach Status
+                    </th>
+                    <th *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px;">
+                        Remarks
+                    </th>
                     <th style="padding: 14px 16px;">
                         Contact Owner(s)
-                    </th>
-                    <th (click)="changeSort('country')" style="padding: 14px 16px; cursor: pointer;">
-                        Country <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
-                    </th>
-                    <th (click)="changeSort('metaRate')" style="padding: 14px 16px; cursor: pointer;">
-                        Meta Rate <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
-                    </th>
-                    <th (click)="changeSort('location')" style="padding: 14px 16px; cursor: pointer;">
-                        Location <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
-                    </th>
-                    <th (click)="changeSort('email')" style="padding: 14px 16px; cursor: pointer;">
-                        Email Address <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
-                    </th>
-                    <th (click)="changeSort('source')" style="padding: 14px 16px; cursor: pointer;">
-                        Source <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
                     </th>
                     <th style="padding: 14px 16px; text-align: right;">Actions</th>
                 </tr>
@@ -237,16 +243,62 @@
                             {{ (currentPage() - 1) * pageSize() + idx + 1 }}
                         </td>
 
-                        <td *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px;">
-                            {{ contact.agencyName || '—' }}
-                        </td>
-
                         <td style="padding: 14px 16px; font-weight: 700; color: #0f172a;">
                             {{ contact.name || 'UNKNOWN' }}
                         </td>
 
+                        <td *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px;">
+                            <span *ngIf="contact.chapter" style="display: inline-block; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 2px 8px; border-radius: 12px; font-size: 11.5px; font-weight: 700;">
+                                <i class="fa-solid fa-users" style="font-size: 10px; margin-right: 3px;"></i> {{ contact.chapter }}
+                            </span>
+                            <span *ngIf="!contact.chapter" style="color: #94a3b8;">—</span>
+                        </td>
+
+                        <td *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px;">
+                            {{ contact.agencyName || '—' }}
+                        </td>
+
+                        <td style="padding: 14px 16px; color: #475569;">
+                            {{ contact.location || '—' }}
+                        </td>
+
+                        <td *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px; color: #475569; font-size: 12px;">
+                            {{ contact.categories || '—' }}
+                        </td>
+
                         <td style="padding: 14px 16px; font-family: monospace; font-size: 13px; font-weight: 600; color: #166534;">
                             {{ contact.phone }}
+                        </td>
+
+                        <td style="padding: 14px 16px; color: #475569;">
+                            {{ contact.email || '—' }}
+                        </td>
+
+                        <td *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px; font-size: 12px;">
+                            <a *ngIf="contact.website" [href]="contact.website.startsWith('http') ? contact.website : 'https://' + contact.website" target="_blank" style="color: #2563eb; text-decoration: none; word-break: break-all;">
+                                {{ contact.website }}
+                            </a>
+                            <span *ngIf="!contact.website" style="color: #94a3b8;">—</span>
+                        </td>
+
+                        <td *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px;">
+                            <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+                                <span [style.background]="contact.callStatus?.toLowerCase() === 'done' ? '#dcfce7' : '#f1f5f9'" [style.color]="contact.callStatus?.toLowerCase() === 'done' ? '#15803d' : '#64748b'" style="padding: 2px 6px; border-radius: 4px; font-size: 10.5px; font-weight: 700;">
+                                    Call: {{ contact.callStatus || '—' }}
+                                </span>
+                                <span [style.background]="contact.mailStatus?.toLowerCase() === 'done' ? '#dcfce7' : '#f1f5f9'" [style.color]="contact.mailStatus?.toLowerCase() === 'done' ? '#15803d' : '#64748b'" style="padding: 2px 6px; border-radius: 4px; font-size: 10.5px; font-weight: 700;">
+                                    Mail: {{ contact.mailStatus || '—' }}
+                                </span>
+                                <span [style.background]="contact.whatsappStatus?.toLowerCase() === 'done' ? '#dcfce7' : '#f1f5f9'" [style.color]="contact.whatsappStatus?.toLowerCase() === 'done' ? '#15803d' : '#64748b'" style="padding: 2px 6px; border-radius: 4px; font-size: 10.5px; font-weight: 700;">
+                                    WA: {{ contact.whatsappStatus || '—' }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <td *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px; font-size: 12px; max-width: 180px;">
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" [title]="(contact.remarks || '') + (contact.remarks1 ? ' | ' + contact.remarks1 : '')">
+                                {{ contact.remarks || contact.remarks1 || '—' }}
+                            </div>
                         </td>
 
                         <td style="padding: 14px 16px;">
@@ -255,31 +307,6 @@
                                     <i class="fa-solid fa-user-gear" style="font-size: 10px;"></i> {{ owner }}
                                 </span>
                             </div>
-                        </td>
-
-                        <td style="padding: 14px 16px;">
-                            <div style="display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px;">
-                                <span style="font-size: 16px; line-height: 1;">{{ getCountryFlag(contact.country) }}</span>
-                                <span style="font-weight: 600; color: #334155; font-size: 12.5px;">{{ contact.country || 'Rest of World' }}</span>
-                            </div>
-                        </td>
-
-                        <td style="padding: 14px 16px; font-weight: 700; color: #0b494d;">
-                            {{ contact.metaRate ? '₹' + contact.metaRate : '₹4.50' }}
-                        </td>
-
-                        <td style="padding: 14px 16px; color: #475569;">
-                            {{ contact.location || '—' }}
-                        </td>
-
-                        <td style="padding: 14px 16px; color: #475569;">
-                            {{ contact.email || '—' }}
-                        </td>
-
-                        <td style="padding: 14px 16px;">
-                            <span style="font-size: 11px; font-weight: 700; text-transform: uppercase; background: #f1f5f9; color: #475569; padding: 3px 8px; border-radius: 4px;">
-                                {{ contact.source || 'ORGANIC' }}
-                            </span>
                         </td>
 
                         <td style="padding: 14px 16px; text-align: right;">
@@ -415,9 +442,15 @@
         </div>
 
         <form [formGroup]="contactForm" (ngSubmit)="onAddContactSubmit()" style="display: flex; flex-direction: column; gap: 16px;">
-            <div *ngIf="contactService.activeType() === 'B2B'">
-                <label style="font-size: 12px; font-weight: 700; color: #334155;">Agency Name</label>
-                <input type="text" formControlName="agencyName" placeholder="e.g. Pace Tourism Agency" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+            <div *ngIf="contactService.activeType() === 'B2B'" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Agency Name</label>
+                    <input type="text" formControlName="agencyName" placeholder="e.g. Pace Tourism Agency" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">BNI Chapter Name</label>
+                    <input type="text" formControlName="chapter" placeholder="e.g. BNI Alpha, Mandovi" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                </div>
             </div>
 
             <div>
@@ -434,12 +467,49 @@
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                 <div>
-                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Location</label>
-                    <input type="text" formControlName="location" placeholder="e.g. Dubai" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">City / Location</label>
+                    <input type="text" formControlName="location" placeholder="e.g. Panaji" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
                 </div>
                 <div>
                     <label style="font-size: 12px; font-weight: 700; color: #334155;">Email Address</label>
                     <input type="email" formControlName="email" placeholder="name@example.com" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                </div>
+            </div>
+
+            <div *ngIf="contactService.activeType() === 'B2B'" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Categories</label>
+                    <input type="text" formControlName="categories" placeholder="e.g. Travel > Travel Agent" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Website URL</label>
+                    <input type="text" formControlName="website" placeholder="https://example.com" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                </div>
+            </div>
+
+            <div *ngIf="contactService.activeType() === 'B2B'" style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Remarks</label>
+                    <input type="text" formControlName="remarks" placeholder="Call / Contact remarks" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Remarks 1</label>
+                    <input type="text" formControlName="remarks1" placeholder="Follow-up remarks" style="width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13.5px; margin-top: 4px; outline: none;">
+                </div>
+            </div>
+
+            <div *ngIf="contactService.activeType() === 'B2B'" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Call Status</label>
+                    <input type="text" formControlName="callStatus" placeholder="e.g. done" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">Mail Status</label>
+                    <input type="text" formControlName="mailStatus" placeholder="e.g. done" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none;">
+                </div>
+                <div>
+                    <label style="font-size: 12px; font-weight: 700; color: #334155;">WhatsApp / Broadcast</label>
+                    <input type="text" formControlName="whatsappStatus" placeholder="e.g. done" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; margin-top: 4px; outline: none;">
                 </div>
             </div>
 

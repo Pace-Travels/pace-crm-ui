@@ -111,11 +111,19 @@ export class ContactsTable implements OnInit {
     this.contactForm = this.fb.group({
       agencyName: [''],
       name: ['', Validators.required],
+      chapter: [''],
+      categories: [''],
       location: [''],
       phone: ['', Validators.required],
       phone2: [''],
       email: [''],
       email2: [''],
+      website: [''],
+      remarks: [''],
+      remarks1: [''],
+      callStatus: [''],
+      mailStatus: [''],
+      whatsappStatus: [''],
       userName: [''],
       tags: [''],
       source: ['ORGANIC']
@@ -140,6 +148,10 @@ export class ContactsTable implements OnInit {
       list = list.filter(c => 
         (c.name && c.name.toLowerCase().includes(query)) ||
         (c.agencyName && c.agencyName.toLowerCase().includes(query)) ||
+        (c.chapter && c.chapter.toLowerCase().includes(query)) ||
+        (c.categories && c.categories.toLowerCase().includes(query)) ||
+        (c.website && c.website.toLowerCase().includes(query)) ||
+        (c.remarks && c.remarks.toLowerCase().includes(query)) ||
         (c.phone && c.phone.includes(query)) ||
         (c.phone2 && c.phone2.includes(query)) ||
         (c.email && c.email.toLowerCase().includes(query)) ||
@@ -370,11 +382,19 @@ export class ContactsTable implements OnInit {
     this.contactForm.patchValue({
       agencyName: contact.agencyName || '',
       name: contact.name,
+      chapter: contact.chapter || '',
+      categories: contact.categories || '',
       location: contact.location || '',
       phone: contact.phone,
       phone2: contact.phone2 || '',
       email: contact.email || '',
       email2: contact.email2 || '',
+      website: contact.website || '',
+      remarks: contact.remarks || '',
+      remarks1: contact.remarks1 || '',
+      callStatus: contact.callStatus || '',
+      mailStatus: contact.mailStatus || '',
+      whatsappStatus: contact.whatsappStatus || '',
       userName: contact.userName || '',
       tags: parsedTags,
       source: contact.source || 'ORGANIC'
@@ -399,11 +419,19 @@ export class ContactsTable implements OnInit {
       type: this.contactService.activeType(),
       agencyName: val.agencyName || null,
       name: val.name,
+      chapter: val.chapter || null,
+      categories: val.categories || null,
       location: val.location || null,
       phone: val.phone,
       phone2: val.phone2 || null,
       email: val.email || null,
       email2: val.email2 || null,
+      website: val.website || null,
+      remarks: val.remarks || null,
+      remarks1: val.remarks1 || null,
+      callStatus: val.callStatus || null,
+      mailStatus: val.mailStatus || null,
+      whatsappStatus: val.whatsappStatus || null,
       userName: val.userName || null,
       tags: val.tags ? val.tags.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
       owners: this.selectedFormOwners(),
@@ -628,9 +656,9 @@ export class ContactsTable implements OnInit {
     let filename = "";
 
     if (activeType === 'B2B') {
-      csvContent = "Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2,Agent Username,Tags,Lead Source\n" +
-                   "1,Pace Tourism,John Doe,New York,=\"'+919876543210\",=\"'+919876543211\",john@pace.com,doe@pace.com,johndoe,\"VIP, Active\",IMPORT\n" +
-                   "2,Dubai Travels,Sarah Khan,Dubai,=\"'+971501234567\",,sarah@dubaitravels.com,,sarahk,\"Agent, Active\",IMPORT";
+      csvContent = "#,NAME,CHAPTER,AGENCY NAME,CITY,CATEGORIES,NUMBER,MAIL ID,WEBSITE,REMARKS,REMARKS 1,CALL,MAIL,WHATSAPP/BROADCAST\n" +
+                   "1,Abhil Sharma,Mandovi,GAC Holidays,Panjim,Travel > Travel Agent,=\"'+918007274939\",contact@gacholidays.com,http://www.gacholidays.com,said to share details,said to share details 05,done,done,done\n" +
+                   "2,Badruddin Mustafa,BNI Alpha,B.M.Hospitality,Panaji,Travel > Travel Agent,=\"'+919890765859\",globaltravelsgoa.11@gmail.com,NA,busy,said to share details 05,,,";
       filename = "b2b_contacts_sample.csv";
     } else {
       csvContent = "Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2,Tags,Lead Source\n" +
@@ -666,20 +694,22 @@ export class ContactsTable implements OnInit {
 
     let csv = '';
     if (activeType === 'B2B') {
-      csv = 'Serial number,Agency Name,Agent Name,Location,Phone Number 1,Phone Number 2,Mail id 1,Mail id 2,Agent Username,Tags,Lead Source\n';
+      csv = '#,NAME,CHAPTER,AGENCY NAME,CITY,CATEGORIES,NUMBER,MAIL ID,WEBSITE,REMARKS,REMARKS 1,CALL,MAIL,WHATSAPP/BROADCAST\n';
       contacts.forEach((c: any, idx: number) => {
-        const agency = (c.agencyName || '').replace(/"/g, '""');
         const name = (c.name || '').replace(/"/g, '""');
-        const loc = (c.location || '').replace(/"/g, '""');
+        const chapter = (c.chapter || '').replace(/"/g, '""');
+        const agency = (c.agencyName || '').replace(/"/g, '""');
+        const city = (c.location || '').replace(/"/g, '""');
+        const cat = (c.categories || '').replace(/"/g, '""');
         const p1 = formatPhoneForExcel(c.phone);
-        const p2 = formatPhoneForExcel(c.phone2);
         const e1 = (c.email || '').replace(/"/g, '""');
-        const e2 = (c.email2 || '').replace(/"/g, '""');
-        const uname = (c.userName || '').replace(/"/g, '""');
-        const tagsList = Array.isArray(c.tags) ? c.tags.join(', ') : (c.tags || '');
-        const tgs = tagsList.replace(/"/g, '""');
-        const src = (c.source || 'ORGANIC').replace(/"/g, '""');
-        csv += `${idx + 1},"${agency}","${name}","${loc}",${p1},${p2},"${e1}","${e2}","${uname}","${tgs}","${src}"\n`;
+        const web = (c.website || '').replace(/"/g, '""');
+        const rem = (c.remarks || '').replace(/"/g, '""');
+        const rem1 = (c.remarks1 || '').replace(/"/g, '""');
+        const call = (c.callStatus || '').replace(/"/g, '""');
+        const mail = (c.mailStatus || '').replace(/"/g, '""');
+        const wa = (c.whatsappStatus || '').replace(/"/g, '""');
+        csv += `${idx + 1},"${name}","${chapter}","${agency}","${city}","${cat}",${p1},"${e1}","${web}","${rem}","${rem1}","${call}","${mail}","${wa}"\n`;
       });
     } else {
       csv = 'Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2,Tags,Lead Source\n';
