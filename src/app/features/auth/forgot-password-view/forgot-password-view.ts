@@ -58,7 +58,7 @@ export class ForgotPasswordView implements OnInit {
     this.isSubmitting = true;
     this.targetEmail = email;
 
-    this.api.post('/users/reset-password', { email, newPassword }).subscribe({
+    this.api.post('/user/reset-password', { email, newPassword }).subscribe({
       next: (res: any) => {
         this.isSubmitting = false;
         this.resetStep = 'SUCCESS';
@@ -112,7 +112,7 @@ export class ForgotPasswordView implements OnInit {
     }
 
     this.isSubmitting = true;
-    this.api.post('/users/reset-password', { email: this.targetEmail || '', newPassword }).subscribe({
+    this.api.post('/user/reset-password', { email: this.targetEmail || '', newPassword }).subscribe({
       next: () => {
         this.isSubmitting = false;
         this.resetStep = 'SUCCESS';

@@ -62,7 +62,13 @@ export class SignupView implements OnInit {
     this.authService.signup(this.signupForm.value).subscribe({
       next: (res) => {
         this.isSubmitting = false;
-        // Navigation is handled in AuthService
+        Swal.fire({
+          title: 'Account Created Successfully!',
+          text: 'Welcome to QuoteDesks Messenger.',
+          icon: 'success',
+          timer: 1500,
+          showConfirmButton: false
+        });
       },
       error: (err) => {
         this.isSubmitting = false;
