@@ -100,6 +100,7 @@ export class CreateCampaignView implements OnInit {
   templates = signal<any[]>([]);
   selectedTemplate = signal<any>(null);
   templateParams = signal<any>({});
+  headerImageUrl = signal<string>(''); // Image URL for template headers
 
   // Test target
   testPhoneNumber = signal('');
@@ -173,6 +174,7 @@ export class CreateCampaignView implements OnInit {
       paramsMap[num] = '';
     });
     this.templateParams.set(paramsMap);
+    this.headerImageUrl.set(''); // Reset image URL when template changes
   }
 
   getTemplateParamKeys() {
@@ -419,11 +421,16 @@ export class CreateCampaignView implements OnInit {
       return;
     }
 
+    const finalParameters = { ...this.templateParams() };
+    if (this.headerImageUrl().trim()) {
+      finalParameters['header_image'] = this.headerImageUrl().trim();
+    }
+
     const payload = {
       name: this.campaignName,
       description: `${this.campaignMode()} Campaign (${this.selectedBlueprintKey()}): ${this.selectedTemplate().templateName}`,
       templateId: this.selectedTemplate().id,
-      parameters: this.templateParams(),
+      parameters: finalParameters,
       blueprintKey: this.selectedBlueprintKey(),
       type: this.campaignMode(),
       conversationalConfig: {
@@ -460,10 +467,15 @@ export class CreateCampaignView implements OnInit {
       return;
     }
 
+    const finalParameters = { ...this.templateParams() };
+    if (this.headerImageUrl().trim()) {
+      finalParameters['header_image'] = this.headerImageUrl().trim();
+    }
+
     const payload = {
       templateId: this.selectedTemplate().id,
       phone: this.testPhoneNumber(),
-      parameters: this.templateParams()
+      parameters: finalParameters
     };
 
     this.api.post('/campaigns/send-test', payload).subscribe({
