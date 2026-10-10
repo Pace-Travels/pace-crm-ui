@@ -253,6 +253,13 @@
                     </div>
 
                     @if (selectedTemplate()) {
+                        <!-- New Header Image URL Field -->
+                        <div class="form-group mb-24">
+                            <label>Header Image URL (Pace Tourism India) <span class="opt-tag">• Optional</span></label>
+                            <p class="help-text">For image-based templates, enter the public URL of your hosted image.</p>
+                            <input type="text" class="form-control" placeholder="e.g. https://messenger.quotedesks.com/wabaptposter.png" [ngModel]="headerImageUrl()" (ngModelChange)="headerImageUrl.set($event)">
+                        </div>
+
                         <div class="config-section mb-24">
                             <h4>Template Variables ({{ getTemplateParamKeys().length }})</h4>
                             @if (getTemplateParamKeys().length === 0) {
