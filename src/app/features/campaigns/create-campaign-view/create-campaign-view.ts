@@ -292,6 +292,21 @@ export class CreateCampaignView implements OnInit {
     return body;
   }
 
+  getTemplateButtons(tpl: any): any[] {
+    if (!tpl) return [];
+    if (Array.isArray(tpl.buttons)) return tpl.buttons;
+    if (Array.isArray(tpl.components)) {
+      const btnComp = tpl.components.find((c: any) => c.type === 'BUTTONS' || c.type === 'buttons');
+      if (btnComp && Array.isArray(btnComp.buttons)) return btnComp.buttons;
+    }
+    return [];
+  }
+
+  handleImgError(event: Event) {
+    const img = event.target as HTMLImageElement;
+    img.style.display = 'none';
+  }
+
   // --- Data Table Filtering, Sorting & Pagination Computations ---
 
   availableAgentOwners = computed(() => {
