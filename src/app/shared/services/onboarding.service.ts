@@ -85,16 +85,17 @@ export class OnboardingService {
             sendSoloMessage: !!res.checklist.sendSoloMessage,
             sendBulkMessage: !!res.checklist.sendBulkMessage
           });
-
-          // If project meta is not connected, pop open setup tour
-          if (!res.checklist.connectMeta) {
-            // Keep WABA credentials prompt accessible
-          }
         }
       },
       error: (err) => {
         this.isLoadingStatus.set(false);
-        console.warn("Failed to fetch onboarding status:", err);
+        // Fallback: evaluate connectMeta status locally from current project
+        const current = this.projectService.currentProject();
+        const hasMeta = !!(current && current.wabaId && (current.phoneNumberId || current.phoneNumber) && current.accessToken);
+        this.checklistState.update(prev => ({
+          ...prev,
+          connectMeta: hasMeta
+        }));
       }
     });
   }
