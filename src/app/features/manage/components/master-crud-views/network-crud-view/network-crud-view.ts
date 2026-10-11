@@ -4,11 +4,16 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { ApiService } from '../../../../../shared/services/api.service';
 import Swal from 'sweetalert2';
 
-export interface NetworkItem {
+export interface BusinessNetworkItem {
   id: number;
   name: string;
   agencyName?: string;
+  organizationType: 'BNI' | 'ROTARY' | 'LIONS_CLUB' | 'TIE' | 'YPO' | 'SPECIAL_GROUP' | 'OTHER';
+  level: 'LOCAL' | 'DISTRICT' | 'STATE' | 'REGIONAL' | 'NATIONAL' | 'INTERNATIONAL';
   chapter?: string;
+  districtName?: string;
+  regionName?: string;
+  specialGroupTag?: string;
   categories?: string;
   website?: string;
   phone?: string;
@@ -37,12 +42,17 @@ export class NetworkCrudView implements OnInit {
   private fb = inject(FormBuilder);
 
   isLoading = signal<boolean>(false);
-  networks = signal<NetworkItem[]>([
+  networks = signal<BusinessNetworkItem[]>([
     {
       id: 1,
       name: "Rajesh Sharma",
       agencyName: "Pace Travels BLR",
+      organizationType: "BNI",
+      level: "LOCAL",
       chapter: "BNI Champions Bengaluru",
+      districtName: "Bengaluru South District",
+      regionName: "Karnataka Region",
+      specialGroupTag: "Outbound Travel Focus",
       categories: "Outbound Tours, Flight Ticketing",
       website: "https://pacetravels.com",
       phone: "+919876543210",
@@ -59,7 +69,12 @@ export class NetworkCrudView implements OnInit {
       id: 2,
       name: "Anita Verma",
       agencyName: "Apex Travels Delhi",
-      chapter: "BNI Dynamic Delhi",
+      organizationType: "ROTARY",
+      level: "DISTRICT",
+      chapter: "Rotary Midtown Delhi",
+      districtName: "District 3011",
+      regionName: "North India Region",
+      specialGroupTag: "Women Entrepreneurs Forum",
       categories: "Corporate Travel, MICE",
       website: "https://apextravels.in",
       phone: "+919811122233",
@@ -75,6 +90,8 @@ export class NetworkCrudView implements OnInit {
 
   // DataTables Pagination, Search & Sorting State
   searchQuery = signal<string>('');
+  selectedOrgFilter = signal<string>('ALL');
+  selectedLevelFilter = signal<string>('ALL');
   currentPage = signal<number>(1);
   pageSize = signal<number>(10);
   sortColumn = signal<string>('name');
@@ -90,16 +107,26 @@ export class NetworkCrudView implements OnInit {
   filteredList = computed(() => {
     let list = [...this.networks()];
     const query = this.searchQuery().toLowerCase().trim();
+    const org = this.selectedOrgFilter();
+    const level = this.selectedLevelFilter();
+
+    if (org !== 'ALL') {
+      list = list.filter(item => item.organizationType === org);
+    }
+
+    if (level !== 'ALL') {
+      list = list.filter(item => item.level === level);
+    }
 
     if (query) {
       list = list.filter(item =>
         (item.name && item.name.toLowerCase().includes(query)) ||
         (item.agencyName && item.agencyName.toLowerCase().includes(query)) ||
         (item.chapter && item.chapter.toLowerCase().includes(query)) ||
-        (item.categories && item.categories.toLowerCase().includes(query)) ||
+        (item.districtName && item.districtName.toLowerCase().includes(query)) ||
+        (item.specialGroupTag && item.specialGroupTag.toLowerCase().includes(query)) ||
         (item.phone && item.phone.toLowerCase().includes(query)) ||
-        (item.email && item.email.toLowerCase().includes(query)) ||
-        (item.location && item.location.toLowerCase().includes(query))
+        (item.email && item.email.toLowerCase().includes(query))
       );
     }
 
@@ -127,7 +154,12 @@ export class NetworkCrudView implements OnInit {
     this.networkForm = this.fb.group({
       name: ['', [Validators.required]],
       agencyName: [''],
+      organizationType: ['BNI', [Validators.required]],
+      level: ['LOCAL', [Validators.required]],
       chapter: [''],
+      districtName: [''],
+      regionName: [''],
+      specialGroupTag: [''],
       categories: [''],
       website: [''],
       phone: ['', [Validators.required]],
@@ -147,7 +179,14 @@ export class NetworkCrudView implements OnInit {
   }
 
   fetchNetworks(): void {
-    // In production, fetch via API endpoint: GET /api/v1/networks
+    this.api.get<any>('businessnetworks/list').subscribe({
+      next: (res: any) => {
+        if (res.success && res.data) {
+          this.networks.set(res.data);
+        }
+      },
+      error: () => {}
+    });
   }
 
   sortBy(column: string): void {
@@ -163,6 +202,8 @@ export class NetworkCrudView implements OnInit {
     this.isEditing.set(false);
     this.editingId.set(null);
     this.networkForm.reset({
+      organizationType: 'BNI',
+      level: 'LOCAL',
       callStatus: 'CONNECTED',
       mailStatus: 'SENT',
       whatsappStatus: 'READY'
@@ -170,7 +211,7 @@ export class NetworkCrudView implements OnInit {
     this.showFormModal.set(true);
   }
 
-  openEditModal(item: NetworkItem): void {
+  openEditModal(item: BusinessNetworkItem): void {
     this.isEditing.set(true);
     this.editingId.set(item.id);
     this.networkForm.patchValue(item);
@@ -187,28 +228,26 @@ export class NetworkCrudView implements OnInit {
     const val = this.networkForm.value;
 
     if (this.isEditing() && this.editingId()) {
-      // Update
       const updated = this.networks().map(n => n.id === this.editingId() ? { ...n, ...val } : n);
       this.networks.set(updated);
-      Swal.fire('Updated!', 'B2B Network partner updated successfully.', 'success');
+      Swal.fire('Updated!', 'Business Network record updated successfully.', 'success');
     } else {
-      // Create
-      const newItem: NetworkItem = {
+      const newItem: BusinessNetworkItem = {
         id: Date.now(),
         ...val,
         isActive: true
       };
       this.networks.set([newItem, ...this.networks()]);
-      Swal.fire('Created!', 'B2B Network partner added successfully.', 'success');
+      Swal.fire('Created!', 'Business Network record added successfully.', 'success');
     }
 
     this.closeModal();
   }
 
-  deleteNetwork(item: NetworkItem): void {
+  deleteNetwork(item: BusinessNetworkItem): void {
     Swal.fire({
-      title: 'Delete Network Partner?',
-      text: `Are you sure you want to delete ${item.name} (${item.agencyName || 'Partner'})?`,
+      title: 'Delete Business Network?',
+      text: `Are you sure you want to delete ${item.name} (${item.agencyName || item.organizationType})?`,
       icon: 'warning',
       showCancelButton: true,
       confirmButtonText: 'Yes, Delete',
@@ -216,35 +255,36 @@ export class NetworkCrudView implements OnInit {
     }).then((res) => {
       if (res.isConfirmed) {
         this.networks.set(this.networks().filter(n => n.id !== item.id));
-        Swal.fire('Deleted!', 'Network partner record removed.', 'success');
+        Swal.fire('Deleted!', 'Business Network record removed.', 'success');
       }
     });
   }
 
-  // DataTable Export Functions (CSV & Excel)
   exportCSV(): void {
     const list = this.filteredList();
     if (list.length === 0) return;
 
-    const headers = ['ID', 'Name', 'Agency Name', 'Chapter', 'Categories', 'Phone', 'Email', 'Location', 'Call Status', 'WhatsApp Status'];
+    const headers = ['ID', 'Name', 'Agency Name', 'Org Type', 'Level', 'Chapter', 'District', 'Region', 'Special Group', 'Phone', 'Email', 'Location'];
     const rows = list.map(item => [
       item.id,
       `"${item.name || ''}"`,
       `"${item.agencyName || ''}"`,
+      `"${item.organizationType || ''}"`,
+      `"${item.level || ''}"`,
       `"${item.chapter || ''}"`,
-      `"${item.categories || ''}"`,
+      `"${item.districtName || ''}"`,
+      `"${item.regionName || ''}"`,
+      `"${item.specialGroupTag || ''}"`,
       `"${item.phone || ''}"`,
       `"${item.email || ''}"`,
-      `"${item.location || ''}"`,
-      `"${item.callStatus || ''}"`,
-      `"${item.whatsappStatus || ''}"`
+      `"${item.location || ''}"`
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `B2B_Network_Export_${Date.now()}.csv`);
+    link.setAttribute('download', `Business_Networks_Export_${Date.now()}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
