@@ -6,9 +6,6 @@
                 <div class="brand-logo">
                     <img src="quotedesks-logo.png" alt="QuoteDesks Logo">
                 </div>
-                <button class="btn-goback" routerLink="/login">
-                    <i class="fa-solid fa-arrow-left"></i> Go back
-                </button>
             </div>
 
             <div class="auth-form-content">
@@ -39,8 +36,10 @@
                     </div>
 
                     <div class="remember-row mb-24">
-                        <div class="toggle-switch" [class.on]="agreeTerms" (click)="agreeTerms = !agreeTerms"></div>
-                        <span class="remember-label" (click)="agreeTerms = !agreeTerms">I agree to Terms & Privacy Policy</span>
+                        <div class="remember-left">
+                            <div class="toggle-switch" [class.on]="agreeTerms" (click)="agreeTerms = !agreeTerms"></div>
+                            <span class="remember-label" (click)="agreeTerms = !agreeTerms">I agree to Terms & Privacy Policy</span>
+                        </div>
                     </div>
 
                     <button type="submit" class="btn btn-primary-blue mb-16" [disabled]="signupForm.invalid || !agreeTerms || isSubmitting">

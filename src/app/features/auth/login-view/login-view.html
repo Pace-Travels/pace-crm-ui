@@ -6,9 +6,6 @@
                 <div class="brand-logo">
                     <img src="quotedesks-logo.png" alt="QuoteDesks Logo">
                 </div>
-                <button class="btn-goback" (click)="forgotPassword($event)">
-                    <i class="fa-solid fa-arrow-left"></i> Go back
-                </button>
             </div>
 
             <div class="auth-form-content">
@@ -28,8 +25,11 @@
                     </div>
 
                     <div class="remember-row mb-24">
-                        <div class="toggle-switch" [class.on]="rememberMe" (click)="rememberMe = !rememberMe"></div>
-                        <span class="remember-label" (click)="rememberMe = !rememberMe">Remember me for 30 days</span>
+                        <div class="remember-left">
+                            <div class="toggle-switch" [class.on]="rememberMe" (click)="rememberMe = !rememberMe"></div>
+                            <span class="remember-label" (click)="rememberMe = !rememberMe">Remember me for 30 days</span>
+                        </div>
+                        <a routerLink="/forgot-password" class="forgot-link">Forgot password?</a>
                     </div>
 
                     <button type="submit" class="btn btn-primary-blue mb-16" [disabled]="loginForm.invalid || isSubmitting">
