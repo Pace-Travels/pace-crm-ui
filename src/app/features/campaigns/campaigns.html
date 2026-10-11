@@ -5,17 +5,22 @@
             <h2>Campaigns</h2>
         </div>
         <div class="topbar-stats">
-            <div class="stat-item">
+            <div class="stat-item" title="Live Meta WhatsApp Phone Number Quality Rating">
                 <span class="stat-label">Quality Rating <i class="fa-solid fa-circle-info"></i></span>
-                <span class="stat-badge success">High</span>
+                <span class="stat-badge" 
+                      [style.background]="wabaStats().qualityRating === 'High' ? '#dcfce7' : (wabaStats().qualityRating === 'Medium' ? '#fef3c7' : '#fee2e2')" 
+                      [style.color]="wabaStats().qualityRating === 'High' ? '#15803d' : (wabaStats().qualityRating === 'Medium' ? '#b45309' : '#dc2626')"
+                      style="padding: 3px 10px; border-radius: 12px; font-size: 11.5px; font-weight: 700;">
+                    {{ wabaStats().qualityRating }}
+                </span>
             </div>
-            <div class="stat-item">
+            <div class="stat-item" title="Meta Template Messaging Tier Limit">
                 <span class="stat-label">Template Messaging Tier <i class="fa-solid fa-circle-info"></i></span>
-                <span class="stat-value">Tier 1</span>
+                <span class="stat-value" style="font-weight: 700; color: #0f172a;">{{ wabaStats().tierDisplay }}</span>
             </div>
-            <div class="stat-item">
+            <div class="stat-item" title="Calculated 24h Remaining Outbound Message Quota">
                 <span class="stat-label">Remaining Quota <i class="fa-solid fa-circle-info"></i></span>
-                <span class="stat-value">1885</span>
+                <span class="stat-value" style="font-weight: 800; color: #7c3aed;">{{ wabaStats().remainingQuota | number }}</span>
             </div>
         </div>
         <div class="topbar-right">
@@ -30,13 +35,13 @@
         </div>
         <div class="guide-content">
             <h4>Quick Guide</h4>
-            <p>Create WhatsApp campaigns using templates. Track their delivery, read & reply metrics in real-time.</p>
+            <p>Create WhatsApp campaigns using approved Meta templates. Track their delivery, read & reply metrics in real-time.</p>
         </div>
         <button class="btn-close"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
     <!-- Action Cards -->
-    <app-action-cards></app-action-cards>
+    <app-action-cards (launchCard)="handleLaunchCard($event)"></app-action-cards>
 
     <!-- Table -->
     <app-campaign-table></app-campaign-table>
@@ -67,7 +72,7 @@
                             <h4>API Campaign</h4>
                         </div>
                         <p>Select a template and connect your existing systems with our API to automate messages.</p>
-                        <button class="btn-next">Next <i class="fa-solid fa-arrow-right"></i></button>
+                        <button class="btn-next" (click)="startBroadcastCampaign()">Next <i class="fa-solid fa-arrow-right"></i></button>
                     </div>
 
                     <div class="campaign-option-card">
@@ -76,7 +81,7 @@
                             <span class="badge-new">NEW</span>
                         </div>
                         <p>Upload your audience from CSV & Broadcast customized Template or Regular messages simultaneously.</p>
-                        <button class="btn-next">Next <i class="fa-solid fa-arrow-right"></i></button>
+                        <button class="btn-next" (click)="startBroadcastCampaign()">Next <i class="fa-solid fa-arrow-right"></i></button>
                     </div>
 
                     <div class="campaign-option-card">
@@ -85,7 +90,7 @@
                             <span class="badge-new">NEW</span>
                         </div>
                         <p>Target Click To WhatsApp Ads to your Facebook and Instagram audience to generate leads for retargeting.</p>
-                        <button class="btn-next">Next <i class="fa-solid fa-arrow-right"></i></button>
+                        <button class="btn-next" (click)="handleLaunchCard('STATUS_AD')">Next <i class="fa-solid fa-arrow-right"></i></button>
                     </div>
 
                 </div>
