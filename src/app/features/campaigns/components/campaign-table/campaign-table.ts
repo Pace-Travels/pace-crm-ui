@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CampaignService, Campaign } from '../../services/campaign.service';
 import { ContactService } from '../../../contacts/services/contact.service';
+import { SocketService } from '../../../../shared/services/socket.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -15,6 +16,7 @@ import Swal from 'sweetalert2';
 export class CampaignTable implements OnInit {
   campaignService = inject(CampaignService);
   contactService = inject(ContactService);
+  socketService = inject(SocketService);
   
   activeTab = signal<string>('All');
   searchQuery = signal<string>('');
@@ -31,6 +33,21 @@ export class CampaignTable implements OnInit {
   ngOnInit() {
     this.campaignService.fetchCampaigns();
     this.contactService.fetchContacts();
+
+    // Listen for real-time campaign response events via WebSocket
+    this.socketService.getSocket()?.on('campaign_response_received', (data: any) => {
+      if (this.showResponsesModal() && this.selectedCampaign()?.id === data.campaignId) {
+        const currentList = [...this.recipientResponses()];
+        const target = currentList.find(r => r.id === data.recipientId || r.contactId === data.contactId);
+        if (target) {
+          target.responseReceived = data.responseReceived;
+          target.respondedAt = data.respondedAt;
+          this.recipientResponses.set(currentList);
+        } else {
+          this.openResponsesModal(this.selectedCampaign()!);
+        }
+      }
+    });
   }
 
   get filteredCampaigns(): Campaign[] {
