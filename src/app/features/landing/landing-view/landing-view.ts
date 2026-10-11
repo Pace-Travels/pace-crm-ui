@@ -1,9 +1,13 @@
-import { Component, AfterViewInit, ElementRef, signal, inject } from '@angular/core';
+import { Component, AfterViewInit, ElementRef, ViewChild, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterModule } from '@angular/router';
 import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ThemeService } from '../../../shared/services/theme.service';
+import { ThreeGlobeCanvas } from '../components/three-globe-canvas/three-globe-canvas';
+
+gsap.registerPlugin(ScrollTrigger);
 
 export interface ChatMessage {
   sender: 'user' | 'bot';
@@ -14,11 +18,13 @@ export interface ChatMessage {
 @Component({
   selector: 'app-landing-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, RouterModule],
+  imports: [CommonModule, FormsModule, RouterLink, RouterModule, ThreeGlobeCanvas],
   templateUrl: './landing-view.html',
   styleUrl: './landing-view.scss',
 })
 export class LandingView implements AfterViewInit {
+  @ViewChild(ThreeGlobeCanvas) globeCanvas?: ThreeGlobeCanvas;
+
   themeService = inject(ThemeService);
   userInput = signal('');
   isTyping = signal(false);
@@ -45,10 +51,91 @@ export class LandingView implements AfterViewInit {
   constructor(private el: ElementRef) {}
 
   ngAfterViewInit() {
-    gsap.from(this.el.nativeElement.querySelector('.hero-title'), { duration: 1, y: 40, opacity: 0, ease: 'power3.out', delay: 0.1 });
-    gsap.from(this.el.nativeElement.querySelector('.hero-subtitle'), { duration: 1, y: 25, opacity: 0, ease: 'power3.out', delay: 0.3 });
-    gsap.from(this.el.nativeElement.querySelector('.hero-cta'), { duration: 1, y: 20, opacity: 0, ease: 'power3.out', delay: 0.4 });
-    gsap.from(this.el.nativeElement.querySelector('.chatbot-simulator-card'), { duration: 1.2, scale: 0.96, opacity: 0, ease: 'power3.out', delay: 0.6 });
+    this.initGsapAnimations();
+  }
+
+  private initGsapAnimations() {
+    const nativeEl = this.el.nativeElement;
+
+    // Hero entrance animations
+    gsap.from(nativeEl.querySelector('.hero-title'), {
+      duration: 1,
+      y: 40,
+      opacity: 0,
+      ease: 'power3.out',
+      delay: 0.1
+    });
+
+    gsap.from(nativeEl.querySelector('.hero-subtitle'), {
+      duration: 1,
+      y: 25,
+      opacity: 0,
+      ease: 'power3.out',
+      delay: 0.3
+    });
+
+    gsap.from(nativeEl.querySelector('.hero-cta'), {
+      duration: 1,
+      y: 20,
+      opacity: 0,
+      ease: 'power3.out',
+      delay: 0.4
+    });
+
+    gsap.from(nativeEl.querySelector('.chatbot-simulator-card'), {
+      duration: 1.2,
+      scale: 0.96,
+      opacity: 0,
+      ease: 'power3.out',
+      delay: 0.6
+    });
+
+    // ScrollTrigger animations for feature cards
+    const featureCards = nativeEl.querySelectorAll('.feature-card');
+    if (featureCards.length > 0) {
+      gsap.from(featureCards, {
+        scrollTrigger: {
+          trigger: '.features-grid',
+          start: 'top 80%',
+          toggleActions: 'play none none reverse'
+        },
+        duration: 0.8,
+        y: 45,
+        opacity: 0,
+        stagger: 0.15,
+        ease: 'power3.out'
+      });
+    }
+
+    // ScrollTrigger animation for pricing cards
+    const pricingCards = nativeEl.querySelectorAll('.pricing-card');
+    if (pricingCards.length > 0) {
+      gsap.from(pricingCards, {
+        scrollTrigger: {
+          trigger: '.pricing-grid',
+          start: 'top 80%',
+          toggleActions: 'play none none reverse'
+        },
+        duration: 0.9,
+        y: 50,
+        opacity: 0,
+        stagger: 0.2,
+        ease: 'power3.out'
+      });
+    }
+
+    // ScrollTrigger binding to update 3D Globe camera/scale progress on scroll
+    ScrollTrigger.create({
+      trigger: nativeEl.querySelector('.landing-container'),
+      start: 'top top',
+      end: 'bottom bottom',
+      scrub: 0.5,
+      onUpdate: (self) => {
+        if (this.globeCanvas) {
+          this.globeCanvas.updateScrollProgress(self.progress);
+        }
+      }
+    });
   }
 
   sendSamplePrompt(promptText: string) {
