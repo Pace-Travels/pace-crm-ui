@@ -8,11 +8,12 @@ import { MediaModal, MediaPayload } from '../media-modal/media-modal';
 import { TagModal } from '../tag-modal/tag-modal';
 import { PayModal, PaymentRequestPayload } from '../pay-modal/pay-modal';
 import { EmojiStickerPicker } from '../emoji-sticker-picker/emoji-sticker-picker';
+import { SendTemplateModal, TemplateDispatchPayload } from '../template-modal/template-modal';
 
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MediaModal, TagModal, PayModal, EmojiStickerPicker],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MediaModal, TagModal, PayModal, EmojiStickerPicker, SendTemplateModal],
   templateUrl: './chat-window.html',
   styleUrl: './chat-window.scss',
 })
@@ -33,6 +34,7 @@ export class ChatWindow implements AfterViewChecked {
   isMediaModalOpen = signal(false);
   isTagModalOpen = signal(false);
   isPayModalOpen = signal(false);
+  isTemplateModalOpen = signal(false);
 
   contactTags = signal<string[]>([]);
 
@@ -355,6 +357,52 @@ export class ChatWindow implements AfterViewChecked {
         this.showAlert('Error', err.error?.error || 'Failed to generate order', 'error');
       }
     });
+  }
+
+  // --- Approved Template Modal Handlers ---
+  openTemplateModal() {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) {
+      this.showAlert('No Conversation', 'Please select a conversation first.', 'warning');
+      return;
+    }
+    this.isTemplateModalOpen.set(true);
+  }
+
+  handleSendTemplate(payload: TemplateDispatchPayload) {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) return;
+
+    this.api.post<any>('messages/send-template', {
+      conversationId: conv.id,
+      templateId: payload.templateId,
+      customParameters: payload.customParameters
+    }).subscribe({
+      next: (res: any) => {
+        this.isTemplateModalOpen.set(false);
+        const newMsg = res.data || res;
+        if (newMsg && newMsg.id) {
+          const current = this.chatService.messagesSubject.value;
+          this.chatService.messagesSubject.next([...current, newMsg]);
+        }
+        this.showAlert('Template Dispatched', `Meta Message Template "${payload.templateName}" sent successfully!`, 'success');
+      },
+      error: (err: any) => {
+        this.showAlert('Delivery Failed', err.error?.error || err.message || 'Failed to dispatch template', 'error');
+      }
+    });
+  }
+
+  hasWindowClosedError(): boolean {
+    const msgs = this.chatService.messagesSubject.value || [];
+    if (msgs.length === 0) return false;
+    const lastMsg = msgs[msgs.length - 1];
+    if (lastMsg?.status === 'FAILED' && (
+      (lastMsg.errorMessage && (lastMsg.errorMessage.includes('131047') || lastMsg.errorMessage.includes('window closed') || lastMsg.errorMessage.includes('Re-Engagement')))
+    )) {
+      return true;
+    }
+    return false;
   }
 
   private showAlert(title: string, text: string, icon: string) {

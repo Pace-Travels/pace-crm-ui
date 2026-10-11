@@ -39,6 +39,9 @@
             </div>
 
             <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-outline" (click)="openTemplateModal()" title="Send Approved Template (Re-open 24h Window)" style="background: #eef2ff; border: 1px solid #6366f1; color: #4338ca; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-file-invoice"></i> Template
+                </button>
                 <button type="button" class="btn btn-outline" (click)="openPayModal()" title="Request Payment" style="background: white; border: 1px solid #10b981; color: #10b981; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-indian-rupee-sign"></i> Pay
                 </button>
@@ -53,6 +56,18 @@
 
         <!-- Chat Messages Area -->
         <div #messagesArea class="messages-area" style="display: flex; flex-direction: column; gap: 12px; padding: 20px; overflow-y: auto; background: #f8fafc; flex: 1;">
+            
+            @if (hasWindowClosedError()) {
+                <div style="background: #fffbe6; border: 1px solid #ffe58f; border-radius: 10px; padding: 12px 16px; margin: 4px 0; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.04);">
+                    <div style="display: flex; align-items: center; gap: 10px; font-size: 12.5px; color: #873800;">
+                        <i class="fa-solid fa-clock-rotate-left" style="font-size: 18px; color: #fa8c16;"></i>
+                        <span><strong>24h Window Closed (Meta Error #131047):</strong> Customer session expired. Re-open conversation with an Approved Message Template.</span>
+                    </div>
+                    <button type="button" (click)="openTemplateModal()" style="background: #fa8c16; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 4px rgba(250, 140, 22, 0.3);">
+                        <i class="fa-solid fa-paper-plane"></i> Select Template
+                    </button>
+                </div>
+            }
             @for(msg of chatService.messages$ | async; track msg.id) {
                 @if (msg.senderType === 'SYSTEM') {
                     <div style="display: flex; justify-content: center; width: 100%; margin: 4px 0;">
@@ -163,8 +178,8 @@
         </div>
     }
 
-    <!-- Dedicated Rich Modals -->
     <app-media-modal [isOpen]="isMediaModalOpen()" (close)="isMediaModalOpen.set(false)" (sendMedia)="handleSendMedia($event)"></app-media-modal>
     <app-tag-modal [isOpen]="isTagModalOpen()" [currentTags]="contactTags()" (close)="isTagModalOpen.set(false)" (addTag)="handleAddTag($event)" (removeTag)="handleRemoveTag($event)"></app-tag-modal>
     <app-pay-modal [isOpen]="isPayModalOpen()" (close)="isPayModalOpen.set(false)" (sendPaymentRequest)="handleSendPaymentRequest($event)"></app-pay-modal>
+    <app-template-modal [isOpen]="isTemplateModalOpen()" [conversation]="chatService.selectedConversation()" (close)="isTemplateModalOpen.set(false)" (sendTemplate)="handleSendTemplate($event)"></app-template-modal>
 </div>
