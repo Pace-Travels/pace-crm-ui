@@ -25,18 +25,48 @@
         </div>
     </div>
 
-    <!-- Progress Bar -->
-    <div class="progress-bar-container">
-        <div class="step" [class.active]="currentStep >= 1">
-            <div class="step-text">Campaign Details</div>
-            <div class="step-line"></div>
+    <!-- Progress Bar / Stepper -->
+    <div class="stepper-container">
+        <div class="stepper-step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1" (click)="currentStep > 1 && (currentStep = 1)">
+            <div class="step-badge">
+                @if (currentStep > 1) {
+                    <i class="fa-solid fa-check"></i>
+                } @else {
+                    <span>1</span>
+                }
+            </div>
+            <div class="step-details">
+                <div class="step-title">1. Campaign Setup</div>
+                <div class="step-subtitle">Name & Audience Selection</div>
+            </div>
         </div>
-        <div class="step" [class.active]="currentStep >= 2">
-            <div class="step-text">Create Message</div>
-            <div class="step-line"></div>
+
+        <div class="stepper-line" [class.active]="currentStep >= 2"></div>
+
+        <div class="stepper-step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2" (click)="currentStep > 2 && (currentStep = 2)">
+            <div class="step-badge">
+                @if (currentStep > 2) {
+                    <i class="fa-solid fa-check"></i>
+                } @else {
+                    <span>2</span>
+                }
+            </div>
+            <div class="step-details">
+                <div class="step-title">2. Create Message</div>
+                <div class="step-subtitle">Template & Quick Replies</div>
+            </div>
         </div>
-        <div class="step" [class.active]="currentStep >= 3">
-            <div class="step-text">Test & Preview</div>
+
+        <div class="stepper-line" [class.active]="currentStep >= 3"></div>
+
+        <div class="stepper-step" [class.active]="currentStep === 3" [class.completed]="currentStep > 3">
+            <div class="step-badge">
+                <span>3</span>
+            </div>
+            <div class="step-details">
+                <div class="step-title">3. Test & Launch</div>
+                <div class="step-subtitle">Preview & Send Broadcast</div>
+            </div>
         </div>
     </div>
 
@@ -58,23 +88,23 @@
                 <p class="help-text">Select audience segments or filter directly in the data table.</p>
                 <div class="audience-options" style="display: flex; gap: 16px; margin-top: 8px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="audience" value="ALL" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> All Contacts
+                        <input type="radio" name="audience" value="ALL" [ngModel]="audienceType()" (ngModelChange)="setAudienceType($event)"> All Contacts
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="audience" value="B2C" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> B2C Contacts (Pace Travels)
+                        <input type="radio" name="audience" value="B2C" [ngModel]="audienceType()" (ngModelChange)="setAudienceType($event)"> B2C Contacts (Pace Travels)
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="audience" value="B2B" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> B2B Contacts (Pace Tourism)
+                        <input type="radio" name="audience" value="B2B" [ngModel]="audienceType()" (ngModelChange)="setAudienceType($event)"> B2B Contacts (Pace Tourism)
                     </label>
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="audience" value="GROUP" [ngModel]="audienceType()" (ngModelChange)="audienceType.set($event)"> Contact Group
+                        <input type="radio" name="audience" value="GROUP" [ngModel]="audienceType()" (ngModelChange)="setAudienceType($event)"> Contact Group
                     </label>
                 </div>
 
                 @if (audienceType() === 'GROUP') {
                     <div style="margin-top: 16px; max-width: 340px;">
                         <label>Select Group</label>
-                        <select class="form-control" [ngModel]="selectedGroupId()" (ngModelChange)="selectedGroupId.set($event)">
+                        <select class="form-control" [ngModel]="selectedGroupId()" (ngModelChange)="onGroupSelect($event)">
                             <option [value]="null">-- Select Group --</option>
                             @for (group of contactService.groups(); track group.id) {
                                 <option [value]="group.id">{{ group.name }} ({{ group.contactType }})</option>

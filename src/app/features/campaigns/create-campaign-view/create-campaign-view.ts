@@ -108,6 +108,34 @@ export class CreateCampaignView implements OnInit {
   // Targeting Audience Type & Group
   audienceType = signal<'ALL' | 'B2B' | 'B2C' | 'GROUP'>('ALL');
   selectedGroupId = signal<number | null>(null);
+  groupMemberIds = signal<number[]>([]);
+
+  setAudienceType(type: 'ALL' | 'B2B' | 'B2C' | 'GROUP') {
+    this.audienceType.set(type);
+    this.currentPage.set(1);
+    if (type === 'GROUP' && this.selectedGroupId()) {
+      this.onGroupSelect(this.selectedGroupId());
+    }
+  }
+
+  onGroupSelect(groupIdVal: any) {
+    const groupId = groupIdVal ? Number(groupIdVal) : null;
+    this.selectedGroupId.set(groupId);
+    this.currentPage.set(1);
+    if (groupId) {
+      this.contactService.getGroupMembers(groupId).subscribe({
+        next: (res: any) => {
+          const memberIds = (res.data || []).map((m: any) => m.contactId || m.id);
+          this.groupMemberIds.set(memberIds);
+        },
+        error: () => {
+          this.groupMemberIds.set([]);
+        }
+      });
+    } else {
+      this.groupMemberIds.set([]);
+    }
+  }
 
   // Data Table Search, Filter, Sort & Pagination Signals
   searchQuery = signal('');
@@ -282,9 +310,13 @@ export class CreateCampaignView implements OnInit {
       list = list.filter(c => c.type === 'B2B');
     } else if (type === 'B2C') {
       list = list.filter(c => c.type === 'B2C');
-    } else if (type === 'GROUP' && this.selectedGroupId()) {
-      const group = this.contactService.groups().find(g => g.id === this.selectedGroupId());
-      list = list.filter(c => c.type === group?.contactType);
+    } else if (type === 'GROUP') {
+      if (this.selectedGroupId()) {
+        const memberIds = this.groupMemberIds();
+        list = list.filter(c => c.id !== undefined && memberIds.includes(c.id));
+      } else {
+        list = [];
+      }
     }
 
     // 2. Search Query Filter
@@ -404,7 +436,7 @@ export class CreateCampaignView implements OnInit {
         this.showCreateGroupModal.set(false);
         if (res.group?.id) {
           this.audienceType.set('GROUP');
-          this.selectedGroupId.set(res.group.id);
+          this.onGroupSelect(res.group.id);
         }
       },
       error: (err: any) => {

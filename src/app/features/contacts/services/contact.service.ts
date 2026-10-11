@@ -30,6 +30,8 @@ export interface Contact {
   metaRate?: number;
   readinessStatus?: string;
   readinessReason?: string;
+  isActive?: boolean;
+  isOptedIn?: boolean;
 }
 
 export interface ContactGroup {
@@ -170,5 +172,13 @@ export class ContactService {
       },
       error: () => this.selectedGroupContactIds.set([])
     });
+  }
+
+  getContactDetails(id: number): Observable<any> {
+    return this.api.get(`/whatsappcontacts/list/${id}/details`);
+  }
+
+  addContactNote(id: number, content: string, author?: string): Observable<any> {
+    return this.api.post(`/whatsappcontacts/list/${id}/notes`, { content, author });
   }
 }

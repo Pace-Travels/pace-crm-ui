@@ -1,6 +1,7 @@
 <div class="panel-overlay" [class.open]="isOpen" (click)="closePanel.emit()">
     <div class="panel-content" (click)="$event.stopPropagation()">
         
+        <!-- Header -->
         <div class="panel-header">
             <div class="header-left">
                 <button class="btn-close" (click)="closePanel.emit()"><i class="fa-solid fa-xmark"></i></button>
@@ -13,111 +14,297 @@
         </div>
 
         <div class="panel-body">
-            <!-- Basic Info Area -->
-            <div class="profile-summary">
-                <div class="avatar-large bg-orange">{{ getInitials(contact?.name) }}</div>
-                <h2 class="name">{{ contact?.name || 'UNKNOWN' }}</h2>
-                <div class="phone">{{ contact?.phone || 'No Phone' }}</div>
-            </div>
+            @if (isLoading()) {
+                <div class="skeleton-loader py-32 text-center">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x text-purple"></i>
+                    <p class="mt-8 text-gray">Loading detailed contact profile...</p>
+                </div>
+            } @else {
+                <!-- Basic Info Summary Area -->
+                <div class="profile-summary">
+                    <div class="avatar-large bg-orange">{{ getInitials(contact?.name) }}</div>
+                    <h2 class="name">{{ contact?.name || 'UNKNOWN' }}</h2>
+                    <div class="phone"><i class="fa-solid fa-phone"></i> {{ contact?.phone || 'No Phone' }}</div>
+                    @if (contact?.email) {
+                        <div class="email"><i class="fa-solid fa-envelope"></i> {{ contact?.email }}</div>
+                    }
+                </div>
 
-            <div class="details-grid">
-                <div class="detail-row">
-                    <span class="label">Status</span>
-                    <span class="value">Active</span>
+                <!-- Stats Grid -->
+                <div class="details-grid">
+                    <div class="detail-row">
+                        <span class="label">Status</span>
+                        <span class="value"><span class="badge badge-success">Active</span></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Last Active</span>
+                        <span class="value">{{ (details()?.contact?.lastSeen || details()?.contact?.updatedAt) | date:'short' }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Template Messages</span>
+                        <span class="value font-bold">{{ details()?.stats?.templateMessagesCount || 0 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Session Messages</span>
+                        <span class="value font-bold">{{ details()?.stats?.sessionMessagesCount || 0 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Unresolved Queries</span>
+                        <span class="value font-bold">{{ details()?.stats?.unresolvedQueriesCount || 0 }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Source</span>
+                        <span class="value"><span class="source-tag">{{ details()?.contact?.source || 'IMPORT' }}</span></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">First Message</span>
+                        <span class="value">{{ details()?.contact?.createdAt | date:'shortDate' }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">WA Conversation</span>
+                        <span class="value" [class.text-green]="details()?.stats?.is24hWindowActive">
+                            {{ details()?.stats?.is24hWindowActive ? 'Active (24h Window)' : 'Inactive' }}
+                        </span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">MAU Status</span>
+                        <span class="value"><span class="badge badge-mau">{{ details()?.stats?.mauStatus || 'ACTIVE' }}</span></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Incoming</span>
+                        <span class="value text-green"><i class="fa-solid fa-circle-check"></i> Allowed</span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="label">Opted In</span>
+                        <span class="value">
+                            <div class="toggle-switch" [class.on]="details()?.contact?.isOptedIn !== false" (click)="toggleOptIn()" title="Toggle Opt-In Status"></div>
+                        </span>
+                    </div>
                 </div>
-                <div class="detail-row">
-                    <span class="label">Last Active</span>
-                    <span class="value">8/4/2026, 10:16 AM</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Template Messages</span>
-                    <span class="value">0</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Session Messages</span>
-                    <span class="value">0</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Unresolved Queries</span>
-                    <span class="value">0</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Source</span>
-                    <span class="value">{{ contact?.source || 'ORGANIC' }}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">First Message</span>
-                    <span class="value">----</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">WA Conversation</span>
-                    <span class="value">Inactive</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">MAU Status</span>
-                    <span class="value">Inactive</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Incoming</span>
-                    <span class="value">Allowed</span>
-                </div>
-                <div class="detail-row">
-                    <span class="label">Opted In</span>
-                    <span class="value"><div class="toggle-switch on"></div></span>
-                </div>
-            </div>
 
-            <!-- Accordions -->
-            <div class="accordion-group">
-                <div class="accordion-item">
-                    <div class="accordion-header" (click)="toggleSection('payments')">
-                        <span>Payments</span>
-                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'payments'"></i>
+                <!-- Accordion Menu -->
+                <div class="accordion-group">
+
+                    <!-- 1. Payments Accordion -->
+                    <div class="accordion-item" [class.open]="expandedSection() === 'payments'">
+                        <div class="accordion-header" (click)="toggleSection('payments')">
+                            <span class="acc-title"><i class="fa-solid fa-credit-card"></i> Payments ({{ details()?.payments?.length || 0 }})</span>
+                            <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection() === 'payments'"></i>
+                        </div>
+                        @if (expandedSection() === 'payments') {
+                            <div class="accordion-body">
+                                @if (!details()?.payments || details()?.payments?.length === 0) {
+                                    <div class="empty-accordion-state">No payment records found for this contact.</div>
+                                } @else {
+                                    <div class="table-responsive">
+                                        <table class="acc-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Txn ID</th>
+                                                    <th>Amount</th>
+                                                    <th>Status</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @for (pay of details()?.payments; track pay.id) {
+                                                    <tr>
+                                                        <td>{{ pay.date || (pay.createdAt | date:'shortDate') }}</td>
+                                                        <td><code>{{ pay.transactionId || pay.id }}</code></td>
+                                                        <td class="font-bold">{{ pay.amount | currency:(pay.currency || 'INR') }}</td>
+                                                        <td>
+                                                            <span class="status-badge" [class.badge-paid]="pay.status === 'PAID'" [class.badge-pending]="pay.status !== 'PAID'">
+                                                                {{ pay.status || 'PAID' }}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <button class="btn-sm-action" (click)="copyPaymentLink(pay)" title="Copy Payment Link">
+                                                                <i class="fa-solid fa-link"></i> Link
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
-                </div>
-                <div class="accordion-item">
-                    <div class="accordion-header" (click)="toggleSection('leads')">
-                        <span>Leads</span>
-                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'leads'"></i>
+
+                    <!-- 2. Leads Accordion -->
+                    <div class="accordion-item" [class.open]="expandedSection() === 'leads'">
+                        <div class="accordion-header" (click)="toggleSection('leads')">
+                            <span class="acc-title"><i class="fa-solid fa-bullseye"></i> Leads & Travel Inquiries ({{ details()?.leads?.length || 0 }})</span>
+                            <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection() === 'leads'"></i>
+                        </div>
+                        @if (expandedSection() === 'leads') {
+                            <div class="accordion-body">
+                                @for (lead of details()?.leads; track lead.id) {
+                                    <div class="lead-card">
+                                        <div class="lead-title font-bold">{{ lead.title }}</div>
+                                        <div class="lead-meta">
+                                            <span>Est. Budget: <strong>{{ lead.budget | currency:'INR' }}</strong></span>
+                                            <span class="stage-badge">{{ lead.stage }}</span>
+                                        </div>
+                                        <div class="lead-agent"><i class="fa-solid fa-user-gear"></i> {{ lead.assignedAgent }}</div>
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
-                </div>
-                <div class="accordion-item">
-                    <div class="accordion-header" (click)="toggleSection('campaigns')">
-                        <span>Campaigns</span>
-                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'campaigns'"></i>
+
+                    <!-- 3. Campaigns Accordion -->
+                    <div class="accordion-item" [class.open]="expandedSection() === 'campaigns'">
+                        <div class="accordion-header" (click)="toggleSection('campaigns')">
+                            <span class="acc-title"><i class="fa-solid fa-paper-plane"></i> Broadcast Campaigns History ({{ details()?.campaigns?.length || 0 }})</span>
+                            <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection() === 'campaigns'"></i>
+                        </div>
+                        @if (expandedSection() === 'campaigns') {
+                            <div class="accordion-body">
+                                @if (!details()?.campaigns || details()?.campaigns?.length === 0) {
+                                    <div class="empty-accordion-state">No broadcast campaigns sent to this contact yet.</div>
+                                } @else {
+                                    <div class="campaign-logs-list">
+                                        @for (camp of details()?.campaigns; track camp.id) {
+                                            <div class="log-card">
+                                                <div class="log-header">
+                                                    <span class="font-bold">{{ camp.campaignTitle || camp.Campaign?.name }}</span>
+                                                    <span class="status-badge badge-read">{{ camp.status || 'DELIVERED' }}</span>
+                                                </div>
+                                                <div class="log-sub">
+                                                    <span>Template: {{ camp.templateName || 'Standard Template' }}</span>
+                                                    <span>{{ camp.sentAt | date:'short' }}</span>
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
-                </div>
-                <div class="accordion-item">
-                    <div class="accordion-header" (click)="toggleSection('attributes')">
-                        <span>Attributes</span>
-                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'attributes'"></i>
+
+                    <!-- 4. Attributes Accordion -->
+                    <div class="accordion-item" [class.open]="expandedSection() === 'attributes'">
+                        <div class="accordion-header" (click)="toggleSection('attributes')">
+                            <span class="acc-title"><i class="fa-solid fa-sliders"></i> Custom Attributes ({{ details()?.attributes?.length || 0 }})</span>
+                            <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection() === 'attributes'"></i>
+                        </div>
+                        @if (expandedSection() === 'attributes') {
+                            <div class="accordion-body">
+                                <div class="attributes-grid">
+                                    @for (attr of details()?.attributes; track attr.key) {
+                                        <div class="attr-row">
+                                            <span class="attr-key">{{ attr.key }}</span>
+                                            <span class="attr-val">{{ attr.value }}</span>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="add-attr-form mt-12">
+                                    <input type="text" class="input-sm" placeholder="Attribute Key" [ngModel]="newAttrKey()" (ngModelChange)="newAttrKey.set($event)">
+                                    <input type="text" class="input-sm" placeholder="Value" [ngModel]="newAttrVal()" (ngModelChange)="newAttrVal.set($event)">
+                                    <button class="btn-sm btn-purple" (click)="addAttribute()"><i class="fa-solid fa-plus"></i> Add</button>
+                                </div>
+                            </div>
+                        }
                     </div>
-                </div>
-                <div class="accordion-item">
-                    <div class="accordion-header" (click)="toggleSection('tags')">
-                        <span>Tags</span>
-                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'tags'"></i>
+
+                    <!-- 5. Tags Accordion -->
+                    <div class="accordion-item" [class.open]="expandedSection() === 'tags'">
+                        <div class="accordion-header" (click)="toggleSection('tags')">
+                            <span class="acc-title"><i class="fa-solid fa-tags"></i> Tags ({{ getParsedTags().length }})</span>
+                            <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection() === 'tags'"></i>
+                        </div>
+                        @if (expandedSection() === 'tags') {
+                            <div class="accordion-body">
+                                <div class="tags-chips-container">
+                                    @for (tag of getParsedTags(); track tag) {
+                                        <span class="tag-chip">
+                                            {{ tag }}
+                                            <i class="fa-solid fa-xmark remove-tag-icon" (click)="removeTag(tag)" title="Remove Tag"></i>
+                                        </span>
+                                    }
+                                </div>
+                                <div class="add-tag-form mt-12">
+                                    <input type="text" class="input-sm" placeholder="New tag name..." [ngModel]="newTagText()" (ngModelChange)="newTagText.set($event)" (keyup.enter)="addTag()">
+                                    <button class="btn-sm btn-purple" (click)="addTag()"><i class="fa-solid fa-plus"></i> Add Tag</button>
+                                </div>
+                            </div>
+                        }
                     </div>
-                </div>
-                <div class="accordion-item">
-                    <div class="accordion-header" (click)="toggleSection('notes')">
-                        <span>Notes</span>
-                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'notes'"></i>
+
+                    <!-- 6. Notes Accordion -->
+                    <div class="accordion-item" [class.open]="expandedSection() === 'notes'">
+                        <div class="accordion-header" (click)="toggleSection('notes')">
+                            <span class="acc-title"><i class="fa-solid fa-sticky-note"></i> Internal Notes ({{ details()?.notes?.length || 0 }})</span>
+                            <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection() === 'notes'"></i>
+                        </div>
+                        @if (expandedSection() === 'notes') {
+                            <div class="accordion-body">
+                                <div class="notes-feed">
+                                    @for (note of details()?.notes; track note.id) {
+                                        <div class="note-card">
+                                            <div class="note-author font-bold"><i class="fa-solid fa-user-pen"></i> {{ note.author || 'Agent' }}</div>
+                                            <div class="note-text">{{ note.content }}</div>
+                                            <div class="note-time">{{ note.createdAt | date:'short' }}</div>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="add-note-form mt-12">
+                                    <textarea class="textarea-sm" placeholder="Write internal note..." [ngModel]="newNoteText()" (ngModelChange)="newNoteText.set($event)" rows="2"></textarea>
+                                    <button class="btn-sm btn-purple mt-8" (click)="addNote()"><i class="fa-solid fa-paper-plane"></i> Save Note</button>
+                                </div>
+                            </div>
+                        }
                     </div>
-                </div>
-                <div class="accordion-item">
-                    <div class="accordion-header" (click)="toggleSection('leadStage')">
-                        <span>Lead Stage</span>
-                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'leadStage'"></i>
+
+                    <!-- 7. Lead Stage Accordion -->
+                    <div class="accordion-item" [class.open]="expandedSection() === 'leadStage'">
+                        <div class="accordion-header" (click)="toggleSection('leadStage')">
+                            <span class="acc-title"><i class="fa-solid fa-diagram-project"></i> Lead Stage Pipeline</span>
+                            <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection() === 'leadStage'"></i>
+                        </div>
+                        @if (expandedSection() === 'leadStage') {
+                            <div class="accordion-body">
+                                <p class="help-text">Click a stage pill to update lead progress:</p>
+                                <div class="stages-pills-container">
+                                    @for (stage of leadStages; track stage) {
+                                        <button class="stage-pill" [class.active]="(details()?.contact?.leadStage || contact?.leadStage) === stage" (click)="updateLeadStage(stage)">
+                                            <i class="fa-solid" [class.fa-check-circle]="(details()?.contact?.leadStage || contact?.leadStage) === stage" [class.fa-circle]="(details()?.contact?.leadStage || contact?.leadStage) !== stage"></i>
+                                            {{ stage }}
+                                        </button>
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
-                </div>
-                <div class="accordion-item">
-                    <div class="accordion-header" (click)="toggleSection('customerJourney')">
-                        <span>Customer Journey</span>
-                        <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection === 'customerJourney'"></i>
+
+                    <!-- 8. Customer Journey Accordion -->
+                    <div class="accordion-item" [class.open]="expandedSection() === 'customerJourney'">
+                        <div class="accordion-header" (click)="toggleSection('customerJourney')">
+                            <span class="acc-title"><i class="fa-solid fa-timeline"></i> Customer Journey</span>
+                            <i class="fa-solid fa-chevron-down" [class.rotated]="expandedSection() === 'customerJourney'"></i>
+                        </div>
+                        @if (expandedSection() === 'customerJourney') {
+                            <div class="accordion-body">
+                                <div class="journey-timeline">
+                                    @for (milestone of details()?.customerJourney; track milestone.event) {
+                                        <div class="timeline-node">
+                                            <div class="node-icon"><i class="fa-solid fa-flag"></i></div>
+                                            <div class="node-content">
+                                                <div class="node-event font-bold">{{ milestone.event }}</div>
+                                                <div class="node-time">{{ milestone.timestamp | date:'short' }}</div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
                     </div>
+
                 </div>
-            </div>
+            }
         </div>
         
     </div>
