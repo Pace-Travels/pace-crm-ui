@@ -16,4 +16,8 @@ export class ChecklistWidgetComponent {
   navigateTo(path: string) {
     this.router.navigate([path]);
   }
+
+  dismiss() {
+    this.onboardingService.dismissChecklist();
+  }
 }

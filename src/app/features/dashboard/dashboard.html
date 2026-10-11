@@ -8,14 +8,14 @@
         </div>
 
         <div class="greeting-actions">
-            <button type="button" class="btn-restart-tour" (click)="onboardingService.openTour()">
+            <button type="button" class="btn-restart-tour" (click)="onboardingService.openFeatureSpotlight()">
                 <i class="fa-regular fa-circle-question"></i> Restart Tour
             </button>
         </div>
     </div>
 
-    <!-- Onboarding Checklist (Hidden when 100% complete) -->
-    <app-checklist-widget *ngIf="onboardingService.progressPercentage() < 100"></app-checklist-widget>
+    <!-- Onboarding Checklist (Hidden when 100% complete or dismissed) -->
+    <app-checklist-widget></app-checklist-widget>
 
     <!-- 4 KPI Metric Cards Grid (Omnichannel Messaging Style) -->
     <div class="kpi-grid">
