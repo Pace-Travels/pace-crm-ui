@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
+import { finalize } from 'rxjs';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -59,19 +60,26 @@ export class SignupView implements OnInit {
     }
 
     this.isSubmitting = true;
-    this.authService.signup(this.signupForm.value).subscribe({
-      next: (res) => {
+    this.authService.signup(this.signupForm.value).pipe(
+      finalize(() => {
         this.isSubmitting = false;
-        Swal.fire({
-          title: 'Account Created Successfully!',
-          text: 'Welcome to QuoteDesks Messenger.',
-          icon: 'success',
-          timer: 1500,
-          showConfirmButton: false
-        });
+      })
+    ).subscribe({
+      next: (res) => {
+        if (res && res.token) {
+          Swal.fire({
+            title: 'Account Created Successfully!',
+            text: 'Welcome to QuoteDesks Messenger.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        } else {
+          const msg = res?.error || res?.message || 'Signup failed. Please try again.';
+          Swal.fire('Signup Error', msg, 'error');
+        }
       },
       error: (err) => {
-        this.isSubmitting = false;
         const msg = err.error?.error || err.error?.message || 'Signup failed. Please try again.';
         Swal.fire('Signup Error', msg, 'error');
       }
@@ -99,13 +107,18 @@ export class SignupView implements OnInit {
     }).then((result) => {
       if (result.isConfirmed && result.value) {
         this.isSubmitting = true;
-        this.authService.googleLogin(result.value).subscribe({
-          next: (res) => {
+        this.authService.googleLogin(result.value).pipe(
+          finalize(() => {
             this.isSubmitting = false;
+          })
+        ).subscribe({
+          next: (res) => {
+            if (!res || !res.token) {
+              Swal.fire('Google Sign In Error', res?.error || res?.message || 'Failed to sign in', 'error');
+            }
           },
           error: (err) => {
-            this.isSubmitting = false;
-            Swal.fire('Google Sign In Error', err.error?.message || 'Failed to sign in', 'error');
+            Swal.fire('Google Sign In Error', err.error?.error || err.error?.message || 'Failed to sign in', 'error');
           }
         });
       }

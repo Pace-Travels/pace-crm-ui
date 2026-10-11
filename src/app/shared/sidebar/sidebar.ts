@@ -86,6 +86,7 @@ export class Sidebar implements OnInit {
       title: 'MANAGEMENT & CONFIGURATION',
       expanded: true,
       items: [
+        { icon: 'fa-solid fa-clock', title: 'Cron Jobs & Health', route: '/cron-jobs' },
         { icon: 'fa-solid fa-gear', title: 'Manage', route: '/manage' },
         { icon: 'fa-solid fa-plug', title: 'Integrations', route: '/integrations' },
         { icon: 'fa-solid fa-users', title: 'Agents', route: '/agents' },

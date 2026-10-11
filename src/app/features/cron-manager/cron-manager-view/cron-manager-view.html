@@ -1,0 +1,259 @@
+<div class="cron-manager-container">
+  <!-- Header Banner -->
+  <div class="page-header">
+    <div class="header-content">
+      <span class="badge-subtitle">AUTOMATION & SYSTEM HEALTH</span>
+      <h1>Cron Jobs & Background Schedulers</h1>
+      <p class="description">
+        Monitor real-time campaign dispatchers, report generators, background threads, and execution audit history.
+      </p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-outline" (click)="refreshAllData()">
+        <i class="ri-refresh-line"></i> Refresh Status
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary Cards Row -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="card-icon blue"><i class="ri-alarm-warning-line"></i></div>
+      <div class="card-info">
+        <span class="label">Total Schedulers</span>
+        <span class="value">{{ overview().totalJobs }}</span>
+        <span class="subtext">{{ overview().activeJobs }} Active • {{ overview().pausedJobs }} Paused</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="card-icon green"><i class="ri-history-line"></i></div>
+      <div class="card-info">
+        <span class="label">Total Executions</span>
+        <span class="value">{{ overview().totalExecutions }}</span>
+        <span class="subtext">{{ overview().successExecutions }} Successful</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="card-icon purple"><i class="ri-checkbox-circle-line"></i></div>
+      <div class="card-info">
+        <span class="label">Global Success Rate</span>
+        <span class="value text-green">{{ overview().successRate }}%</span>
+        <span class="subtext">{{ overview().failedExecutions }} Failures Recorded</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="card-icon orange"><i class="ri-time-line"></i></div>
+      <div class="card-info">
+        <span class="label">Next Scheduled Run</span>
+        <span class="value font-sm">{{ overview().nextUpcomingJob?.title || 'None Scheduled' }}</span>
+        <span class="subtext" *ngIf="overview().nextUpcomingJob?.nextRunAt">
+          {{ overview().nextUpcomingJob.nextRunAt | date:'mediumTime' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Schedulers Grid -->
+  <div class="section-container">
+    <div class="section-header">
+      <h2><i class="ri-play-circle-line"></i> Configured Background Schedulers</h2>
+    </div>
+
+    <div class="jobs-grid">
+      <div class="job-card" *ngFor="let job of jobs()">
+        <div class="job-card-header">
+          <div class="job-title-wrapper">
+            <h3>{{ job.title }}</h3>
+            <span class="job-key">{{ job.jobKey }}</span>
+          </div>
+          <span class="status-pill" [ngClass]="job.status.toLowerCase()">
+            <i class="ri-checkbox-blank-circle-fill dot"></i> {{ job.status }}
+          </span>
+        </div>
+
+        <p class="job-desc">{{ job.description }}</p>
+
+        <div class="job-meta-grid">
+          <div class="meta-item">
+            <span class="lbl">Frequency</span>
+            <span class="val font-semibold">{{ job.frequency }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="lbl">Last Duration</span>
+            <span class="val">{{ job.lastDurationMs ? (job.lastDurationMs + ' ms') : 'N/A' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="lbl">Last Run</span>
+            <span class="val">{{ job.lastRunAt ? (job.lastRunAt | date:'short') : 'Never' }}</span>
+          </div>
+          <div class="meta-item">
+            <span class="lbl">Next Schedule</span>
+            <span class="val text-blue">{{ job.nextRunAt ? (job.nextRunAt | date:'shortTime') : 'N/A' }}</span>
+          </div>
+        </div>
+
+        <div class="job-stats-bar">
+          <div class="stat-pill success">
+            <i class="ri-check-line"></i> {{ job.successCount }} Passed
+          </div>
+          <div class="stat-pill danger" *ngIf="job.failureCount > 0">
+            <i class="ri-close-line"></i> {{ job.failureCount }} Failed
+          </div>
+          <div class="stat-pill total">
+            <i class="ri-repeat-line"></i> {{ job.totalExecutions }} Total Runs
+          </div>
+        </div>
+
+        <div class="job-card-actions">
+          <button class="btn btn-sm btn-primary" (click)="triggerNow(job)">
+            <i class="ri-flashlight-line"></i> Run Now
+          </button>
+          <button class="btn btn-sm btn-secondary" (click)="toggleStatus(job)">
+            <i [ngClass]="job.status === 'ACTIVE' ? 'ri-pause-circle-line' : 'ri-play-circle-line'"></i>
+            {{ job.status === 'ACTIVE' ? 'Pause' : 'Activate' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Execution Audit Trail Section -->
+  <div class="section-container" style="margin-top: 32px;">
+    <div class="table-header-bar">
+      <div>
+        <h2><i class="ri-file-list-3-line"></i> Execution Audit Trail Logs</h2>
+        <p class="subtitle">Complete chronological history of past background job runs and triggered broadcasts.</p>
+      </div>
+
+      <!-- Filters -->
+      <div class="table-filters">
+        <div class="filter-group">
+          <label>Scheduler:</label>
+          <select [ngModel]="selectedJobFilter()" (ngModelChange)="selectedJobFilter.set($event); onFilterChange()">
+            <option value="ALL">All Cron Jobs</option>
+            <option value="CAMPAIGN_SCHEDULER">Campaign Dispatcher</option>
+            <option value="HOURLY_REPORTS">Hourly Reports</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label>Status:</label>
+          <select [ngModel]="selectedStatusFilter()" (ngModelChange)="selectedStatusFilter.set($event); onFilterChange()">
+            <option value="ALL">All Statuses</option>
+            <option value="SUCCESS">Success</option>
+            <option value="FAILED">Failed</option>
+            <option value="RUNNING">Running</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Data Table -->
+    <div class="table-card">
+      <div class="loading-spinner" *ngIf="isLoading()">
+        <i class="ri-loader-4-line spin"></i> Loading execution history...
+      </div>
+
+      <table class="data-table" *ngIf="!isLoading()">
+        <thead>
+          <tr>
+            <th>Log ID</th>
+            <th>Task Name</th>
+            <th>Trigger Source</th>
+            <th>Status</th>
+            <th>Started At</th>
+            <th>Duration</th>
+            <th>Items Processed</th>
+            <th>Summary Log</th>
+            <th class="text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let log of logs()">
+            <td class="font-mono">#{{ log.id }}</td>
+            <td>
+              <div class="font-bold">{{ log.jobTitle }}</div>
+              <span class="badge-code">{{ log.jobKey }}</span>
+            </td>
+            <td>
+              <span class="trigger-badge" [ngClass]="log.triggerType.toLowerCase()">
+                {{ log.triggerType === 'AUTOMATIC_CRON' ? '⏰ Automatic Cron' : '⚡ Manual Trigger' }}
+              </span>
+            </td>
+            <td>
+              <span class="status-pill" [ngClass]="log.status.toLowerCase()">
+                {{ log.status }}
+              </span>
+            </td>
+            <td class="text-nowrap">{{ log.startedAt | date:'medium' }}</td>
+            <td>{{ log.durationMs !== null ? (log.durationMs + ' ms') : 'Processing...' }}</td>
+            <td class="font-bold text-center">{{ log.itemsProcessed }}</td>
+            <td class="truncate-cell" [title]="log.summaryLog || ''">{{ log.summaryLog || '-' }}</td>
+            <td class="text-right">
+              <button class="btn btn-xs btn-outline" (click)="openLogModal(log)">
+                <i class="ri-eye-line"></i> View
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="logs().length === 0">
+            <td colspan="9" class="empty-state">
+              <i class="ri-inbox-line"></i> No execution logs recorded for selected filters.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div class="table-pagination" *ngIf="!isLoading() && totalPages() > 1">
+        <span>Showing Page {{ currentPage() }} of {{ totalPages() }} ({{ totalLogsCount() }} Records)</span>
+        <div class="pagination-buttons">
+          <button class="btn btn-sm btn-outline" [disabled]="currentPage() === 1" (click)="prevPage()">Previous</button>
+          <button class="btn btn-sm btn-outline" [disabled]="currentPage() === totalPages()" (click)="nextPage()">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail Log Modal -->
+  <div class="modal-backdrop" *ngIf="selectedLog()" (click)="closeLogModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="ri-file-text-line"></i> Execution Details - Log #{{ selectedLog()?.id }}</h3>
+        <button class="close-btn" (click)="closeLogModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-row">
+          <label>Job Title:</label> <span>{{ selectedLog()?.jobTitle }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Status:</label> <span class="status-pill" [ngClass]="selectedLog()?.status?.toLowerCase() || ''">{{ selectedLog()?.status }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Started At:</label> <span>{{ selectedLog()?.startedAt | date:'medium' }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Completed At:</label> <span>{{ selectedLog()?.completedAt ? (selectedLog()?.completedAt | date:'medium') : 'N/A' }}</span>
+        </div>
+        <div class="detail-row">
+          <label>Duration:</label> <span>{{ selectedLog()?.durationMs }} ms</span>
+        </div>
+
+        <div class="log-box" *ngIf="selectedLog()?.summaryLog">
+          <label>Summary Log:</label>
+          <pre>{{ selectedLog()?.summaryLog }}</pre>
+        </div>
+
+        <div class="log-box error-box" *ngIf="selectedLog()?.errorDetails">
+          <label>Error Details & Stacktrace:</label>
+          <pre>{{ selectedLog()?.errorDetails }}</pre>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeLogModal()">Close</button>
+      </div>
+    </div>
+  </div>
+</div>

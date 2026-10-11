@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../../shared/services/api.service';
+import { finalize } from 'rxjs';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -58,21 +59,23 @@ export class ForgotPasswordView implements OnInit {
     this.isSubmitting = true;
     this.targetEmail = email;
 
-    this.api.post('/user/reset-password', { email, newPassword }).subscribe({
-      next: (res: any) => {
+    this.api.post('/user/reset-password', { email, newPassword }).pipe(
+      finalize(() => {
         this.isSubmitting = false;
+      })
+    ).subscribe({
+      next: (res: any) => {
         this.resetStep = 'SUCCESS';
         Swal.fire({
           title: 'Password Updated!',
-          text: `Account password for ${email} has been updated in MySQL database.`,
+          text: `Account password for ${email} has been updated in database.`,
           icon: 'success',
           timer: 2500,
           showConfirmButton: false
         });
       },
       error: (err: any) => {
-        this.isSubmitting = false;
-        Swal.fire('Error', err.error?.error || 'Failed to update password', 'error');
+        Swal.fire('Error', err.error?.error || err.error?.message || 'Failed to update password', 'error');
       }
     });
   }
@@ -112,14 +115,16 @@ export class ForgotPasswordView implements OnInit {
     }
 
     this.isSubmitting = true;
-    this.api.post('/user/reset-password', { email: this.targetEmail || '', newPassword }).subscribe({
-      next: () => {
+    this.api.post('/user/reset-password', { email: this.targetEmail || '', newPassword }).pipe(
+      finalize(() => {
         this.isSubmitting = false;
+      })
+    ).subscribe({
+      next: () => {
         this.resetStep = 'SUCCESS';
       },
       error: (err) => {
-        this.isSubmitting = false;
-        Swal.fire('Error', err.error?.error || 'Failed to update password', 'error');
+        Swal.fire('Error', err.error?.error || err.error?.message || 'Failed to update password', 'error');
       }
     });
   }

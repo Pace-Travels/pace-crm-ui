@@ -70,6 +70,21 @@ export class ApiService {
     return this.http.put<T>(this.getUrl(endpoint), body, finalOptions) as Observable<T>;
   }
 
+  patch<T>(endpoint: string, body: any, options?: any): Observable<T> {
+    const isMultipart = (body instanceof FormData) || (body && typeof body === 'object' && body.constructor && body.constructor.name === 'FormData');
+    let reqHeaders = this.getHeaders(isMultipart);
+
+    if (options && options.headers) {
+      reqHeaders = options.headers;
+      if (isMultipart) {
+        reqHeaders = reqHeaders.delete('Content-Type');
+      }
+    }
+
+    const finalOptions = { ...(options || {}), headers: reqHeaders };
+    return this.http.patch<T>(this.getUrl(endpoint), body, finalOptions) as Observable<T>;
+  }
+
   delete<T>(endpoint: string): Observable<T> {
     return this.http.delete<T>(this.getUrl(endpoint), { headers: this.getHeaders() });
   }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../shared/services/auth.service';
+import { finalize } from 'rxjs';
 import Swal from 'sweetalert2';
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
@@ -61,13 +62,18 @@ export class LoginView implements OnInit {
     }
 
     this.isSubmitting = true;
-    this.authService.login(this.loginForm.value).subscribe({
-      next: (res) => {
+    this.authService.login(this.loginForm.value).pipe(
+      finalize(() => {
         this.isSubmitting = false;
-        // Navigation is handled in AuthService
+      })
+    ).subscribe({
+      next: (res) => {
+        if (!res || !res.token) {
+          const msg = res?.error || res?.message || 'Login failed. Please check your credentials.';
+          Swal.fire('Login Error', msg, 'error');
+        }
       },
       error: (err) => {
-        this.isSubmitting = false;
         const msg = err.error?.error || err.error?.message || 'Login failed. Please check your credentials.';
         Swal.fire('Login Error', msg, 'error');
       }
@@ -92,13 +98,18 @@ export class LoginView implements OnInit {
             googleId: user.uid,
             avatarUrl: user.photoURL
           };
-          this.authService.googleLogin(payload).subscribe({
-            next: () => {
+          this.authService.googleLogin(payload).pipe(
+            finalize(() => {
               this.isSubmitting = false;
+            })
+          ).subscribe({
+            next: (res) => {
+              if (!res || !res.token) {
+                Swal.fire('Google Sign In Error', res?.error || res?.message || 'Failed to authenticate Google user', 'error');
+              }
             },
             error: (err) => {
-              this.isSubmitting = false;
-              Swal.fire('Google Sign In Error', err.error?.message || err.message || 'Failed to authenticate Google user', 'error');
+              Swal.fire('Google Sign In Error', err.error?.error || err.error?.message || err.message || 'Failed to authenticate Google user', 'error');
             }
           });
         })

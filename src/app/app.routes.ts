@@ -56,6 +56,7 @@ import { DataPolicy } from './features/policies/components/data-policy/data-poli
 
 import { SuperAdminLicenseView } from './features/super-admin/super-admin-license-view/super-admin-license-view';
 import { MetaGovernanceView } from './features/super-admin/meta-governance-view/meta-governance-view';
+import { CronManagerView } from './features/cron-manager/cron-manager-view/cron-manager-view';
 
 const mainAppChildren: Routes = [
     {
@@ -67,6 +68,16 @@ const mainAppChildren: Routes = [
         path: 'admin/meta-radar',
         component: MetaGovernanceView,
         title: 'Meta Platform Governance & Tenant Health Radar - QuoteDesks Messenger'
+    },
+    {
+        path: 'admin/cron-jobs',
+        component: CronManagerView,
+        title: 'Cron Jobs & Automation Health - QuoteDesks Messenger'
+    },
+    {
+        path: 'cron-jobs',
+        component: CronManagerView,
+        title: 'Cron Jobs & Automation Health - QuoteDesks Messenger'
     },
     {
         path: 'dashboard',
