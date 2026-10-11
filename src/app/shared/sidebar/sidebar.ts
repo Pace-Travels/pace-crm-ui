@@ -90,6 +90,7 @@ export class Sidebar implements OnInit {
       expanded: true,
       items: [
         { icon: 'fa-solid fa-clock', title: 'Cron Jobs & Health', route: '/cron-jobs' },
+        { icon: 'fa-solid fa-triangle-exclamation', title: 'System Error Logs', route: '/system-logs' },
         { icon: 'fa-solid fa-gear', title: 'Manage', route: '/manage' },
         { icon: 'fa-solid fa-plug', title: 'Integrations', route: '/integrations' },
         { icon: 'fa-solid fa-users', title: 'Agents', route: '/agents' },

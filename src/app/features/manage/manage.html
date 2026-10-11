@@ -26,6 +26,8 @@
                             class="fa-solid fa-reply"></i> Quick Canned Responses</li>
                     <li [class.active]="activeTab() === 'roles'" (click)="activeTab.set('roles')"><i
                             class="fa-solid fa-shield-halved"></i> Roles & Permissions</li>
+                    <li [class.active]="activeTab() === 'system-logs'" (click)="activeTab.set('system-logs')"><i
+                            class="fa-solid fa-triangle-exclamation"></i> System Error Logs</li>
                 </ul>
             </div>
         </div>
@@ -370,6 +372,8 @@
         <app-canned-responses-crud-view></app-canned-responses-crud-view>
         } @else if (activeTab() === 'roles') {
         <app-role-permissions-crud-view></app-role-permissions-crud-view>
+        } @else if (activeTab() === 'system-logs') {
+        <app-system-logs-view></app-system-logs-view>
         }
     </div>
 </div>

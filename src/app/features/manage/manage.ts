@@ -9,6 +9,7 @@ import { AgencyCrudView } from './components/master-crud-views/agency-crud-view/
 import { GeographyCrudView } from './components/master-crud-views/geography-crud-view/geography-crud-view';
 import { CannedResponsesCrudView } from './components/master-crud-views/canned-responses-crud-view/canned-responses-crud-view';
 import { RolePermissionsCrudView } from './components/master-crud-views/role-permissions-crud-view/role-permissions-crud-view';
+import { SystemLogsView } from './components/system-logs-view/system-logs-view';
 import { ApiService } from '../../shared/services/api.service';
 
 import Swal from 'sweetalert2';
@@ -40,7 +41,8 @@ interface Widget {
     AgencyCrudView,
     GeographyCrudView,
     CannedResponsesCrudView,
-    RolePermissionsCrudView
+    RolePermissionsCrudView,
+    SystemLogsView
   ],
   templateUrl: './manage.html',
   styleUrl: './manage.scss',
