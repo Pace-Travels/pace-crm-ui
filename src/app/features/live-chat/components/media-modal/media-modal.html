@@ -50,12 +50,12 @@
            (dragleave)="onDragLeave($event)"
            (drop)="onDrop($event)">
         
-        <input #fileInput type="file" (change)="onFilePicked($event)" class="file-input-hidden" />
+        <input #fileInput type="file" [accept]="acceptMimeTypes" (change)="onFilePicked($event)" class="file-input-hidden" />
         
         <div class="dropzone-content" *ngIf="!previewUrl() && !isUploading()">
           <i class="fa-solid fa-folder-open drop-icon"></i>
           <p class="drop-text">Drag and drop your file here, or <span class="browse-link" (click)="fileInput.click()">browse</span></p>
-          <span class="drop-hint">Supports JPG, PNG, WebP, MP4, PDF, MP3 up to 50MB</span>
+          <span class="drop-hint">{{ dropzoneHint }}</span>
         </div>
 
         <!-- Upload Progress Indicator -->
@@ -100,7 +100,7 @@
           <input 
             type="text" 
             class="form-control" 
-            placeholder="https://example.com/assets/brochure.pdf" 
+            [placeholder]="urlPlaceholder" 
             [ngModel]="mediaUrl"
             (ngModelChange)="onUrlInput($event)" 
           />
