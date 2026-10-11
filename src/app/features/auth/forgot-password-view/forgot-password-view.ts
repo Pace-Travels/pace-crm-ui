@@ -26,6 +26,17 @@ export class ForgotPasswordView implements OnInit {
   isSubmitting = false;
   targetEmail = '';
 
+  showNewPassword = false;
+  showConfirmPassword = false;
+
+  toggleNewPassword() {
+    this.showNewPassword = !this.showNewPassword;
+  }
+
+  toggleConfirmPassword() {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
+
   ngOnInit() {
     this.requestForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]]
