@@ -9,11 +9,12 @@ import { TagModal } from '../tag-modal/tag-modal';
 import { PayModal, PaymentRequestPayload } from '../pay-modal/pay-modal';
 import { EmojiStickerPicker } from '../emoji-sticker-picker/emoji-sticker-picker';
 import { SendTemplateModal, TemplateDispatchPayload } from '../template-modal/template-modal';
+import { AssetGalleryPicker } from '../../../campaigns/components/asset-gallery-picker/asset-gallery-picker';
 
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MediaModal, TagModal, PayModal, EmojiStickerPicker, SendTemplateModal],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MediaModal, TagModal, PayModal, EmojiStickerPicker, SendTemplateModal, AssetGalleryPicker],
   templateUrl: './chat-window.html',
   styleUrl: './chat-window.scss',
 })
@@ -35,6 +36,7 @@ export class ChatWindow implements AfterViewChecked {
   isTagModalOpen = signal(false);
   isPayModalOpen = signal(false);
   isTemplateModalOpen = signal(false);
+  isAssetGalleryOpen = signal(false);
 
   contactTags = signal<string[]>([]);
 
@@ -389,6 +391,47 @@ export class ChatWindow implements AfterViewChecked {
       },
       error: (err: any) => {
         this.showAlert('Delivery Failed', err.error?.error || err.message || 'Failed to dispatch template', 'error');
+      }
+    });
+  }
+
+  handleGalleryAssetSelected(assetUrl: string) {
+    const conv = this.chatService.selectedConversation();
+    if (!conv || !assetUrl) return;
+
+    let mediaType = 'IMAGE';
+    const lower = assetUrl.toLowerCase();
+
+    if (lower.endsWith('.mp4') || lower.endsWith('.mov') || lower.endsWith('.3gp')) {
+      mediaType = 'VIDEO';
+    } else if (lower.endsWith('.pdf') || lower.endsWith('.doc') || lower.endsWith('.docx') || lower.endsWith('.xlsx')) {
+      mediaType = 'DOCUMENT';
+    } else if (lower.endsWith('.mp3') || lower.endsWith('.wav') || lower.endsWith('.ogg')) {
+      mediaType = 'AUDIO';
+    }
+
+    const payload = {
+      conversationId: conv.id,
+      senderType: 'HUMAN',
+      messageType: mediaType,
+      content: assetUrl,
+      mediaUrl: assetUrl,
+      textContent: `[Media Attachment: ${mediaType}]`,
+      direction: 'OUTBOUND'
+    };
+
+    this.api.post<any>('messages/add', payload).subscribe({
+      next: (res: any) => {
+        this.isAssetGalleryOpen.set(false);
+        const newMsg = res.data || res;
+        if (newMsg && newMsg.id) {
+          const current = this.chatService.messagesSubject.value;
+          this.chatService.messagesSubject.next([...current, newMsg]);
+        }
+        this.showAlert('Media Sent', `Media asset (${mediaType}) sent successfully from Gallery.`, 'success');
+      },
+      error: (err: any) => {
+        this.showAlert('Error', err.error?.error || err.message || 'Failed to send media asset', 'error');
       }
     });
   }
