@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ContactService, Contact } from '../../contacts/services/contact.service';
 import { ApiService } from '../../../shared/services/api.service';
 import { ContactProfilePanel } from '../../../shared/components/contact-profile-panel/contact-profile-panel';
+import { AssetGalleryPicker } from '../components/asset-gallery-picker/asset-gallery-picker';
 import Swal from 'sweetalert2';
 
 export interface QuickReplyOption {
@@ -26,7 +27,7 @@ export interface BaseBlueprint {
 @Component({
   selector: 'app-create-campaign-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, ContactProfilePanel],
+  imports: [CommonModule, FormsModule, ContactProfilePanel, AssetGalleryPicker],
   templateUrl: './create-campaign-view.html',
   styleUrl: './create-campaign-view.scss',
 })
@@ -37,6 +38,9 @@ export class CreateCampaignView implements OnInit {
 
   campaignName = '';
   showQuickFilters = false;
+
+  // Asset Gallery Signal
+  isAssetGalleryOpen = signal(false);
 
   // Mode & Blueprint Signals
   campaignMode = signal<'STANDARD' | 'CONVERSATIONAL'>('STANDARD');
