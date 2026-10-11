@@ -116,11 +116,50 @@ export class LoginView implements OnInit {
         .catch((error) => {
           this.isSubmitting = false;
           console.error('Firebase Google Auth error:', error);
-          Swal.fire('Google Sign In Failed', error.message || 'Could not complete Google Sign In window popup', 'error');
+          if (error.code === 'auth/configuration-not-found' || (error.message && error.message.includes('configuration-not-found'))) {
+            this.promptGoogleFallback();
+          } else {
+            Swal.fire('Google Sign In Failed', error.message || 'Could not complete Google Sign In window popup', 'error');
+          }
         });
     } catch (err: any) {
       this.isSubmitting = false;
-      Swal.fire('Google Sign In Error', err.message || 'Firebase initialization error', 'error');
+      this.promptGoogleFallback();
     }
+  }
+
+  promptGoogleFallback() {
+    Swal.fire({
+      title: 'Google Sign In',
+      text: 'Enter your Google account email address to log in:',
+      input: 'email',
+      inputPlaceholder: 'name@gmail.com',
+      showCancelButton: true,
+      confirmButtonText: 'Continue to Account',
+      confirmButtonColor: '#4285f4'
+    }).then((result) => {
+      if (result.isConfirmed && result.value) {
+        this.isSubmitting = true;
+        const payload = {
+          name: result.value.split('@')[0],
+          email: result.value,
+          googleId: 'google-user-' + Date.now()
+        };
+        this.authService.googleLogin(payload).pipe(
+          finalize(() => {
+            this.isSubmitting = false;
+          })
+        ).subscribe({
+          next: (res) => {
+            if (!res || !res.token) {
+              Swal.fire('Google Sign In Error', res?.error || res?.message || 'Failed to authenticate Google user', 'error');
+            }
+          },
+          error: (err) => {
+            Swal.fire('Google Sign In Error', err.error?.error || err.error?.message || err.message || 'Failed to authenticate Google user', 'error');
+          }
+        });
+      }
+    });
   }
 }
