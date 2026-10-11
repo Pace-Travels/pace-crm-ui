@@ -129,6 +129,17 @@ export class CreateCampaignView implements OnInit {
   newGroupName = signal('');
   newGroupDescription = signal('');
 
+  // Dynamic WABA Metrics Signal
+  wabaStats = signal<{
+    qualityRating: string;
+    tierDisplay: string;
+    remainingQuota: number;
+  }>({
+    qualityRating: 'High',
+    tierDisplay: 'Tier 1 (1k/day)',
+    remainingQuota: 1000
+  });
+
   constructor(
     private router: Router,
     private api: ApiService,
@@ -139,6 +150,23 @@ export class CreateCampaignView implements OnInit {
     this.contactService.fetchContacts();
     this.contactService.fetchGroups();
     this.fetchTemplates();
+    this.fetchWabaStats();
+  }
+
+  fetchWabaStats() {
+    const projId = localStorage.getItem('activeProjectId') || '1';
+    this.api.get<any>(`projects/${projId}/waba-stats`).subscribe({
+      next: (res) => {
+        if (res && res.success) {
+          this.wabaStats.set({
+            qualityRating: res.qualityRating || 'High',
+            tierDisplay: res.tierDisplay || 'Tier 1 (1k/day)',
+            remainingQuota: res.remainingQuota !== undefined ? res.remainingQuota : 1000
+          });
+        }
+      },
+      error: () => {}
+    });
   }
 
   fetchTemplates() {

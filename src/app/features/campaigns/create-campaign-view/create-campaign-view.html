@@ -4,14 +4,23 @@
         <div class="header-left">
             <button class="btn-back" (click)="goBack()"><i class="fa-solid fa-arrow-left"></i> Create Campaign</button>
         </div>
-        <div class="header-right">
-            <div class="metric">
+        <div class="header-right" style="display: flex; align-items: center; gap: 16px;">
+            <div class="metric" title="Live Meta Quality Rating">
                 <span>Quality Rating <i class="fa-solid fa-circle-info"></i></span>
-                <span class="badge badge-high">High</span>
+                <span class="badge" 
+                      [style.background]="wabaStats().qualityRating === 'High' ? '#dcfce7' : '#fef3c7'" 
+                      [style.color]="wabaStats().qualityRating === 'High' ? '#15803d' : '#b45309'"
+                      style="padding: 2px 8px; border-radius: 10px; font-weight: 700;">
+                    {{ wabaStats().qualityRating }}
+                </span>
             </div>
-            <div class="metric">
+            <div class="metric" title="Template Messaging Tier Limit">
                 <span>Template Messaging Tier <i class="fa-solid fa-circle-info"></i></span>
-                <span class="value">Tier 1</span>
+                <span class="value" style="font-weight: 700;">{{ wabaStats().tierDisplay }}</span>
+            </div>
+            <div class="metric" title="Calculated 24h Outbound Remaining Quota">
+                <span>Remaining Quota <i class="fa-solid fa-circle-info"></i></span>
+                <span class="value" style="font-weight: 800; color: #7c3aed;">{{ wabaStats().remainingQuota | number }}</span>
             </div>
         </div>
     </div>
