@@ -358,23 +358,42 @@
                         </span>
                     </div>
 
-                    <!-- 2. Phone Number ID -->
+                    <!-- 2. Phone Number ID & Messaging Capacity -->
                     <div
-                        style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                                <i class="fa-solid fa-phone" style="color: #64748b; font-size: 14px;"></i>
-                                <strong style="font-size: 13.5px; color: #0f172a;">Phone Number ID</strong>
+                        style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 18px; display: flex; flex-direction: column; gap: 8px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                    <i class="fa-solid fa-phone" style="color: #64748b; font-size: 14px;"></i>
+                                    <strong style="font-size: 13.5px; color: #0f172a;">Phone Number Status & Sending Capability</strong>
+                                </div>
+                                <span style="font-size: 12.5px; color: #475569;">{{
+                                    diagnosticData().checks.phoneNumber.message }}</span>
                             </div>
-                            <span style="font-size: 12.5px; color: #475569;">{{
-                                diagnosticData().checks.phoneNumber.message }}</span>
+                            <span
+                                [style.background]="diagnosticData().checks.phoneNumber.status === 'OK' ? '#dcfce7' : '#fee2e2'"
+                                [style.color]="diagnosticData().checks.phoneNumber.status === 'OK' ? '#15803d' : '#b91c1c'"
+                                style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
+                                {{ diagnosticData().checks.phoneNumber.status === 'OK' ? 'CAN SEND MESSAGES' : 'SENDING DISABLED' }}
+                            </span>
                         </div>
-                        <span
-                            [style.background]="diagnosticData().checks.phoneNumber.status === 'OK' ? '#dcfce7' : '#fee2e2'"
-                            [style.color]="diagnosticData().checks.phoneNumber.status === 'OK' ? '#15803d' : '#b91c1c'"
-                            style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;">
-                            {{ diagnosticData().checks.phoneNumber.status }}
-                        </span>
+
+                        <!-- Extended Capacity Metrics Breakdown -->
+                        <div *ngIf="diagnosticData().checks.phoneNumber.details"
+                            style="background: white; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 10px 14px; margin-top: 4px; display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; font-size: 12px;">
+                            <div>
+                                <span style="color: #64748b; display: block; font-size: 11px;">Messaging Tier Limit</span>
+                                <strong style="color: #0284c7; font-size: 13px;">{{ diagnosticData().checks.phoneNumber.details.messagingLimitTier || 'TIER_1K' }}</strong>
+                            </div>
+                            <div>
+                                <span style="color: #64748b; display: block; font-size: 11px;">Quality Rating</span>
+                                <strong style="color: #15803d;">{{ diagnosticData().checks.phoneNumber.details.qualityRating || 'GREEN' }} 🟢</strong>
+                            </div>
+                            <div>
+                                <span style="color: #64748b; display: block; font-size: 11px;">Throughput</span>
+                                <strong style="color: #334155;">{{ diagnosticData().checks.phoneNumber.details.throughput || 'STANDARD' }}</strong>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- 3. WABA Account ID -->
