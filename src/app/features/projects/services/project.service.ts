@@ -1,6 +1,21 @@
 import { Injectable, signal } from '@angular/core';
 import { ApiService } from '../../../shared/services/api.service';
 
+export interface WhatsappNumber {
+  id: number;
+  projectId: number;
+  phoneNumberId: string;
+  phoneNumber: string;
+  phoneDisplayNumber?: string;
+  verifiedName?: string;
+  qualityRating: 'GREEN' | 'YELLOW' | 'RED' | 'UNKNOWN';
+  messagingLimit: string;
+  codeVerificationStatus: string;
+  status: string;
+  isPrimary: boolean;
+  isActive: boolean;
+}
+
 export interface Project {
   id: number;
   name: string;
@@ -15,6 +30,7 @@ export interface Project {
   testPhoneNumberId?: string;
   testAccessToken?: string;
   mode?: 'DEVELOPMENT' | 'PRODUCTION';
+  whatsappNumbers?: WhatsappNumber[];
 }
 
 @Injectable({ providedIn: 'root' })
@@ -78,5 +94,13 @@ export class ProjectService {
 
   detachConfig(projectId: number) {
     return this.api.post<any>('projects/detach', { projectId });
+  }
+
+  addPhoneNumber(payload: any) {
+    return this.api.post<any>('projects/phone-number/add', payload);
+  }
+
+  togglePhoneNumberStatus(numberId: number, isActive: boolean) {
+    return this.api.put<any>(`projects/phone-number/${numberId}/status`, { isActive });
   }
 }

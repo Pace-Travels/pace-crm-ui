@@ -28,11 +28,31 @@ export class ProjectsView implements OnInit {
   isCheckingHealth = signal<boolean>(false);
   activeCheckingProjectName = signal<string>('');
 
+  // Expandable Project Cards & Multi-Phone Number State
+  expandedProjectIds = signal<Set<number>>(new Set());
+  showAddPhoneModal = signal<boolean>(false);
+  selectedProjectIdForPhone = signal<number | null>(null);
+  addPhoneForm: FormGroup;
+
   private router = inject(Router);
   private api = inject(ApiService);
 
   toggleCreateForm() {
     this.showCreateForm.set(!this.showCreateForm());
+  }
+
+  toggleExpand(projectId: number) {
+    const current = new Set(this.expandedProjectIds());
+    if (current.has(projectId)) {
+      current.delete(projectId);
+    } else {
+      current.add(projectId);
+    }
+    this.expandedProjectIds.set(current);
+  }
+
+  isExpanded(projectId: number): boolean {
+    return this.expandedProjectIds().has(projectId);
   }
 
   constructor(
@@ -48,6 +68,14 @@ export class ProjectsView implements OnInit {
       accessToken: ['', Validators.required],
       webhookVerifyToken: ['pace_messenger_verify_token'],
       testPhoneNumber: ['']
+    });
+
+    this.addPhoneForm = this.fb.group({
+      phoneNumber: ['', Validators.required],
+      phoneNumberId: ['', Validators.required],
+      verifiedName: [''],
+      qualityRating: ['GREEN'],
+      messagingLimit: ['TIER_1K']
     });
   }
 
@@ -419,6 +447,57 @@ export class ProjectsView implements OnInit {
             Swal.fire('Error', err.error?.error || 'Failed to detach account', 'error');
           }
         });
+      }
+    });
+  }
+
+  openAddPhoneModal(projectId: number, event?: Event) {
+    if (event) event.stopPropagation();
+    this.selectedProjectIdForPhone.set(projectId);
+    this.addPhoneForm.reset({
+      qualityRating: 'GREEN',
+      messagingLimit: 'TIER_1K'
+    });
+    this.showAddPhoneModal.set(true);
+  }
+
+  closeAddPhoneModal() {
+    this.showAddPhoneModal.set(false);
+    this.selectedProjectIdForPhone.set(null);
+  }
+
+  submitAddPhone() {
+    if (this.addPhoneForm.invalid || !this.selectedProjectIdForPhone()) {
+      Swal.fire('Error', 'Please fill in the required Phone Number and Phone Number ID fields.', 'error');
+      return;
+    }
+
+    const payload = {
+      projectId: this.selectedProjectIdForPhone(),
+      ...this.addPhoneForm.value
+    };
+
+    this.projectService.addPhoneNumber(payload).subscribe({
+      next: () => {
+        Swal.fire('Added!', 'New WhatsApp Phone Number added to project successfully.', 'success');
+        this.closeAddPhoneModal();
+        this.projectService.fetchProjects();
+      },
+      error: (err: any) => {
+        Swal.fire('Error', 'Failed to add phone number: ' + (err.error?.message || err.message), 'error');
+      }
+    });
+  }
+
+  toggleNumberActive(numRecord: any, event: Event) {
+    event.stopPropagation();
+    const newStatus = !numRecord.isActive;
+    this.projectService.togglePhoneNumberStatus(numRecord.id, newStatus).subscribe({
+      next: () => {
+        numRecord.isActive = newStatus;
+      },
+      error: (err: any) => {
+        Swal.fire('Error', 'Failed to update phone status: ' + (err.error?.message || err.message), 'error');
       }
     });
   }
