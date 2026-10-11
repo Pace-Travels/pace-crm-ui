@@ -1,10 +1,19 @@
-import { Component, OnInit, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../../shared/services/api.service';
 import { finalize } from 'rxjs';
 import Swal from 'sweetalert2';
+
+export interface ShowcaseSlide {
+  badge: string;
+  title: string;
+  description: string;
+  cardTitle: string;
+  cardSub: string;
+  mockupType?: 'INTEGRATIONS' | 'AI_BOT' | 'WABA_QUOTA';
+}
 
 @Component({
   selector: 'app-forgot-password-view',
@@ -13,7 +22,7 @@ import Swal from 'sweetalert2';
   templateUrl: './forgot-password-view.html',
   styleUrl: './forgot-password-view.scss'
 })
-export class ForgotPasswordView implements OnInit {
+export class ForgotPasswordView implements OnInit, OnDestroy {
   api = inject(ApiService);
   router = inject(Router);
   fb = inject(FormBuilder);
@@ -28,6 +37,66 @@ export class ForgotPasswordView implements OnInit {
 
   showNewPassword = false;
   showConfirmPassword = false;
+
+  // Showcase Carousel Signal State
+  currentSlide = signal(0);
+  private slideTimer: any = null;
+
+  slides: ShowcaseSlide[] = [
+    {
+      badge: "ACCOUNT RECOVERY",
+      title: "15 new integrations added",
+      description: "You asked and we listened! We've added a bunch of new integrations to speed up your workflow.",
+      cardTitle: "Connect QuoteDesks to Meta & Linear",
+      cardSub: "Prioritize work based on customer needs and build a tighter feedback loop with your customers.",
+      mockupType: 'INTEGRATIONS'
+    },
+    {
+      badge: "AI MARKETING RADAR",
+      title: "AI Conversational Workflows",
+      description: "Auto-qualify incoming prospects & map response buttons directly to CRM lead stages with automated bot flows.",
+      cardTitle: "Lead Qualification & Interactive Bot",
+      cardSub: "Sends instant auto-replies and tags customer profiles automatically upon button click.",
+      mockupType: 'AI_BOT'
+    },
+    {
+      badge: "ENTERPRISE INFRASTRUCTURE",
+      title: "Tier 1 Official Meta WABA API",
+      description: "Broadcast up to 100,000+ daily messages with live Meta quality rating monitoring and dynamic quota tracking.",
+      cardTitle: "Meta WABA Quota: 1,000 / Day",
+      cardSub: "Quality Rating: High • Official Meta TSP Partner Ecosystem",
+      mockupType: 'WABA_QUOTA'
+    }
+  ];
+
+  startSlideTimer() {
+    this.stopSlideTimer();
+    this.slideTimer = setInterval(() => {
+      this.nextSlide();
+    }, 5000);
+  }
+
+  stopSlideTimer() {
+    if (this.slideTimer) {
+      clearInterval(this.slideTimer);
+      this.slideTimer = null;
+    }
+  }
+
+  setSlide(index: number) {
+    this.currentSlide.set(index);
+    this.startSlideTimer();
+  }
+
+  nextSlide() {
+    this.currentSlide.set((this.currentSlide() + 1) % this.slides.length);
+  }
+
+  prevSlide() {
+    const current = this.currentSlide();
+    this.currentSlide.set(current === 0 ? this.slides.length - 1 : current - 1);
+    this.startSlideTimer();
+  }
 
   toggleNewPassword() {
     this.showNewPassword = !this.showNewPassword;
@@ -53,6 +122,12 @@ export class ForgotPasswordView implements OnInit {
       newPassword: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]]
     });
+
+    this.startSlideTimer();
+  }
+
+  ngOnDestroy() {
+    this.stopSlideTimer();
   }
 
   submitDirectReset() {

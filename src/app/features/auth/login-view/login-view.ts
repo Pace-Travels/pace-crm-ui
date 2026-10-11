@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -10,6 +10,15 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { environment } from '../../../../environments/environment';
 
+export interface ShowcaseSlide {
+  badge: string;
+  title: string;
+  description: string;
+  cardTitle: string;
+  cardSub: string;
+  mockupType?: 'INTEGRATIONS' | 'AI_BOT' | 'WABA_QUOTA';
+}
+
 @Component({
   selector: 'app-login-view',
   standalone: true,
@@ -17,10 +26,42 @@ import { environment } from '../../../../environments/environment';
   templateUrl: './login-view.html',
   styleUrl: './login-view.scss',
 })
-export class LoginView implements OnInit {
+export class LoginView implements OnInit, OnDestroy {
   loginForm!: FormGroup;
   isSubmitting = false;
   showPassword = false;
+  rememberMe = true;
+
+  // Showcase Carousel Signal State
+  currentSlide = signal(0);
+  private slideTimer: any = null;
+
+  slides: ShowcaseSlide[] = [
+    {
+      badge: "WHAT'S NEW?",
+      title: "15 new integrations added",
+      description: "You asked and we listened! We've added a bunch of new integrations to speed up your workflow.",
+      cardTitle: "Connect QuoteDesks to Meta & Linear",
+      cardSub: "Prioritize work based on customer needs and build a tighter feedback loop with your customers.",
+      mockupType: 'INTEGRATIONS'
+    },
+    {
+      badge: "AI MARKETING RADAR",
+      title: "AI Conversational Workflows",
+      description: "Auto-qualify incoming prospects & map response buttons directly to CRM lead stages with automated bot flows.",
+      cardTitle: "Lead Qualification & Interactive Bot",
+      cardSub: "Sends instant auto-replies and tags customer profiles automatically upon button click.",
+      mockupType: 'AI_BOT'
+    },
+    {
+      badge: "ENTERPRISE INFRASTRUCTURE",
+      title: "Tier 1 Official Meta WABA API",
+      description: "Broadcast up to 100,000+ daily messages with live Meta quality rating monitoring and dynamic quota tracking.",
+      cardTitle: "Meta WABA Quota: 1,000 / Day",
+      cardSub: "Quality Rating: High • Official Meta TSP Partner Ecosystem",
+      mockupType: 'WABA_QUOTA'
+    }
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -30,9 +71,43 @@ export class LoginView implements OnInit {
 
   ngOnInit() {
     this.loginForm = this.fb.group({
-      email: ['', Validators.required],
+      email: ['amelie@quotedesks.com', [Validators.required, Validators.email]],
       password: ['', Validators.required]
     });
+    this.startSlideTimer();
+  }
+
+  ngOnDestroy() {
+    this.stopSlideTimer();
+  }
+
+  startSlideTimer() {
+    this.stopSlideTimer();
+    this.slideTimer = setInterval(() => {
+      this.nextSlide();
+    }, 5000);
+  }
+
+  stopSlideTimer() {
+    if (this.slideTimer) {
+      clearInterval(this.slideTimer);
+      this.slideTimer = null;
+    }
+  }
+
+  setSlide(index: number) {
+    this.currentSlide.set(index);
+    this.startSlideTimer();
+  }
+
+  nextSlide() {
+    this.currentSlide.set((this.currentSlide() + 1) % this.slides.length);
+  }
+
+  prevSlide() {
+    const current = this.currentSlide();
+    this.currentSlide.set(current === 0 ? this.slides.length - 1 : current - 1);
+    this.startSlideTimer();
   }
 
   togglePassword() {
