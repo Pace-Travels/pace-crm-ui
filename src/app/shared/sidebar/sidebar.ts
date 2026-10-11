@@ -79,6 +79,7 @@ export class Sidebar implements OnInit {
         { icon: 'fa-regular fa-address-book', title: 'Contacts', route: '/contacts' },
         { icon: 'fa-solid fa-bullhorn', title: 'Campaigns', route: '/campaigns' },
         { icon: 'fa-solid fa-layer-group', title: 'Templates', route: '/templates' },
+        { icon: 'fa-solid fa-photo-film', title: 'Gallery', route: '/gallery' },
         { icon: 'fa-solid fa-share-nodes', title: 'Flows', route: '/flows' },
         { icon: 'fa-solid fa-indian-rupee-sign', title: 'WA Payments', route: '/payments' },
         { icon: 'fa-brands fa-chrome', title: 'Web Push', route: '/webpush' },

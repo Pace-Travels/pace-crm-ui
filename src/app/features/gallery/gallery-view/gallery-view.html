@@ -1,0 +1,331 @@
+<div class="gallery-container">
+    <!-- Header Section -->
+    <div class="page-header">
+        <div class="header-left">
+            <h2><i class="fa-solid fa-photo-film text-indigo"></i> Multimedia Asset Gallery</h2>
+            <p class="subtitle">Upload, organize, preview, and deploy high-res images, videos, documents, and audio to S3 for campaigns.</p>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-primary" (click)="showUploadModal.set(true)">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload Multimedia
+            </button>
+        </div>
+    </div>
+
+    <!-- Storage Statistics Summary Bar -->
+    <div class="stats-summary-grid">
+        <div class="stat-card">
+            <div class="stat-icon bg-indigo-light"><i class="fa-solid fa-hard-drive text-indigo"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Total Storage</span>
+                <span class="stat-value">{{ galleryService.stats()?.totalSizeFormatted || '0.00 MB' }}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-blue-light"><i class="fa-solid fa-photo-film text-blue"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Total Assets</span>
+                <span class="stat-value">{{ galleryService.stats()?.totalFiles || 0 }}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-emerald-light"><i class="fa-regular fa-image text-emerald"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Images</span>
+                <span class="stat-value">{{ galleryService.stats()?.imageCount || 0 }}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-purple-light"><i class="fa-solid fa-video text-purple"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Videos</span>
+                <span class="stat-value">{{ galleryService.stats()?.videoCount || 0 }}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-amber-light"><i class="fa-solid fa-file-lines text-amber"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Documents</span>
+                <span class="stat-value">{{ galleryService.stats()?.documentCount || 0 }}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon bg-rose-light"><i class="fa-solid fa-music text-rose"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Audio Files</span>
+                <span class="stat-value">{{ galleryService.stats()?.audioCount || 0 }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Tabs & Controls Bar -->
+    <div class="gallery-controls-card">
+        <!-- Category Tabs -->
+        <div class="category-tabs">
+            <button class="tab-btn" [class.active]="activeTab() === 'ALL'" (click)="setTab('ALL')">
+                <i class="fa-solid fa-layer-group"></i> All Media
+            </button>
+            <button class="tab-btn" [class.active]="activeTab() === 'IMAGE'" (click)="setTab('IMAGE')">
+                <i class="fa-regular fa-image"></i> Images
+            </button>
+            <button class="tab-btn" [class.active]="activeTab() === 'VIDEO'" (click)="setTab('VIDEO')">
+                <i class="fa-solid fa-video"></i> Videos
+            </button>
+            <button class="tab-btn" [class.active]="activeTab() === 'DOCUMENT'" (click)="setTab('DOCUMENT')">
+                <i class="fa-solid fa-file-pdf"></i> Documents
+            </button>
+            <button class="tab-btn" [class.active]="activeTab() === 'AUDIO'" (click)="setTab('AUDIO')">
+                <i class="fa-solid fa-music"></i> Audio
+            </button>
+        </div>
+
+        <!-- Search & Filter Actions -->
+        <div class="action-controls">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Search by name or file type..." [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()" />
+            </div>
+
+            <select class="sort-select" [(ngModel)]="sortBy">
+                <option value="NEWEST">Sort: Newest First</option>
+                <option value="SIZE">Sort: Largest Size</option>
+                <option value="NAME">Sort: File Name</option>
+            </select>
+
+            <div class="view-toggle">
+                <button class="toggle-btn" [class.active]="viewMode() === 'GRID'" (click)="viewMode.set('GRID')" title="Grid View">
+                    <i class="fa-solid fa-border-all"></i>
+                </button>
+
+                <button class="toggle-btn" [class.active]="viewMode() === 'LIST'" (click)="viewMode.set('LIST')" title="List View">
+                    <i class="fa-solid fa-list"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Media Grid / List Container -->
+    @if (galleryService.isLoading()) {
+        <div class="loading-state">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <p>Loading S3 multimedia gallery assets...</p>
+        </div>
+    } @else if (processedAssets.length === 0) {
+        <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-photo-film"></i></div>
+            <h4>No multimedia assets found</h4>
+            <p>Upload images, videos, PDFs, or audio files to populate your S3 asset gallery.</p>
+            <button class="btn btn-primary" (click)="showUploadModal.set(true)">
+                <i class="fa-solid fa-cloud-arrow-up"></i> Upload Media
+            </button>
+        </div>
+    } @else {
+        <!-- Grid View -->
+        @if (viewMode() === 'GRID') {
+            <div class="media-grid">
+                @for (asset of processedAssets; track asset.id) {
+                    <div class="media-card" (click)="openPreview(asset)">
+                        <!-- Media Thumbnail Container -->
+                        <div class="card-thumb">
+                            @if (asset.mediaType === 'IMAGE') {
+                                <img [src]="asset.publicUrl" [alt]="asset.title" loading="lazy" />
+                            } @else if (asset.mediaType === 'VIDEO') {
+                                <div class="video-thumb">
+                                    <i class="fa-solid fa-play-circle play-overlay"></i>
+                                    <video [src]="asset.publicUrl" preload="metadata"></video>
+                                </div>
+                            } @else if (asset.mediaType === 'AUDIO') {
+                                <div class="audio-thumb">
+                                    <i class="fa-solid fa-music"></i>
+                                    <span>AUDIO</span>
+                                </div>
+                            } @else {
+                                <div class="doc-thumb">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                    <span>DOCUMENT</span>
+                                </div>
+                            }
+                            <span class="media-type-badge" [class]="'badge-' + asset.mediaType.toLowerCase()">{{ asset.mediaType }}</span>
+                        </div>
+
+                        <!-- Card Info -->
+                        <div class="card-body">
+                            <h5 class="asset-title" [title]="asset.title">{{ asset.title }}</h5>
+                            <div class="asset-meta">
+                                <span>{{ formatBytes(asset.fileSize) }}</span>
+                                <span>• {{ asset.createdAt | date:'shortDate' }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Bar -->
+                        <div class="card-actions">
+                            <button class="btn-action" (click)="copyPublicUrl(asset, $event)" title="Copy Public S3 CDN URL">
+                                <i class="fa-solid fa-link"></i> Copy URL
+                            </button>
+                            <button class="btn-action delete" (click)="deleteAsset(asset, $event)" title="Delete Asset">
+                                <i class="fa-regular fa-trash-can"></i>
+                            </button>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <!-- List View -->
+        @if (viewMode() === 'LIST') {
+            <div class="media-list-table-container">
+                <table class="media-table">
+                    <thead>
+                        <tr>
+                            <th>PREVIEW</th>
+                            <th>NAME & TITLE</th>
+                            <th>TYPE</th>
+                            <th>FILE SIZE</th>
+                            <th>UPLOAD DATE</th>
+                            <th>PUBLIC S3 URL</th>
+                            <th class="text-right">ACTIONS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @for (asset of processedAssets; track asset.id) {
+                            <tr (click)="openPreview(asset)">
+                                <td>
+                                    <div class="list-thumb">
+                                        @if (asset.mediaType === 'IMAGE') {
+                                            <img [src]="asset.publicUrl" />
+                                        } @else if (asset.mediaType === 'VIDEO') {
+                                            <i class="fa-solid fa-video text-purple"></i>
+                                        } @else if (asset.mediaType === 'AUDIO') {
+                                            <i class="fa-solid fa-music text-rose"></i>
+                                        } @else {
+                                            <i class="fa-solid fa-file-pdf text-amber"></i>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="list-title">{{ asset.title }}</span>
+                                    <span class="list-filename">{{ asset.filename }}</span>
+                                </td>
+                                <td><span class="media-type-badge" [class]="'badge-' + asset.mediaType.toLowerCase()">{{ asset.mediaType }}</span></td>
+                                <td>{{ formatBytes(asset.fileSize) }}</td>
+                                <td>{{ asset.createdAt | date:'short' }}</td>
+                                <td>
+                                    <span class="url-snippet" [title]="asset.publicUrl">{{ asset.publicUrl }}</span>
+                                </td>
+                                <td class="text-right" (click)="$event.stopPropagation()">
+                                    <button class="btn-icon-action" (click)="copyPublicUrl(asset, $event)" title="Copy S3 URL"><i class="fa-solid fa-link"></i></button>
+                                    <button class="btn-icon-action text-red" (click)="deleteAsset(asset, $event)" title="Delete"><i class="fa-regular fa-trash-can"></i></button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    }
+
+    <!-- Upload Multi-file Modal -->
+    @if (showUploadModal()) {
+        <div class="modal-backdrop" (click)="showUploadModal.set(false)">
+            <div class="modal-content" (click)="$event.stopPropagation()">
+                <div class="modal-header">
+                    <h4><i class="fa-solid fa-cloud-arrow-up text-indigo"></i> Upload Multimedia to S3 Gallery</h4>
+                    <button class="btn-close" (click)="showUploadModal.set(false)"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div class="modal-body">
+                    <!-- Drag and Drop Dropzone -->
+                    <div class="dropzone" [class.drag-over]="dragOver()" (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onDrop($event)" (click)="fileInput.click()">
+                        <input #fileInput type="file" multiple (change)="onFileSelect($event)" style="display: none;" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.csv" />
+                        <i class="fa-solid fa-cloud-arrow-up drop-icon"></i>
+                        <h5>Drag & Drop files here or click to browse</h5>
+                        <p class="drop-hint">Supports Images (PNG/JPG), Videos (MP4), Documents (PDF/DOCX), and Audio (MP3/WAV).</p>
+                    </div>
+
+                    <!-- Selected File List -->
+                    @if (selectedFiles().length > 0) {
+                        <div class="file-queue">
+                            <h6>Selected Files ({{ selectedFiles().length }})</h6>
+                            <div class="queue-list">
+                                @for (file of selectedFiles(); track file.name; let idx = $index) {
+                                    <div class="queue-item">
+                                        <div class="file-icon"><i class="fa-solid fa-file"></i></div>
+                                        <div class="file-info">
+                                            <span class="file-name">{{ file.name }}</span>
+                                            <span class="file-size">{{ formatBytes(file.size) }}</span>
+                                        </div>
+                                        <button class="btn-remove-file" (click)="removeFile(idx)"><i class="fa-solid fa-xmark"></i></button>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-outline" (click)="showUploadModal.set(false)" [disabled]="uploading()">Cancel</button>
+                    <button class="btn btn-primary" [disabled]="selectedFiles().length === 0 || uploading()" (click)="startUpload()">
+                        @if (uploading()) {
+                            <i class="fa-solid fa-spinner fa-spin"></i> Uploading to AWS S3...
+                        } @else {
+                            <i class="fa-solid fa-upload"></i> Start S3 Upload
+                        }
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Rich Interactive Media Preview Lightbox Modal -->
+    @if (showPreviewModal() && selectedAsset()) {
+        <div class="modal-backdrop preview-backdrop" (click)="closePreview()">
+            <div class="preview-dialog" (click)="$event.stopPropagation()">
+                <div class="preview-header">
+                    <h4>{{ selectedAsset()?.title }}</h4>
+                    <button class="btn-close" (click)="closePreview()"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+
+                <div class="preview-body">
+                    <div class="preview-media-container">
+                        @if (selectedAsset()?.mediaType === 'IMAGE') {
+                            <img [src]="selectedAsset()?.publicUrl" [alt]="selectedAsset()?.title" class="preview-img" />
+                        } @else if (selectedAsset()?.mediaType === 'VIDEO') {
+                            <video [src]="selectedAsset()?.publicUrl" controls autoplay class="preview-video"></video>
+                        } @else if (selectedAsset()?.mediaType === 'AUDIO') {
+                            <div class="audio-player-wrapper">
+                                <i class="fa-solid fa-file-audio audio-big-icon"></i>
+                                <audio [src]="selectedAsset()?.publicUrl" controls autoplay style="width: 100%; margin-top: 16px;"></audio>
+                            </div>
+                        } @else {
+                            <div class="doc-preview-wrapper">
+                                <i class="fa-solid fa-file-pdf doc-big-icon"></i>
+                                <h5>{{ selectedAsset()?.filename }}</h5>
+                                <a [href]="selectedAsset()?.publicUrl" target="_blank" class="btn btn-outline btn-sm style-margin"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Document in New Tab</a>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Metadata Details Drawer -->
+                    <div class="preview-meta-panel">
+                        <h5>Asset Details</h5>
+                        <div class="meta-row"><span class="label">File Name:</span><span class="value">{{ selectedAsset()?.filename }}</span></div>
+                        <div class="meta-row"><span class="label">File Size:</span><span class="value">{{ formatBytes(selectedAsset()?.fileSize || 0) }}</span></div>
+                        <div class="meta-row"><span class="label">MIME Type:</span><span class="value">{{ selectedAsset()?.mimeType }}</span></div>
+                        <div class="meta-row"><span class="label">Uploaded On:</span><span class="value">{{ selectedAsset()?.createdAt | date:'medium' }}</span></div>
+                        <div class="meta-row"><span class="label">S3 Object Key:</span><span class="value code-val">{{ selectedAsset()?.s3Key }}</span></div>
+
+                        <div class="meta-url-box mb-16">
+                            <label>Public CDN URL</label>
+                            <div class="url-input-group">
+                                <input type="text" readonly [value]="selectedAsset()?.publicUrl" class="form-control" />
+                                <button class="btn btn-primary btn-sm" (click)="copyPublicUrl(selectedAsset()!)"><i class="fa-solid fa-copy"></i> Copy</button>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-danger btn-block" (click)="deleteAsset(selectedAsset()!)"><i class="fa-regular fa-trash-can"></i> Delete from S3</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

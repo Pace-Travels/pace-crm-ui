@@ -154,6 +154,11 @@ const mainAppChildren: Routes = [
         ]
     },
     {
+        path: 'gallery',
+        loadComponent: () => import('./features/gallery/gallery-view/gallery-view').then(m => m.GalleryView),
+        title: 'Multimedia Asset Gallery - QuoteDesks Messenger'
+    },
+    {
         path: 'contacts',
         component: Contacts,
         title: 'Contacts - QuoteDesks Messenger'
