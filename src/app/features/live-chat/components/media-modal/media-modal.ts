@@ -47,7 +47,59 @@ export class MediaModal {
 
   onTypeChange(type: MediaType) {
     this.selectedType = type;
+    if (type === 'LINK') {
+      this.inputMode = 'URL';
+    } else {
+      this.inputMode = 'UPLOAD';
+    }
     this.resetUploadState();
+  }
+
+  get acceptMimeTypes(): string {
+    switch (this.selectedType) {
+      case 'IMAGE':
+        return 'image/jpeg,image/png,image/webp,image/gif';
+      case 'VIDEO':
+        return 'video/mp4,video/3gpp,video/quicktime,video/x-msvideo';
+      case 'PDF':
+        return '.pdf,.doc,.docx,.xls,.xlsx,.txt,application/pdf';
+      case 'AUDIO':
+        return 'audio/mpeg,audio/aac,audio/ogg,audio/wav,audio/mp4';
+      default:
+        return '*/*';
+    }
+  }
+
+  get dropzoneHint(): string {
+    switch (this.selectedType) {
+      case 'IMAGE':
+        return 'Supports JPG, PNG, WebP, GIF up to 50MB';
+      case 'VIDEO':
+        return 'Supports MP4, 3GP, MOV up to 50MB';
+      case 'PDF':
+        return 'Supports PDF, DOCX, XLSX, TXT up to 50MB';
+      case 'AUDIO':
+        return 'Supports MP3, AAC, OGG, WAV up to 50MB';
+      default:
+        return 'Supports files up to 50MB';
+    }
+  }
+
+  get urlPlaceholder(): string {
+    switch (this.selectedType) {
+      case 'IMAGE':
+        return 'https://example.com/assets/photo.jpg';
+      case 'VIDEO':
+        return 'https://example.com/assets/video.mp4';
+      case 'PDF':
+        return 'https://example.com/assets/brochure.pdf';
+      case 'AUDIO':
+        return 'https://example.com/assets/voice.mp3';
+      case 'LINK':
+        return 'https://example.com';
+      default:
+        return 'https://example.com/media';
+    }
   }
 
   onModeChange(mode: 'UPLOAD' | 'URL') {
