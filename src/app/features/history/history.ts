@@ -288,7 +288,7 @@ export class History implements OnInit {
     this.isLoading.set(true);
     this.api.get<any>('messages/list?limit=5000').subscribe({
       next: (res) => {
-        if (res.data && res.data.length > 0) {
+        if (res && res.data && res.data.length > 0) {
           const formatted: MessageLog[] = res.data.map((m: any, idx: number) => {
             const rawDate = m.createdAt ? new Date(m.createdAt) : new Date();
             return {
@@ -310,12 +310,12 @@ export class History implements OnInit {
           });
           this.messageLogs.set(formatted);
         } else {
-          this.loadMockHistory();
+          this.messageLogs.set([]);
         }
         this.isLoading.set(false);
       },
       error: () => {
-        this.loadMockHistory();
+        this.messageLogs.set([]);
         this.isLoading.set(false);
       }
     });
@@ -323,33 +323,22 @@ export class History implements OnInit {
     this.fetchCampaignHistory();
   }
 
-  loadMockHistory() {
-    const mockLogs: MessageLog[] = [
-      { id: 101, rawId: 101, timestamp: '13 Aug 2026, 22:45:10', rawDate: new Date('2026-08-13T22:45:10'), senderType: 'AGENT', direction: 'OUTBOUND', recipientName: 'Alice Smith', recipientPhone: '+919876543210', messageType: 'TEMPLATE', content: 'Hi Alice! Your Dubai VIP staycation booking is confirmed.', status: 'READ', channel: 'WhatsApp Meta WABA' },
-      { id: 102, rawId: 102, timestamp: '13 Aug 2026, 22:40:15', rawDate: new Date('2026-08-13T22:40:15'), senderType: 'USER', direction: 'INBOUND', recipientName: 'Bob Johnson', recipientPhone: '+919876543211', messageType: 'TEXT', content: 'Can I get the itinerary details for 3 nights package?', status: 'DELIVERED', channel: 'WhatsApp Meta WABA' },
-      { id: 103, rawId: 103, timestamp: '13 Aug 2026, 22:30:00', rawDate: new Date('2026-08-13T22:30:00'), senderType: 'AI', direction: 'OUTBOUND', recipientName: 'Pace Travels Agency', recipientPhone: '+919876543212', messageType: 'TEXT', content: 'Hello! Pace Travels AI Agent here. How can I assist your team today?', status: 'READ', channel: 'WhatsApp Meta WABA' },
-      { id: 104, rawId: 104, timestamp: '13 Aug 2026, 21:15:40', rawDate: new Date('2026-08-13T21:15:40'), senderType: 'AGENT', direction: 'OUTBOUND', recipientName: 'Rahul Verma', recipientPhone: '+919876543213', messageType: 'TEMPLATE', content: 'Special offer! Get 20% OFF on Thailand holiday vouchers.', status: 'SENT', channel: 'WhatsApp Meta WABA' },
-      { id: 105, rawId: 105, timestamp: '13 Aug 2026, 20:05:12', rawDate: new Date('2026-08-13T20:05:12'), senderType: 'AGENT', direction: 'OUTBOUND', recipientName: 'Dubai Pace Travels', recipientPhone: '+919876543214', messageType: 'TEXT', content: 'B2B Tariff list updated for Q3 2026.', status: 'FAILED', channel: 'WhatsApp Meta WABA' }
-    ];
-    this.messageLogs.set(mockLogs);
-  }
-
   fetchCampaignHistory() {
     this.api.get<any>('campaigns/list').subscribe({
       next: (res) => {
-        if (res.data) {
+        if (res && res.data && res.data.length > 0) {
           const list: CampaignLog[] = res.data.map((c: any) => {
             const rawDate = c.createdAt ? new Date(c.createdAt) : new Date();
-            const total = c.totalRecipients || c.CampaignMetrics?.totalRecipients || 450;
-            const del = c.deliveredCount || c.CampaignMetrics?.deliveredCount || Math.floor(total * 0.96);
-            const read = c.readCount || c.CampaignMetrics?.readCount || Math.floor(total * 0.82);
-            const failed = c.failedCount || c.CampaignMetrics?.failedCount || Math.floor(total * 0.04);
+            const total = c.totalRecipients ?? c.CampaignMetrics?.totalRecipients ?? 0;
+            const del = c.deliveredCount ?? c.CampaignMetrics?.deliveredCount ?? 0;
+            const read = c.readCount ?? c.CampaignMetrics?.readCount ?? 0;
+            const failed = c.failedCount ?? c.CampaignMetrics?.failedCount ?? 0;
             return {
               id: c.id,
               campaignTitle: c.name || 'Broadcast Campaign',
               sentAt: rawDate.toLocaleDateString(),
               rawDate: rawDate,
-              targetAudience: c.targetType || 'B2C Travelers',
+              targetAudience: c.targetType || 'ALL',
               totalRecipients: total,
               deliveredCount: del,
               readCount: read,
@@ -358,13 +347,12 @@ export class History implements OnInit {
             };
           });
           this.campaignLogs.set(list);
+        } else {
+          this.campaignLogs.set([]);
         }
       },
       error: () => {
-        this.campaignLogs.set([
-          { id: 1, campaignTitle: 'Weekend Special Staycation Sale', sentAt: '8/25/2026', rawDate: new Date('2026-08-25'), targetAudience: 'B2C Travelers', totalRecipients: 450, deliveredCount: 432, readCount: 369, failedCount: 18, status: 'COMPLETED' },
-          { id: 2, campaignTitle: 'B2B Travel Agent Q3 Package Launch', sentAt: '8/25/2026', rawDate: new Date('2026-08-25'), targetAudience: 'B2B Travel Agents', totalRecipients: 450, deliveredCount: 432, readCount: 369, failedCount: 18, status: 'COMPLETED' }
-        ]);
+        this.campaignLogs.set([]);
       }
     });
   }
