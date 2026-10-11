@@ -90,10 +90,12 @@ export class ChatWindow implements AfterViewChecked {
   }
 
   getMediaUrl(url: string | undefined): string {
-    if (!url) return '';
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (!url || typeof url !== 'string') return '';
+    const trimmed = url.trim();
+    if (trimmed.startsWith('[') || trimmed.includes('Attachment:')) return '';
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) return trimmed;
     const base = this.api.baseUrl.replace(/\/api\/v1\/?$/, '');
-    return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+    return `${base}${trimmed.startsWith('/') ? '' : '/'}${trimmed}`;
   }
 
   getInteractiveLabel(text: string | undefined): string {
