@@ -4,11 +4,14 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LiveChatService } from '../../services/live-chat.service';
 import { ApiService } from '../../../../shared/services/api.service';
 import Swal from 'sweetalert2';
+import { MediaModal, MediaPayload } from '../media-modal/media-modal';
+import { TagModal } from '../tag-modal/tag-modal';
+import { PayModal, PaymentRequestPayload } from '../pay-modal/pay-modal';
 
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MediaModal, TagModal, PayModal],
   templateUrl: './chat-window.html',
   styleUrl: './chat-window.scss',
 })
@@ -24,15 +27,12 @@ export class ChatWindow implements AfterViewChecked {
   btn2 = '';
   btn3 = '';
 
-  // Quick Action Modal states
-  showAttributeModal = signal(false);
-  showTagModal = signal(false);
-  showMediaLinkModal = signal(false);
+  // Rich Modal Visibility Signals
+  isMediaModalOpen = signal(false);
+  isTagModalOpen = signal(false);
+  isPayModalOpen = signal(false);
 
-  attrKey = '';
-  attrValue = '';
-  tagName = '';
-  mediaUrlInput = '';
+  contactTags = signal<string[]>([]);
 
   ngAfterViewChecked() {
     this.scrollToBottom();
@@ -65,7 +65,6 @@ export class ChatWindow implements AfterViewChecked {
     const conv = this.chatService.selectedConversation();
     if (!text || !conv) return;
 
-    // Clear input box immediately for high responsiveness
     this.chatService.chatInputMessage.set('');
 
     const payload = {
@@ -153,43 +152,84 @@ export class ChatWindow implements AfterViewChecked {
     });
   }
 
-  // Action 1: Add User Attributes
-  onAddUserAttribute() {
+  // --- Rich Media Modal Handlers ---
+  openMediaModal() {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) {
+      this.showAlert('No Conversation', 'Please select a conversation first.', 'warning');
+      return;
+    }
+    this.isMediaModalOpen.set(true);
+  }
+
+  handleSendMedia(media: MediaPayload) {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) return;
+
+    const payload = {
+      conversationId: conv.id,
+      senderType: 'HUMAN',
+      messageType: media.messageType,
+      content: media.mediaUrl,
+      mediaUrl: media.mediaUrl,
+      textContent: media.caption || `[Media Attachment: ${media.messageType}]`,
+      direction: 'OUTBOUND'
+    };
+
+    this.api.post<any>('messages/add', payload).subscribe({
+      next: (res: any) => {
+        const newMsg = res.data || res;
+        if (newMsg && newMsg.id) {
+          const current = this.chatService.messagesSubject.value;
+          this.chatService.messagesSubject.next([...current, newMsg]);
+        }
+        this.showAlert('Media Shared', `${media.messageType} attachment sent successfully.`, 'success');
+      },
+      error: (err: any) => {
+        this.showAlert('Error', err.error?.error || err.message || 'Failed to send media', 'error');
+      }
+    });
+  }
+
+  // --- Tag Modal Handlers ---
+  openTagModal() {
     const conv = this.chatService.selectedConversation();
     if (!conv) {
       this.showAlert('No Conversation', 'Please select a conversation first.', 'warning');
       return;
     }
 
-    Swal.fire({
-      title: 'Add Contact Attribute',
-      html: `
-        <div style="text-align: left;">
-          <input id="swal-key" class="swal2-input" placeholder="Attribute Key (e.g. City, VIP, LeadScore)">
-          <input id="swal-val" class="swal2-input" placeholder="Attribute Value (e.g. Mumbai, High)">
-        </div>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Save Attribute',
-      preConfirm: () => {
-        const key = (document.getElementById('swal-key') as HTMLInputElement).value.trim();
-        const val = (document.getElementById('swal-val') as HTMLInputElement).value.trim();
-        if (!key || !val) {
-          Swal.showValidationMessage('Both key and value are required!');
-          return false;
-        }
-        return { key, val };
-      }
-    }).then((result: any) => {
-      if (result.isConfirmed && result.value) {
-        const { key, val } = result.value;
+    const contactId = conv.contactId || (conv.Contact as any)?.id;
+    if (contactId) {
+      this.api.get<any>(`contacttags/list/${contactId}`).subscribe({
+        next: (res: any) => {
+          const list = res.data || res || [];
+          this.contactTags.set(list.map((t: any) => t.tag || t));
+        },
+        error: () => this.contactTags.set([])
+      });
+    }
+
+    this.isTagModalOpen.set(true);
+  }
+
+  handleAddTag(tag: string) {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) return;
+
+    const contactId = conv.contactId || (conv.Contact as any)?.id || conv.id;
+
+    this.api.post('contacttags/add', { contactId, tag }).subscribe({
+      next: () => {
+        this.contactTags.update(prev => [...prev.filter(t => t !== tag), tag]);
+        
+        // Post System Notification in Chat
         this.api.post<any>('messages/add', {
           conversationId: conv.id,
           senderType: 'SYSTEM',
           messageType: 'TEXT',
-          content: `📌 Attribute added: ${key} = ${val}`,
-          textContent: `📌 Attribute added: ${key} = ${val}`
+          content: `🏷️ Tag "${tag}" added to contact profile`,
+          textContent: `🏷️ Tag "${tag}" added to contact profile`
         }).subscribe({
           next: (mRes: any) => {
             const newMsg = mRes.data || mRes;
@@ -200,202 +240,74 @@ export class ChatWindow implements AfterViewChecked {
           }
         });
 
-        this.showAlert('Attribute Added', `Attribute "${key}: ${val}" saved.`, 'success');
+        this.showAlert('Tag Applied', `Tag "${tag}" saved to contact.`, 'success');
+      },
+      error: (err: any) => {
+        this.showAlert('Error', err.error?.error || 'Failed to save tag', 'error');
       }
     });
   }
 
-  // Action 2: Add/Remove Tag
-  onAddRemoveTag() {
+  handleRemoveTag(tag: string) {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) return;
+
+    const contactId = conv.contactId || (conv.Contact as any)?.id || conv.id;
+
+    this.api.post('contacttags/remove', { contactId, tag }).subscribe({
+      next: () => {
+        this.contactTags.update(prev => prev.filter(t => t !== tag));
+        this.showAlert('Tag Removed', `Tag "${tag}" removed.`, 'success');
+      },
+      error: (err: any) => {
+        this.showAlert('Error', err.error?.error || 'Failed to remove tag', 'error');
+      }
+    });
+  }
+
+  // --- Payment Request Modal Handlers ---
+  openPayModal() {
     const conv = this.chatService.selectedConversation();
     if (!conv) {
       this.showAlert('No Conversation', 'Please select a conversation first.', 'warning');
       return;
     }
-
-    Swal.fire({
-      title: 'Apply Contact Tag',
-      input: 'text',
-      inputPlaceholder: 'Enter tag name (e.g. HotLead, VIP, Support, Booked)',
-      showCancelButton: true,
-      confirmButtonText: 'Apply Tag',
-      inputValidator: (value: string) => {
-        if (!value || !value.trim()) return 'Tag name cannot be empty!';
-        return null;
-      }
-    }).then((result: any) => {
-      if (result.isConfirmed && result.value) {
-        const tag = result.value.trim();
-        const contactId = conv.contactId || (conv.Contact as any)?.id || conv.id;
-
-        // 1. Save ContactTag in Database
-        this.api.post('contacttags/add', { contactId, tag }).subscribe({
-          next: () => {
-            // 2. Post System notification message to Live Chat stream
-            this.api.post<any>('messages/add', {
-              conversationId: conv.id,
-              senderType: 'SYSTEM',
-              messageType: 'TEXT',
-              content: `🏷️ Tag "${tag}" added to contact profile`,
-              textContent: `🏷️ Tag "${tag}" added to contact profile`
-            }).subscribe({
-              next: (mRes: any) => {
-                const newMsg = mRes.data || mRes;
-                if (newMsg && newMsg.id) {
-                  const current = this.chatService.messagesSubject.value;
-                  this.chatService.messagesSubject.next([...current, newMsg]);
-                }
-              }
-            });
-
-            this.showAlert('Tag Applied', `Tag "${tag}" updated on contact profile.`, 'success');
-          },
-          error: (err: any) => {
-            this.showAlert('Error', err.error?.error || err.message || 'Failed to save tag', 'error');
-          }
-        });
-      }
-    });
+    this.isPayModalOpen.set(true);
   }
 
-  // Action 3: Send & Share Rich Media Link/Attachment
-  onSendMediaLink() {
+  handleSendPaymentRequest(req: PaymentRequestPayload) {
     const conv = this.chatService.selectedConversation();
-    if (!conv) {
-      this.showAlert('No Conversation', 'Please select a conversation first.', 'warning');
-      return;
-    }
+    if (!conv) return;
 
-    Swal.fire({
-      title: 'Share Media Attachment',
-      html: `
-        <div style="text-align: left; font-size: 13px;">
-          <label style="font-weight: bold; margin-bottom: 4px; display: block; color: #334155;">Select Media Type:</label>
-          <select id="swal-media-type" class="swal2-select" style="width: 100%; margin-bottom: 12px; padding: 8px; font-size: 13px;">
-            <option value="IMAGE">📷 Image (JPG, PNG, WebP)</option>
-            <option value="PDF">📄 PDF Document</option>
-            <option value="AUDIO">🎵 Audio Track (MP3, OGG)</option>
-          </select>
-          <label style="font-weight: bold; margin-bottom: 4px; display: block; color: #334155;">Media URL:</label>
-          <input id="swal-media-url" class="swal2-input" placeholder="Paste Image, PDF, or Audio URL" style="width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 13px;">
-          <label style="font-weight: bold; margin-bottom: 4px; display: block; color: #334155;">Caption / Description (Optional):</label>
-          <input id="swal-media-caption" class="swal2-input" placeholder="Enter optional caption..." style="width: 100%; box-sizing: border-box; font-size: 13px;">
-        </div>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Attach & Share Media',
-      preConfirm: () => {
-        const type = (document.getElementById('swal-media-type') as HTMLSelectElement).value;
-        const url = (document.getElementById('swal-media-url') as HTMLInputElement).value.trim();
-        const caption = (document.getElementById('swal-media-caption') as HTMLInputElement).value.trim();
-        if (!url) {
-          Swal.showValidationMessage('Please provide a valid Media URL!');
-          return false;
-        }
-        return { type, url, caption };
-      }
-    }).then((result: any) => {
-      if (result.isConfirmed && result.value) {
-        const { type, url, caption } = result.value;
-        const payload = {
+    this.api.post<any>('payments/create-order', {
+      amount: req.amount,
+      gateway: req.gateway,
+      currency: req.currency
+    }).subscribe({
+      next: (orderRes: any) => {
+        const orderId = orderRes.gatewayData?.orderId || orderRes.payment?.transactionId || orderRes.orderId;
+        const paymentUrl = `${window.location.origin}/pay/${orderId}`;
+        
+        this.api.post<any>('messages/send-payment-link', {
           conversationId: conv.id,
-          senderType: 'HUMAN',
-          messageType: type,
-          content: url,
-          mediaUrl: url,
-          textContent: caption || `[Media Attachment: ${type}]`,
-          direction: 'OUTBOUND'
-        };
-
-        this.api.post<any>('messages/add', payload).subscribe({
-          next: (res: any) => {
-            const newMsg = res.data || res;
+          textContent: `Hi! Here is your payment request for ${req.description} (₹${req.amount}).`,
+          paymentUrl: paymentUrl
+        }).subscribe({
+          next: (mRes: any) => {
+            const newMsg = mRes.data || mRes;
             if (newMsg && newMsg.id) {
               const current = this.chatService.messagesSubject.value;
               this.chatService.messagesSubject.next([...current, newMsg]);
             }
-            this.showAlert('Media Shared', `${type} attachment added to conversation.`, 'success');
+            this.showAlert('Payment Link Sent', `Requested ₹${req.amount} successfully via ${req.gateway}.`, 'success');
           },
           error: (err: any) => {
-            this.showAlert('Error', err.error?.error || err.message || 'Failed to attach media', 'error');
+            this.showAlert('Error', err.error?.error || 'Failed to send payment link', 'error');
           }
         });
-      }
-    });
-  }
-
-  // Action 4: Request Payment
-  onRequestPayment() {
-    const conv = this.chatService.selectedConversation();
-    if (!conv) {
-      this.showAlert('No Conversation', 'Please select a conversation first.', 'warning');
-      return;
-    }
-
-    Swal.fire({
-      title: 'Request Payment',
-      html: `
-        <div style="text-align: left; font-size: 13px;">
-          <label style="font-weight: bold; margin-bottom: 4px; display: block; color: #334155;">Amount (₹):</label>
-          <input id="swal-pay-amount" type="number" class="swal2-input" placeholder="e.g. 1500" style="width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 13px;">
-          <label style="font-weight: bold; margin-bottom: 4px; display: block; color: #334155;">Description:</label>
-          <input id="swal-pay-desc" class="swal2-input" placeholder="e.g. Booking Advance" style="width: 100%; box-sizing: border-box; margin-bottom: 12px; font-size: 13px;">
-        </div>
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Generate & Send Link',
-      preConfirm: () => {
-        const amountStr = (document.getElementById('swal-pay-amount') as HTMLInputElement).value;
-        const amount = parseFloat(amountStr);
-        const desc = (document.getElementById('swal-pay-desc') as HTMLInputElement).value.trim();
-        
-        if (!amount || amount <= 0) {
-          Swal.showValidationMessage('Please enter a valid amount!');
-          return false;
-        }
-        return { amount, desc: desc || 'Payment Request' };
-      }
-    }).then((result: any) => {
-      if (result.isConfirmed && result.value) {
-        const { amount, desc } = result.value;
-
-        // 1. Create Order
-        this.api.post<any>('payments/create-order', {
-          amount,
-          gateway: 'RAZORPAY',
-          currency: 'INR'
-        }).subscribe({
-          next: (orderRes: any) => {
-            const orderId = orderRes.gatewayData?.orderId || orderRes.payment?.transactionId;
-            // The payment page URL is typically hosted on the frontend or backend.
-            // Assuming frontend handles /payment/:orderId
-            const paymentUrl = `${window.location.origin}/pay/${orderId}`;
-            
-            // 2. Send Payment Link Message
-            this.api.post<any>('messages/send-payment-link', {
-              conversationId: conv.id,
-              textContent: `Hi! Here is your payment link for ${desc} (₹${amount}).`,
-              paymentUrl: paymentUrl
-            }).subscribe({
-              next: (mRes: any) => {
-                const newMsg = mRes.data || mRes;
-                if (newMsg && newMsg.id) {
-                  const current = this.chatService.messagesSubject.value;
-                  this.chatService.messagesSubject.next([...current, newMsg]);
-                }
-                this.showAlert('Payment Link Sent', `Requested ₹${amount} successfully.`, 'success');
-              },
-              error: (err: any) => {
-                this.showAlert('Error', err.error?.error || 'Failed to send payment link', 'error');
-              }
-            });
-          },
-          error: (err: any) => {
-            this.showAlert('Error', err.error?.error || 'Failed to generate order', 'error');
-          }
-        });
+      },
+      error: (err: any) => {
+        this.showAlert('Error', err.error?.error || 'Failed to generate order', 'error');
       }
     });
   }

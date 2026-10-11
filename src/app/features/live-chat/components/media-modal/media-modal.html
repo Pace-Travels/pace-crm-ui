@@ -1,0 +1,149 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="closeModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="title-group">
+        <i class="fa-solid fa-cloud-arrow-up header-icon"></i>
+        <h3>Share Media & Attachments</h3>
+      </div>
+      <button type="button" class="btn-close" (click)="closeModal()">&times;</button>
+    </div>
+
+    <!-- Media Type Selector Tabs -->
+    <div class="media-type-tabs">
+      <button type="button" class="tab-btn" [class.active]="selectedType === 'IMAGE'" (click)="onTypeChange('IMAGE')">
+        <i class="fa-solid fa-image"></i> Image
+      </button>
+      <button type="button" class="tab-btn" [class.active]="selectedType === 'VIDEO'" (click)="onTypeChange('VIDEO')">
+        <i class="fa-solid fa-video"></i> Video
+      </button>
+      <button type="button" class="tab-btn" [class.active]="selectedType === 'PDF'" (click)="onTypeChange('PDF')">
+        <i class="fa-solid fa-file-pdf"></i> Document / PDF
+      </button>
+      <button type="button" class="tab-btn" [class.active]="selectedType === 'AUDIO'" (click)="onTypeChange('AUDIO')">
+        <i class="fa-solid fa-headphones"></i> Audio
+      </button>
+      <button type="button" class="tab-btn" [class.active]="selectedType === 'LINK'" (click)="onTypeChange('LINK')">
+        <i class="fa-solid fa-link"></i> Web Link
+      </button>
+    </div>
+
+    <!-- Source Input Mode Toggle (Upload vs URL) -->
+    <div class="source-toggle">
+      <button type="button" class="toggle-btn" [class.active]="inputMode === 'UPLOAD'" (click)="onModeChange('UPLOAD')">
+        <i class="fa-solid fa-upload"></i> Upload from Device
+      </button>
+      <button type="button" class="toggle-btn" [class.active]="inputMode === 'URL'" (click)="onModeChange('URL')">
+        <i class="fa-solid fa-globe"></i> Paste URL
+      </button>
+    </div>
+
+    <!-- Body Content -->
+    <div class="modal-body">
+
+      <!-- Upload Drop Zone -->
+      <div *ngIf="inputMode === 'UPLOAD'" 
+           class="dropzone" 
+           [class.dragging]="isDragging"
+           (dragover)="onDragOver($event)"
+           (dragleave)="onDragLeave($event)"
+           (drop)="onDrop($event)">
+        
+        <input #fileInput type="file" (change)="onFilePicked($event)" class="file-input-hidden" />
+        
+        <div class="dropzone-content" *ngIf="!previewUrl() && !isUploading()">
+          <i class="fa-solid fa-folder-open drop-icon"></i>
+          <p class="drop-text">Drag and drop your file here, or <span class="browse-link" (click)="fileInput.click()">browse</span></p>
+          <span class="drop-hint">Supports JPG, PNG, WebP, MP4, PDF, MP3 up to 50MB</span>
+        </div>
+
+        <!-- Upload Progress Indicator -->
+        <div class="upload-progress-box" *ngIf="isUploading()">
+          <i class="fa-solid fa-spinner fa-spin progress-icon"></i>
+          <p class="progress-text">Uploading {{ fileName }} ({{ uploadProgress() }}%)</p>
+          <div class="progress-bar-bg">
+            <div class="progress-bar-fill" [style.width.%]="uploadProgress()"></div>
+          </div>
+        </div>
+
+        <!-- Media Preview Area -->
+        <div class="preview-box" *ngIf="previewUrl() && !isUploading()">
+          <div class="preview-media-wrapper">
+            @if (selectedType === 'IMAGE') {
+              <img [src]="previewUrl()" class="preview-img" alt="Media Preview" />
+            } @else if (selectedType === 'VIDEO') {
+              <video [src]="previewUrl()" controls class="preview-video"></video>
+            } @else if (selectedType === 'AUDIO') {
+              <audio [src]="previewUrl()" controls class="preview-audio"></audio>
+            } @else if (selectedType === 'PDF') {
+              <div class="preview-pdf">
+                <i class="fa-solid fa-file-pdf pdf-icon"></i>
+                <div class="pdf-info">
+                  <span class="pdf-name">{{ fileName || 'Document.pdf' }}</span>
+                  <span class="pdf-size" *ngIf="fileSize">{{ formatBytes(fileSize) }}</span>
+                </div>
+              </div>
+            }
+          </div>
+          <button type="button" class="btn-change-file" (click)="fileInput.click()">
+            <i class="fa-solid fa-arrow-rotate-right"></i> Change File
+          </button>
+        </div>
+      </div>
+
+      <!-- URL Input Mode -->
+      <div *ngIf="inputMode === 'URL'" class="url-input-group">
+        <label class="input-label">Media / Document Direct URL *</label>
+        <div class="input-with-icon">
+          <i class="fa-solid fa-link field-icon"></i>
+          <input 
+            type="text" 
+            class="form-control" 
+            placeholder="https://example.com/assets/brochure.pdf" 
+            [ngModel]="mediaUrl"
+            (ngModelChange)="onUrlInput($event)" 
+          />
+        </div>
+
+        <div class="preview-box" *ngIf="previewUrl()">
+          <div class="preview-media-wrapper">
+            @if (selectedType === 'IMAGE') {
+              <img [src]="previewUrl()" class="preview-img" alt="URL Preview" />
+            } @else if (selectedType === 'VIDEO') {
+              <video [src]="previewUrl()" controls class="preview-video"></video>
+            } @else if (selectedType === 'AUDIO') {
+              <audio [src]="previewUrl()" controls class="preview-audio"></audio>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Caption & Message Text -->
+      <div class="caption-input-group">
+        <label class="input-label">Caption / Message (Optional)</label>
+        <textarea 
+          class="form-control text-area" 
+          rows="2" 
+          placeholder="Enter optional text caption to accompany this attachment..." 
+          [(ngModel)]="caption">
+        </textarea>
+      </div>
+
+      <!-- Upload Error Notice -->
+      <div class="error-notice" *ngIf="uploadError()">
+        <i class="fa-solid fa-triangle-exclamation"></i> {{ uploadError() }}
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button type="button" class="btn btn-cancel" (click)="closeModal()">Cancel</button>
+      <button type="button" class="btn btn-submit" (click)="submitMedia()" [disabled]="isUploading() || !mediaUrl.trim()">
+        <i class="fa-solid fa-paper-plane"></i> Attach & Send Media
+      </button>
+    </div>
+
+  </div>
+</div>
