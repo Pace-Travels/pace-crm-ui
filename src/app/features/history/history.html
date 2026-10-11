@@ -250,37 +250,284 @@
 
     <!-- Broadcast Campaigns Tab -->
     <ng-container *ngIf="activeTab() === 'campaigns'">
-        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead>
-                    <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 12px; font-weight: 700; color: #475569;">
-                        <th style="padding: 14px 16px;">Campaign Name</th>
-                        <th style="padding: 14px 16px;">Sent Date</th>
-                        <th style="padding: 14px 16px;">Target Audience</th>
-                        <th style="padding: 14px 16px;">Recipients</th>
-                        <th style="padding: 14px 16px;">Delivered</th>
-                        <th style="padding: 14px 16px;">Read</th>
-                        <th style="padding: 14px 16px;">Failed</th>
-                        <th style="padding: 14px 16px;">Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr *ngFor="let camp of campaignLogs()" style="border-bottom: 1px solid #f1f5f9; font-size: 13.5px; color: #1e293b;">
-                        <td style="padding: 14px 16px; font-weight: 700; color: #0f172a;">{{ camp.campaignTitle }}</td>
-                        <td style="padding: 14px 16px; color: #64748b;">{{ camp.sentAt }}</td>
-                        <td style="padding: 14px 16px; color: #334155;">{{ camp.targetAudience }}</td>
-                        <td style="padding: 14px 16px; font-weight: 700;">{{ camp.totalRecipients | number }}</td>
-                        <td style="padding: 14px 16px; color: #16a34a; font-weight: 700;">{{ camp.deliveredCount | number }}</td>
-                        <td style="padding: 14px 16px; color: #2563eb; font-weight: 700;">{{ camp.readCount | number }}</td>
-                        <td style="padding: 14px 16px; color: #dc2626; font-weight: 700;">{{ camp.failedCount | number }}</td>
-                        <td style="padding: 14px 16px;">
-                            <span style="background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px;">{{ camp.status }}</span>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+        
+        <!-- DataTables Top Control Bar: Page Size & Search -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+            
+            <!-- Show Entries Dropdown -->
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13.5px; color: #475569; font-weight: 600;">
+                <span>Show</span>
+                <select [ngModel]="campaignPageSize()" (ngModelChange)="onCampaignPageSizeChange(+$event)" style="padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: #f8fafc; font-weight: 700; color: #0f172a; outline: none; cursor: pointer;">
+                    <option [value]="10">10</option>
+                    <option [value]="25">25</option>
+                    <option [value]="50">50</option>
+                    <option [value]="100">100</option>
+                    <option [value]="-1">All ({{ filteredAndSortedCampaignLogs().length }})</option>
+                </select>
+                <span>entries</span>
+            </div>
+
+            <!-- Global Real-Time Search Input -->
+            <div style="position: relative; flex: 1; max-width: 380px;">
+                <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 13px;"></i>
+                <input type="text" [ngModel]="campaignSearchQuery()" (ngModelChange)="onCampaignSearchChange($event)" placeholder="Search campaign name, audience, status..." style="width: 100%; padding: 8px 12px 8px 34px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none;">
+            </div>
+        </div>
+
+        <!-- DataTables Grid -->
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px;">
+                            <th (click)="toggleCampaignSort('campaignTitle')" style="padding: 14px 16px; cursor: pointer; user-select: none;">
+                                Campaign Name
+                                <span style="font-size: 11px; margin-left: 4px; color: #7c3aed;">
+                                    <ng-container *ngIf="campaignSortField() === 'campaignTitle'">{{ campaignSortOrder() === 'asc' ? '▲' : '▼' }}</ng-container>
+                                    <ng-container *ngIf="campaignSortField() !== 'campaignTitle'"><i class="fa-solid fa-sort" style="color: #cbd5e1;"></i></ng-container>
+                                </span>
+                            </th>
+                            <th (click)="toggleCampaignSort('rawDate')" style="padding: 14px 16px; cursor: pointer; user-select: none;">
+                                Sent Date
+                                <span style="font-size: 11px; margin-left: 4px; color: #7c3aed;">
+                                    <ng-container *ngIf="campaignSortField() === 'rawDate'">{{ campaignSortOrder() === 'asc' ? '▲' : '▼' }}</ng-container>
+                                    <ng-container *ngIf="campaignSortField() !== 'rawDate'"><i class="fa-solid fa-sort" style="color: #cbd5e1;"></i></ng-container>
+                                </span>
+                            </th>
+                            <th (click)="toggleCampaignSort('targetAudience')" style="padding: 14px 16px; cursor: pointer; user-select: none;">
+                                Target Audience
+                                <span style="font-size: 11px; margin-left: 4px; color: #7c3aed;">
+                                    <ng-container *ngIf="campaignSortField() === 'targetAudience'">{{ campaignSortOrder() === 'asc' ? '▲' : '▼' }}</ng-container>
+                                    <ng-container *ngIf="campaignSortField() !== 'targetAudience'"><i class="fa-solid fa-sort" style="color: #cbd5e1;"></i></ng-container>
+                                </span>
+                            </th>
+                            <th (click)="toggleCampaignSort('totalRecipients')" style="padding: 14px 16px; cursor: pointer; user-select: none;">
+                                Recipients
+                                <span style="font-size: 11px; margin-left: 4px; color: #7c3aed;">
+                                    <ng-container *ngIf="campaignSortField() === 'totalRecipients'">{{ campaignSortOrder() === 'asc' ? '▲' : '▼' }}</ng-container>
+                                    <ng-container *ngIf="campaignSortField() !== 'totalRecipients'"><i class="fa-solid fa-sort" style="color: #cbd5e1;"></i></ng-container>
+                                </span>
+                            </th>
+                            <th (click)="toggleCampaignSort('deliveredCount')" style="padding: 14px 16px; cursor: pointer; user-select: none;">
+                                Delivered
+                                <span style="font-size: 11px; margin-left: 4px; color: #7c3aed;">
+                                    <ng-container *ngIf="campaignSortField() === 'deliveredCount'">{{ campaignSortOrder() === 'asc' ? '▲' : '▼' }}</ng-container>
+                                    <ng-container *ngIf="campaignSortField() !== 'deliveredCount'"><i class="fa-solid fa-sort" style="color: #cbd5e1;"></i></ng-container>
+                                </span>
+                            </th>
+                            <th (click)="toggleCampaignSort('readCount')" style="padding: 14px 16px; cursor: pointer; user-select: none;">
+                                Read
+                                <span style="font-size: 11px; margin-left: 4px; color: #7c3aed;">
+                                    <ng-container *ngIf="campaignSortField() === 'readCount'">{{ campaignSortOrder() === 'asc' ? '▲' : '▼' }}</ng-container>
+                                    <ng-container *ngIf="campaignSortField() !== 'readCount'"><i class="fa-solid fa-sort" style="color: #cbd5e1;"></i></ng-container>
+                                </span>
+                            </th>
+                            <th (click)="toggleCampaignSort('failedCount')" style="padding: 14px 16px; cursor: pointer; user-select: none;">
+                                Failed
+                                <span style="font-size: 11px; margin-left: 4px; color: #7c3aed;">
+                                    <ng-container *ngIf="campaignSortField() === 'failedCount'">{{ campaignSortOrder() === 'asc' ? '▲' : '▼' }}</ng-container>
+                                    <ng-container *ngIf="campaignSortField() !== 'failedCount'"><i class="fa-solid fa-sort" style="color: #cbd5e1;"></i></ng-container>
+                                </span>
+                            </th>
+                            <th (click)="toggleCampaignSort('status')" style="padding: 14px 16px; cursor: pointer; user-select: none;">
+                                Status
+                                <span style="font-size: 11px; margin-left: 4px; color: #7c3aed;">
+                                    <ng-container *ngIf="campaignSortField() === 'status'">{{ campaignSortOrder() === 'asc' ? '▲' : '▼' }}</ng-container>
+                                    <ng-container *ngIf="campaignSortField() !== 'status'"><i class="fa-solid fa-sort" style="color: #cbd5e1;"></i></ng-container>
+                                </span>
+                            </th>
+                            <th style="padding: 14px 16px; text-align: right;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr *ngIf="paginatedCampaignLogs().length === 0">
+                            <td colspan="9" style="padding: 40px; text-align: center; color: #64748b;">
+                                No broadcast campaign records found matching search query.
+                            </td>
+                        </tr>
+
+                        <tr *ngFor="let camp of paginatedCampaignLogs()" style="border-bottom: 1px solid #f1f5f9; font-size: 13.5px; color: #1e293b; transition: background 0.15s ease;" onmouseover="this.style.background='#f8fafc';" onmouseout="this.style.background='transparent';">
+                            <td (click)="openCampaignAnalytics(camp)" style="padding: 14px 16px; font-weight: 700; color: #0f172a; cursor: pointer;" title="Click to view campaign analytics">
+                                <span style="border-bottom: 1px dotted #94a3b8;">{{ camp.campaignTitle }}</span>
+                            </td>
+                            <td style="padding: 14px 16px; color: #64748b;">{{ camp.sentAt }}</td>
+                            <td style="padding: 14px 16px; color: #334155;">{{ camp.targetAudience }}</td>
+                            <td style="padding: 14px 16px; font-weight: 700; color: #0f172a;">{{ camp.totalRecipients | number }}</td>
+                            <td style="padding: 14px 16px; color: #16a34a; font-weight: 700;">{{ camp.deliveredCount | number }}</td>
+                            <td style="padding: 14px 16px; color: #2563eb; font-weight: 700;">{{ camp.readCount | number }}</td>
+                            <td style="padding: 14px 16px; color: #dc2626; font-weight: 700;">{{ camp.failedCount | number }}</td>
+                            <td style="padding: 14px 16px;">
+                                <span style="background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 4px;">{{ camp.status }}</span>
+                            </td>
+                            <td style="padding: 14px 16px; text-align: right; white-space: nowrap;">
+                                <button (click)="openCampaignAnalytics(camp)" title="View Analytics & Recipient Breakdown" style="background: rgba(124, 58, 237, 0.08); border: 1px solid rgba(124, 58, 237, 0.25); color: #7c3aed; font-size: 12px; font-weight: 700; padding: 5px 10px; border-radius: 6px; cursor: pointer; margin-right: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="fa-solid fa-chart-pie"></i> Analytics
+                                </button>
+
+                                <button (click)="filterMessageLogsByCampaign(camp)" title="Filter Message Logs for this Campaign" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; margin-right: 6px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="fa-solid fa-filter"></i> Logs
+                                </button>
+
+                                <button (click)="exportCampaignRecipientsCSV(camp)" title="Export Recipient CSV Log" style="background: white; border: 1px solid #cbd5e1; color: #334155; font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="fa-solid fa-download"></i> CSV
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- DataTables Bottom Footer Bar -->
+            <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; font-size: 13px; color: #64748b;">
+                <div style="font-weight: 600; color: #475569;">
+                    Showing <strong style="color: #0f172a;">{{ campaignDisplayStart() }}</strong> to <strong style="color: #0f172a;">{{ campaignDisplayEnd() }}</strong> of <strong style="color: #0f172a;">{{ filteredAndSortedCampaignLogs().length }}</strong> entries
+                    <span *ngIf="filteredAndSortedCampaignLogs().length !== campaignLogs().length" style="color: #94a3b8; font-size: 12px; margin-left: 4px;">
+                        (filtered from {{ campaignLogs().length }} total entries)
+                    </span>
+                </div>
+
+                <!-- Pagination Buttons -->
+                <div style="display: flex; gap: 4px; align-items: center;">
+                    <button (click)="goToCampaignPage(1)" [disabled]="campaignCurrentPage() === 1" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;" [style.opacity]="campaignCurrentPage() === 1 ? 0.4 : 1">
+                        First
+                    </button>
+
+                    <button (click)="goToCampaignPage(campaignCurrentPage() - 1)" [disabled]="campaignCurrentPage() === 1" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;" [style.opacity]="campaignCurrentPage() === 1 ? 0.4 : 1">
+                        Prev
+                    </button>
+
+                    <ng-container *ngFor="let page of campaignPagesList()">
+                        <button *ngIf="page !== '...'" (click)="goToCampaignPage(page)" 
+                            [style.background]="campaignCurrentPage() === page ? '#7c3aed' : 'white'"
+                            [style.color]="campaignCurrentPage() === page ? 'white' : '#334155'"
+                            [style.border]="campaignCurrentPage() === page ? '1px solid #7c3aed' : '1px solid #cbd5e1'"
+                            style="padding: 5px 11px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                            {{ page }}
+                        </button>
+                        <span *ngIf="page === '...'" style="padding: 5px 8px; color: #94a3b8; font-weight: 700;">...</span>
+                    </ng-container>
+
+                    <button (click)="goToCampaignPage(campaignCurrentPage() + 1)" [disabled]="campaignCurrentPage() >= campaignTotalPages()" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;" [style.opacity]="campaignCurrentPage() >= campaignTotalPages() ? 0.4 : 1">
+                        Next
+                    </button>
+
+                    <button (click)="goToCampaignPage(campaignTotalPages())" [disabled]="campaignCurrentPage() >= campaignTotalPages()" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;" [style.opacity]="campaignCurrentPage() >= campaignTotalPages() ? 0.4 : 1">
+                        Last
+                    </button>
+                </div>
+            </div>
         </div>
     </ng-container>
+
+    <!-- Campaign Analytics Modal Dialog -->
+    <div *ngIf="selectedCampaignDetail()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;">
+        <div style="background: white; border-radius: 16px; width: 100%; max-width: 760px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid #e2e8f0; animation: modalPop 0.2s ease-out;">
+            
+            <!-- Modal Header -->
+            <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-bullhorn" style="color: #7c3aed; font-size: 18px;"></i>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;">
+                        {{ selectedCampaignDetail()?.campaignTitle }}
+                    </h3>
+                </div>
+                <button (click)="closeCampaignAnalytics()" style="background: none; border: none; font-size: 18px; color: #64748b; cursor: pointer; padding: 4px 8px;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div style="padding: 24px; max-height: 75vh; overflow-y: auto;">
+                
+                <!-- Performance Overview Cards -->
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px;">
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Recipients</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #0f172a; margin-top: 4px;">{{ selectedCampaignDetail()?.totalRecipients | number }}</div>
+                    </div>
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px; text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; color: #15803d; text-transform: uppercase;">Delivered</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #16a34a; margin-top: 4px;">{{ selectedCampaignDetail()?.deliveredCount | number }}</div>
+                    </div>
+                    <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px; text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; color: #1d4ed8; text-transform: uppercase;">Read</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #2563eb; margin-top: 4px;">{{ selectedCampaignDetail()?.readCount | number }}</div>
+                    </div>
+                    <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 14px; text-align: center;">
+                        <div style="font-size: 11px; font-weight: 700; color: #b91c1c; text-transform: uppercase;">Failed</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #dc2626; margin-top: 4px;">{{ selectedCampaignDetail()?.failedCount | number }}</div>
+                    </div>
+                </div>
+
+                <!-- Recipient Search & Drawer -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: #334155;">
+                            Campaign Recipient Breakdown ({{ filteredCampaignRecipients().length }})
+                        </h4>
+                        <input type="text" [ngModel]="recipientSearchQuery()" (ngModelChange)="recipientSearchQuery.set($event)" placeholder="Search recipient name or phone..." style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12.5px; width: 220px; outline: none;">
+                    </div>
+
+                    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; max-height: 280px; overflow-y: auto;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12.5px;">
+                            <thead>
+                                <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #475569; font-weight: 700;">
+                                    <th style="padding: 10px 14px;">Contact Name</th>
+                                    <th style="padding: 10px 14px;">Phone</th>
+                                    <th style="padding: 10px 14px;">Status</th>
+                                    <th style="padding: 10px 14px; text-align: right;">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr *ngIf="isLoadingCampaignRecipients()">
+                                    <td colspan="4" style="padding: 24px; text-align: center; color: #64748b;">
+                                        <i class="fa-solid fa-circle-notch fa-spin" style="margin-right: 6px; color: #7c3aed;"></i> Loading recipient breakdown...
+                                    </td>
+                                </tr>
+
+                                <tr *ngIf="!isLoadingCampaignRecipients() && filteredCampaignRecipients().length === 0">
+                                    <td colspan="4" style="padding: 24px; text-align: center; color: #64748b;">
+                                        No matching recipient records found.
+                                    </td>
+                                </tr>
+
+                                <tr *ngFor="let rec of filteredCampaignRecipients()" style="border-bottom: 1px solid #f1f5f9;">
+                                    <td style="padding: 10px 14px; font-weight: 700; color: #0f172a;">
+                                        {{ rec.Contact?.name || 'Customer Recipient' }}
+                                    </td>
+                                    <td style="padding: 10px 14px; font-family: monospace; color: #475569;">
+                                        {{ rec.Contact?.phone || '-' }}
+                                    </td>
+                                    <td style="padding: 10px 14px;">
+                                        <span [style.background]="getStatusBadgeClass(rec.status || 'SENT').bg" [style.color]="getStatusBadgeClass(rec.status || 'SENT').color" style="font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 10px;">
+                                            {{ getStatusBadgeClass(rec.status || 'SENT').label }}
+                                        </span>
+                                    </td>
+                                    <td style="padding: 10px 14px; text-align: right;">
+                                        <button (click)="openLiveChat(rec); closeCampaignAnalytics();" style="background: rgba(124, 58, 237, 0.08); border: 1px solid rgba(124, 58, 237, 0.25); color: #7c3aed; font-size: 11.5px; font-weight: 700; padding: 4px 10px; border-radius: 6px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                            <i class="fa-solid fa-comments"></i> Chat
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;">
+                <button (click)="closeCampaignAnalytics()" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                    Close
+                </button>
+                
+                <button (click)="exportCampaignRecipientsCSV(selectedCampaignDetail()!)" style="background: #7c3aed; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-download"></i> Export Campaign CSV
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Full Message Detail Modal Dialog -->
     <div *ngIf="selectedMessage()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;">

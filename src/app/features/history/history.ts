@@ -25,6 +25,7 @@ export interface CampaignLog {
   id: number;
   campaignTitle: string;
   sentAt: string;
+  rawDate: Date;
   targetAudience: string;
   totalRecipients: number;
   deliveredCount: number;
@@ -58,11 +59,24 @@ export class History implements OnInit {
   // Selected message for detail modal
   selectedMessage = signal<MessageLog | null>(null);
 
-  // DataTables Pagination & Sorting
+  // Message DataTables Pagination & Sorting
   currentPage = signal<number>(1);
   pageSize = signal<number>(25); // Options: 10, 25, 50, 100, 250, 500, -1 (All)
   sortField = signal<keyof MessageLog>('rawDate');
   sortOrder = signal<'asc' | 'desc'>('desc');
+
+  // Campaign DataTables State
+  campaignPageSize = signal<number>(10); // Options: 10, 25, 50, 100, -1 (All)
+  campaignCurrentPage = signal<number>(1);
+  campaignSearchQuery = signal<string>('');
+  campaignSortField = signal<keyof CampaignLog>('rawDate');
+  campaignSortOrder = signal<'asc' | 'desc'>('desc');
+
+  // Campaign Detail Modal State
+  selectedCampaignDetail = signal<CampaignLog | null>(null);
+  campaignRecipients = signal<any[]>([]);
+  isLoadingCampaignRecipients = signal<boolean>(false);
+  recipientSearchQuery = signal<string>('');
 
   // Filtered & Sorted Messages
   filteredAndSortedMessageLogs = computed(() => {
@@ -164,6 +178,108 @@ export class History implements OnInit {
     return pages;
   });
 
+  // Filtered & Sorted Campaign Logs
+  filteredAndSortedCampaignLogs = computed(() => {
+    let list = [...this.campaignLogs()];
+    const query = this.campaignSearchQuery().toLowerCase().trim();
+
+    if (query) {
+      list = list.filter(c => 
+        (c.campaignTitle && c.campaignTitle.toLowerCase().includes(query)) ||
+        (c.targetAudience && c.targetAudience.toLowerCase().includes(query)) ||
+        (c.status && c.status.toLowerCase().includes(query)) ||
+        (c.sentAt && c.sentAt.toLowerCase().includes(query))
+      );
+    }
+
+    const field = this.campaignSortField();
+    const order = this.campaignSortOrder() === 'asc' ? 1 : -1;
+
+    list.sort((a, b) => {
+      let valA: any = a[field];
+      let valB: any = b[field];
+
+      if (field === 'rawDate') {
+        valA = a.rawDate ? a.rawDate.getTime() : 0;
+        valB = b.rawDate ? b.rawDate.getTime() : 0;
+      } else if (typeof valA === 'number') {
+        valA = valA ?? 0;
+        valB = valB ?? 0;
+      } else {
+        valA = (valA ?? '').toString().toLowerCase();
+        valB = (valB ?? '').toString().toLowerCase();
+      }
+
+      if (valA < valB) return -1 * order;
+      if (valA > valB) return 1 * order;
+      return 0;
+    });
+
+    return list;
+  });
+
+  paginatedCampaignLogs = computed(() => {
+    const list = this.filteredAndSortedCampaignLogs();
+    const size = this.campaignPageSize();
+    if (size === -1 || size >= list.length) {
+      return list;
+    }
+    const start = (this.campaignCurrentPage() - 1) * size;
+    return list.slice(start, start + size);
+  });
+
+  campaignTotalPages = computed(() => {
+    const total = this.filteredAndSortedCampaignLogs().length;
+    const size = this.campaignPageSize();
+    if (size === -1 || size >= total) return 1;
+    return Math.ceil(total / size) || 1;
+  });
+
+  campaignDisplayStart = computed(() => {
+    const total = this.filteredAndSortedCampaignLogs().length;
+    if (total === 0) return 0;
+    const size = this.campaignPageSize();
+    if (size === -1) return 1;
+    return (this.campaignCurrentPage() - 1) * size + 1;
+  });
+
+  campaignDisplayEnd = computed(() => {
+    const total = this.filteredAndSortedCampaignLogs().length;
+    const size = this.campaignPageSize();
+    if (size === -1 || (this.campaignCurrentPage() * size) > total) return total;
+    return this.campaignCurrentPage() * size;
+  });
+
+  campaignPagesList = computed(() => {
+    const total = this.campaignTotalPages();
+    const current = this.campaignCurrentPage();
+    const pages: (number | string)[] = [];
+    
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (current > 3) pages.push('...');
+      const start = Math.max(2, current - 1);
+      const end = Math.min(total - 1, current + 1);
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (current < total - 2) pages.push('...');
+      pages.push(total);
+    }
+    return pages;
+  });
+
+  filteredCampaignRecipients = computed(() => {
+    const list = this.campaignRecipients();
+    const q = this.recipientSearchQuery().toLowerCase().trim();
+    if (!q) return list;
+    return list.filter((r: any) => 
+      (r.Contact?.name && r.Contact.name.toLowerCase().includes(q)) ||
+      (r.Contact?.phone && r.Contact.phone.includes(q)) ||
+      (r.status && r.status.toLowerCase().includes(q))
+    );
+  });
+
   ngOnInit() {
     this.fetchHistory();
   }
@@ -222,30 +338,38 @@ export class History implements OnInit {
     this.api.get<any>('campaigns/list').subscribe({
       next: (res) => {
         if (res.data) {
-          const list: CampaignLog[] = res.data.map((c: any) => ({
-            id: c.id,
-            campaignTitle: c.name || 'Broadcast Campaign',
-            sentAt: c.createdAt ? new Date(c.createdAt).toLocaleDateString() : 'Today',
-            targetAudience: c.targetType || 'B2C Travelers',
-            totalRecipients: c.totalRecipients || 450,
-            deliveredCount: Math.floor((c.totalRecipients || 450) * 0.96),
-            readCount: Math.floor((c.totalRecipients || 450) * 0.82),
-            failedCount: Math.floor((c.totalRecipients || 450) * 0.04),
-            status: c.status || 'COMPLETED'
-          }));
+          const list: CampaignLog[] = res.data.map((c: any) => {
+            const rawDate = c.createdAt ? new Date(c.createdAt) : new Date();
+            const total = c.totalRecipients || c.CampaignMetrics?.totalRecipients || 450;
+            const del = c.deliveredCount || c.CampaignMetrics?.deliveredCount || Math.floor(total * 0.96);
+            const read = c.readCount || c.CampaignMetrics?.readCount || Math.floor(total * 0.82);
+            const failed = c.failedCount || c.CampaignMetrics?.failedCount || Math.floor(total * 0.04);
+            return {
+              id: c.id,
+              campaignTitle: c.name || 'Broadcast Campaign',
+              sentAt: rawDate.toLocaleDateString(),
+              rawDate: rawDate,
+              targetAudience: c.targetType || 'B2C Travelers',
+              totalRecipients: total,
+              deliveredCount: del,
+              readCount: read,
+              failedCount: failed,
+              status: c.status || 'COMPLETED'
+            };
+          });
           this.campaignLogs.set(list);
         }
       },
       error: () => {
         this.campaignLogs.set([
-          { id: 1, campaignTitle: 'Weekend Special Staycation Sale', sentAt: '12 Aug 2026', targetAudience: 'B2C Travelers (1,240 contacts)', totalRecipients: 1240, deliveredCount: 1190, readCount: 890, failedCount: 50, status: 'COMPLETED' },
-          { id: 2, campaignTitle: 'B2B Travel Agent Q3 Package Launch', sentAt: '10 Aug 2026', targetAudience: 'B2B Travel Agents (350 agencies)', totalRecipients: 350, deliveredCount: 342, readCount: 295, failedCount: 8, status: 'COMPLETED' }
+          { id: 1, campaignTitle: 'Weekend Special Staycation Sale', sentAt: '8/25/2026', rawDate: new Date('2026-08-25'), targetAudience: 'B2C Travelers', totalRecipients: 450, deliveredCount: 432, readCount: 369, failedCount: 18, status: 'COMPLETED' },
+          { id: 2, campaignTitle: 'B2B Travel Agent Q3 Package Launch', sentAt: '8/25/2026', rawDate: new Date('2026-08-25'), targetAudience: 'B2B Travel Agents', totalRecipients: 450, deliveredCount: 432, readCount: 369, failedCount: 18, status: 'COMPLETED' }
         ]);
       }
     });
   }
 
-  // Sort handler
+  // Sort handler for Message Logs
   toggleSort(field: keyof MessageLog) {
     if (this.sortField() === field) {
       this.sortOrder.set(this.sortOrder() === 'asc' ? 'desc' : 'asc');
@@ -255,7 +379,7 @@ export class History implements OnInit {
     }
   }
 
-  // Page handlers
+  // Page handlers for Message Logs
   goToPage(page: number | string) {
     if (typeof page === 'number' && page >= 1 && page <= this.totalPages()) {
       this.currentPage.set(page);
@@ -290,6 +414,98 @@ export class History implements OnInit {
     this.selectedMessage.set(null);
   }
 
+  // Campaign DataTables Handlers
+  toggleCampaignSort(field: keyof CampaignLog) {
+    if (this.campaignSortField() === field) {
+      this.campaignSortOrder.set(this.campaignSortOrder() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.campaignSortField.set(field);
+      this.campaignSortOrder.set('asc');
+    }
+  }
+
+  goToCampaignPage(page: number | string) {
+    if (typeof page === 'number' && page >= 1 && page <= this.campaignTotalPages()) {
+      this.campaignCurrentPage.set(page);
+    }
+  }
+
+  onCampaignPageSizeChange(size: number) {
+    this.campaignPageSize.set(size);
+    this.campaignCurrentPage.set(1);
+  }
+
+  onCampaignSearchChange(query: string) {
+    this.campaignSearchQuery.set(query);
+    this.campaignCurrentPage.set(1);
+  }
+
+  openCampaignAnalytics(camp: CampaignLog) {
+    this.selectedCampaignDetail.set(camp);
+    this.isLoadingCampaignRecipients.set(true);
+    this.campaignRecipients.set([]);
+
+    this.api.get<any>(`campaigns/responses/${camp.id}`).subscribe({
+      next: (res: any) => {
+        if (res && res.data) {
+          this.campaignRecipients.set(res.data);
+        }
+        this.isLoadingCampaignRecipients.set(false);
+      },
+      error: () => {
+        this.isLoadingCampaignRecipients.set(false);
+      }
+    });
+  }
+
+  closeCampaignAnalytics() {
+    this.selectedCampaignDetail.set(null);
+  }
+
+  filterMessageLogsByCampaign(camp: CampaignLog) {
+    this.activeTab.set('messages');
+    this.searchQuery.set(camp.campaignTitle);
+  }
+
+  exportCampaignRecipientsCSV(camp: CampaignLog) {
+    this.api.get<any>(`campaigns/responses/${camp.id}`).subscribe({
+      next: (res: any) => {
+        const recipients = res.data || [];
+        if (recipients.length === 0) {
+          Swal.fire('Info', 'No recipient logs found for this campaign.', 'info');
+          return;
+        }
+
+        let csv = 'Campaign ID,Campaign Name,Recipient Name,Phone,Status,Location,Type,Date\n';
+        recipients.forEach((r: any) => {
+          const cName = (camp.campaignTitle || '').replace(/"/g, '""');
+          const rName = (r.Contact?.name || '').replace(/"/g, '""');
+          const phone = r.Contact?.phone || '';
+          const status = r.status || 'SENT';
+          const loc = r.Contact?.location || r.Contact?.country || '';
+          const type = r.Contact?.type || r.Contact?.source || '';
+          const date = r.createdAt ? new Date(r.createdAt).toLocaleString() : '';
+          csv += `"${camp.id}","${cName}","${rName}","${phone}","${status}","${loc}","${type}","${date}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', `campaign_${camp.id}_recipients_${Date.now()}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        Swal.fire('Export Complete', `Campaign recipient logs for "${camp.campaignTitle}" exported!`, 'success');
+      },
+      error: (err: any) => {
+        Swal.fire('Export Failed', err.error?.error || 'Failed to fetch campaign recipient logs.', 'error');
+      }
+    });
+  }
+
   exportLogsCSV() {
     const logs = this.filteredAndSortedMessageLogs();
     if (logs.length === 0) {
@@ -322,8 +538,9 @@ export class History implements OnInit {
     return { bg: '#fef2f2', color: '#dc2626', label: '✕ Failed' };
   }
 
-  openLiveChat(log: MessageLog) {
-    const phone = log.recipientPhone ? log.recipientPhone.replace(/\D/g, '') : '';
-    this.router.navigate(['/chat'], { queryParams: { phone } });
+  openLiveChat(log: MessageLog | any) {
+    const phone = log.recipientPhone || log.Contact?.phone || '';
+    const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
+    this.router.navigate(['/chat'], { queryParams: { phone: cleanPhone } });
   }
 }
