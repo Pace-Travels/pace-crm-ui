@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output, OnInit, inject, signal } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, inject, signal, computed } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Menu } from 'primeng/menu';
 import { Router } from '@angular/router';
@@ -71,6 +71,10 @@ export class Header implements OnInit {
     }
   }
 
+  unreadCount = computed(() => {
+    return this.notificationsList().filter(n => n.status === 'UNREAD').length;
+  });
+
   fetchNotifications() {
     this.api.get<any>('notifications/list').subscribe({
       next: (res) => {
@@ -78,7 +82,7 @@ export class Header implements OnInit {
           const mapped = res.data.map((item: any) => {
             let iconClass = 'fa-solid fa-bell text-blue';
             if (item.type === 'WABA') iconClass = 'fa-brands fa-whatsapp text-green';
-            else if (item.type === 'RADAR') iconClass = 'fa-solid fa-bolt text-yellow';
+            else if (item.type === 'RADAR') iconClass = 'fa-solid fa-satellite-dish text-yellow';
             else if (item.type === 'TEMPLATES') iconClass = 'fa-solid fa-circle-check text-blue';
             else if (item.type === 'INTEGRATIONS') iconClass = 'fa-solid fa-plug text-purple';
 
@@ -88,7 +92,9 @@ export class Header implements OnInit {
 
             return {
               id: item.id,
-              title: item.type ? `${item.type} Notification` : 'System Alert',
+              type: item.type,
+              status: item.status || 'UNREAD',
+              title: item.type ? `${item.type} Alert` : 'System Alert',
               desc: item.content,
               time: formattedTime,
               icon: iconClass
@@ -98,6 +104,15 @@ export class Header implements OnInit {
         }
       },
       error: () => {}
+    });
+  }
+
+  markAllAsRead() {
+    this.api.put<any>('notifications/read-all', {}).subscribe({
+      next: () => {
+        const updated = this.notificationsList().map(n => ({ ...n, status: 'READ' }));
+        this.notificationsList.set(updated);
+      }
     });
   }
 

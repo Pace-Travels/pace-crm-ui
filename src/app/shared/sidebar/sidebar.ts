@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit, signal, Output, EventEmitter } from '@angular/core';
+import { Component, HostListener, OnInit, signal, Output, EventEmitter, inject } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProjectService } from '../../features/projects/services/project.service';
 import { AuthService } from '../services/auth.service';
+import { SearchService } from '../services/search.service';
 import Swal from 'sweetalert2';
 
 export interface MenuItem {
@@ -35,6 +36,8 @@ export class Sidebar implements OnInit {
   mobileOpen = signal(false);
   isMobile = window.innerWidth < 992;
 
+  searchService = inject(SearchService);
+
   constructor(
     public projectService: ProjectService,
     private authService: AuthService,
@@ -64,7 +67,7 @@ export class Sidebar implements OnInit {
       expanded: true,
       items: [
         { icon: 'fa-solid fa-brain', title: 'AI Marketing Intelligence', route: '/ai-marketing-intelligence' },
-        { icon: 'fa-solid fa-radar', title: 'Event Radar', route: '/events-radar' },
+        { icon: 'fa-solid fa-satellite-dish', title: 'Event Radar', route: '/events-radar' },
         { icon: 'fa-solid fa-chart-line', title: 'Market Intelligence', route: '/market-intelligence' },
         { icon: 'fa-solid fa-rectangle-ad', title: 'Ads Manager', route: '/ads' }
       ]

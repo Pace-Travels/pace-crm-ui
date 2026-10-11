@@ -12,7 +12,7 @@
 
     <!-- Search Bar (Cmd+K) -->
     @if (!collapsed()) {
-        <div class="sidebar-search-container">
+        <div class="sidebar-search-container" (click)="searchService.openSearchModal()" style="cursor: pointer;">
             <div class="sidebar-search-btn">
                 <i class="fa-solid fa-magnifying-glass search-icon"></i>
                 <span class="search-text">Search (Cmd+K)</span>

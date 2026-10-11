@@ -49,7 +49,7 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
             <!-- Contacts -->
             <div class="result-group" *ngIf="searchService.searchResults().contacts.length">
                 <div class="group-title">Contacts</div>
-                <a class="result-item" *ngFor="let c of searchService.searchResults().contacts" routerLink="/contacts">
+                <a class="result-item" *ngFor="let c of searchService.searchResults().contacts" routerLink="/contacts" (click)="searchService.closeSearchModal()">
                     <i class="fa-regular fa-address-book item-icon"></i>
                     <div class="item-content">
                         <span class="item-title" [innerHTML]="c.name | highlight:searchService.searchQuery()"></span>
@@ -61,7 +61,7 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
             <!-- Users -->
             <div class="result-group" *ngIf="searchService.searchResults().users.length">
                 <div class="group-title">Team Members</div>
-                <a class="result-item" *ngFor="let u of searchService.searchResults().users" routerLink="/agents">
+                <a class="result-item" *ngFor="let u of searchService.searchResults().users" routerLink="/agents" (click)="searchService.closeSearchModal()">
                     <i class="fa-solid fa-user item-icon"></i>
                     <div class="item-content">
                         <span class="item-title" [innerHTML]="u.name | highlight:searchService.searchQuery()"></span>
@@ -73,7 +73,7 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
             <!-- Campaigns -->
             <div class="result-group" *ngIf="searchService.searchResults().campaigns.length">
                 <div class="group-title">Campaigns</div>
-                <a class="result-item" *ngFor="let camp of searchService.searchResults().campaigns" routerLink="/campaigns">
+                <a class="result-item" *ngFor="let camp of searchService.searchResults().campaigns" routerLink="/campaigns" (click)="searchService.closeSearchModal()">
                     <i class="fa-solid fa-bullhorn item-icon"></i>
                     <div class="item-content">
                         <span class="item-title" [innerHTML]="camp.name | highlight:searchService.searchQuery()"></span>
@@ -85,7 +85,7 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
             <!-- Messages -->
             <div class="result-group" *ngIf="searchService.searchResults().messages.length">
                 <div class="group-title">Messages</div>
-                <a class="result-item" *ngFor="let m of searchService.searchResults().messages" routerLink="/chat">
+                <a class="result-item" *ngFor="let m of searchService.searchResults().messages" routerLink="/chat" (click)="searchService.closeSearchModal()">
                     <i class="fa-regular fa-comment-dots item-icon"></i>
                     <div class="item-content">
                         <span class="item-title message-preview" [innerHTML]="m.body | highlight:searchService.searchQuery()"></span>

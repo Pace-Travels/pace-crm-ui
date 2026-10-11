@@ -4,7 +4,7 @@
     <div class="dashboard-greeting-bar">
         <div class="greeting-text">
             <h1>Good Morning, <span class="highlight-name">{{ userName() }}</span></h1>
-            <p>Here is what's happening with your travel business today.</p>
+            <p>Here is what's happening with your omnichannel messaging workspace today.</p>
         </div>
 
         <div class="greeting-actions">
@@ -17,42 +17,42 @@
     <!-- Onboarding Checklist (Hidden when 100% complete) -->
     <app-checklist-widget *ngIf="onboardingService.progressPercentage() < 100"></app-checklist-widget>
 
-    <!-- 4 KPI Metric Cards Grid (Quote Desks Style) -->
+    <!-- 4 KPI Metric Cards Grid (Omnichannel Messaging Style) -->
     <div class="kpi-grid">
         
-        <!-- Total Enquiries -->
+        <!-- Total Messages -->
         <div class="kpi-card">
             <div class="kpi-content">
-                <span class="kpi-title">TOTAL ENQUIRIES</span>
-                <div class="kpi-value">{{ analytics().totalEnquiries ?? analytics().totalMessagesSent ?? 0 }}</div>
+                <span class="kpi-title">TOTAL MESSAGES</span>
+                <div class="kpi-value">{{ analytics().totalMessages ?? analytics().totalEnquiries ?? 0 }}</div>
                 <div class="kpi-trend up">
                     <i class="fa-solid fa-arrow-up"></i> +0% from last week
                 </div>
             </div>
             <div class="kpi-icon-tab purple">
-                <i class="fa-regular fa-image"></i>
+                <i class="fa-regular fa-comments"></i>
             </div>
         </div>
 
-        <!-- Quotations Sent -->
+        <!-- Broadcasts Sent -->
         <div class="kpi-card">
             <div class="kpi-content">
-                <span class="kpi-title">QUOTATIONS SENT</span>
-                <div class="kpi-value">{{ analytics().quotationsSent ?? analytics().totalDelivered ?? 0 }}</div>
+                <span class="kpi-title">BROADCASTS SENT</span>
+                <div class="kpi-value">{{ analytics().messagesSent ?? analytics().quotationsSent ?? 0 }}</div>
                 <div class="kpi-trend up">
                     <i class="fa-solid fa-arrow-up"></i> +0% from last week
                 </div>
             </div>
             <div class="kpi-icon-tab amber">
-                <i class="fa-solid fa-file-invoice-dollar"></i>
+                <i class="fa-solid fa-paper-plane"></i>
             </div>
         </div>
 
-        <!-- Confirmed Bookings -->
+        <!-- Active Conversations -->
         <div class="kpi-card">
             <div class="kpi-content">
-                <span class="kpi-title">CONFIRMED BOOKINGS</span>
-                <div class="kpi-value">{{ analytics().confirmedBookings ?? analytics().totalRead ?? 0 }}</div>
+                <span class="kpi-title">ACTIVE CONVERSATIONS</span>
+                <div class="kpi-value">{{ analytics().activeConversations ?? analytics().confirmedBookings ?? 0 }}</div>
                 <div class="kpi-trend up">
                     <i class="fa-solid fa-arrow-up"></i> +0% from last week
                 </div>
@@ -62,17 +62,17 @@
             </div>
         </div>
 
-        <!-- Cancelled -->
+        <!-- Failed / Opt-Outs -->
         <div class="kpi-card">
             <div class="kpi-content">
-                <span class="kpi-title">CANCELLED</span>
-                <div class="kpi-value">{{ analytics().cancelledCount ?? 0 }}</div>
+                <span class="kpi-title">FAILED / OPT-OUTS</span>
+                <div class="kpi-value">{{ analytics().failedMessages ?? analytics().cancelledCount ?? 0 }}</div>
                 <div class="kpi-trend down">
                     <i class="fa-solid fa-arrow-down"></i> -0% from last week
                 </div>
             </div>
             <div class="kpi-icon-tab coral">
-                <i class="fa-solid fa-circle-xmark"></i>
+                <i class="fa-solid fa-triangle-exclamation"></i>
             </div>
         </div>
     </div>
@@ -80,10 +80,10 @@
     <!-- Main Workspace 2-Column Grid -->
     <div class="workspace-grid">
         
-        <!-- Left Column: Conversion Rate Analytics -->
+        <!-- Left Column: Delivery & Read Rate Analytics -->
         <div class="qd-card chart-card">
             <div class="card-header">
-                <h3>Conversion Rate</h3>
+                <h3>Delivery & Read Engagement</h3>
                 <div class="card-action">
                     <select class="select-filter" [ngModel]="selectedYearFilter">
                         <option value="This Year">This Year</option>
@@ -95,8 +95,8 @@
 
             <div class="chart-body">
                 <div class="conversion-summary">
-                    <div class="rate-large">{{ analytics().conversionRate || '0.0' }}%</div>
-                    <div class="rate-subtitle">Average Inquiry to Paid Quotation Ratio</div>
+                    <div class="rate-large">{{ analytics().readRate || analytics().conversionRate || '0.0' }}%</div>
+                    <div class="rate-subtitle">Average Delivery to Customer Read Engagement Ratio</div>
                 </div>
 
                 <!-- Visual Bar Chart Representation -->
@@ -121,10 +121,10 @@
             </div>
         </div>
 
-        <!-- Right Column: Upcoming Packages & Enquiries Table -->
+        <!-- Right Column: Recent Customer Conversations Table -->
         <div class="qd-card table-card">
             <div class="card-header">
-                <h3>Upcoming Packages</h3>
+                <h3>Recent Customer Messages</h3>
                 <a routerLink="/contacts" class="link-view-all">View All</a>
             </div>
 
@@ -132,24 +132,24 @@
                 <table class="qd-table">
                     <thead>
                         <tr>
-                            <th>ENQUIRY ID</th>
-                            <th>GUEST NAME</th>
-                            <th>CHECK-IN</th>
+                            <th>MESSAGE ID</th>
+                            <th>CUSTOMER NAME</th>
+                            <th>LAST ACTIVE</th>
                             <th style="text-align: right;">ACTION</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr *ngFor="let item of (analytics().upcomingPackages || [])">
-                            <td><strong style="color: #4F46E5;">{{ item.id }}</strong></td>
-                            <td>{{ item.guestName }}</td>
-                            <td>{{ item.checkIn }}</td>
+                        <tr *ngFor="let item of (analytics().recentConversations || analytics().upcomingPackages || [])">
+                            <td><strong style="color: #0b494d;">{{ item.id }}</strong></td>
+                            <td>{{ item.customerName || item.guestName }}</td>
+                            <td>{{ item.lastActive || item.checkIn }}</td>
                             <td style="text-align: right;">
                                 <a routerLink="/chat" class="btn-table-action"><i class="fa-regular fa-comment-dots"></i> Chat</a>
                             </td>
                         </tr>
-                        <tr *ngIf="!analytics().upcomingPackages || analytics().upcomingPackages.length === 0">
+                        <tr *ngIf="(!analytics().recentConversations || analytics().recentConversations.length === 0) && (!analytics().upcomingPackages || analytics().upcomingPackages.length === 0)">
                             <td colspan="4" style="text-align: center; color: #64748b; padding: 20px;">
-                                No recent enquiries found.
+                                No recent customer messages found.
                             </td>
                         </tr>
                     </tbody>
