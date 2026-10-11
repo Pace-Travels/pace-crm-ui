@@ -38,7 +38,7 @@
         } @else if (activeTab() === 'ai-agent') {
         <div class="ai-agent-setup-panel"
             style="background: white; border: 1px solid #cbd5e1; border-radius: 8px; padding: 24px; font-family: 'Inter', sans-serif;">
-            <h2 style="margin: 0 0 16px 0; font-size: 20px; color: #0b494d;">Agentic AI Bot Settings</h2>
+            <h2 style="margin: 0 0 16px 0; font-size: 20px; color: #7c3aed;">Agentic AI Bot Settings</h2>
 
             <div
                 style="display: flex; gap: 24px; align-items: flex-start; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 24px;">
@@ -99,7 +99,7 @@
             @if (!showAddWidgetForm()) {
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <div>
-                    <h2 style="margin: 0; font-size: 20px; color: #0b494d;">Website Widgets Integrations</h2>
+                    <h2 style="margin: 0; font-size: 20px; color: #7c3aed;">Website Widgets Integrations</h2>
                     <p style="margin: 4px 0 0 0; font-size: 13px; color: #64748b;">Create chatbot script loaders to
                         embed live chat or WhatsApp links on external sites.</p>
                 </div>
@@ -174,7 +174,7 @@
             } @else {
             <div
                 style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
-                <h2 style="margin: 0; font-size: 18px; color: #0b494d;">
+                <h2 style="margin: 0; font-size: 18px; color: #7c3aed;">
                     {{ editingWidget() ? 'Modify Web Widget' : 'Configure New Web Widget' }}
                 </h2>
                 <button class="btn btn-outline" style="padding: 6px 12px; font-size: 12px;"
@@ -206,7 +206,7 @@
                             <input type="color" [(ngModel)]="wThemeColor"
                                 style="width: 40px; height: 34px; padding: 0; border: none; border-radius: 4px; cursor: pointer;">
                             <input type="text" class="form-control" [(ngModel)]="wThemeColor" style="flex: 1;"
-                                placeholder="#0b494d">
+                                placeholder="#7c3aed">
                         </div>
                     </div>
                     <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
@@ -281,7 +281,7 @@
   
     <!-- Header -->
     <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px;">
-        <h2 style="margin: 0; font-size: 18px; color: #0b494d;"> FCM Token Generate</h2>
+        <h2 style="margin: 0; font-size: 18px; color: #7c3aed;"> FCM Token Generate</h2>
     </div>
 
     <!-- Form Body -->
@@ -308,7 +308,7 @@
                 <label style="font-size: 11px; font-weight: 700; color: #475569;">Widget Primary Accent Color</label>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <input type="color" [(ngModel)]="fcmThemeColor" style="width: 40px; height: 34px; padding: 0; border: none; border-radius: 4px; cursor: pointer;">
-                    <input type="text" class="form-control" [(ngModel)]="fcmThemeColor" style="flex: 1;" placeholder="#0b494d">
+                    <input type="text" class="form-control" [(ngModel)]="fcmThemeColor" style="flex: 1;" placeholder="#7c3aed">
                 </div>
             </div>
             <div style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
@@ -336,7 +336,7 @@
 
         <!-- Response Result & Copy Token Box -->
         <div *ngIf="generatedToken()" style="margin-top: 16px; padding: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; flex-direction: column; gap: 8px;">
-            <label style="font-size: 12px; font-weight: 700; color: #0b494d;">Generated JWT Token:</label>
+            <label style="font-size: 12px; font-weight: 700; color: #7c3aed;">Generated JWT Token:</label>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <input type="text" class="form-control" [value]="generatedToken()" readonly style="background: #ffffff; color: #334155; font-family: monospace; font-size: 12px;">
                 <button class="btn btn-primary" style="padding: 8px 16px; white-space: nowrap;" (click)="copyTokenToClipboard()">
@@ -345,7 +345,7 @@
             </div>
         </div>
         <div *ngIf="generatedSecretKey()" style="margin-top: 16px; padding: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; display: flex; flex-direction: column; gap: 8px;">
-            <label style="font-size: 12px; font-weight: 700; color: #0b494d;">Secret Key:</label>
+            <label style="font-size: 12px; font-weight: 700; color: #7c3aed;">Secret Key:</label>
             <div style="display: flex; gap: 8px; align-items: center;">
                 <input type="text" class="form-control" [value]="generatedSecretKey()" readonly style="background: #ffffff; color: #334155; font-family: monospace; font-size: 12px;">
                 <button class="btn btn-primary" style="padding: 8px 16px; white-space: nowrap;" (click)="copySecretTokenToClipboard()">

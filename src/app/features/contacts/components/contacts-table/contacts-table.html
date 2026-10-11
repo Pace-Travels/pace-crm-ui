@@ -5,19 +5,19 @@
         <div style="display: flex; gap: 8px; align-items: center;">
             <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-right: 4px;">Contacts Section:</span>
             <button (click)="filterOwnerMode.set('ALL'); currentPage.set(1)"
-                [style.background]="filterOwnerMode() === 'ALL' ? '#0b494d' : '#f1f5f9'"
+                [style.background]="filterOwnerMode() === 'ALL' ? '#7c3aed' : '#f1f5f9'"
                 [style.color]="filterOwnerMode() === 'ALL' ? 'white' : '#475569'"
                 style="border: none; padding: 7px 16px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer; transition: all 0.2s ease;">
                 All Contacts
             </button>
             <button (click)="filterOwnerMode.set('MY_CONTACTS'); currentPage.set(1)"
-                [style.background]="filterOwnerMode() === 'MY_CONTACTS' ? '#0b494d' : '#f1f5f9'"
+                [style.background]="filterOwnerMode() === 'MY_CONTACTS' ? '#7c3aed' : '#f1f5f9'"
                 [style.color]="filterOwnerMode() === 'MY_CONTACTS' ? 'white' : '#475569'"
                 style="border: none; padding: 7px 16px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
                 <i class="fa-solid fa-user-check"></i> My Contacts ({{ myContactsCount() }})
             </button>
             <button (click)="filterOwnerMode.set('UNASSIGNED'); currentPage.set(1)"
-                [style.background]="filterOwnerMode() === 'UNASSIGNED' ? '#0b494d' : '#f1f5f9'"
+                [style.background]="filterOwnerMode() === 'UNASSIGNED' ? '#7c3aed' : '#f1f5f9'"
                 [style.color]="filterOwnerMode() === 'UNASSIGNED' ? 'white' : '#475569'"
                 style="border: none; padding: 7px 16px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer; transition: all 0.2s ease;">
                 Unassigned
@@ -78,7 +78,7 @@
                     <i class="fa-solid fa-layer-group"></i> Create Group ({{ selectedIds().length }})
                 </button>
                 
-                <button *ngIf="selectedIds().length > 0" class="btn btn-primary" (click)="openBulkSend()" style="background: #0b494d; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <button *ngIf="selectedIds().length > 0" class="btn btn-primary" (click)="openBulkSend()" style="background: #7c3aed; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-paper-plane"></i> Bulk Send ({{ selectedIds().length }})
                 </button>
                 
@@ -86,7 +86,7 @@
                     <i class="fa-solid fa-download"></i> Sample Sheet
                 </button>
                 
-                <button (click)="openAddContact()" style="background: #0b494d; color: white; border: none; padding: 9px 18px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
+                <button (click)="openAddContact()" style="background: #7c3aed; color: white; border: none; padding: 9px 18px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
                     + Add Contact
                 </button>
 
@@ -97,7 +97,7 @@
                     </button>
                     <div *ngIf="showImportDropdown()" style="position: absolute; right: 0; top: 42px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 210px; z-index: 100; overflow: hidden;">
                         <a href="javascript:void(0)" (click)="openImportModal()" style="display: block; padding: 10px 16px; color: #1e293b; font-size: 13px; text-decoration: none; font-weight: 500;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-                            <i class="fa-solid fa-file-import" style="margin-right: 6px; color: #0b494d;"></i> Import {{ contactService.activeType() }} Sheet
+                            <i class="fa-solid fa-file-import" style="margin-right: 6px; color: #7c3aed;"></i> Import {{ contactService.activeType() }} Sheet
                         </a>
                         <a href="javascript:void(0)" (click)="exportContacts(); showImportDropdown.set(false)" style="display: block; padding: 10px 16px; color: #1e293b; font-size: 13px; text-decoration: none; font-weight: 500; border-top: 1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
                             <i class="fa-solid fa-file-export" style="margin-right: 6px; color: #10b981;"></i> Export {{ contactService.activeType() }} Sheet
@@ -143,14 +143,14 @@
     <!-- Group View Header Banner -->
     <div *ngIf="contactService.selectedGroup()" style="display: flex; justify-content: space-between; align-items: center; width: 100%; background: #f0fdf4; padding: 12px 20px; border-radius: 10px; border: 1px solid #b7ebc6; margin-bottom: 16px; animation: fadeIn 0.2s ease;">
         <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-weight: 800; color: #166534; font-size: 14.5px; display: flex; align-items: center; gap: 6px;">
+            <span style="font-weight: 800; color: #6d28d9; font-size: 14.5px; display: flex; align-items: center; gap: 6px;">
                 <i class="fa-solid fa-layer-group"></i> Viewing Group: {{ contactService.selectedGroup()?.name }}
             </span>
             <span *ngIf="contactService.selectedGroup()?.description" style="font-size: 13px; color: #15803d; opacity: 0.85;">
                 — {{ contactService.selectedGroup()?.description }}
             </span>
         </div>
-        <button (click)="contactService.selectedGroup.set(null); contactService.selectedGroupContactIds.set([])" style="background: white; border: 1px solid #b7ebc6; color: #166534; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
+        <button (click)="contactService.selectedGroup.set(null); contactService.selectedGroupContactIds.set([])" style="background: white; border: 1px solid #b7ebc6; color: #6d28d9; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: all 0.2s;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">
             <i class="fa-solid fa-arrow-left-long"></i> Show All {{ contactService.activeType() }} Contacts
         </button>
     </div>
@@ -266,7 +266,7 @@
                             {{ contact.categories || '—' }}
                         </td>
 
-                        <td style="padding: 14px 16px; font-family: monospace; font-size: 13px; font-weight: 600; color: #166534;">
+                        <td style="padding: 14px 16px; font-family: monospace; font-size: 13px; font-weight: 600; color: #6d28d9;">
                             {{ contact.phone }}
                         </td>
 
@@ -350,10 +350,10 @@
                             {{ contact.name || 'UNKNOWN' }}
                         </td>
 
-                        <td style="padding: 8px 12px; font-family: monospace; font-size: 13px; font-weight: 600; color: #166534;">
+                        <td style="padding: 8px 12px; font-family: monospace; font-size: 13px; font-weight: 600; color: #6d28d9;">
                             <input type="text" [value]="contact.phone" (change)="onPreviewPhoneChange(contact, $event)" 
                                    style="font-family: inherit; font-size: inherit; font-weight: inherit; color: inherit; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; width: 145px; outline: none; background: #fafafa; transition: border 0.15s ease;"
-                                   onfocus="this.style.border='#0b494d'; this.style.background='white';"
+                                   onfocus="this.style.border='#7c3aed'; this.style.background='white';"
                                    onblur="this.style.border='#cbd5e1'; this.style.background='#fafafa';">
                         </td>
 
@@ -364,14 +364,14 @@
                             </div>
                         </td>
 
-                        <td style="padding: 14px 16px; font-weight: 700; color: #0b494d;">
+                        <td style="padding: 14px 16px; font-weight: 700; color: #7c3aed;">
                             {{ contact.metaRate ? '₹' + contact.metaRate : '₹4.50' }}
                         </td>
 
                         <td style="padding: 14px 16px; min-width: 155px;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span [style.background]="contact.readinessStatus === 'READY' ? '#dcfce7' : '#fecaca'" 
-                                      [style.color]="contact.readinessStatus === 'READY' ? '#166534' : '#991b1b'"
+                                      [style.color]="contact.readinessStatus === 'READY' ? '#6d28d9' : '#991b1b'"
                                       style="font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; display: inline-block; vertical-align: middle;">
                                     {{ contact.readinessStatus || 'READY' }}
                                 </span>
@@ -395,7 +395,7 @@
 
                         <td style="padding: 14px 16px; text-align: right;">
                             <span [style.background]="contact.verificationStatus === 'ERROR' ? '#fecaca' : (contact.verificationStatus === 'WARNING' ? '#fef3c7' : (contact.verificationStatus === 'DUPLICATE' ? '#f3e8ff' : '#dcfce7'))"
-                                  [style.color]="contact.verificationStatus === 'ERROR' ? '#991b1b' : (contact.verificationStatus === 'WARNING' ? '#92400e' : (contact.verificationStatus === 'DUPLICATE' ? '#6b21a8' : '#166534'))"
+                                  [style.color]="contact.verificationStatus === 'ERROR' ? '#991b1b' : (contact.verificationStatus === 'WARNING' ? '#92400e' : (contact.verificationStatus === 'DUPLICATE' ? '#6b21a8' : '#6d28d9'))"
                                   style="font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 12px; text-transform: uppercase;">
                                 {{ contact.verificationStatus }}
                             </span>
@@ -545,7 +545,7 @@
                 <!-- Owner Search Dropdown Menu -->
                 <div *ngIf="showOwnerDropdown() && filteredAgentOptions().length > 0" style="position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.12); z-index: 100; max-height: 180px; overflow-y: auto;">
                     <div *ngFor="let opt of filteredAgentOptions()" (click)="addFormOwner(opt)" style="padding: 10px 14px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-                        <i class="fa-solid fa-user-check" style="color: #0b494d; font-size: 12px;"></i> {{ opt }}
+                        <i class="fa-solid fa-user-check" style="color: #7c3aed; font-size: 12px;"></i> {{ opt }}
                     </div>
                 </div>
             </div>
@@ -568,7 +568,7 @@
 
             <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
                 <button type="button" (click)="closeAddContact()" style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 9px 18px; border-radius: 6px; font-weight: 600; font-size: 13px; cursor: pointer;">Cancel</button>
-                <button type="submit" [disabled]="contactForm.invalid" style="background: #0b494d; color: white; border: none; padding: 9px 20px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer;">
+                <button type="submit" [disabled]="contactForm.invalid" style="background: #7c3aed; color: white; border: none; padding: 9px 20px; border-radius: 6px; font-weight: 700; font-size: 13px; cursor: pointer;">
                     {{ editingContactId() ? 'Update Contact' : 'Save Contact' }}
                 </button>
             </div>
@@ -589,7 +589,7 @@
         <!-- Bulk Target Country Filters -->
         <div *ngIf="isBulkSendMode()" style="border-bottom: 1px solid #f1f5f9; padding-bottom: 16px; margin-bottom: 20px;">
             <label style="font-size: 12.5px; font-weight: 700; color: #475569; display: block; margin-bottom: 8px;">
-                <i class="fa-solid fa-filter" style="color: #0b494d; margin-right: 4px;"></i> Target Countries (Sending to {{ getFilteredBulkCount() }} of {{ selectedIds().length }} selected)
+                <i class="fa-solid fa-filter" style="color: #7c3aed; margin-right: 4px;"></i> Target Countries (Sending to {{ getFilteredBulkCount() }} of {{ selectedIds().length }} selected)
             </label>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                 <label *ngFor="let country of availableBulkCountries()" style="display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; cursor: pointer; background: #f8fafc; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 6px; user-select: none;">
@@ -658,7 +658,7 @@
                 <span>{{ bulkProgress() }}%</span>
             </div>
             <div style="background: #e2e8f0; border-radius: 4px; height: 8px; overflow: hidden; width: 100%;">
-                <div [style.width.%]="bulkProgress()" style="background: #0b494d; height: 100%; transition: width 0.1s ease-out;"></div>
+                <div [style.width.%]="bulkProgress()" style="background: #7c3aed; height: 100%; transition: width 0.1s ease-out;"></div>
             </div>
         </div>
 
@@ -678,7 +678,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
             <div>
                 <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-square-poll-horizontal" style="color: #0b494d;"></i> Bulk Message Dispatch Summary
+                    <i class="fa-solid fa-square-poll-horizontal" style="color: #7c3aed;"></i> Bulk Message Dispatch Summary
                 </h3>
                 <span style="font-size: 12px; color: #64748b; margin-top: 4px; display: block;">Real-time audit log of the bulk dispatch process</span>
             </div>
@@ -691,8 +691,8 @@
                 <span style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Total Targets</span>
                 <span style="display: block; font-size: 20px; font-weight: 800; color: #0f172a; margin-top: 4px;">{{ bulkSummaryStats()?.total }}</span>
             </div>
-            <div style="flex: 1; min-width: 130px; background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px; text-align: center;">
-                <span style="font-size: 11px; font-weight: 700; color: #047857; text-transform: uppercase;">Sent Successfully</span>
+            <div style="flex: 1; min-width: 130px; background: #f5f3ff; border: 1px solid #a7f3d0; border-radius: 8px; padding: 12px; text-align: center;">
+                <span style="font-size: 11px; font-weight: 700; color: #7c3aed; text-transform: uppercase;">Sent Successfully</span>
                 <span style="display: block; font-size: 20px; font-weight: 800; color: #065f46; margin-top: 4px;">{{ bulkSummaryStats()?.success }}</span>
             </div>
             <div style="flex: 1; min-width: 130px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; text-align: center;">
@@ -721,7 +721,7 @@
                         </td>
                         <td style="padding: 12px 14px; text-align: right;">
                             <span [style.background]="res.status === 'SUCCESS' ? '#dcfce7' : '#fecaca'" 
-                                  [style.color]="res.status === 'SUCCESS' ? '#166534' : '#991b1b'"
+                                  [style.color]="res.status === 'SUCCESS' ? '#6d28d9' : '#991b1b'"
                                   style="font-size: 10.5px; font-weight: 800; padding: 3px 6px; border-radius: 12px; text-transform: uppercase;">
                                 {{ res.status }}
                             </span>

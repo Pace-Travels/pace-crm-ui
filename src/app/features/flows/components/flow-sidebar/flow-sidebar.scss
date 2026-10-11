@@ -17,8 +17,8 @@
             justify-content: center;
             gap: 8px;
             background: #e8f0fe;
-            color: #0b494d;
-            border: 1px solid #0b494d;
+            color: #7c3aed;
+            border: 1px solid #7c3aed;
             border-radius: 4px;
             padding: 10px;
             font-size: 13px;
@@ -57,10 +57,10 @@
 
                 &.active {
                     background: #e8f4f4;
-                    color: #0b494d;
+                    color: #7c3aed;
                     font-weight: 500;
                     
-                    i { color: #0b494d; }
+                    i { color: #7c3aed; }
                 }
             }
         }

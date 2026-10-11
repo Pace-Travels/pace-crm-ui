@@ -237,7 +237,7 @@
     align-items: center;
     gap: 16px;
     padding: 20px;
-    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+    background: linear-gradient(135deg, #f5f3ff 0%, #f0fdf4 100%);
     border: 1px solid #a7f3d0;
     border-radius: 12px;
 
@@ -265,7 +265,7 @@
       p {
         margin: 4px 0 0;
         font-size: 13px;
-        color: #047857;
+        color: #7c3aed;
       }
     }
   }
@@ -468,7 +468,7 @@
       }
       .url-hint {
         font-size: 11px;
-        color: #166534;
+        color: #6d28d9;
         word-break: break-all;
       }
     }
@@ -818,7 +818,7 @@
 
           &.active {
             background: #ffffff;
-            color: #0b494d;
+            color: #7c3aed;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
           }
         }
@@ -1178,7 +1178,7 @@
     font-weight: 500;
     cursor: pointer;
 
-    &:hover { background: #047857; }
+    &:hover { background: #7c3aed; }
   }
 
   /* AI Visual Action Pills & Toolbar Buttons */
@@ -1189,9 +1189,9 @@
   }
 
   .btn-ai-pill {
-    background: #ecfdf5;
+    background: #f5f3ff;
     border: 1px solid #a7f3d0;
-    color: #047857;
+    color: #7c3aed;
     font-size: 12px;
     font-weight: 600;
     padding: 5px 12px;
@@ -1228,7 +1228,7 @@
   .btn-magic-ai {
     background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
     border: 1px solid #a7f3d0;
-    color: #047857;
+    color: #7c3aed;
     font-size: 11.5px;
     font-weight: 700;
     padding: 3px 10px;
@@ -1287,10 +1287,10 @@
         border-radius: 6px;
         padding: 6px 12px;
         font-size: 12.5px;
-        &:focus { outline: none; border-color: #0b494d; }
+        &:focus { outline: none; border-color: #7c3aed; }
       }
       .btn-gen-prompt-img {
-        background: #0b494d;
+        background: #7c3aed;
         color: #ffffff;
         border: none;
         padding: 6px 14px;
@@ -1311,7 +1311,7 @@
       width: 100%;
       background: #f0fdf4;
       border: 1px dashed #86efac;
-      color: #166534;
+      color: #6d28d9;
       font-size: 12.5px;
       font-weight: 600;
       padding: 8px;
@@ -1359,13 +1359,13 @@
     label { font-size: 12px; font-weight: 600; color: #475569; }
     .ratio-btn {
       padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; font-size: 12px; cursor: pointer;
-      &.active { background: #0b494d; color: #fff; border-color: #0b494d; font-weight: 600; }
+      &.active { background: #7c3aed; color: #fff; border-color: #7c3aed; font-weight: 600; }
     }
   }
 
   .btn-ai-analyze {
     width: 100%;
-    background: #0b494d;
+    background: #7c3aed;
     color: #fff;
     border: none;
     padding: 10px;
@@ -1401,7 +1401,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    &:hover { border-color: #0b494d; background: #f0fdf4; }
+    &:hover { border-color: #7c3aed; background: #f0fdf4; }
   }
 
   .video-preview-player {
@@ -1528,7 +1528,7 @@
 
           .btn-apply-idea {
             width: 100%;
-            background: #0b494d;
+            background: #7c3aed;
             color: #ffffff;
             border: none;
             padding: 8px;

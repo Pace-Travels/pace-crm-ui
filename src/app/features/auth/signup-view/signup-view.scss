@@ -137,7 +137,7 @@
             color: #666;
             
             a {
-                color: #0b494d;
+                color: #7c3aed;
                 text-decoration: none;
                 font-weight: 600;
                 &:hover { text-decoration: underline; }
@@ -217,7 +217,7 @@
                         font-size: 14px;
                         outline: none;
 
-                        &:focus { border-color: #0b494d; }
+                        &:focus { border-color: #7c3aed; }
                         &::placeholder { color: #a0aec0; }
                     }
 

@@ -60,7 +60,7 @@
     }
 
     .btn-dark {
-        background: #0b494d;
+        background: #7c3aed;
         color: white;
         border: none;
         padding: 8px 16px;
@@ -145,7 +145,7 @@
                 align-items: center;
                 gap: 12px;
                 
-                .text-teal { color: #0b494d; }
+                .text-teal { color: #7c3aed; }
             }
 
             .close-btn {
@@ -173,7 +173,7 @@
                     transition: all 0.2s ease;
 
                     &:hover {
-                        border-color: #0b494d;
+                        border-color: #7c3aed;
                         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
                     }
 
@@ -190,8 +190,8 @@
                         }
 
                         .badge-new {
-                            background: #e0f2f1;
-                            color: #0b494d;
+                            background: #f3e8ff;
+                            color: #7c3aed;
                             font-size: 11px;
                             font-weight: 600;
                             padding: 4px 8px;
@@ -208,7 +208,7 @@
                     }
 
                     .btn-next {
-                        background: #0b494d;
+                        background: #7c3aed;
                         color: white;
                         border: none;
                         border-radius: 6px;

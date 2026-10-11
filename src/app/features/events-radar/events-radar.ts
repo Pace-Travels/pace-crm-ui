@@ -291,7 +291,7 @@ export class EventsRadar implements OnInit, AfterViewInit, OnDestroy {
         <div style="font-family: sans-serif; padding: 4px;">
           <strong style="font-size: 13px; color: #0f172a; display: block;">${ev.title}</strong>
           <div style="font-size: 11px; color: #64748b; margin: 4px 0;">📍 ${ev.venue}</div>
-          <div style="font-size: 12px; font-weight: 700; color: #059669; background: #ecfdf5; padding: 4px 8px; border-radius: 4px; display: inline-block;">
+          <div style="font-size: 12px; font-weight: 700; color: #059669; background: #f5f3ff; padding: 4px 8px; border-radius: 4px; display: inline-block;">
             Total Spend: ₹ ${Number(ev.totalPredictedSpend || 0).toLocaleString()}
           </div>
         </div>

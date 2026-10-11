@@ -140,7 +140,7 @@
                     </thead>
                     <tbody>
                         <tr *ngFor="let item of (analytics().recentConversations || analytics().upcomingPackages || [])">
-                            <td><strong style="color: #0b494d;">{{ item.id }}</strong></td>
+                            <td><strong style="color: #7c3aed;">{{ item.id }}</strong></td>
                             <td>{{ item.customerName || item.guestName }}</td>
                             <td>{{ item.lastActive || item.checkIn }}</td>
                             <td style="text-align: right;">

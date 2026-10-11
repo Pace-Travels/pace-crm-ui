@@ -121,9 +121,9 @@ import Swal from 'sweetalert2';
                 &:hover { background: #f8fafc; }
 
                 &.active {
-                    background: #e9f5f0;
-                    color: #0b494d;
-                    border-right: 3px solid #0b494d;
+                    background: #f3e8ff;
+                    color: #7c3aed;
+                    border-right: 3px solid #7c3aed;
                 }
             }
         }

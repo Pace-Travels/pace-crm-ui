@@ -794,7 +794,7 @@ openCreateGroup() {
         focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: 'Submit',
-        confirmButtonColor: '#0b494d',
+        confirmButtonColor: '#7c3aed',
         didOpen: () => {
             const actionTypeSelect = document.getElementById('swal-action-type') as HTMLSelectElement;
             const newGroupFields = document.getElementById('swal-new-group-fields');

@@ -51,7 +51,7 @@
                         </td>
                         <td style="font-size: 13px; color: #334155;">{{ campaign.audience }}</td>
                         <td style="text-align: right;" (click)="$event.stopPropagation()">
-                            <button (click)="openResponsesModal(campaign)" class="icon-btn" style="background: #e6f4f1; border: 1px solid #0b494d; color: #0b494d; cursor: pointer; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; margin-right: 6px;" title="View Details, Read Receipts & Responses">
+                            <button (click)="openResponsesModal(campaign)" class="icon-btn" style="background: #e6f4f1; border: 1px solid #7c3aed; color: #7c3aed; cursor: pointer; padding: 6px 12px; font-size: 12px; font-weight: 600; border-radius: 6px; margin-right: 6px;" title="View Details, Read Receipts & Responses">
                                 <i class="fa-solid fa-chart-line"></i> Analytics & Read Receipts
                             </button>
                             <button (click)="deleteCampaign(campaign)" class="icon-btn" style="background: none; border: none; color: #ef4444; cursor: pointer; padding: 6px 10px; font-size: 14px;" title="Delete Campaign">
@@ -73,12 +73,12 @@
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; padding-bottom: 16px; margin-bottom: 16px;">
             <div>
                 <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-chart-pie" style="color: #0b494d;"></i> Campaign Analytics & Message Audit — {{ selectedCampaign()?.campaignName }}
+                    <i class="fa-solid fa-chart-pie" style="color: #7c3aed;"></i> Campaign Analytics & Message Audit — {{ selectedCampaign()?.campaignName }}
                 </h3>
                 <span style="font-size: 12px; color: #64748b; margin-top: 4px; display: block;">Per-message delivery audit logs, WhatsApp read receipts, user responses & CRM sync.</span>
             </div>
             <div style="display: flex; align-items: center; gap: 12px;">
-                <button (click)="syncAllResponsesToCrm()" style="background: #0b494d; color: white; border: none; padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <button (click)="syncAllResponsesToCrm()" style="background: #7c3aed; color: white; border: none; padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                     <i class="fa-solid fa-arrows-rotate"></i> Sync All to CRM
                 </button>
                 <button (click)="closeResponsesModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
@@ -95,13 +95,13 @@
                 <span style="font-size: 11px; font-weight: 700; color: #1d4ed8; text-transform: uppercase;">Messages Sent</span>
                 <span style="display: block; font-size: 20px; font-weight: 800; color: #1e40af; margin-top: 2px;">{{ campaignStats().sent }}</span>
             </div>
-            <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 12px; border-radius: 8px; text-align: center;">
-                <span style="font-size: 11px; font-weight: 700; color: #047857; text-transform: uppercase;">Delivered</span>
+            <div style="background: #f5f3ff; border: 1px solid #a7f3d0; padding: 12px; border-radius: 8px; text-align: center;">
+                <span style="font-size: 11px; font-weight: 700; color: #7c3aed; text-transform: uppercase;">Delivered</span>
                 <span style="display: block; font-size: 20px; font-weight: 800; color: #065f46; margin-top: 2px;">{{ campaignStats().delivered }}</span>
             </div>
             <div style="background: #f0fdf4; border: 1px solid #86efac; padding: 12px; border-radius: 8px; text-align: center;">
                 <span style="font-size: 11px; font-weight: 700; color: #15803d; text-transform: uppercase;"><i class="fa-solid fa-check-double" style="color: #16a34a;"></i> Read Receipts</span>
-                <span style="display: block; font-size: 20px; font-weight: 800; color: #166534; margin-top: 2px;">{{ campaignStats().read }}</span>
+                <span style="display: block; font-size: 20px; font-weight: 800; color: #6d28d9; margin-top: 2px;">{{ campaignStats().read }}</span>
             </div>
             <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 12px; border-radius: 8px; text-align: center;">
                 <span style="font-size: 11px; font-weight: 700; color: #b91c1c; text-transform: uppercase;">Failed / Bounced</span>
@@ -148,7 +148,7 @@
                             <td style="padding: 12px 14px;">
                                 <!-- Read Receipt Badges -->
                                 <div style="display: flex; flex-direction: column; gap: 2px;">
-                                    <span *ngIf="item.status === 'READ'" style="display: inline-flex; align-items: center; gap: 4px; color: #166534; font-weight: 700; font-size: 12px;">
+                                    <span *ngIf="item.status === 'READ'" style="display: inline-flex; align-items: center; gap: 4px; color: #6d28d9; font-weight: 700; font-size: 12px;">
                                         <i class="fa-solid fa-check-double" style="color: #25d366;"></i> READ
                                         <span *ngIf="item.updatedAt" style="font-size: 11px; font-weight: 400; color: #64748b;">({{ item.updatedAt | date:'shortTime' }})</span>
                                     </span>
@@ -166,14 +166,14 @@
                                     </span>
                                 </div>
                             </td>
-                            <td style="padding: 12px 14px; font-weight: 600;" [style.color]="item.responseReceived ? '#047857' : '#94a3b8'">
+                            <td style="padding: 12px 14px; font-weight: 600;" [style.color]="item.responseReceived ? '#7c3aed' : '#94a3b8'">
                                 {{ item.responseReceived || 'No Response Yet' }}
                                 <div *ngIf="item.respondedAt" style="font-size: 11px; color: #64748b; font-weight: 400;">
                                     At {{ item.respondedAt | date:'short' }}
                                 </div>
                             </td>
                             <td style="padding: 12px 14px;">
-                                <span [style.background]="item.crmSyncStatus === 'SYNCED' ? '#dcfce7' : '#fef3c7'" [style.color]="item.crmSyncStatus === 'SYNCED' ? '#166534' : '#b45309'" style="padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">
+                                <span [style.background]="item.crmSyncStatus === 'SYNCED' ? '#dcfce7' : '#fef3c7'" [style.color]="item.crmSyncStatus === 'SYNCED' ? '#6d28d9' : '#b45309'" style="padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 700;">
                                     {{ item.crmSyncStatus || 'PENDING' }}
                                 </span>
                             </td>

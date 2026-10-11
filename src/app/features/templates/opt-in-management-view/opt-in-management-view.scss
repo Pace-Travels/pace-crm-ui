@@ -130,7 +130,7 @@
       width: 180px;
 
       &:focus {
-        border-color: #0b494d;
+        border-color: #7c3aed;
       }
     }
 
@@ -146,7 +146,7 @@
   }
 
   .btn-dark-save {
-    background: #0b494d;
+    background: #7c3aed;
     color: #ffffff;
     border: none;
     padding: 9px 20px;
@@ -248,7 +248,7 @@
       width: 0;
       height: 0;
 
-      &:checked + .slider { background-color: #0b494d; }
+      &:checked + .slider { background-color: #7c3aed; }
       &:checked + .slider:before { transform: translateX(18px); }
     }
 
@@ -299,6 +299,6 @@
     }
   }
 
-  .btn-primary { background: #0b494d; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  .btn-primary { background: #7c3aed; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
   .btn-secondary { background: #ffffff; color: #334155; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
 }

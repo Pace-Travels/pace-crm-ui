@@ -21,7 +21,7 @@
 
         <!-- Inline Verify WhatsApp Button & Status Badge -->
         <div *ngIf="showVerifyButton" style="display: flex; align-items: center; padding-right: 8px;">
-            <button *ngIf="!verificationResult() && !isVerifying()" type="button" (click)="verifyWhatsappNumber()" [disabled]="!phoneNumberOnly() || phoneNumberOnly().length < 7" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #00695c; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;" [style.opacity]="phoneNumberOnly().length >= 7 ? '1' : '0.5'">
+            <button *ngIf="!verificationResult() && !isVerifying()" type="button" (click)="verifyWhatsappNumber()" [disabled]="!phoneNumberOnly() || phoneNumberOnly().length < 7" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #6d28d9; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;" [style.opacity]="phoneNumberOnly().length >= 7 ? '1' : '0.5'">
                 <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i> Verify WA
             </button>
 
@@ -53,7 +53,7 @@
                     <span style="font-size: 16px;">{{ c.flag }}</span>
                     <span style="font-weight: 600; color: #0f172a;">{{ c.name }}</span>
                 </div>
-                <strong style="color: #0b494d; font-family: monospace; font-size: 12.5px;">{{ c.code }}</strong>
+                <strong style="color: #7c3aed; font-family: monospace; font-size: 12.5px;">{{ c.code }}</strong>
             </div>
 
             <div *ngIf="filteredCountries.length === 0" style="padding: 16px; text-align: center; color: #64748b; font-size: 12px;">

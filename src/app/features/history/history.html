@@ -4,7 +4,7 @@
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
         <div>
             <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
-                <i class="fa-solid fa-clock-rotate-left" style="color: #0b494d;"></i> Communication History
+                <i class="fa-solid fa-clock-rotate-left" style="color: #7c3aed;"></i> Communication History
             </h1>
             <p style="margin: 4px 0 0 0; font-size: 13.5px; color: #64748b;">
                 Audit log of outbound & inbound WhatsApp messages, broadcast campaign dispatches, and delivery status receipts.
@@ -16,7 +16,7 @@
                 <i class="fa-solid fa-rotate"></i> Refresh History
             </button>
             
-            <button (click)="exportLogsCSV()" style="background: #0b494d; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
+            <button (click)="exportLogsCSV()" style="background: #7c3aed; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(11,73,77,0.2);">
                 <i class="fa-solid fa-download"></i> Export Logs CSV
             </button>
         </div>
@@ -25,15 +25,15 @@
     <!-- Navigation Tabs -->
     <div style="display: flex; gap: 12px; border-bottom: 1px solid #e2e8f0; margin-bottom: 20px;">
         <button (click)="activeTab.set('messages')" 
-            [style.color]="activeTab() === 'messages' ? '#0b494d' : '#64748b'"
-            [style.border-bottom]="activeTab() === 'messages' ? '2px solid #0b494d' : '2px solid transparent'"
+            [style.color]="activeTab() === 'messages' ? '#7c3aed' : '#64748b'"
+            [style.border-bottom]="activeTab() === 'messages' ? '2px solid #7c3aed' : '2px solid transparent'"
             style="background: none; border: none; padding: 12px 18px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s ease;">
             <i class="fa-brands fa-whatsapp" style="margin-right: 6px;"></i> Message Logs ({{ messageLogs().length }})
         </button>
 
         <button (click)="activeTab.set('campaigns')" 
-            [style.color]="activeTab() === 'campaigns' ? '#0b494d' : '#64748b'"
-            [style.border-bottom]="activeTab() === 'campaigns' ? '2px solid #0b494d' : '2px solid transparent'"
+            [style.color]="activeTab() === 'campaigns' ? '#7c3aed' : '#64748b'"
+            [style.border-bottom]="activeTab() === 'campaigns' ? '2px solid #7c3aed' : '2px solid transparent'"
             style="background: none; border: none; padding: 12px 18px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s ease;">
             <i class="fa-solid fa-bullhorn" style="margin-right: 6px;"></i> Broadcast Campaign History ({{ campaignLogs().length }})
         </button>

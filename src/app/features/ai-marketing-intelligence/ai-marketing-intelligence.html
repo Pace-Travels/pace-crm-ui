@@ -8,7 +8,7 @@
             <p class="subtitle">AI Decision Support System for Tourism Demand Prediction, Competitor Pattern Analysis & Ad Campaigns</p>
         </div>
         <div style="display: flex; gap: 10px;">
-            <button type="button" (click)="openAddCompetitorModal()" style="background: #0b494d; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+            <button type="button" (click)="openAddCompetitorModal()" style="background: #7c3aed; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                 <i class="fa-solid fa-plus"></i> Add Competitor
             </button>
             <button type="button" (click)="openDiscoveryModal()" style="background: #0284c7; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
@@ -225,7 +225,7 @@
                         </select>
                     </div>
 
-                    <button type="button" (click)="generateWhatsappCampaign()" [disabled]="isGeneratingWhatsapp()" style="width: 100%; background: #0b494d; color: white; border: none; padding: 10px; border-radius: 6px; font-size: 13.5px; font-weight: 700; cursor: pointer;">
+                    <button type="button" (click)="generateWhatsappCampaign()" [disabled]="isGeneratingWhatsapp()" style="width: 100%; background: #7c3aed; color: white; border: none; padding: 10px; border-radius: 6px; font-size: 13.5px; font-weight: 700; cursor: pointer;">
                         <span *ngIf="!isGeneratingWhatsapp()"><i class="fa-solid fa-wand-magic-sparkles"></i> Generate WhatsApp Status Sequence</span>
                         <span *ngIf="isGeneratingWhatsapp()"><i class="fa-solid fa-spinner fa-spin"></i> Generating with Gemini AI...</span>
                     </button>
@@ -362,7 +362,7 @@
                 <div *ngFor="let rec of recommendations()" style="border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; background: white;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                         <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">{{ rec.title }}</h4>
-                        <button type="button" (click)="navigateTo(rec.actionRoute || '/ads')" style="background: #0b494d; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;">
+                        <button type="button" (click)="navigateTo(rec.actionRoute || '/ads')" style="background: #7c3aed; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;">
                             Launch Campaign →
                         </button>
                     </div>

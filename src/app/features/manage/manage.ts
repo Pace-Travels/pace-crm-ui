@@ -62,7 +62,7 @@ export class Manage implements OnInit {
   // Widget Form Fields
   wName = '';
   wType = 'WEB_CLIENT';
-  wThemeColor = '#0b494d';
+  wThemeColor = '#7c3aed';
   wWelcomeText = 'Hello! How can we help you today?';
   wPreChatFieldsText = ''; // Comma-separated
   wWhatsappNumber = '';
@@ -73,7 +73,7 @@ export class Manage implements OnInit {
   // FCM Token Generator Fields
   fcmName = '';
   fcmType = 'WEB_CLIENT';
-  fcmThemeColor = '#0b494d';
+  fcmThemeColor = '#7c3aed';
   fcmWelcomeText = 'Hello! How can we help you today?';
   fcmPreChatFieldsText = '';
   fcmCallPhoneNumber = '';
@@ -136,7 +136,7 @@ export class Manage implements OnInit {
     this.editingWidget.set(null);
     this.wName = '';
     this.wType = 'WEB_CLIENT';
-    this.wThemeColor = '#0b494d';
+    this.wThemeColor = '#7c3aed';
     this.wWelcomeText = 'Hello! How can we help you today?';
     this.wPreChatFieldsText = '';
     this.wWhatsappNumber = '';

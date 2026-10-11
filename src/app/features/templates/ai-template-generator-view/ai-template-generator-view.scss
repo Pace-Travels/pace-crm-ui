@@ -72,7 +72,7 @@
         width: 44px;
         height: 44px;
         border-radius: 10px;
-        background: #ecfdf5;
+        background: #f5f3ff;
         color: #059669;
         display: flex;
         align-items: center;
@@ -165,8 +165,8 @@
 
       &.active {
         background: #e6f4f1;
-        border-color: #0b494d;
-        color: #0b494d;
+        border-color: #7c3aed;
+        color: #7c3aed;
         font-weight: 700;
       }
     }
@@ -177,7 +177,7 @@
     padding: 14px;
     border-radius: 10px;
     border: none;
-    background: #0b494d;
+    background: #7c3aed;
     color: #ffffff;
     font-size: 15px;
     font-weight: 600;
@@ -226,7 +226,7 @@
           font-size: 12px;
           font-weight: 600;
           color: #059669;
-          background: #ecfdf5;
+          background: #f5f3ff;
           padding: 3px 8px;
           border-radius: 6px;
         }
@@ -322,7 +322,7 @@
                 background: #ffffff;
                 font-size: 12px;
                 cursor: pointer;
-                &.active { background: #0b494d; color: #ffffff; border-color: #0b494d; }
+                &.active { background: #7c3aed; color: #ffffff; border-color: #7c3aed; }
               }
             }
           }
@@ -331,7 +331,7 @@
     }
   }
 
-  .btn-primary { background: #0b494d; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
+  .btn-primary { background: #7c3aed; color: #ffffff; border: none; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
   .btn-secondary { background: #ffffff; color: #334155; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; }
   .btn-outline { background: #ffffff; color: #475569; border: 1px solid #cbd5e1; cursor: pointer; }
 }

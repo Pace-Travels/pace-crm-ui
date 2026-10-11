@@ -376,7 +376,7 @@ export class TemplatesView implements OnInit {
           icon: 'warning',
           showCancelButton: true,
           confirmButtonText: 'Configure Credentials',
-          confirmButtonColor: '#0b494d'
+          confirmButtonColor: '#7c3aed'
         }).then(res => {
           if (res.isConfirmed) this.navigateTo('/projects');
         });
@@ -421,7 +421,7 @@ export class TemplatesView implements OnInit {
           `,
           icon: rejectedItems.length > 0 ? 'warning' : 'success',
           confirmButtonText: 'Great!',
-          confirmButtonColor: '#0b494d'
+          confirmButtonColor: '#7c3aed'
         });
       },
       error: (err: any) => {
@@ -474,7 +474,7 @@ export class TemplatesView implements OnInit {
       icon: 'question',
       showCancelButton: true,
       confirmButtonText: 'Import & Use',
-      confirmButtonColor: '#0b494d'
+      confirmButtonColor: '#7c3aed'
     }).then(res => {
       if (res.isConfirmed) {
         const payload = {
@@ -689,7 +689,7 @@ export class TemplatesView implements OnInit {
       `,
       icon: 'error',
       confirmButtonText: 'Understood',
-      confirmButtonColor: '#0b494d'
+      confirmButtonColor: '#7c3aed'
     });
   }
 
@@ -778,7 +778,7 @@ export class TemplatesView implements OnInit {
           `,
           icon: 'error',
           confirmButtonText: 'Review in Action Required',
-          confirmButtonColor: '#0b494d'
+          confirmButtonColor: '#7c3aed'
         });
       }
     });
@@ -810,7 +810,7 @@ export class TemplatesView implements OnInit {
           `,
           icon: 'error',
           confirmButtonText: 'Close',
-          confirmButtonColor: '#0b494d'
+          confirmButtonColor: '#7c3aed'
         });
       }
     });

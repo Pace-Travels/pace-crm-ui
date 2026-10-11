@@ -664,9 +664,9 @@ export class CreateTemplateView implements OnInit {
     Swal.fire({
       title: `Generating ${mediaType === 'VIDEO' ? 'Banana Pro Video' : 'Imagen 3 Banner'}...`,
       html: `
-        <div style="font-weight:600; color:#0b494d; margin-bottom:8px;" id="swal-status">Initializing AI Synthesis...</div>
+        <div style="font-weight:600; color:#7c3aed; margin-bottom:8px;" id="swal-status">Initializing AI Synthesis...</div>
         <div style="width:100%; background:#e2e8f0; border-radius:10px; overflow:hidden; height:12px;">
-          <div id="swal-bar" style="width:15%; height:100%; background:#0b494d; transition:width 0.4s ease;"></div>
+          <div id="swal-bar" style="width:15%; height:100%; background:#7c3aed; transition:width 0.4s ease;"></div>
         </div>
       `,
       allowOutsideClick: false,
