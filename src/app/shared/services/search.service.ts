@@ -1,4 +1,4 @@
-import { Injectable, signal, Inject, PLATFORM_ID, HostListener } from '@angular/core';
+import { Injectable, signal, Inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { ApiService } from './api.service';
 
@@ -7,7 +7,20 @@ export interface SearchResults {
     users: any[];
     campaigns: any[];
     messages: any[];
+    templates: any[];
+    flows: any[];
+    cannedResponses: any[];
 }
+
+const EMPTY_RESULTS: SearchResults = {
+    contacts: [],
+    users: [],
+    campaigns: [],
+    messages: [],
+    templates: [],
+    flows: [],
+    cannedResponses: []
+};
 
 @Injectable({
     providedIn: 'root'
@@ -21,7 +34,7 @@ export class SearchService {
     searchQuery = signal<string>('');
     
     // Results state
-    searchResults = signal<SearchResults>({ contacts: [], users: [], campaigns: [], messages: [] });
+    searchResults = signal<SearchResults>(EMPTY_RESULTS);
     
     // Loading state
     isLoading = signal<boolean>(false);
@@ -63,14 +76,14 @@ export class SearchService {
 
     clearSearch() {
         this.searchQuery.set('');
-        this.searchResults.set({ contacts: [], users: [], campaigns: [], messages: [] });
+        this.searchResults.set({ ...EMPTY_RESULTS });
     }
 
     performSearch(query: string) {
         this.searchQuery.set(query);
         
         if (!query || query.trim().length === 0) {
-            this.searchResults.set({ contacts: [], users: [], campaigns: [], messages: [] });
+            this.searchResults.set({ ...EMPTY_RESULTS });
             this.isLoading.set(false);
             return;
         }
@@ -78,15 +91,23 @@ export class SearchService {
         this.isLoading.set(true);
         this.api.get(`/system/search?q=${encodeURIComponent(query)}`).subscribe({
             next: (res: any) => {
-                if (res.success) {
-                    this.searchResults.set(res.data);
+                if (res.success && res.data) {
+                    this.searchResults.set({
+                        contacts: res.data.contacts || [],
+                        users: res.data.users || [],
+                        campaigns: res.data.campaigns || [],
+                        messages: res.data.messages || [],
+                        templates: res.data.templates || [],
+                        flows: res.data.flows || [],
+                        cannedResponses: res.data.cannedResponses || []
+                    });
                 }
                 this.isLoading.set(false);
             },
             error: (err) => {
                 console.error('Search failed', err);
                 this.isLoading.set(false);
-                this.searchResults.set({ contacts: [], users: [], campaigns: [], messages: [] });
+                this.searchResults.set({ ...EMPTY_RESULTS });
             }
         });
     }
