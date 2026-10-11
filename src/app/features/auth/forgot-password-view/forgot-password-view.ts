@@ -76,17 +76,22 @@ export class ForgotPasswordView implements OnInit {
       })
     ).subscribe({
       next: (res: any) => {
-        this.resetStep = 'SUCCESS';
-        Swal.fire({
-          title: 'Password Updated!',
-          text: `Account password for ${email} has been updated in database.`,
-          icon: 'success',
-          timer: 2500,
-          showConfirmButton: false
-        });
+        if (res && res.success !== false) {
+          this.resetStep = 'SUCCESS';
+          Swal.fire({
+            title: 'Password Updated!',
+            text: res.message || `Account password for ${email} has been updated in database.`,
+            icon: 'success',
+            timer: 2500,
+            showConfirmButton: false
+          });
+        } else {
+          Swal.fire('Error', res?.error || res?.message || 'Failed to update password', 'error');
+        }
       },
       error: (err: any) => {
-        Swal.fire('Error', err.error?.error || err.error?.message || 'Failed to update password', 'error');
+        const msg = err.error?.error || err.error?.message || err.message || 'Failed to update password';
+        Swal.fire('Error', msg, 'error');
       }
     });
   }
@@ -131,11 +136,21 @@ export class ForgotPasswordView implements OnInit {
         this.isSubmitting = false;
       })
     ).subscribe({
-      next: () => {
-        this.resetStep = 'SUCCESS';
+      next: (res: any) => {
+        if (res && res.success !== false) {
+          this.resetStep = 'SUCCESS';
+          Swal.fire({
+            title: 'Password Updated!',
+            text: res.message || 'Your password has been reset successfully.',
+            icon: 'success'
+          });
+        } else {
+          Swal.fire('Error', res?.error || res?.message || 'Failed to update password', 'error');
+        }
       },
       error: (err) => {
-        Swal.fire('Error', err.error?.error || err.error?.message || 'Failed to update password', 'error');
+        const msg = err.error?.error || err.error?.message || err.message || 'Failed to update password';
+        Swal.fire('Error', msg, 'error');
       }
     });
   }
