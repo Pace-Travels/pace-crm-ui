@@ -125,7 +125,7 @@
         <div class="qd-card table-card">
             <div class="card-header">
                 <h3>Recent Customer Messages</h3>
-                <a routerLink="/contacts" class="link-view-all">View All</a>
+                <a (click)="navigateTo('/history')" class="link-view-all" style="cursor: pointer;">View All</a>
             </div>
 
             <div class="table-container">
@@ -144,7 +144,7 @@
                             <td>{{ item.customerName || item.guestName }}</td>
                             <td>{{ item.lastActive || item.checkIn }}</td>
                             <td style="text-align: right;">
-                                <a routerLink="/chat" class="btn-table-action"><i class="fa-regular fa-comment-dots"></i> Chat</a>
+                                <button (click)="openCustomerChat(item.phone)" class="btn-table-action" style="background: rgba(124, 58, 237, 0.08); border: 1px solid rgba(124, 58, 237, 0.25); color: #7c3aed; cursor: pointer; font-size: 12.5px; font-weight: 700; padding: 5px 12px; border-radius: 6px; display: inline-flex; align-items: center; gap: 6px;"><i class="fa-regular fa-comment-dots"></i> Chat</button>
                             </td>
                         </tr>
                         <tr *ngIf="(!analytics().recentConversations || analytics().recentConversations.length === 0) && (!analytics().upcomingPackages || analytics().upcomingPackages.length === 0)">

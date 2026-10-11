@@ -29,6 +29,8 @@ interface CampaignLog {
   status: string;
 }
 
+import { Router } from '@angular/router';
+
 @Component({
   selector: 'app-history',
   standalone: true,
@@ -38,6 +40,7 @@ interface CampaignLog {
 })
 export class History implements OnInit {
   private api = inject(ApiService);
+  private router = inject(Router);
 
   activeTab = signal<'messages' | 'campaigns' | 'notifications'>('messages');
   searchQuery = signal<string>('');
@@ -186,5 +189,10 @@ export class History implements OnInit {
     if (status === 'DELIVERED') return { bg: '#e0f2fe', color: '#0369a1', label: '✓✓ Delivered' };
     if (status === 'SENT') return { bg: '#fef3c7', color: '#b45309', label: '✓ Sent' };
     return { bg: '#fef2f2', color: '#dc2626', label: '✕ Failed' };
+  }
+
+  openLiveChat(log: MessageLog) {
+    const phone = log.recipientPhone ? log.recipientPhone.replace(/\D/g, '') : '';
+    this.router.navigate(['/chat'], { queryParams: { phone } });
   }
 }

@@ -109,6 +109,15 @@ export class Dashboard implements OnInit {
     this.showAlert('Report Download', 'Analytics export CSV download initiated.', 'success');
   }
 
+  openCustomerChat(phone: string) {
+    const cleanPhone = (phone || '').replace(/\D/g, '');
+    this.router.navigate(['/chat'], { queryParams: { phone: cleanPhone } });
+  }
+
+  navigateTo(path: string) {
+    this.router.navigate([path]);
+  }
+
   private showAlert(title: string, text: string, icon: string) {
     Swal.fire({ title, text, icon: icon as any, toast: true, position: 'top-end', timer: 3000, showConfirmButton: false });
   }
