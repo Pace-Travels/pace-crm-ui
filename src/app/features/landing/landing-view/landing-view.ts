@@ -20,6 +20,11 @@ export interface ChatMessage {
 export class LandingView implements AfterViewInit {
   userInput = signal('');
   isTyping = signal(false);
+  isAnnual = signal(false);
+
+  toggleBilling() {
+    this.isAnnual.set(!this.isAnnual());
+  }
 
   chatHistory = signal<ChatMessage[]>([
     {

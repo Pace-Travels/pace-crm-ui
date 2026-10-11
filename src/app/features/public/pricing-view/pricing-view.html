@@ -3,9 +3,9 @@
   <!-- NAV HEADER -->
   <header class="public-header">
     <div class="header-inner">
-      <a routerLink="/" class="brand-logo" style="display: flex; align-items: center; gap: 8px;">
-        <img src="quotedesks-logo.png" alt="QuoteDesks Logo" style="height: 36px; width: auto; object-fit: contain; background: white; padding: 4px 10px; border-radius: 6px;">
-        <span style="font-weight: 800; font-size: 14px; color: white; background: #6366f1; padding: 2px 8px; border-radius: 4px;">Messenger</span>
+      <a routerLink="/" class="brand-logo">
+        <img src="quotedesks-logo.png" alt="QuoteDesks Logo" class="brand-logo-img">
+        <span class="brand-badge">Messenger</span>
       </a>
       <nav class="nav-links">
         <a routerLink="/" class="nav-item">Home</a>
@@ -17,7 +17,7 @@
       </nav>
       <div class="nav-actions">
         <a routerLink="/login" class="btn-login">Sign In</a>
-        <a routerLink="/signup" class="btn-signup">Get Started Free</a>
+        <a routerLink="/signup" class="btn-signup"><i class="fa-solid fa-rocket"></i> Get Started Free</a>
       </div>
     </div>
   </header>
@@ -25,16 +25,16 @@
   <!-- PRICING HERO -->
   <section class="pricing-hero">
     <div class="hero-content">
-      <span class="pill-tag"><i class="fa-solid fa-tags"></i> Transparent Seat Pricing</span>
-      <h1>Predictable Pricing Tiered for <br><span class="purple-gradient">Every QuoteDesks Agency</span></h1>
-      <p>Scale your WhatsApp marketing and agent seat allocations with zero hidden fees.</p>
+      <span class="pill-tag"><i class="fa-solid fa-indian-rupee-sign"></i> Transparent Indian Rupee Pricing</span>
+      <h1>Predictable ₹ INR Plans Billed for <br><span class="purple-gradient">Every QuoteDesks Agency</span></h1>
+      <p>Zero markup on Meta WABA message rates. High-performance cloud infrastructure hosted in AWS Mumbai (ap-south-1).</p>
 
       <div class="billing-toggle">
-        <span [class.active]="!isAnnual()">Monthly</span>
-        <button type="button" class="toggle-btn" (click)="toggleBilling()">
-          <span class="slider" [class.on]="isAnnual()"></span>
+        <span [class.active]="!isAnnual()">Monthly Billing</span>
+        <button type="button" class="toggle-btn" (click)="toggleBilling()" [class.on]="isAnnual()" aria-label="Toggle Annual Billing">
+          <span class="slider"></span>
         </button>
-        <span [class.active]="isAnnual()">Annual <span class="save-badge">Save 20%</span></span>
+        <span [class.active]="isAnnual()">Annual Billing <span class="save-badge">Save 20%</span></span>
       </div>
     </div>
   </section>
@@ -48,69 +48,72 @@
         <div class="card-header">
           <span class="tier-name">STARTER</span>
           <div class="price">
-            <span class="currency">$</span>
-            <span class="amount">{{ isAnnual() ? '29' : '39' }}</span>
+            <span class="currency">₹</span>
+            <span class="amount">{{ isAnnual() ? '1,199' : '1,499' }}</span>
             <span class="period">/mo</span>
           </div>
-          <p class="tier-desc">Ideal for solo founders & micro agencies.</p>
+          <p class="tier-desc">{{ isAnnual() ? 'Billed ₹14,388 annually' : 'Ideal for solo travel consultants' }}</p>
         </div>
         <div class="seat-quota-box">
-          <i class="fa-solid fa-user"></i> <b>1 Total Seat</b> (0 sub-users)
+          <i class="fa-solid fa-user"></i> <b>1 Seat Allocation</b> (Solo Admin)
         </div>
         <ul class="tier-features">
-          <li><i class="fa-solid fa-check"></i> Unlimited WhatsApp Contacts</li>
-          <li><i class="fa-solid fa-check"></i> 5,000 Marketing Broadcasts/mo</li>
-          <li><i class="fa-solid fa-check"></i> Shared Team Inbox</li>
-          <li><i class="fa-solid fa-check"></i> Gemini AI Copilot</li>
+          <li><i class="fa-solid fa-check"></i> 2,500 Marketing Broadcasts/mo</li>
+          <li><i class="fa-solid fa-check"></i> Meta Embedded 1-Click Signup</li>
+          <li><i class="fa-solid fa-check"></i> Omnichannel Live Inbox</li>
+          <li><i class="fa-solid fa-check"></i> Gemini AI Copilot Assistant</li>
+          <li><i class="fa-solid fa-check"></i> Shared Contact Book</li>
         </ul>
-        <a routerLink="/signup" class="plan-btn outline">Choose Starter</a>
+        <a routerLink="/signup" class="plan-btn outline">Choose Starter Plan</a>
       </div>
 
-      <!-- STANDARD -->
+      <!-- PROFESSIONAL (POPULAR) -->
       <div class="pricing-card featured">
-        <div class="popular-badge">MOST POPULAR</div>
+        <div class="popular-badge"><i class="fa-solid fa-fire"></i> MOST POPULAR</div>
         <div class="card-header">
-          <span class="tier-name">STANDARD</span>
+          <span class="tier-name">PROFESSIONAL</span>
           <div class="price">
-            <span class="currency">$</span>
-            <span class="amount">{{ isAnnual() ? '59' : '79' }}</span>
+            <span class="currency">₹</span>
+            <span class="amount">{{ isAnnual() ? '3,199' : '3,999' }}</span>
             <span class="period">/mo</span>
           </div>
-          <p class="tier-desc">For growing travel agencies with sales reps.</p>
+          <p class="tier-desc">{{ isAnnual() ? 'Billed ₹38,388 annually' : 'Built for growing sales teams' }}</p>
         </div>
         <div class="seat-quota-box featured">
-          <i class="fa-solid fa-users"></i> <b>2 Total Seats</b> (1 Sub-user seat)
+          <i class="fa-solid fa-users"></i> <b>3 Total Seats</b> (2 Sub-user reps)
         </div>
         <ul class="tier-features">
-          <li><i class="fa-solid fa-check"></i> Multi-tenant RBAC Contact Isolation</li>
-          <li><i class="fa-solid fa-check"></i> 25,000 Marketing Broadcasts/mo</li>
-          <li><i class="fa-solid fa-check"></i> AWS SES Team Invites (admin@quotedesks.com)</li>
-          <li><i class="fa-solid fa-check"></i> Meta Click-to-WhatsApp Ads Sync</li>
+          <li><i class="fa-solid fa-check"></i> Multi-Tenant Agent Walling Out (RBAC)</li>
+          <li><i class="fa-solid fa-check"></i> 15,000 Marketing Broadcasts/mo</li>
+          <li><i class="fa-solid fa-check"></i> Interactive Quick-Reply Button Builder</li>
+          <li><i class="fa-solid fa-check"></i> Automated CSV Data Cleaning & Validation</li>
+          <li><i class="fa-solid fa-check"></i> AWS SES Team Email Invites</li>
         </ul>
-        <a routerLink="/signup" class="plan-btn primary">Choose Standard</a>
+        <a routerLink="/signup" class="plan-btn primary">Choose Professional</a>
       </div>
 
-      <!-- PREMIUM -->
+      <!-- AGENCY -->
       <div class="pricing-card">
         <div class="card-header">
-          <span class="tier-name">PREMIUM</span>
+          <span class="tier-name">AGENCY</span>
           <div class="price">
-            <span class="currency">$</span>
-            <span class="amount">{{ isAnnual() ? '119' : '149' }}</span>
+            <span class="currency">₹</span>
+            <span class="amount">{{ isAnnual() ? '7,999' : '9,999' }}</span>
             <span class="period">/mo</span>
           </div>
-          <p class="tier-desc">Designed for established teams & agencies.</p>
+          <p class="tier-desc">{{ isAnnual() ? 'Billed ₹95,988 annually' : 'For established travel agencies' }}</p>
         </div>
         <div class="seat-quota-box">
-          <i class="fa-solid fa-users-gear"></i> <b>3 Total Seats</b> (2 Sub-user seats)
+          <i class="fa-solid fa-building-user"></i> <b>10 Total Seats</b> (9 Sub-user reps)
         </div>
         <ul class="tier-features">
-          <li><i class="fa-solid fa-check"></i> Everything in Standard</li>
-          <li><i class="fa-solid fa-check"></i> 100,000 Marketing Broadcasts/mo</li>
-          <li><i class="fa-solid fa-check"></i> Visual Automation Flow Builder</li>
-          <li><i class="fa-solid fa-check"></i> Custom Gemini AI Persona Prompts</li>
+          <li><i class="fa-solid fa-check"></i> Everything in Professional</li>
+          <li><i class="fa-solid fa-check"></i> 50,000 Marketing Broadcasts/mo</li>
+          <li><i class="fa-solid fa-check"></i> Multi-Project Phone Number Scoping</li>
+          <li><i class="fa-solid fa-check"></i> Dynamic WABA Health Quality Radar</li>
+          <li><i class="fa-solid fa-check"></i> 24/7 Gemini AI Auto-Responder</li>
         </ul>
-        <a routerLink="/signup" class="plan-btn outline">Choose Premium</a>
+        <a routerLink="/signup" class="plan-btn outline">Choose Agency Plan</a>
       </div>
 
       <!-- ENTERPRISE -->
@@ -118,33 +121,48 @@
         <div class="card-header">
           <span class="tier-name">ENTERPRISE</span>
           <div class="price">
-            <span class="currency">$</span>
-            <span class="amount">{{ isAnnual() ? '239' : '299' }}</span>
+            <span class="currency">₹</span>
+            <span class="amount">{{ isAnnual() ? '19,999' : '24,999' }}</span>
             <span class="period">/mo</span>
           </div>
-          <p class="tier-desc">High-scale operations requiring maximum capacity.</p>
+          <p class="tier-desc">{{ isAnnual() ? 'Billed ₹2,39,988 annually' : 'High volume dedicated instance' }}</p>
         </div>
         <div class="seat-quota-box">
-          <i class="fa-solid fa-building-user"></i> <b>5 Total Seats</b> (4 Sub-user seats)
+          <i class="fa-solid fa-server"></i> <b>Dedicated Node</b> (Unlimited Seats)
         </div>
         <ul class="tier-features">
-          <li><i class="fa-solid fa-check"></i> Unlimited Broadcast Messages</li>
-          <li><i class="fa-solid fa-check"></i> Priority AWS SES Gateway</li>
-          <li><i class="fa-solid fa-check"></i> Custom Web Push SDK Loader</li>
-          <li><i class="fa-solid fa-check"></i> Dedicated Onboarding Manager</li>
+          <li><i class="fa-solid fa-check"></i> Unlimited WhatsApp Broadcast Capacity</li>
+          <li><i class="fa-solid fa-check"></i> Dedicated AWS EC2 Server Instance (Mumbai)</li>
+          <li><i class="fa-solid fa-check"></i> Custom Meta TSP Tech Integration</li>
+          <li><i class="fa-solid fa-check"></i> Priority 99.9% SLA & Account Manager</li>
+          <li><i class="fa-solid fa-check"></i> Custom Security Audit Logs</li>
         </ul>
-        <a routerLink="/contact" class="plan-btn outline">Contact Enterprise</a>
+        <a routerLink="/contact" class="plan-btn outline">Contact Enterprise Sales</a>
       </div>
 
     </div>
   </section>
 
-  <!-- FOOTER -->
+  <!-- INFRASTRUCTURE COST & TRANSPARENCY NOTE -->
+  <section class="infra-note-section">
+    <div class="infra-card">
+      <div class="infra-icon"><i class="fa-brands fa-aws"></i></div>
+      <div class="infra-info">
+        <h3>Enterprise AWS EC2 Cloud Infrastructure Guarantee</h3>
+        <p>QuoteDesks Messenger is hosted on high-availability AWS EC2 & RDS MySQL instances in the AWS Mumbai (ap-south-1) region. Base infrastructure overhead is optimized to provide 99.9% uptime with 0% markup on Meta official WABA conversation rates.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER WITH META TSP POLICIES -->
   <footer class="public-footer">
     <div class="footer-inner">
       <div class="footer-brand">
-        <div class="logo">QuoteDesks <span>Messenger</span></div>
-        <p>The complete WhatsApp CRM & Conversational Sales Suite for QuoteDesks.</p>
+        <div class="logo">
+          <img src="quotedesks-logo.png" alt="QuoteDesks Logo" style="height: 32px; background: white; padding: 2px 8px; border-radius: 6px;">
+          <span style="background: #444ce7; color: white; padding: 2px 8px; border-radius: 4px; font-weight: 800;">Messenger</span>
+        </div>
+        <p>Official Meta WABA Tech Solution Provider Platform for QuoteDesks Agencies.</p>
       </div>
       <div class="footer-links">
         <a routerLink="/features">Features</a>
@@ -153,10 +171,18 @@
         <a routerLink="/blog">Blog</a>
         <a routerLink="/contact">Contact Us</a>
       </div>
+      <div class="footer-legal">
+        <a routerLink="/privacy-policy">Privacy Policy</a>
+        <a routerLink="/terms-of-service">Terms of Service</a>
+        <a routerLink="/data-deletion-instructions">Data Deletion</a>
+        <a routerLink="/dpa">DPA Policy</a>
+        <a routerLink="/privacy-policy-1">TSP Privacy</a>
+      </div>
     </div>
     <div class="footer-bottom">
-      &copy; 2026 QuoteDesks Messenger. All rights reserved.
+      &copy; 2026 QuoteDesks Messenger. All rights reserved. Powered by Meta WABA Cloud & AWS Infrastructure.
     </div>
   </footer>
 
 </div>
+
