@@ -23,6 +23,7 @@ export interface MediaPayload {
 })
 export class MediaModal {
   @Input() isOpen = false;
+  @Input() conversationId: any = 'general';
   @Output() close = new EventEmitter<void>();
   @Output() sendMedia = new EventEmitter<MediaPayload>();
 
@@ -113,7 +114,10 @@ export class MediaModal {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('folderCategory', 'chat-media');
+    formData.append('folderCategory', 'chat');
+    if (this.conversationId) {
+      formData.append('conversationId', String(this.conversationId));
+    }
 
     const uploadUrl = `${this.api.baseUrl}/storage/upload`;
 
