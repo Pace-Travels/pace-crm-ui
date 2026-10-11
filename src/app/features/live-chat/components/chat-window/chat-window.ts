@@ -7,11 +7,12 @@ import Swal from 'sweetalert2';
 import { MediaModal, MediaPayload } from '../media-modal/media-modal';
 import { TagModal } from '../tag-modal/tag-modal';
 import { PayModal, PaymentRequestPayload } from '../pay-modal/pay-modal';
+import { EmojiStickerPicker } from '../emoji-sticker-picker/emoji-sticker-picker';
 
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MediaModal, TagModal, PayModal],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MediaModal, TagModal, PayModal, EmojiStickerPicker],
   templateUrl: './chat-window.html',
   styleUrl: './chat-window.scss',
 })
@@ -22,6 +23,7 @@ export class ChatWindow implements AfterViewChecked {
   @ViewChild('messagesArea') private messagesArea!: ElementRef;
 
   showInteractiveModal = signal(false);
+  isEmojiPickerOpen = signal(false);
   interactiveBody = '';
   btn1 = '';
   btn2 = '';
@@ -33,6 +35,47 @@ export class ChatWindow implements AfterViewChecked {
   isPayModalOpen = signal(false);
 
   contactTags = signal<string[]>([]);
+
+  toggleEmojiPicker() {
+    this.isEmojiPickerOpen.set(!this.isEmojiPickerOpen());
+  }
+
+  handleSelectEmoji(emoji: string) {
+    const current = this.chatService.chatInputMessage();
+    this.chatService.chatInputMessage.set(current + emoji);
+  }
+
+  handleSelectSticker(stickerUrl: string) {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) return;
+
+    const isGif = stickerUrl.endsWith('.gif');
+    const msgType = isGif ? 'GIF' : 'STICKER';
+
+    const payload = {
+      conversationId: conv.id,
+      senderType: 'HUMAN',
+      messageType: msgType,
+      content: stickerUrl,
+      mediaUrl: stickerUrl,
+      textContent: `[${msgType} Attachment]`,
+      direction: 'OUTBOUND'
+    };
+
+    this.api.post<any>('messages/add', payload).subscribe({
+      next: (res: any) => {
+        const newMsg = res.data || res;
+        if (newMsg && newMsg.id) {
+          const current = this.chatService.messagesSubject.value;
+          this.chatService.messagesSubject.next([...current, newMsg]);
+        }
+        this.showAlert('Sent', `${msgType} delivered.`, 'success');
+      },
+      error: (err: any) => {
+        this.showAlert('Error', err.error?.error || err.message || 'Failed to send sticker', 'error');
+      }
+    });
+  }
 
   ngAfterViewChecked() {
     this.scrollToBottom();

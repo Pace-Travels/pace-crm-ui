@@ -67,6 +67,8 @@
                             <!-- Rich media renderer -->
                             @if (msg.messageType === 'IMAGE') {
                                 <img [src]="getMediaUrl(msg.content || msg.mediaUrl)" style="max-width: 100%; border-radius: 8px; margin-bottom: 8px; display: block; max-height: 240px; object-fit: contain;" />
+                            } @else if (msg.messageType === 'STICKER' || msg.messageType === 'GIF') {
+                                <img [src]="getMediaUrl(msg.content || msg.mediaUrl)" style="width: 130px; height: 130px; object-fit: contain; display: block; margin-bottom: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));" />
                             } @else if (msg.messageType === 'VIDEO') {
                                 <video controls [src]="getMediaUrl(msg.content || msg.mediaUrl)" style="max-width: 100%; border-radius: 8px; margin-bottom: 8px; display: block; max-height: 240px;"></video>
                             } @else if (msg.messageType === 'AUDIO') {
@@ -86,7 +88,7 @@
                                     <i class="fa-solid fa-list-check" style="color: #444ce7;"></i>
                                     <span>{{ getInteractiveLabel(msg.textContent || msg.content) }}</span>
                                 </div>
-                            } @else {
+                            } @else if (msg.messageType !== 'STICKER' && msg.messageType !== 'GIF') {
                                 <div>{{ msg.textContent || msg.content }}</div>
                             }
                             
@@ -115,9 +117,13 @@
         </div>
 
         <div class="input-area" style="position: relative;">
+            <button class="icon-btn" (click)="toggleEmojiPicker()" title="Emojis, GIFs, Stickers"><i class="fa-regular fa-face-smile" style="font-size: 18px; color: #64748b;"></i></button>
             <button class="icon-btn" (click)="toggleInteractiveModal()" title="Send Quick Reply Buttons"><i class="fa-solid fa-list-check"></i></button>
             <input type="text" placeholder="Type a message..." [ngModel]="chatService.chatInputMessage()" (ngModelChange)="chatService.chatInputMessage.set($event)" (keyup.enter)="sendMessage()">
             <button class="icon-btn" (click)="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+
+            <!-- Emoji, GIF, Sticker Picker Popover -->
+            <app-emoji-sticker-picker [isOpen]="isEmojiPickerOpen()" (close)="isEmojiPickerOpen.set(false)" (selectEmoji)="handleSelectEmoji($event)" (selectSticker)="handleSelectSticker($event)"></app-emoji-sticker-picker>
 
             <!-- Quick Reply Buttons Composer Popover -->
             @if (showInteractiveModal()) {

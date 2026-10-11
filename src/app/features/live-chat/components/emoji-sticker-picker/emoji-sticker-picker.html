@@ -1,0 +1,88 @@
+@if (isOpen) {
+    <div class="emoji-picker-popover">
+        <!-- Top Category Bar (Only for Emoji mode) -->
+        @if (activeTab() === 'EMOJI') {
+            <div class="category-header">
+                @for (cat of emojiCategories; track cat.id) {
+                    <button type="button" class="cat-btn" [class.active]="activeEmojiCategory() === cat.id" (click)="setCategory(cat.id)" [title]="cat.title">
+                        <i [class]="cat.icon"></i>
+                    </button>
+                }
+            </div>
+        }
+
+        <!-- Search Bar -->
+        <div class="search-box-wrapper">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" class="search-input" [placeholder]="activeTab() === 'EMOJI' ? 'Search emoji' : (activeTab() === 'GIF' ? 'Search GIFs' : 'Search stickers')" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)">
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="picker-body">
+            @if (activeTab() === 'EMOJI') {
+                @if (searchQuery().trim()) {
+                    <div class="category-section">
+                        <div class="section-title">Search Results</div>
+                        <div class="emoji-grid">
+                            @for (emoji of filteredEmojis(); track emoji) {
+                                <span class="emoji-item" (click)="onEmojiClick(emoji)">{{ emoji }}</span>
+                            }
+                        </div>
+                    </div>
+                } @else {
+                    @for (cat of emojiCategories; track cat.id) {
+                        <div class="category-section" [id]="'cat-' + cat.id">
+                            <div class="section-title">{{ cat.title }}</div>
+                            <div class="emoji-grid">
+                                @for (emoji of cat.emojis; track emoji) {
+                                    <span class="emoji-item" (click)="onEmojiClick(emoji)">{{ emoji }}</span>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+            } @else if (activeTab() === 'GIF') {
+                <div class="gif-grid">
+                    @for (gif of filteredGifs(); track gif.id) {
+                        <div class="gif-card" (click)="onGifClick(gif.url)">
+                            <img [src]="gif.url" [alt]="gif.title" loading="lazy" />
+                            <span class="gif-title">{{ gif.title }}</span>
+                        </div>
+                    }
+                </div>
+            } @else if (activeTab() === 'STICKER') {
+                <div class="sticker-pack-selector">
+                    @for (pack of stickerPacks; track pack.id) {
+                        <button type="button" class="pack-tab-btn" [class.active]="selectedStickerPackId() === pack.id" (click)="selectedStickerPackId.set(pack.id)">
+                            <span>{{ pack.icon }}</span> {{ pack.name }}
+                        </button>
+                    }
+                </div>
+
+                <div class="sticker-grid">
+                    @for (st of currentStickers(); track st.id) {
+                        <div class="sticker-card" (click)="onStickerClick(st.url)">
+                            <img [src]="st.url" [alt]="st.title" />
+                            <span class="sticker-label">{{ st.title }}</span>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Bottom Mode Navigation Switcher Bar (Matching WhatsApp Web) -->
+        <div class="bottom-nav-bar">
+            <button type="button" class="nav-tab-btn" [class.active]="activeTab() === 'EMOJI'" (click)="activeTab.set('EMOJI')">
+                <i class="fa-regular fa-face-smile"></i>
+                <span>Emoji</span>
+            </button>
+            <button type="button" class="nav-tab-btn" [class.active]="activeTab() === 'GIF'" (click)="activeTab.set('GIF')">
+                <span class="gif-badge">GIF</span>
+            </button>
+            <button type="button" class="nav-tab-btn" [class.active]="activeTab() === 'STICKER'" (click)="activeTab.set('STICKER')">
+                <i class="fa-regular fa-note-sticky"></i>
+                <span>Stickers</span>
+            </button>
+        </div>
+    </div>
+}
