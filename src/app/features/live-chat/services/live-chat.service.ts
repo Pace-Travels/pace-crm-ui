@@ -7,17 +7,19 @@ import { io, Socket } from 'socket.io-client';
 export interface Conversation {
   id: number;
   contactId: number;
-  platform: string;
+  platform?: string;
   status: string;
   assignedToType?: string;
   assignedToUserId?: number | null;
   Contact?: {
+    id?: number;
     name?: string;
     phone?: string;
     firstName?: string;
     lastName?: string;
   };
   Messages?: any[];
+  lastActivityAt?: string;
 }
 
 @Injectable({
@@ -28,6 +30,7 @@ export class LiveChatService {
   // State management using Signals
   activeConversations = signal<Conversation[]>([]);
   requestingConversations = signal<Conversation[]>([]);
+  intervenedConversations = signal<Conversation[]>([]);
   
   // Currently selected conversation
   selectedConversation = signal<Conversation | null>(null);
@@ -46,7 +49,6 @@ export class LiveChatService {
   }
 
   private initSocket() {
-    // Establish connection to backend WebSocket server dynamically based on environment API URL
     const apiUrl = environment.apiUrl || 'http://localhost:3000/api/v1';
     const socketUrl = apiUrl.replace(/\/api\/v1\/?$/, '');
     this.socket = io(socketUrl);
@@ -74,7 +76,6 @@ export class LiveChatService {
     });
 
     this.socket.on('message_status_update', (data: any) => {
-      // data format: { messageId, status, errorMessage? }
       const current = this.messagesSubject.value.map((m: any) => {
         if (m.id === data.messageId || Number(m.id) === Number(data.messageId)) {
           return { ...m, status: data.status, errorMessage: data.errorMessage };
@@ -88,37 +89,35 @@ export class LiveChatService {
   fetchConversations() {
     this.api.get<any>('conversations/list').subscribe({
       next: (res: any) => {
-        if (res.success && res.data) {
-          // Resolve contact associations mapping mock
+        if (res && res.success && Array.isArray(res.data)) {
           const list = res.data.map((c: any) => {
-            const contact = c.Contact || { name: `Contact ${c.contactId || c.id}`, phone: c.phone || '917204262473' };
+            const contact = c.Contact || { name: `Contact #${c.contactId || c.id}`, phone: c.phone || '' };
             if (!contact.firstName) {
               const parts = (contact.name || '').split(' ');
-              contact.firstName = parts[0] || 'Customer';
-              contact.lastName = parts.slice(1).join(' ') || '';
+              contact.firstName = parts[0] || 'Contact';
+              contact.lastName = parts.slice(1).join(' ') || `#${c.contactId || c.id}`;
             }
             return {
               ...c,
               Contact: contact
             };
           });
-          this.activeConversations.set(list);
+
+          const active = list.filter((c: any) => !c.status || c.status === 'OPEN' || c.status === 'ACTIVE');
+          const requesting = list.filter((c: any) => c.status === 'PENDING' || c.status === 'REQUESTING');
+          const intervened = list.filter((c: any) => c.status === 'CLOSED' || c.assignedToType === 'HUMAN');
+
+          this.activeConversations.set(active);
+          this.requestingConversations.set(requesting);
+          this.intervenedConversations.set(intervened);
 
           if (!this.selectedConversation() && list.length > 0) {
             this.selectConversation(list[0]);
           }
         }
       },
-      error: () => {
-        // Fallback mockup if empty
-        const mockData: Conversation[] = [
-          { id: 1, contactId: 101, platform: 'WHATSAPP', status: 'OPEN', assignedToType: 'AI', Contact: { name: 'VIP Guest', firstName: 'VIP', lastName: 'Guest', phone: '917428262731' }, Messages: [] },
-          { id: 2, contactId: 102, platform: 'WHATSAPP', status: 'OPEN', assignedToType: 'HUMAN', Contact: { name: 'John travels', firstName: 'John', lastName: 'travels', phone: '919876543210' }, Messages: [] }
-        ];
-        this.activeConversations.set(mockData);
-        if (!this.selectedConversation() && mockData.length > 0) {
-          this.selectConversation(mockData[0]);
-        }
+      error: (err) => {
+        console.warn('Fetch conversations error, utilizing local active fallback', err);
       }
     });
   }

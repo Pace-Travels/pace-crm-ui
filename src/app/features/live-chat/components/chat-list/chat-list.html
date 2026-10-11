@@ -4,47 +4,59 @@
     <div class="search-header">
         <div class="search-box">
             <i class="fa-solid fa-magnifying-glass search-icon"></i>
-            <input type="text" placeholder="Search name or mobile number">
+            <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Search name or mobile number...">
         </div>
-        <button class="filter-btn"><i class="fa-solid fa-filter"></i></button>
+        <button class="filter-btn" title="Filter Conversations"><i class="fa-solid fa-filter"></i></button>
     </div>
 
-    <!-- Tabs -->
+    <!-- Tabs Header with Live Badges -->
     <div class="tabs">
-        <button class="tab" [class.active]="activeTab === 'ACTIVE'" (click)="activeTab = 'ACTIVE'">
-            ACTIVE ({{chatService.activeConversations().length}})
+        <button class="tab" [class.active]="activeTab() === 'ACTIVE'" (click)="activeTab.set('ACTIVE')">
+            ACTIVE ({{ chatService.activeConversations().length }})
         </button>
-        <button class="tab" [class.active]="activeTab === 'REQUESTING'" (click)="activeTab = 'REQUESTING'">
-            REQUESTING (0)
+        <button class="tab" [class.active]="activeTab() === 'REQUESTING'" (click)="activeTab.set('REQUESTING')">
+            REQUESTING ({{ chatService.requestingConversations().length }})
         </button>
-        <button class="tab" [class.active]="activeTab === 'INTERVENED'" (click)="activeTab = 'INTERVENED'">
-            INTERVENED (0)
+        <button class="tab" [class.active]="activeTab() === 'INTERVENED'" (click)="activeTab.set('INTERVENED')">
+            INTERVENED ({{ chatService.intervenedConversations().length }})
         </button>
     </div>
 
-    <!-- List -->
+    <!-- Conversation Items Scroll List -->
     <div class="list-scroll">
-        @for(conv of chatService.activeConversations(); track conv.id) {
-            <div class="chat-item" 
-                 [class.selected]="chatService.selectedConversation()?.id === conv.id"
-                 (click)="selectChat(conv)">
-                
-                <div class="avatar">
-                    {{ getAvatarInitial(conv.Contact?.firstName) }}
+        <div *ngFor="let conv of displayedConversations()" 
+             class="chat-item" 
+             [class.selected]="chatService.selectedConversation()?.id === conv.id"
+             (click)="selectChat(conv)">
+            
+            <div class="avatar">
+                {{ getAvatarInitial(conv.Contact?.firstName || conv.Contact?.name) }}
+            </div>
+            
+            <div class="chat-info" style="flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center;">
+                <div class="chat-name" style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: #0f172a; font-size: 13.5px; margin-bottom: 2px;">
+                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">
+                        {{ conv.Contact?.name || ((conv.Contact?.firstName || 'Contact') + ' ' + (conv.Contact?.lastName || '')) }}
+                    </span>
+                    <span *ngIf="conv.lastActivityAt" style="font-size: 10.5px; color: #94a3b8; font-weight: 500;">
+                        {{ conv.lastActivityAt | date:'shortTime' }}
+                    </span>
                 </div>
                 
-                <div class="chat-info" style="flex: 1; overflow: hidden;">
-                    <div class="chat-name" style="display: flex; justify-content: space-between; align-items: center;">
-                        <span>{{ conv.Contact?.firstName || 'UNKNOWN' }} {{ conv.Contact?.lastName || '' }}</span>
-                        @if (conv.Messages?.[0]?.status === 'FAILED') {
-                            <i class="fa-solid fa-circle-exclamation" style="color: #ef4444; font-size: 12px;" title="Action Required: Message Failed"></i>
-                        }
-                    </div>
-                    <div class="chat-preview" [style.color]="conv.Messages?.[0]?.status === 'FAILED' ? '#ef4444' : ''" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px;">
+                <div class="chat-phone-preview" style="display: flex; justify-content: space-between; align-items: center;">
+                    <span class="chat-preview" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; color: #64748b; max-width: 180px;">
                         {{ formatPreview(conv.Messages?.[0]) }}
-                    </div>
+                    </span>
+                    <span *ngIf="conv.Contact?.phone" style="font-size: 10px; color: #0284c7; background: #f0f9ff; padding: 1px 6px; border-radius: 8px; font-weight: 600;">
+                        {{ conv.Contact?.phone }}
+                    </span>
                 </div>
             </div>
-        }
+        </div>
+
+        <div *ngIf="displayedConversations().length === 0" style="padding: 40px 20px; text-align: center; color: #64748b; font-size: 13px;">
+            <i class="fa-regular fa-comments" style="font-size: 28px; color: #cbd5e1; margin-bottom: 10px; display: block;"></i>
+            No conversations found in this tab.
+        </div>
     </div>
 </div>
