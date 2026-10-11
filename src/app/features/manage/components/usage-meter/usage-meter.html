@@ -1,0 +1,41 @@
+<div class="usage-meter-card">
+  <div class="card-header">
+    <h3><i class="ri-dashboard-3-line"></i> SaaS Subscription & Metered Limits</h3>
+    <span class="plan-pill">PRO PLAN</span>
+  </div>
+
+  <div class="meter-grid">
+    <!-- Seats Utilization Meter -->
+    <div class="meter-item">
+      <div class="meter-header">
+        <span class="meter-title"><i class="ri-user-shared-line"></i> User Seats</span>
+        <span class="meter-stat">{{ seatsUsed() }} / {{ maxSeats() }} Seats Used</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" [style.width.%]="getSeatPercentage()" [ngClass]="{'danger': getSeatPercentage() >= 90}"></div>
+      </div>
+    </div>
+
+    <!-- Message Throughput Meter -->
+    <div class="meter-item">
+      <div class="meter-header">
+        <span class="meter-title"><i class="ri-message-2-line"></i> Monthly Messages</span>
+        <span class="meter-stat">{{ messagesSent() | number }} / {{ maxMessages() | number }} Sent</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" [style.width.%]="getMessagePercentage()" [ngClass]="{'danger': getMessagePercentage() >= 90}"></div>
+      </div>
+    </div>
+
+    <!-- Contact Limit Meter -->
+    <div class="meter-item">
+      <div class="meter-header">
+        <span class="meter-title"><i class="ri-contacts-line"></i> Stored Contacts</span>
+        <span class="meter-stat">{{ contactsStored() | number }} / {{ maxContacts() | number }} Contacts</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" [style.width.%]="getContactPercentage()" [ngClass]="{'danger': getContactPercentage() >= 90}"></div>
+      </div>
+    </div>
+  </div>
+</div>

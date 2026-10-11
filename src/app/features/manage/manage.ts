@@ -3,6 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TemplatesView } from './components/templates-view/templates-view';
 import { TeamManagement } from './components/team-management/team-management';
+import { MasterDataManagementComponent } from './components/master-data-management/master-data-management';
+import { NetworkCrudView } from './components/master-crud-views/network-crud-view/network-crud-view';
+import { AgencyCrudView } from './components/master-crud-views/agency-crud-view/agency-crud-view';
+import { GeographyCrudView } from './components/master-crud-views/geography-crud-view/geography-crud-view';
+import { CannedResponsesCrudView } from './components/master-crud-views/canned-responses-crud-view/canned-responses-crud-view';
+import { RolePermissionsCrudView } from './components/master-crud-views/role-permissions-crud-view/role-permissions-crud-view';
 import { ApiService } from '../../shared/services/api.service';
 
 import Swal from 'sweetalert2';
@@ -24,7 +30,18 @@ interface Widget {
 @Component({
   selector: 'app-manage',
   standalone: true,
-  imports: [CommonModule, FormsModule, TemplatesView, TeamManagement],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    TemplatesView, 
+    TeamManagement,
+    MasterDataManagementComponent,
+    NetworkCrudView,
+    AgencyCrudView,
+    GeographyCrudView,
+    CannedResponsesCrudView,
+    RolePermissionsCrudView
+  ],
   templateUrl: './manage.html',
   styleUrl: './manage.scss',
 })

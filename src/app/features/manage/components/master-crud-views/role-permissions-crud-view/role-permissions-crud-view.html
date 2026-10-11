@@ -1,0 +1,86 @@
+<div class="datatable-crud-container">
+  <div class="crud-header">
+    <div class="title-group">
+      <div class="icon-badge"><i class="ri-lock-password-line"></i></div>
+      <div>
+        <h2>Role & Permission Matrix Management</h2>
+        <p>Define custom roles and assign granular security permissions for your agency's team seats.</p>
+      </div>
+    </div>
+    <div class="action-group">
+      <button class="btn btn-primary" (click)="openModal()">
+        <i class="ri-add-circle-line"></i> Add Custom Role
+      </button>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <table class="datatable-grid">
+      <thead>
+        <tr>
+          <th>Role Title</th>
+          <th>Description</th>
+          <th>Type</th>
+          <th>Assigned Permissions</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredRoles()">
+          <td><strong>{{ item.name }}</strong></td>
+          <td><span class="desc-text">{{ item.description || 'No description provided.' }}</span></td>
+          <td><span class="type-pill" [class.system]="item.roleType === 'SYSTEM'">{{ item.roleType }}</span></td>
+          <td>
+            <div class="perm-tags">
+              <span class="perm-tag" *ngFor="let p of item.permissions">{{ p }}</span>
+            </div>
+          </td>
+          <td>
+            <button class="btn-icon edit" (click)="openModal(item)"><i class="ri-edit-line"></i></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Form -->
+<div class="modal-backdrop" *ngIf="showModal()">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>{{ isEditing() ? 'Edit Role & Permissions' : 'Add Custom Role' }}</h3>
+      <button class="close-btn" (click)="showModal.set(false)"><i class="ri-close-line"></i></button>
+    </div>
+    <form [formGroup]="roleForm" (ngSubmit)="saveRole()">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Role Title *</label>
+          <input type="text" formControlName="name" placeholder="e.g. Senior Sales Agent" />
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <input type="text" formControlName="description" placeholder="e.g. Can send broadcasts and manage contacts..." />
+        </div>
+
+        <div class="form-group">
+          <label>Granular Permission Matrix (Check to Assign):</label>
+          <div class="perm-checkbox-list">
+            <label class="checkbox-item" *ngFor="let perm of availablePermissions">
+              <input 
+                type="checkbox" 
+                [checked]="isPermissionSelected(perm.code)" 
+                (change)="togglePermission(perm.code)" 
+              />
+              <span><strong>{{ perm.label }}</strong> <code>({{ perm.code }})</code></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="showModal.set(false)">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="roleForm.invalid">Save Role & Matrix</button>
+      </div>
+    </form>
+  </div>
+</div>

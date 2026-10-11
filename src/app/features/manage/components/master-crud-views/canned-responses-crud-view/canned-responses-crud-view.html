@@ -1,0 +1,95 @@
+<div class="datatable-crud-container">
+  <div class="crud-header">
+    <div class="title-group">
+      <div class="icon-badge"><i class="ri-chat-quick-line"></i></div>
+      <div>
+        <h2>Quick Canned Responses & Message Shortcuts</h2>
+        <p>Manage slash shortcuts (e.g. <code>/welcome</code>, <code>/pricing</code>) for agents to quickly insert in Live Chat & WhatsApp conversations.</p>
+      </div>
+    </div>
+    <div class="action-group">
+      <button class="btn btn-primary" (click)="openModal()">
+        <i class="ri-add-circle-line"></i> Add Quick Shortcut
+      </button>
+    </div>
+  </div>
+
+  <div class="datatable-controls">
+    <div class="search-box">
+      <i class="ri-search-line"></i>
+      <input 
+        type="text" 
+        placeholder="Search shortcut code, category or message content..." 
+        [value]="searchQuery()" 
+        (input)="searchQuery.set($any($event.target).value)"
+      />
+    </div>
+  </div>
+
+  <div class="table-card">
+    <table class="datatable-grid">
+      <thead>
+        <tr>
+          <th>Shortcut Code</th>
+          <th>Category</th>
+          <th>Message Content Template</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of filteredList()">
+          <td><code class="shortcut-pill">{{ item.shortcut }}</code></td>
+          <td><span class="cat-badge">{{ item.category }}</span></td>
+          <td><p class="content-text">{{ item.content }}</p></td>
+          <td><span class="status-badge active">ACTIVE</span></td>
+          <td>
+            <div class="action-btn-group">
+              <button class="btn-icon edit" (click)="openModal(item)"><i class="ri-edit-line"></i></button>
+              <button class="btn-icon delete" (click)="deleteResponse(item)"><i class="ri-delete-bin-line"></i></button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal Form -->
+<div class="modal-backdrop" *ngIf="showModal()">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>{{ isEditing() ? 'Edit Quick Shortcut' : 'Add Quick Shortcut' }}</h3>
+      <button class="close-btn" (click)="showModal.set(false)"><i class="ri-close-line"></i></button>
+    </div>
+    <form [formGroup]="cannedForm" (ngSubmit)="saveResponse()">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Shortcut Code (Prefix with /) *</label>
+            <input type="text" formControlName="shortcut" placeholder="e.g. /welcome" />
+          </div>
+
+          <div class="form-group">
+            <label>Category *</label>
+            <select formControlName="category">
+              <option value="GREETING">GREETING</option>
+              <option value="PRICING">PRICING</option>
+              <option value="CLOSING">CLOSING</option>
+              <option value="SUPPORT">SUPPORT</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Message Content Template * (Supports {{ '{{contact_name}}' }} variables)</label>
+          <textarea rows="4" formControlName="content" [placeholder]="'Hello {{contact_name}}! Welcome to Pace Travels...'"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="showModal.set(false)">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="cannedForm.invalid">Save Shortcut</button>
+      </div>
+    </form>
+  </div>
+</div>

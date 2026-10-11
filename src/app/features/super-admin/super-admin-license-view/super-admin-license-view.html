@@ -1,0 +1,260 @@
+<div class="admin-portal-container">
+  <!-- Header Title & Action -->
+  <div class="portal-header">
+    <div class="title-group">
+      <div class="icon-badge">
+        <i class="ri-shield-keyhole-line"></i>
+      </div>
+      <div>
+        <h1>SaaS Super Admin Control Portal</h1>
+        <p>Manage multi-tenant agency licenses, provision software seats, monitor subscription health & terminate overdue accounts.</p>
+      </div>
+    </div>
+    <div class="action-group">
+      <button class="btn btn-primary" (click)="openProvisionModal()">
+        <i class="ri-key-2-line"></i> Provision New License
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-icon blue"><i class="ri-building-4-line"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">Total Agencies</span>
+        <span class="kpi-value">{{ summary().totalAgencies || 0 }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon green"><i class="ri-checkbox-circle-line"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">Active Licenses</span>
+        <span class="kpi-value">{{ summary().activeLicenses || 0 }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon yellow"><i class="ri-time-line"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">Suspended / Overdue</span>
+        <span class="kpi-value">{{ summary().suspendedLicenses || 0 }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <div class="kpi-icon red"><i class="ri-error-warning-line"></i></div>
+      <div class="kpi-content">
+        <span class="kpi-label">Terminated</span>
+        <span class="kpi-value">{{ summary().terminatedLicenses || 0 }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Toolbar -->
+  <div class="table-toolbar">
+    <div class="search-box">
+      <i class="ri-search-line"></i>
+      <input 
+        type="text" 
+        placeholder="Search tenant agency name, key or plan..." 
+        [value]="searchQuery()" 
+        (input)="searchQuery.set($any($event.target).value)" 
+      />
+    </div>
+
+    <div class="filter-group">
+      <label>Status:</label>
+      <select [value]="selectedStatusFilter()" (change)="selectedStatusFilter.set($any($event.target).value)">
+        <option value="ALL">All Statuses</option>
+        <option value="ACTIVE">Active</option>
+        <option value="SUSPENDED">Suspended</option>
+        <option value="TERMINATED">Terminated</option>
+        <option value="EXPIRED">Expired</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div class="loading-state" *ngIf="isLoading()">
+    <i class="ri-loader-4-line spinner"></i>
+    <p>Loading multi-tenant license records...</p>
+  </div>
+
+  <!-- Tenants & Licenses Directory Table -->
+  <div class="table-card" *ngIf="!isLoading()">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Agency Tenant</th>
+          <th>Plan & Seats</th>
+          <th>SaaS License Key</th>
+          <th>Contacts Volume</th>
+          <th>Status</th>
+          <th>AI Upsell Intel</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let tenant of filteredTenants()">
+          <td>
+            <div class="agency-cell">
+              <span class="agency-name">{{ tenant.agencyName }}</span>
+              <span class="agency-id">Agency ID: #{{ tenant.agencyId }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="seat-cell">
+              <span class="plan-badge {{ tenant.plan | lowercase }}">{{ tenant.plan }}</span>
+              <span class="seat-count">{{ tenant.seatsUsed }} / {{ tenant.maxSeats }} Seats</span>
+            </div>
+          </td>
+          <td>
+            <code class="license-key">{{ tenant.licenseKey || 'NO_KEY' }}</code>
+          </td>
+          <td>
+            <span class="contact-count">{{ tenant.totalContacts | number }} Contacts</span>
+          </td>
+          <td>
+            <span class="status-badge" [ngClass]="{
+              'status-active': tenant.licenseStatus === 'ACTIVE',
+              'status-suspended': tenant.licenseStatus === 'SUSPENDED',
+              'status-terminated': tenant.licenseStatus === 'TERMINATED',
+              'status-expired': tenant.licenseStatus === 'EXPIRED'
+            }">
+              {{ tenant.licenseStatus }}
+            </span>
+          </td>
+          <td>
+            <span class="upsell-badge" [ngClass]="{'highlight': tenant.upsellRecommendation.includes('High Priority')}">
+              {{ tenant.upsellRecommendation }}
+            </span>
+          </td>
+          <td>
+            <div class="btn-group">
+              <button 
+                class="btn-icon danger" 
+                title="Terminate License"
+                *ngIf="tenant.licenseStatus === 'ACTIVE' || tenant.licenseStatus === 'SUSPENDED'"
+                (click)="openTerminateModal(tenant)"
+              >
+                <i class="ri-subtract-line"></i> Terminate
+              </button>
+
+              <button 
+                class="btn-icon success" 
+                title="Reactivate License"
+                *ngIf="tenant.licenseStatus === 'TERMINATED' || tenant.licenseStatus === 'EXPIRED' || tenant.licenseStatus === 'SUSPENDED'"
+                (click)="reactivateTenant(tenant)"
+              >
+                <i class="ri-refresh-line"></i> Reactivate
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="filteredTenants().length === 0">
+          <td colspan="7" class="empty-cell">No tenant license records match the selected filter criteria.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Provision License Modal -->
+<div class="modal-backdrop" *ngIf="showProvisionModal()">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h2><i class="ri-key-2-line"></i> Provision New SaaS License</h2>
+      <button class="close-btn" (click)="closeProvisionModal()"><i class="ri-close-line"></i></button>
+    </div>
+    <form [formGroup]="provisionForm" (ngSubmit)="onProvisionSubmit()">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Target Agency ID:</label>
+          <input type="number" formControlName="agencyId" placeholder="e.g. 50" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Subscription Plan:</label>
+            <select formControlName="planType">
+              <option value="STARTER">STARTER</option>
+              <option value="PRO">PRO</option>
+              <option value="ENTERPRISE">ENTERPRISE</option>
+              <option value="CUSTOM">CUSTOM</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Licensed Max Seats:</label>
+            <input type="number" formControlName="maxSeats" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Max Contacts Allocation:</label>
+            <input type="number" formControlName="maxContacts" />
+          </div>
+
+          <div class="form-group">
+            <label>Monthly Messages Cap:</label>
+            <input type="number" formControlName="maxMessagesPerMonth" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Validity (Days):</label>
+            <input type="number" formControlName="validityDays" />
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" formControlName="autoRenew" />
+              Auto-Renewal Enabled
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeProvisionModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="provisionForm.invalid">
+          Provision & Generate License Key
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Terminate License Modal -->
+<div class="modal-backdrop" *ngIf="showTerminateModal()">
+  <div class="modal-dialog danger-dialog">
+    <div class="modal-header">
+      <h2><i class="ri-error-warning-line"></i> ⚠️ Terminate SaaS License</h2>
+      <button class="close-btn" (click)="closeTerminateModal()"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <p class="warning-text">
+        You are about to revoke and terminate the SaaS license for 
+        <strong>{{ selectedTenantForAction()?.agencyName }}</strong>.
+      </p>
+      
+      <div class="form-group">
+        <label>Reason for Termination (Logged to Audit Trail):</label>
+        <textarea 
+          rows="3" 
+          [value]="terminationReason()" 
+          (input)="terminationReason.set($any($event.target).value)"
+        ></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-secondary" (click)="closeTerminateModal()">Cancel</button>
+      <button type="button" class="btn btn-danger" (click)="confirmTerminate()">
+        Confirm Revocation
+      </button>
+    </div>
+  </div>
+</div>

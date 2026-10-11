@@ -1,0 +1,88 @@
+.usage-meter-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+  font-family: 'Inter', system-ui, sans-serif;
+  margin-bottom: 1.5rem;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #f1f5f9;
+
+    h3 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #0f172a;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+
+      i { color: #6366f1; }
+    }
+
+    .plan-pill {
+      background: #e0e7ff;
+      color: #4338ca;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.25rem 0.65rem;
+      border-radius: 999px;
+    }
+  }
+
+  .meter-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+
+    .meter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+
+      .meter-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.85rem;
+
+        .meter-title {
+          font-weight: 600;
+          color: #334155;
+          display: flex;
+          align-items: center;
+          gap: 0.35rem;
+        }
+
+        .meter-stat {
+          color: #64748b;
+          font-weight: 500;
+        }
+      }
+
+      .progress-bar-bg {
+        height: 8px;
+        background: #f1f5f9;
+        border-radius: 999px;
+        overflow: hidden;
+
+        .progress-bar-fill {
+          height: 100%;
+          background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
+          border-radius: 999px;
+          transition: width 0.4s ease;
+
+          &.danger {
+            background: linear-gradient(90deg, #f43f5e 0%, #e11d48 100%);
+          }
+        }
+      }
+    }
+  }
+}

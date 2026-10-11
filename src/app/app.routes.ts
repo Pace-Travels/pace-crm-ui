@@ -54,7 +54,20 @@ import { DataPolicy } from './features/policies/components/data-policy/data-poli
 
 
 
+import { SuperAdminLicenseView } from './features/super-admin/super-admin-license-view/super-admin-license-view';
+import { MetaGovernanceView } from './features/super-admin/meta-governance-view/meta-governance-view';
+
 const mainAppChildren: Routes = [
+    {
+        path: 'admin/licenses',
+        component: SuperAdminLicenseView,
+        title: 'Super Admin License & Tenant Portal - QuoteDesks Messenger'
+    },
+    {
+        path: 'admin/meta-radar',
+        component: MetaGovernanceView,
+        title: 'Meta Platform Governance & Tenant Health Radar - QuoteDesks Messenger'
+    },
     {
         path: 'dashboard',
         component: Dashboard,

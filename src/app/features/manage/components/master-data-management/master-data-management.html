@@ -1,0 +1,101 @@
+<div class="master-container">
+  <!-- Top Section Title -->
+  <div class="master-header">
+    <div>
+      <h2><i class="ri-list-settings-line"></i> Master Lookup Data & Dropdowns Manager</h2>
+      <p>Configure dynamic contact types, pipeline stages, lead sources, and contact tags across your agency workspace.</p>
+    </div>
+    <button class="btn btn-primary" (click)="openAddModal()">
+      <i class="ri-add-line"></i> Add New Master Option
+    </button>
+  </div>
+
+  <!-- Navigation Category Tabs -->
+  <div class="category-tabs">
+    <button [class.active]="activeTab() === 'USER_TYPE'" (click)="activeTab.set('USER_TYPE')">
+      <i class="ri-user-shared-line"></i> Contact User Types
+    </button>
+    <button [class.active]="activeTab() === 'LEAD_STAGE'" (click)="activeTab.set('LEAD_STAGE')">
+      <i class="ri-git-commit-line"></i> Pipeline Lead Stages
+    </button>
+    <button [class.active]="activeTab() === 'SOURCE'" (click)="activeTab.set('SOURCE')">
+      <i class="ri-share-forward-line"></i> Lead Sources
+    </button>
+    <button [class.active]="activeTab() === 'CONTACT_TAG'" (click)="activeTab.set('CONTACT_TAG')">
+      <i class="ri-price-tag-3-line"></i> Contact Tags
+    </button>
+  </div>
+
+  <!-- Master Data Items Table -->
+  <div class="table-card">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Order</th>
+          <th>System Code</th>
+          <th>Display Label</th>
+          <th>Badge Color</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of getActiveList()">
+          <td><strong>#{{ item.displayOrder }}</strong></td>
+          <td><code>{{ item.code }}</code></td>
+          <td>
+            <span class="item-label">{{ item.label }}</span>
+          </td>
+          <td>
+            <div class="color-preview-box" [style.background]="item.color || '#6366f1'">
+              <span class="color-code">{{ item.color || '#6366f1' }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="status-badge" [class.active]="item.isActive" [class.inactive]="!item.isActive">
+              {{ item.isActive ? 'ACTIVE' : 'INACTIVE' }}
+            </span>
+          </td>
+          <td>
+            <button class="btn-sm" (click)="toggleStatus(item)">
+              {{ item.isActive ? 'Deactivate' : 'Activate' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal: Add New Master Item -->
+<div class="modal-backdrop" *ngIf="showAddModal()">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3><i class="ri-add-circle-line"></i> Add New {{ activeTab() | titlecase }} Option</h3>
+      <button class="close-btn" (click)="closeAddModal()"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Display Label (Shown in UI Dropdown):</label>
+        <input type="text" [value]="newItemLabel()" (input)="newItemLabel.set($any($event.target).value)" placeholder="e.g. VIP Corporate Client" />
+      </div>
+
+      <div class="form-group">
+        <label>System Code (Key):</label>
+        <input type="text" [value]="newItemCode()" (input)="newItemCode.set($any($event.target).value)" placeholder="e.g. VIP_CORPORATE" />
+      </div>
+
+      <div class="form-group">
+        <label>Badge Highlight Color:</label>
+        <div class="color-picker-group">
+          <input type="color" [value]="newItemColor()" (input)="newItemColor.set($any($event.target).value)" />
+          <input type="text" [value]="newItemColor()" (input)="newItemColor.set($any($event.target).value)" />
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveMasterItem()">Save Master Option</button>
+    </div>
+  </div>
+</div>

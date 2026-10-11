@@ -1,0 +1,147 @@
+.meta-radar-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #1e293b;
+}
+
+.portal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+  color: #ffffff;
+  padding: 1.75rem 2rem;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px -5px rgba(2, 132, 199, 0.3);
+
+  .title-group {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+
+    .icon-badge {
+      width: 54px;
+      height: 54px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.8rem;
+    }
+
+    h1 { margin: 0; font-size: 1.6rem; font-weight: 700; }
+    p { margin: 0.25rem 0 0 0; opacity: 0.85; font-size: 0.9rem; }
+  }
+
+  .version-pill {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    font-size: 0.9rem;
+  }
+}
+
+.radar-section, .tenant-section {
+  margin-bottom: 2.5rem;
+
+  h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+}
+
+.radar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.25rem;
+
+  .radar-card {
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e2e8f0;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03);
+
+    &.warning { border-left: 4px solid #f59e0b; }
+    &.critical { border-left: 4px solid #ef4444; }
+    &.blocking { border-left: 4px solid #dc2626; }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.75rem;
+
+      .version-tag { background: #f1f5f9; padding: 0.2rem 0.5rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; }
+      .severity-badge { font-size: 0.75rem; font-weight: 700; color: #ef4444; }
+    }
+
+    h3 { margin: 0 0 0.5rem 0; font-size: 1.05rem; }
+    .desc { font-size: 0.875rem; color: #475569; margin-bottom: 1rem; }
+
+    .action-box {
+      background: #f8fafc;
+      padding: 0.85rem;
+      border-radius: 8px;
+      font-size: 0.825rem;
+      strong { color: #0f172a; }
+      p { margin: 0.25rem 0 0 0; color: #334155; }
+    }
+  }
+}
+
+.table-card {
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+    th { background: #f8fafc; padding: 1rem 1.25rem; font-size: 0.8rem; font-weight: 600; color: #475569; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; }
+    td { padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; font-size: 0.9rem; }
+
+    .quality-badge {
+      padding: 0.25rem 0.65rem; border-radius: 999px; font-weight: 700; font-size: 0.75rem;
+      &.green { background: #dcfce7; color: #15803d; }
+      &.yellow { background: #fef9c3; color: #a16207; }
+      &.red { background: #ffe4e6; color: #be123c; }
+    }
+
+    .risk-badge {
+      font-weight: 700; font-size: 0.8rem;
+      &.high { color: #ef4444; }
+      &.medium { color: #f59e0b; }
+      &.low { color: #10b981; }
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700;
+      &.allowed { background: #dcfce7; color: #16a34a; }
+      &.restricted { background: #ffe4e6; color: #e11d48; }
+    }
+  }
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 0.8rem; font-weight: 600; cursor: pointer;
+  &:hover { background: #f8fafc; }
+}
+
+.modal-backdrop {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000;
+  .modal-dialog { background: #fff; border-radius: 16px; width: 100%; max-width: 520px; overflow: hidden; }
+  .modal-header { padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; h2 { margin: 0; font-size: 1.2rem; } .close-btn { background: none; border: none; font-size: 1.25rem; cursor: pointer; } }
+  .modal-body { padding: 1.5rem; textarea { width: 100%; padding: 0.6rem; border-radius: 8px; border: 1px solid #cbd5e1; margin-top: 0.5rem; } }
+  .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 0.75rem; }
+}

@@ -1,0 +1,88 @@
+.license-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.875rem;
+  font-family: 'Inter', system-ui, sans-serif;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  animation: slideDown 0.3s ease-out;
+
+  &.type-grace {
+    background: #fef9c3;
+    color: #854d0e;
+    border-bottom: 1px solid #fef08a;
+
+    .banner-icon { color: #ca8a04; }
+    .renew-btn { background: #ca8a04; color: #fff; }
+  }
+
+  &.type-payment {
+    background: #ffedd5;
+    color: #9a3412;
+    border-bottom: 1px solid #fed7aa;
+
+    .banner-icon { color: #ea580c; }
+    .renew-btn { background: #ea580c; color: #fff; }
+  }
+
+  &.type-expired {
+    background: #ffe4e6;
+    color: #9f1239;
+    border-bottom: 1px solid #fecdd3;
+
+    .banner-icon { color: #e11d48; }
+    .renew-btn { background: #e11d48; color: #fff; }
+  }
+
+  .banner-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .banner-icon {
+      font-size: 1.25rem;
+    }
+
+    .banner-text {
+      font-weight: 500;
+    }
+  }
+
+  .banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+
+    .renew-btn {
+      padding: 0.35rem 0.85rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: opacity 0.2s;
+
+      &:hover {
+        opacity: 0.9;
+      }
+    }
+
+    .dismiss-btn {
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      color: inherit;
+      cursor: pointer;
+      opacity: 0.7;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}

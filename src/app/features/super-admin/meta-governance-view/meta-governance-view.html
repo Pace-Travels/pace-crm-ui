@@ -1,0 +1,116 @@
+<div class="meta-radar-container">
+  <!-- Header -->
+  <div class="portal-header">
+    <div class="title-group">
+      <div class="icon-badge">
+        <i class="ri-facebook-circle-line"></i>
+      </div>
+      <div>
+        <h1>Meta Platform Governance & Tenant Health Radar</h1>
+        <p>Monitor Meta Graph API breaking changes, version deprecations, and per-tenant phone quality ratings & spam risk.</p>
+      </div>
+    </div>
+    <div class="version-pill">
+      <span>Meta API: <strong>v25.0</strong></span>
+    </div>
+  </div>
+
+  <!-- Meta Graph API Platform Release & Deprecation Radar Cards -->
+  <div class="radar-section">
+    <h2><i class="ri-radar-line"></i> Meta Platform Release & Breaking Changes Radar</h2>
+    <div class="radar-grid" *ngIf="platformRadar()">
+      <div class="radar-card" *ngFor="let item of platformRadar().platformUpdates" [ngClass]="item.severity | lowercase">
+        <div class="card-top">
+          <span class="version-tag">{{ item.metaVersion }}</span>
+          <span class="severity-badge">{{ item.severity }}</span>
+        </div>
+        <h3>{{ item.title }}</h3>
+        <p class="desc">{{ item.description }}</p>
+        <div class="action-box">
+          <strong>Product Action Required:</strong>
+          <p>{{ item.actionRequired }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tenant Compliance & Quality Health Table -->
+  <div class="tenant-section">
+    <h2><i class="ri-heart-pulse-line"></i> Tenant Meta Phone Quality & Activity Compliance Governance</h2>
+
+    <div class="loading-state" *ngIf="isLoading()">
+      <i class="ri-loader-4-line spinner"></i>
+      <p>Analyzing tenant WABA quality ratings & Meta error frequencies...</p>
+    </div>
+
+    <div class="table-card" *ngIf="!isLoading()">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Tenant Agency</th>
+            <th>Phone Number</th>
+            <th>Quality Rating</th>
+            <th>Messaging Limit Tier</th>
+            <th>7D Failed Msgs</th>
+            <th>Risk Level</th>
+            <th>Broadcast Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let t of tenantsHealth()">
+            <td><strong>{{ t.agencyName }}</strong> (#{{ t.agencyId }})</td>
+            <td><code>{{ t.displayPhoneNumber || t.phoneNumber }}</code></td>
+            <td>
+              <span class="quality-badge" [ngClass]="t.qualityRating | lowercase">
+                {{ t.qualityRating }}
+              </span>
+            </td>
+            <td><span class="tier-badge">{{ t.messagingLimitTier }}</span></td>
+            <td><span class="error-count">{{ t.failedMessages7d }} Failed</span></td>
+            <td>
+              <span class="risk-badge" [ngClass]="t.riskLevel | lowercase">{{ t.riskLevel }}</span>
+            </td>
+            <td>
+              <span class="status-badge" [ngClass]="t.tenantAllowed ? 'allowed' : 'restricted'">
+                {{ t.tenantAllowed ? 'ALLOWED' : 'RESTRICTED' }}
+              </span>
+            </td>
+            <td>
+              <button class="btn-sm" (click)="openRestrictModal(t)">
+                <i class="ri-settings-4-line"></i> Policy Control
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Restrict Control Modal -->
+<div class="modal-backdrop" *ngIf="showRestrictModal()">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h2><i class="ri-shield-flash-line"></i> Tenant Broadcast Policy Control</h2>
+      <button class="close-btn" (click)="closeRestrictModal()"><i class="ri-close-line"></i></button>
+    </div>
+    <div class="modal-body">
+      <p>Managing broadcast messaging permissions for <strong>{{ selectedTenant()?.agencyName }}</strong>.</p>
+      
+      <div class="form-group">
+        <label>Reason for Policy Restriction / Action:</label>
+        <textarea rows="3" [value]="restrictReason()" (input)="restrictReason.set($any($event.target).value)"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeRestrictModal()">Cancel</button>
+      <button class="btn btn-success" *ngIf="!selectedTenant()?.tenantAllowed" (click)="confirmToggleRestriction(true)">
+        Allow Broadcasts
+      </button>
+      <button class="btn btn-danger" *ngIf="selectedTenant()?.tenantAllowed" (click)="confirmToggleRestriction(false)">
+        Restrict Broadcasts
+      </button>
+    </div>
+  </div>
+</div>

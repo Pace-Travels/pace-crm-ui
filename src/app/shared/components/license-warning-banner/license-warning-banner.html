@@ -1,0 +1,16 @@
+<div class="license-banner" *ngIf="showBanner()" [ngClass]="{
+  'type-grace': bannerType() === 'GRACE_PERIOD',
+  'type-payment': bannerType() === 'PAYMENT_REQUIRED',
+  'type-expired': bannerType() === 'EXPIRED'
+}">
+  <div class="banner-content">
+    <i class="ri-error-warning-line banner-icon"></i>
+    <span class="banner-text">
+      <strong>Subscription Alert:</strong> {{ bannerMessage() }}
+    </span>
+  </div>
+  <div class="banner-actions">
+    <a href="/payments" class="renew-btn">Renew Now</a>
+    <button class="dismiss-btn" (click)="dismiss()"><i class="ri-close-line"></i></button>
+  </div>
+</div>

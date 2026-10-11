@@ -1,0 +1,151 @@
+<div class="datatable-crud-container">
+  <div class="crud-header">
+    <div class="title-group">
+      <div class="icon-badge"><i class="ri-map-pin-2-line"></i></div>
+      <div>
+        <h2>Regional Geography Masters</h2>
+        <p>Manage States & Cities for regional B2B network mapping and geographical lead assignment.</p>
+      </div>
+    </div>
+    <div class="action-group">
+      <button class="btn btn-primary" *ngIf="activeTab() === 'STATE'" (click)="openStateModal()">
+        <i class="ri-add-circle-line"></i> Add State
+      </button>
+      <button class="btn btn-primary" *ngIf="activeTab() === 'CITY'" (click)="openCityModal()">
+        <i class="ri-add-circle-line"></i> Add City
+      </button>
+    </div>
+  </div>
+
+  <div class="tabs-nav">
+    <button [class.active]="activeTab() === 'STATE'" (click)="activeTab.set('STATE')">
+      <i class="ri-map-line"></i> State Masters ({{ states().length }})
+    </button>
+    <button [class.active]="activeTab() === 'CITY'" (click)="activeTab.set('CITY')">
+      <i class="ri-building-2-line"></i> City Masters ({{ cities().length }})
+    </button>
+  </div>
+
+  <!-- State Masters Table -->
+  <div class="table-card" *ngIf="activeTab() === 'STATE'">
+    <table class="datatable-grid">
+      <thead>
+        <tr>
+          <th>State Name</th>
+          <th>State Code</th>
+          <th>Country</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let s of filteredStates()">
+          <td><strong>{{ s.name }}</strong></td>
+          <td><code>{{ s.code || 'N/A' }}</code></td>
+          <td>{{ s.country }}</td>
+          <td><span class="status-badge active">ACTIVE</span></td>
+          <td>
+            <button class="btn-icon edit" (click)="openStateModal(s)"><i class="ri-edit-line"></i></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- City Masters Table -->
+  <div class="table-card" *ngIf="activeTab() === 'CITY'">
+    <table class="datatable-grid">
+      <thead>
+        <tr>
+          <th>City Name</th>
+          <th>City Code</th>
+          <th>Parent State</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of filteredCities()">
+          <td><strong>{{ c.name }}</strong></td>
+          <td><code>{{ c.code || 'N/A' }}</code></td>
+          <td><span class="state-pill">{{ c.stateName || 'N/A' }}</span></td>
+          <td><span class="status-badge active">ACTIVE</span></td>
+          <td>
+            <button class="btn-icon edit" (click)="openCityModal(c)"><i class="ri-edit-line"></i></button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Modal State Form -->
+<div class="modal-backdrop" *ngIf="showStateModal()">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>{{ isEditing() ? 'Edit State' : 'Add State' }}</h3>
+      <button class="close-btn" (click)="showStateModal.set(false)"><i class="ri-close-line"></i></button>
+    </div>
+    <form [formGroup]="stateForm" (ngSubmit)="saveState()">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>State Name *</label>
+          <input type="text" formControlName="name" placeholder="e.g. Karnataka" />
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>State Code</label>
+            <input type="text" formControlName="code" placeholder="e.g. KA" />
+          </div>
+
+          <div class="form-group">
+            <label>Country *</label>
+            <input type="text" formControlName="country" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="showStateModal.set(false)">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="stateForm.invalid">Save State</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal City Form -->
+<div class="modal-backdrop" *ngIf="showCityModal()">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>{{ isEditing() ? 'Edit City' : 'Add City' }}</h3>
+      <button class="close-btn" (click)="showCityModal.set(false)"><i class="ri-close-line"></i></button>
+    </div>
+    <form [formGroup]="cityForm" (ngSubmit)="saveCity()">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Parent State *</label>
+          <select formControlName="networkStateId">
+            <option value="">Select State</option>
+            <option *ngFor="let st of states()" [value]="st.id">{{ st.name }} ({{ st.code }})</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>City Name *</label>
+            <input type="text" formControlName="name" placeholder="e.g. Bengaluru" />
+          </div>
+
+          <div class="form-group">
+            <label>City Code</label>
+            <input type="text" formControlName="code" placeholder="e.g. BLR" />
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="showCityModal.set(false)">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="cityForm.invalid">Save City</button>
+      </div>
+    </form>
+  </div>
+</div>

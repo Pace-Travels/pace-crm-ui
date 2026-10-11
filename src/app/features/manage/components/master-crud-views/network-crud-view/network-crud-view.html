@@ -1,0 +1,228 @@
+<div class="datatable-crud-container">
+  <!-- Top Title & Toolbar -->
+  <div class="crud-header">
+    <div class="title-group">
+      <div class="icon-badge"><i class="ri-global-line"></i></div>
+      <div>
+        <h2>B2B Network & Chapter Partners</h2>
+        <p>Manage partner agencies, BNI chapter contacts, categories, location mapping & communication statuses.</p>
+      </div>
+    </div>
+    <div class="action-group">
+      <button class="btn btn-outline" (click)="exportCSV()">
+        <i class="ri-file-download-line"></i> Export CSV
+      </button>
+      <button class="btn btn-primary" (click)="openCreateModal()">
+        <i class="ri-add-circle-line"></i> Add Network Partner
+      </button>
+    </div>
+  </div>
+
+  <!-- DataTables Filter & Controls Bar -->
+  <div class="datatable-controls">
+    <div class="page-size-selector">
+      <label>Show</label>
+      <select [value]="pageSize()" (change)="pageSize.set(+$any($event.target).value); currentPage.set(1)">
+        <option [value]="10">10</option>
+        <option [value]="25">25</option>
+        <option [value]="50">50</option>
+        <option [value]="100">100</option>
+      </select>
+      <label>entries</label>
+    </div>
+
+    <div class="search-box">
+      <i class="ri-search-line"></i>
+      <input 
+        type="text" 
+        placeholder="Search partner, agency, BNI chapter, phone, city..." 
+        [value]="searchQuery()" 
+        (input)="searchQuery.set($any($event.target).value); currentPage.set(1)"
+      />
+    </div>
+  </div>
+
+  <!-- DataTables Data Table -->
+  <div class="table-card">
+    <table class="datatable-grid">
+      <thead>
+        <tr>
+          <th (click)="sortBy('name')">
+            Partner Name <i class="ri-arrow-up-down-line sort-icon"></i>
+          </th>
+          <th (click)="sortBy('agencyName')">
+            Agency & Chapter <i class="ri-arrow-up-down-line sort-icon"></i>
+          </th>
+          <th>Categories</th>
+          <th (click)="sortBy('phone')">
+            Contact Details <i class="ri-arrow-up-down-line sort-icon"></i>
+          </th>
+          <th (click)="sortBy('location')">
+            Location <i class="ri-arrow-up-down-line sort-icon"></i>
+          </th>
+          <th>Status Badges</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let item of paginatedList()">
+          <td>
+            <div class="partner-cell">
+              <strong>{{ item.name }}</strong>
+              <a *ngIf="item.website" [href]="item.website" target="_blank" class="web-link"><i class="ri-link"></i> {{ item.website }}</a>
+            </div>
+          </td>
+          <td>
+            <div class="agency-cell">
+              <span class="agency-title">{{ item.agencyName || 'N/A' }}</span>
+              <span class="chapter-tag" *ngIf="item.chapter"><i class="ri-community-line"></i> {{ item.chapter }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="cat-pill" *ngIf="item.categories">{{ item.categories }}</span>
+          </td>
+          <td>
+            <div class="contact-cell">
+              <span><i class="ri-phone-line"></i> {{ item.phone }}</span>
+              <span *ngIf="item.email"><i class="ri-mail-line"></i> {{ item.email }}</span>
+            </div>
+          </td>
+          <td>
+            <span class="location-badge"><i class="ri-map-pin-line"></i> {{ item.location || 'N/A' }}</span>
+          </td>
+          <td>
+            <div class="badge-group">
+              <span class="status-chip call">{{ item.callStatus || 'CONNECTED' }}</span>
+              <span class="status-chip wa">{{ item.whatsappStatus || 'READY' }}</span>
+            </div>
+          </td>
+          <td>
+            <div class="action-btn-group">
+              <button class="btn-icon edit" (click)="openEditModal(item)" title="Edit Partner">
+                <i class="ri-edit-line"></i>
+              </button>
+              <button class="btn-icon delete" (click)="deleteNetwork(item)" title="Delete Partner">
+                <i class="ri-delete-bin-line"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        <tr *ngIf="paginatedList().length === 0">
+          <td colspan="7" class="empty-state">No network partners match your search.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- DataTables Pagination Controls -->
+    <div class="datatable-pagination">
+      <div class="pagination-info">
+        Showing {{ ((currentPage() - 1) * pageSize()) + (paginatedList().length ? 1 : 0) }} 
+        to {{ ((currentPage() - 1) * pageSize()) + paginatedList().length }} 
+        of {{ filteredList().length }} entries
+      </div>
+
+      <div class="pagination-buttons">
+        <button [disabled]="currentPage() === 1" (click)="currentPage.set(currentPage() - 1)">
+          Previous
+        </button>
+        <span class="page-number">Page {{ currentPage() }} of {{ totalPages() }}</span>
+        <button [disabled]="currentPage() >= totalPages()" (click)="currentPage.set(currentPage() + 1)">
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Add / Edit Network Partner Form -->
+<div class="modal-backdrop" *ngIf="showFormModal()">
+  <div class="modal-dialog">
+    <div class="modal-header">
+      <h3>
+        <i class="ri-edit-box-line" *ngIf="isEditing()"></i>
+        <i class="ri-add-circle-line" *ngIf="!isEditing()"></i>
+        {{ isEditing() ? 'Edit B2B Network Partner' : 'Add New B2B Network Partner' }}
+      </h3>
+      <button class="close-btn" (click)="closeModal()"><i class="ri-close-line"></i></button>
+    </div>
+    <form [formGroup]="networkForm" (ngSubmit)="saveNetwork()">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>Partner Contact Name *</label>
+            <input type="text" formControlName="name" placeholder="e.g. Rajesh Sharma" />
+          </div>
+
+          <div class="form-group">
+            <label>Agency Name</label>
+            <input type="text" formControlName="agencyName" placeholder="e.g. Pace Travels BLR" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>BNI Chapter / Association</label>
+            <input type="text" formControlName="chapter" placeholder="e.g. BNI Champions Bengaluru" />
+          </div>
+
+          <div class="form-group">
+            <label>Business Categories</label>
+            <input type="text" formControlName="categories" placeholder="e.g. Outbound Tours, Ticketing" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Primary Phone *</label>
+            <input type="text" formControlName="phone" placeholder="+919876543210" />
+          </div>
+
+          <div class="form-group">
+            <label>Alternate Phone</label>
+            <input type="text" formControlName="phone2" placeholder="+919876543211" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Primary Email</label>
+            <input type="email" formControlName="email" placeholder="rajesh@agency.com" />
+          </div>
+
+          <div class="form-group">
+            <label>Website URL</label>
+            <input type="text" formControlName="website" placeholder="https://pacetravels.com" />
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>City / Location</label>
+            <input type="text" formControlName="location" placeholder="Bengaluru" />
+          </div>
+
+          <div class="form-group">
+            <label>Call Status</label>
+            <select formControlName="callStatus">
+              <option value="CONNECTED">CONNECTED</option>
+              <option value="BUSY">BUSY</option>
+              <option value="NO_ANSWER">NO_ANSWER</option>
+              <option value="CALLBACK_REQUESTED">CALLBACK_REQUESTED</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Remarks / Notes</label>
+          <textarea rows="2" formControlName="remarks" placeholder="Add partner operational notes..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary" [disabled]="networkForm.invalid">
+          {{ isEditing() ? 'Update Partner' : 'Save Partner' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -11,9 +11,21 @@
                     <li [class.active]="activeTab() === 'widget-sdk'" (click)="activeTab.set('widget-sdk')"><i
                             class="fa-solid fa-code"></i> Web Widget SDK</li>
                     <li [class.active]="activeTab() === 'fcm-sdk'" (click)="activeTab.set('fcm-sdk')"><i
-                            class="fa-solid fa-code"></i>FCM SDK</li>
+                            class="fa-solid fa-code"></i> FCM SDK</li>
                     <li [class.active]="activeTab() === 'team'" (click)="activeTab.set('team')"><i
                             class="fa-solid fa-user-group"></i> Team & Seat Allocations</li>
+                    <li [class.active]="activeTab() === 'masters'" (click)="activeTab.set('masters')"><i
+                            class="fa-solid fa-list-check"></i> Master Lookups & Types</li>
+                    <li [class.active]="activeTab() === 'networks'" (click)="activeTab.set('networks')"><i
+                            class="fa-solid fa-network-wired"></i> B2B Networks & Chapters</li>
+                    <li [class.active]="activeTab() === 'agencies'" (click)="activeTab.set('agencies')"><i
+                            class="fa-solid fa-building"></i> Travel Agencies</li>
+                    <li [class.active]="activeTab() === 'geography'" (click)="activeTab.set('geography')"><i
+                            class="fa-solid fa-earth-asia"></i> State & City Geography</li>
+                    <li [class.active]="activeTab() === 'canned'" (click)="activeTab.set('canned')"><i
+                            class="fa-solid fa-reply"></i> Quick Canned Responses</li>
+                    <li [class.active]="activeTab() === 'roles'" (click)="activeTab.set('roles')"><i
+                            class="fa-solid fa-shield-halved"></i> Roles & Permissions</li>
                 </ul>
             </div>
         </div>
@@ -346,6 +358,18 @@
 </div>
         } @else if (activeTab() === 'team') {
         <app-team-management></app-team-management>
+        } @else if (activeTab() === 'masters') {
+        <app-master-data-management></app-master-data-management>
+        } @else if (activeTab() === 'networks') {
+        <app-network-crud-view></app-network-crud-view>
+        } @else if (activeTab() === 'agencies') {
+        <app-agency-crud-view></app-agency-crud-view>
+        } @else if (activeTab() === 'geography') {
+        <app-geography-crud-view></app-geography-crud-view>
+        } @else if (activeTab() === 'canned') {
+        <app-canned-responses-crud-view></app-canned-responses-crud-view>
+        } @else if (activeTab() === 'roles') {
+        <app-role-permissions-crud-view></app-role-permissions-crud-view>
         }
     </div>
 </div>
