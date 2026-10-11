@@ -91,11 +91,11 @@ export class LiveChatService {
       next: (res: any) => {
         if (res && res.success && Array.isArray(res.data)) {
           const list = res.data.map((c: any) => {
-            const contact = c.Contact || { name: `Contact #${c.contactId || c.id}`, phone: c.phone || '' };
+            const contact = c.Contact || { name: c.phone || 'Customer', phone: c.phone || '' };
             if (!contact.firstName) {
-              const parts = (contact.name || '').split(' ');
-              contact.firstName = parts[0] || 'Contact';
-              contact.lastName = parts.slice(1).join(' ') || `#${c.contactId || c.id}`;
+              const parts = (contact.name || 'Customer').split(' ');
+              contact.firstName = parts[0] || 'Customer';
+              contact.lastName = parts.slice(1).join(' ') || '';
             }
             return {
               ...c,
