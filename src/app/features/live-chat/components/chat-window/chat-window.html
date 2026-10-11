@@ -66,19 +66,19 @@
                             
                             <!-- Rich media renderer -->
                             @if (msg.messageType === 'IMAGE') {
-                                <img [src]="getMediaUrl(msg.content || msg.mediaUrl)" style="max-width: 100%; border-radius: 8px; margin-bottom: 8px; display: block; max-height: 240px; object-fit: contain;" />
+                                <img [src]="getMediaUrl(msg.mediaUrl || msg.content)" style="max-width: 100%; border-radius: 8px; margin-bottom: 8px; display: block; max-height: 240px; object-fit: contain;" />
                             } @else if (msg.messageType === 'STICKER' || msg.messageType === 'GIF') {
-                                <img [src]="getMediaUrl(msg.content || msg.mediaUrl)" style="width: 130px; height: 130px; object-fit: contain; display: block; margin-bottom: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));" />
+                                <img [src]="getMediaUrl(msg.mediaUrl || msg.content)" style="width: 130px; height: 130px; object-fit: contain; display: block; margin-bottom: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));" />
                             } @else if (msg.messageType === 'VIDEO') {
-                                <video controls [src]="getMediaUrl(msg.content || msg.mediaUrl)" style="max-width: 100%; border-radius: 8px; margin-bottom: 8px; display: block; max-height: 240px;"></video>
+                                <video controls [src]="getMediaUrl(msg.mediaUrl || msg.content)" style="max-width: 100%; border-radius: 8px; margin-bottom: 8px; display: block; max-height: 240px;"></video>
                             } @else if (msg.messageType === 'AUDIO') {
-                                <audio controls [src]="getMediaUrl(msg.content || msg.mediaUrl)" style="max-width: 100%; margin-bottom: 8px; display: block;"></audio>
+                                <audio controls [src]="getMediaUrl(msg.mediaUrl || msg.content)" style="max-width: 100%; margin-bottom: 8px; display: block;"></audio>
                             } @else if (msg.messageType === 'PDF' || msg.messageType === 'DOCUMENT') {
                                 <div style="background: #ffffff; border: 1px solid #e2e8f0; padding: 10px 14px; border-radius: 8px; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; max-width: 280px;">
                                     <i class="fa-solid fa-file-pdf" style="font-size: 26px; color: #ef4444;"></i>
                                     <div style="flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
                                         <div style="font-size: 12px; font-weight: 700; color: #0f172a; overflow: hidden; text-overflow: ellipsis;">{{ msg.fileName || 'Attachment Document' }}</div>
-                                        <a [href]="getMediaUrl(msg.content || msg.mediaUrl)" target="_blank" style="font-size: 11.5px; font-weight: 600; color: #444ce7; text-decoration: none;">Download Document</a>
+                                        <a [href]="getMediaUrl(msg.mediaUrl || msg.content)" target="_blank" style="font-size: 11.5px; font-weight: 600; color: #444ce7; text-decoration: none;">Download Document</a>
                                     </div>
                                 </div>
                             }
