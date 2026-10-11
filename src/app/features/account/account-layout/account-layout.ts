@@ -35,7 +35,7 @@ import Swal from 'sweetalert2';
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px;">
                     <div>
                         <h3 style="font-size: 20px; font-weight: 700; color: #0f172a; margin: 0 0 4px 0;">Two-Factor Authentication (2FA)</h3>
-                        <p style="font-size: 13px; color: #64748b; margin: 0;">Add an extra layer of security to your Pace Messenger account using TOTP Authenticator (Google Authenticator, Authy).</p>
+                        <p style="font-size: 13px; color: #64748b; margin: 0;">Add an extra layer of security to your Quote Desks Messenger account using TOTP Authenticator (Google Authenticator, Authy).</p>
                     </div>
                     <span [style.background]="twoFactorEnabled() ? '#dcfce7' : '#fee2e2'" [style.color]="twoFactorEnabled() ? '#15803d' : '#b91c1c'" style="padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 700;">
                         {{ twoFactorEnabled() ? 'ENABLED' : 'DISABLED' }}

@@ -328,7 +328,7 @@ export class ProjectsView implements OnInit {
             this.metaAccessToken.set(token);
             this.fetchMetaAccounts(token);
           } else {
-            Swal.fire('Facebook Connection', 'Please log in and authorize Pace Messenger to connect your WhatsApp Business accounts.', 'info');
+            Swal.fire('Facebook Connection', 'Please log in and authorize Quote Desks Messenger to connect your WhatsApp Business accounts.', 'info');
           }
         }, loginOptions);
       },

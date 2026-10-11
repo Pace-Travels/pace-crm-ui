@@ -10,9 +10,9 @@ import { MarkdownComponent } from 'ngx-markdown';
   styleUrl: './docs-viewer.scss'
 })
 export class DocsViewer implements OnInit {
-  markdownContent = `# Pace Messenger Developer & API Documentation
+  markdownContent = `# Quote Desks Messenger Developer & API Documentation
 
-Welcome to the Pace Messenger Platform Documentation.
+Welcome to the Quote Desks Messenger Platform Documentation.
 
 ---
 

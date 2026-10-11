@@ -98,7 +98,7 @@ import { HighlightPipe } from '../../pipes/highlight.pipe';
         
         <!-- Footer -->
         <div class="search-footer">
-            <span class="footer-hint">Search powered by <strong>Pace DB</strong></span>
+            <span class="footer-hint">Search powered by <strong>Quote Desks Messenger DB</strong></span>
             <div class="footer-shortcuts">
                 <span><kbd>&uarr;</kbd><kbd>&darr;</kbd> to navigate</span>
                 <span><kbd>ESC</kbd> to close</span>
