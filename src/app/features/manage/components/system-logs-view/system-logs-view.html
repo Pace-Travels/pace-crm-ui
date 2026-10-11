@@ -1,0 +1,170 @@
+<div class="system-logs-container">
+  
+  <!-- Header Title & Actions -->
+  <div class="page-header">
+    <div class="header-title">
+      <div class="icon-badge">
+        <i class="fa-solid fa-server"></i>
+      </div>
+      <div>
+        <h2>System Error & Audit Logs</h2>
+        <p class="subtitle">Monitor Meta WhatsApp API delivery failures, rate limit events, and system errors in real time.</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button type="button" class="btn btn-export" (click)="exportCsv()">
+        <i class="fa-solid fa-file-csv"></i> Export CSV Audit Report
+      </button>
+      <button type="button" class="btn btn-refresh" (click)="loadLogs()">
+        <i class="fa-solid fa-rotate"></i> Refresh
+      </button>
+    </div>
+  </div>
+
+  <!-- Metric Stat Cards -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-title">System Health Score</span>
+        <i class="fa-solid fa-heart-pulse stat-icon success"></i>
+      </div>
+      <div class="stat-value success-val">{{ healthScore() }}%</div>
+      <span class="stat-hint">Active WABA webhook connection</span>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-title">API Failures (24h)</span>
+        <i class="fa-solid fa-triangle-exclamation stat-icon danger"></i>
+      </div>
+      <div class="stat-value danger-val">{{ errorCount24h() }}</div>
+      <span class="stat-hint">Failed Meta & system events</span>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-header">
+        <span class="stat-title">Meta WABA API Errors</span>
+        <i class="fa-brands fa-whatsapp stat-icon warning"></i>
+      </div>
+      <div class="stat-value warning-val">{{ metaErrorCount() }}</div>
+      <span class="stat-hint">Meta Graph Cloud API return codes</span>
+    </div>
+  </div>
+
+  <!-- Filter & Search Toolbar -->
+  <div class="filter-toolbar">
+    <div class="level-tabs">
+      <button type="button" class="level-btn" [class.active]="selectedLevel === 'ALL'" (click)="selectedLevel = 'ALL'; onFilterChange()">All Logs</button>
+      <button type="button" class="level-btn error" [class.active]="selectedLevel === 'ERROR'" (click)="selectedLevel = 'ERROR'; onFilterChange()">Errors Only</button>
+      <button type="button" class="level-btn warn" [class.active]="selectedLevel === 'WARN'" (click)="selectedLevel = 'WARN'; onFilterChange()">Warnings</button>
+    </div>
+
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input 
+        type="text" 
+        class="search-input" 
+        placeholder="Search error logs by code, message, or trace ID..." 
+        [(ngModel)]="searchQuery" 
+        (keyup.enter)="onFilterChange()"
+      />
+    </div>
+  </div>
+
+  <!-- Logs Data Table -->
+  <div class="table-card">
+    
+    <div class="loader-overlay" *ngIf="isLoading()">
+      <i class="fa-solid fa-spinner fa-spin loader-icon"></i> Fetching system logs...
+    </div>
+
+    <table class="logs-table" *ngIf="!isLoading()">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Level</th>
+          <th>Service Channel</th>
+          <th>Meta Code</th>
+          <th>Message & Actionable Guidance</th>
+          <th style="text-align: right;">Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of logs()">
+          <td class="col-time">
+            <i class="fa-regular fa-clock"></i> {{ log.createdAt | date:'medium' }}
+          </td>
+
+          <td class="col-level">
+            <span class="badge" [class.badge-danger]="log.level === 'ERROR'" [class.badge-warning]="log.level === 'WARN'" [class.badge-info]="log.level === 'INFO'">
+              {{ log.level }}
+            </span>
+          </td>
+
+          <td class="col-service">
+            <span class="service-pill"><i class="fa-brands fa-whatsapp"></i> {{ log.service || 'META_WABA_API' }}</span>
+          </td>
+
+          <td class="col-code">
+            <span class="code-badge" *ngIf="log.errorCode">#{{ log.errorCode }}</span>
+            <span class="text-muted" *ngIf="!log.errorCode">N/A</span>
+          </td>
+
+          <td class="col-msg">
+            <div class="msg-text">{{ log.message }}</div>
+            <div class="guidance-box" *ngIf="log.guidance">
+              <i class="fa-solid fa-circle-info"></i> {{ log.guidance }}
+            </div>
+          </td>
+
+          <td class="col-action" style="text-align: right;">
+            <button type="button" class="btn-detail" (click)="viewLogDetail(log)">
+              <i class="fa-solid fa-code"></i> View Raw JSON
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="logs().length === 0">
+          <td colspan="6" class="empty-state">
+            <i class="fa-regular fa-face-smile"></i>
+            <p>No system error logs found for the selected filter criteria.</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Pagination Controls -->
+    <div class="pagination-footer" *ngIf="totalPages() > 1">
+      <span class="page-info">Showing page <strong>{{ page() }}</strong> of <strong>{{ totalPages() }}</strong> ({{ totalLogs() }} entries)</span>
+      <div class="pager-btns">
+        <button type="button" class="pager-btn" (click)="changePage(-1)" [disabled]="page() <= 1">Previous</button>
+        <button type="button" class="pager-btn" (click)="changePage(1)" [disabled]="page() >= totalPages()">Next</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Raw Payload Inspector Modal -->
+  <div class="modal-overlay" *ngIf="selectedLogDetail()" (click)="closeDetailModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-bug"></i> System Log Stack Trace Inspector</h3>
+        <button type="button" class="btn-close" (click)="closeDetailModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="log-meta-info">
+          <div><strong>Log ID:</strong> {{ selectedLogDetail()?.id }}</div>
+          <div><strong>Timestamp:</strong> {{ selectedLogDetail()?.createdAt | date:'medium' }}</div>
+          <div><strong>Service:</strong> {{ selectedLogDetail()?.service }}</div>
+        </div>
+
+        <label class="json-label">Raw Request & Response Meta Payload (JSON):</label>
+        <pre class="json-box"><code>{{ selectedLogDetail()?.metaParsed | json }}</code></pre>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-close-modal" (click)="closeDetailModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+</div>

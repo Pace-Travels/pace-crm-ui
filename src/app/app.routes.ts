@@ -57,8 +57,19 @@ import { DataPolicy } from './features/policies/components/data-policy/data-poli
 import { SuperAdminLicenseView } from './features/super-admin/super-admin-license-view/super-admin-license-view';
 import { MetaGovernanceView } from './features/super-admin/meta-governance-view/meta-governance-view';
 import { CronManagerView } from './features/cron-manager/cron-manager-view/cron-manager-view';
+import { SystemLogsView } from './features/manage/components/system-logs-view/system-logs-view';
 
 const mainAppChildren: Routes = [
+    {
+        path: 'manage/system-logs',
+        component: SystemLogsView,
+        title: 'System Error & Audit Logs - QuoteDesks Messenger'
+    },
+    {
+        path: 'system-logs',
+        component: SystemLogsView,
+        title: 'System Error & Audit Logs - QuoteDesks Messenger'
+    },
     {
         path: 'admin/licenses',
         component: SuperAdminLicenseView,

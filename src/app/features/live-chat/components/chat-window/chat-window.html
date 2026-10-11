@@ -99,7 +99,10 @@
                                     } @else if (msg.status === 'DELIVERED') {
                                         <i class="fa-solid fa-check-double" style="color: #94a3b8;"></i>
                                     } @else if (msg.status === 'FAILED') {
-                                        <i class="fa-solid fa-circle-exclamation" style="color: #ef4444;" [title]="msg.errorMessage || 'Failed to send message'"></i>
+                                        <span class="failed-badge" style="color: #ef4444; font-weight: 700; cursor: help; display: inline-flex; align-items: center; gap: 3px;" [title]="'Delivery Failed: ' + (msg.errorMessage || 'Meta Cloud API Error') + ' (Check System Logs for details)'">
+                                            <i class="fa-solid fa-circle-exclamation" style="color: #ef4444;"></i>
+                                            <span style="font-size: 8.5px; text-transform: uppercase;">Failed</span>
+                                        </span>
                                     } @else {
                                         <i class="fa-solid fa-check" style="color: #94a3b8;"></i>
                                     }
