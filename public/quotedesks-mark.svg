@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 84" width="36" height="38" fill="none">
+  <!-- Top Right Block (Light Purple) -->
+  <rect x="30" y="2" width="32" height="32" rx="7" fill="#D8B4FE" />
+  <!-- Middle Left Block (Dark Purple) -->
+  <rect x="2" y="22" width="32" height="32" rx="7" fill="#4C1D95" />
+  <!-- Bottom Right Block (Medium Purple) -->
+  <rect x="30" y="42" width="32" height="32" rx="7" fill="#7C3AED" />
+</svg>
