@@ -1,8 +1,9 @@
-import { Component, AfterViewInit, ElementRef, signal } from '@angular/core';
+import { Component, AfterViewInit, ElementRef, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterModule } from '@angular/router';
 import { gsap } from 'gsap';
+import { ThemeService } from '../../../shared/services/theme.service';
 
 export interface ChatMessage {
   sender: 'user' | 'bot';
@@ -18,6 +19,7 @@ export interface ChatMessage {
   styleUrl: './landing-view.scss',
 })
 export class LandingView implements AfterViewInit {
+  themeService = inject(ThemeService);
   userInput = signal('');
   isTyping = signal(false);
   isAnnual = signal(false);

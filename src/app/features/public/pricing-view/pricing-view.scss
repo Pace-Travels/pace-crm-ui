@@ -1,14 +1,15 @@
 .public-page-container {
   min-height: 100vh;
-  background: #0f172a;
+  background: #f8fafc;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  color: #f8fafc;
+  color: #0f172a;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .public-header {
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(255, 255, 255, 0.9);
   backdrop-filter: blur(16px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid #e2e8f0;
   position: sticky;
   top: 0;
   z-index: 100;
@@ -35,7 +36,8 @@
       background: #ffffff;
       padding: 4px 12px;
       border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      border: 1px solid #e2e8f0;
     }
 
     .brand-badge {
@@ -47,6 +49,7 @@
       border-radius: 6px;
       letter-spacing: 0.5px;
       text-transform: uppercase;
+      box-shadow: 0 2px 8px rgba(68, 76, 231, 0.25);
     }
   }
 
@@ -58,28 +61,48 @@
       text-decoration: none;
       font-size: 14px;
       font-weight: 500;
-      color: #94a3b8;
+      color: #475569;
       transition: color 0.2s ease;
 
-      &:hover, &.active { color: #ffffff; font-weight: 600; }
+      &:hover, &.active { color: #444ce7; font-weight: 600; }
     }
   }
 
   .nav-actions {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
+
+    .btn-theme-toggle {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      color: #444ce7;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: #e2e8f0;
+        transform: scale(1.05);
+      }
+    }
 
     .btn-login {
       text-decoration: none;
       font-size: 14px;
       font-weight: 600;
-      color: #e2e8f0;
+      color: #334155;
       padding: 9px 18px;
       border-radius: 10px;
       transition: background 0.2s ease;
 
-      &:hover { background: rgba(255, 255, 255, 0.08); }
+      &:hover { background: #f1f5f9; }
     }
 
     .btn-signup {
@@ -90,13 +113,13 @@
       background: linear-gradient(135deg, #444ce7 0%, #2563eb 100%);
       padding: 10px 22px;
       border-radius: 10px;
-      box-shadow: 0 4px 16px rgba(68, 76, 231, 0.35);
+      box-shadow: 0 4px 16px rgba(68, 76, 231, 0.3);
       transition: all 0.25s ease;
       display: inline-flex;
       align-items: center;
       gap: 8px;
 
-      &:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(68, 76, 231, 0.5); }
+      &:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(68, 76, 231, 0.45); }
     }
   }
 }
@@ -104,7 +127,7 @@
 .pricing-hero {
   padding: 70px 24px 40px 24px;
   text-align: center;
-  background: radial-gradient(circle at 50% 20%, rgba(68, 76, 231, 0.18) 0%, rgba(15, 23, 42, 0) 70%);
+  background: radial-gradient(circle at 50% 20%, rgba(68, 76, 231, 0.08) 0%, rgba(248, 250, 252, 0) 70%);
 
   .hero-content {
     max-width: 850px;
@@ -114,9 +137,9 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: rgba(68, 76, 231, 0.15);
-      border: 1px solid rgba(68, 76, 231, 0.35);
-      color: #818cf8;
+      background: #eeeffe;
+      border: 1px solid #c7d2fe;
+      color: #444ce7;
       font-size: 13px;
       font-weight: 700;
       padding: 7px 18px;
@@ -127,40 +150,40 @@
     h1 {
       font-size: 44px;
       font-weight: 800;
-      color: #ffffff;
+      color: #0f172a;
       line-height: 1.2;
       margin: 0 0 18px 0;
       letter-spacing: -0.6px;
 
       .purple-gradient {
-        background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 50%, #38bdf8 100%);
+        background: linear-gradient(135deg, #444ce7 0%, #2563eb 60%, #7c3aed 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
       }
     }
 
-    p { font-size: 17px; color: #94a3b8; margin: 0 0 32px 0; }
+    p { font-size: 17px; color: #475569; margin: 0 0 32px 0; }
 
     .billing-toggle {
       display: inline-flex;
       align-items: center;
       gap: 14px;
-      background: #1e293b;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
       border-radius: 30px;
       padding: 8px 22px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
       font-size: 14px;
       color: #64748b;
 
       span.active {
         font-weight: 700;
-        color: #ffffff;
+        color: #0f172a;
       }
 
       .save-badge {
-        background: rgba(52, 211, 153, 0.15);
-        color: #34d399;
+        background: #d1fae5;
+        color: #047857;
         font-size: 11.5px;
         font-weight: 800;
         padding: 3px 10px;
@@ -169,8 +192,8 @@
       }
 
       .toggle-btn {
-        background: #0f172a;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: #cbd5e1;
+        border: none;
         width: 48px;
         height: 26px;
         border-radius: 20px;
@@ -183,14 +206,14 @@
           display: block;
           width: 20px;
           height: 20px;
-          background: #818cf8;
+          background: #ffffff;
           border-radius: 50%;
           transition: transform 0.25s ease;
         }
 
-        &.on .slider {
-          transform: translateX(22px);
-          background: #34d399;
+        &.on {
+          background: #444ce7;
+          .slider { transform: translateX(22px); }
         }
       }
     }
@@ -209,11 +232,11 @@
   }
 
   .pricing-card {
-    background: #1e293b;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 20px;
     padding: 32px 26px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
     position: relative;
     display: flex;
     flex-direction: column;
@@ -222,12 +245,12 @@
 
     &:hover {
       transform: translateY(-4px);
-      border-color: rgba(255, 255, 255, 0.25);
+      border-color: #cbd5e1;
     }
 
     &.featured {
       border: 2px solid #444ce7;
-      box-shadow: 0 12px 36px rgba(68, 76, 231, 0.25);
+      box-shadow: 0 12px 36px rgba(68, 76, 231, 0.15);
 
       .popular-badge {
         position: absolute;
@@ -254,7 +277,7 @@
         font-size: 13px;
         font-weight: 800;
         letter-spacing: 0.6px;
-        color: #818cf8;
+        color: #444ce7;
       }
 
       .price {
@@ -263,32 +286,32 @@
         align-items: baseline;
         gap: 4px;
 
-        .currency { font-size: 24px; font-weight: 700; color: #ffffff; }
-        .amount { font-size: 42px; font-weight: 800; color: #ffffff; line-height: 1; }
-        .period { font-size: 14px; color: #94a3b8; }
+        .currency { font-size: 24px; font-weight: 700; color: #0f172a; }
+        .amount { font-size: 42px; font-weight: 800; color: #0f172a; line-height: 1; }
+        .period { font-size: 14px; color: #64748b; }
       }
 
       .tier-desc {
         font-size: 13px;
-        color: #94a3b8;
+        color: #64748b;
         margin: 0;
       }
     }
 
     .seat-quota-box {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
       border-radius: 10px;
       padding: 10px 14px;
       font-size: 13px;
-      color: #e2e8f0;
+      color: #334155;
       margin-bottom: 20px;
 
-      b { color: #38bdf8; }
+      b { color: #444ce7; }
 
       &.featured {
-        background: rgba(68, 76, 231, 0.15);
-        border-color: rgba(68, 76, 231, 0.35);
+        background: #eeeffe;
+        border-color: #c7d2fe;
       }
     }
 
@@ -302,12 +325,12 @@
 
       li {
         font-size: 13.5px;
-        color: #cbd5e1;
+        color: #475569;
         display: flex;
         align-items: center;
         gap: 10px;
 
-        i { color: #34d399; font-size: 14px; }
+        i { color: #10b981; font-size: 14px; }
       }
     }
 
@@ -321,15 +344,15 @@
       transition: all 0.2s ease;
 
       &.outline {
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        color: #ffffff;
-        &:hover { background: rgba(255, 255, 255, 0.08); }
+        border: 1px solid #cbd5e1;
+        color: #0f172a;
+        &:hover { background: #f1f5f9; }
       }
 
       &.primary {
         background: linear-gradient(135deg, #444ce7 0%, #2563eb 100%);
         color: #ffffff;
-        box-shadow: 0 4px 14px rgba(68, 76, 231, 0.4);
+        box-shadow: 0 4px 14px rgba(68, 76, 231, 0.35);
         &:hover { transform: translateY(-1px); }
       }
     }
@@ -342,33 +365,34 @@
   padding: 0 24px;
 
   .infra-card {
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 20px;
     padding: 28px 36px;
     display: flex;
     align-items: center;
     gap: 28px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.04);
 
     .infra-icon {
       font-size: 42px;
       color: #ff9900;
-      background: rgba(255, 153, 0, 0.12);
+      background: #fff7ed;
       padding: 16px 20px;
       border-radius: 16px;
+      border: 1px solid #ffedd5;
     }
 
     .infra-info {
-      h3 { font-size: 18px; font-weight: 700; color: #ffffff; margin: 0 0 6px 0; }
-      p { font-size: 14px; color: #94a3b8; line-height: 1.6; margin: 0; }
+      h3 { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 6px 0; }
+      p { font-size: 14px; color: #475569; line-height: 1.6; margin: 0; }
     }
   }
 }
 
 .public-footer {
   background: #0f172a;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
   padding: 60px 48px 28px 48px;
 
   .footer-inner {
@@ -413,10 +437,118 @@
   }
 }
 
+/* ==========================================================================
+   DARK MODE OVERRIDES ([data-theme="dark"])
+   ========================================================================== */
+:host-context([data-theme="dark"]),
+[data-theme="dark"] .public-page-container {
+  background: #0f172a;
+  color: #f8fafc;
+
+  .public-header {
+    background: rgba(15, 23, 42, 0.85);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+
+    .nav-links .nav-item {
+      color: #94a3b8;
+      &:hover, &.active { color: #ffffff; }
+    }
+
+    .btn-theme-toggle {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #fbbf24;
+
+      &:hover { background: rgba(255, 255, 255, 0.15); }
+    }
+
+    .btn-login {
+      color: #e2e8f0;
+      &:hover { background: rgba(255, 255, 255, 0.08); }
+    }
+  }
+
+  .pricing-hero {
+    background: radial-gradient(circle at 50% 20%, rgba(68, 76, 231, 0.18) 0%, rgba(15, 23, 42, 0) 70%);
+
+    .pill-tag {
+      background: rgba(68, 76, 231, 0.15);
+      border-color: rgba(68, 76, 231, 0.35);
+      color: #818cf8;
+    }
+
+    h1 { color: #ffffff; }
+    p { color: #94a3b8; }
+
+    .billing-toggle {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.12);
+      color: #64748b;
+
+      span.active { color: #ffffff; }
+      .save-badge { background: rgba(52, 211, 153, 0.15); color: #34d399; }
+      .toggle-btn { background: #0f172a; border: 1px solid rgba(255,255,255,0.2); }
+      .toggle-btn.on .slider { background: #34d399; }
+    }
+  }
+
+  .content-section {
+    .pricing-card {
+      background: #1e293b;
+      border-color: rgba(255, 255, 255, 0.1);
+
+      &.featured { border-color: #444ce7; }
+
+      .card-header {
+        .tier-name { color: #818cf8; }
+        .price .currency, .price .amount { color: #ffffff; }
+        .price .period, .tier-desc { color: #94a3b8; }
+      }
+
+      .seat-quota-box {
+        background: rgba(15, 23, 42, 0.6);
+        border-color: rgba(255, 255, 255, 0.08);
+        color: #e2e8f0;
+        b { color: #38bdf8; }
+
+        &.featured {
+          background: rgba(68, 76, 231, 0.15);
+          border-color: rgba(68, 76, 231, 0.35);
+        }
+      }
+
+      .tier-features li { color: #cbd5e1; }
+
+      .plan-btn.outline {
+        border-color: rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+
+        &:hover { background: rgba(255, 255, 255, 0.08); }
+      }
+    }
+  }
+
+  .infra-note-section .infra-card {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+    border-color: rgba(255, 255, 255, 0.12);
+
+    .infra-icon {
+      background: rgba(255, 153, 0, 0.12);
+      border-color: transparent;
+    }
+
+    .infra-info {
+      h3 { color: #ffffff; }
+      p { color: #94a3b8; }
+    }
+  }
+}
+
 @media (max-width: 900px) {
   .public-header { padding: 16px 20px; .nav-links { display: none; } }
   .pricing-hero .hero-content h1 { font-size: 32px; }
   .infra-card { flex-direction: column; text-align: center; }
   .public-footer .footer-inner { grid-template-columns: 1fr; gap: 32px; }
 }
+
 

@@ -1,6 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { ThemeService } from '../../../shared/services/theme.service';
 
 @Component({
   selector: 'app-about-view',
@@ -9,4 +10,6 @@ import { RouterModule } from '@angular/router';
   templateUrl: './about-view.html',
   styleUrl: './about-view.scss'
 })
-export class AboutView {}
+export class AboutView {
+  themeService = inject(ThemeService);
+}

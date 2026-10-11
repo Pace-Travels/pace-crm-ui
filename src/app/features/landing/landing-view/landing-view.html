@@ -15,6 +15,13 @@
       <a routerLink="/contact" class="nav-link">Contact</a>
     </div>
     <div class="navbar-actions">
+      <button type="button" class="btn-theme-toggle" (click)="themeService.toggleTheme()" [title]="'Switch to ' + (themeService.currentTheme() === 'light' ? 'Dark' : 'Light') + ' Mode'" [aria-label]="'Switch to ' + (themeService.currentTheme() === 'light' ? 'Dark' : 'Light') + ' Mode'">
+        @if (themeService.currentTheme() === 'light') {
+          <i class="fa-solid fa-moon"></i>
+        } @else {
+          <i class="fa-solid fa-sun"></i>
+        }
+      </button>
       <a routerLink="/login" class="btn-login">Sign In</a>
       <a routerLink="/signup" class="btn-signup"><i class="fa-solid fa-rocket"></i> Get Started Free</a>
     </div>

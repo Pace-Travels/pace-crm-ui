@@ -1,8 +1,9 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import Swal from 'sweetalert2';
+import { ThemeService } from '../../../shared/services/theme.service';
 
 @Component({
   selector: 'app-contact-view',
@@ -12,6 +13,7 @@ import Swal from 'sweetalert2';
   styleUrl: './contact-view.scss'
 })
 export class ContactView {
+  themeService = inject(ThemeService);
   fullName = '';
   email = '';
   company = '';

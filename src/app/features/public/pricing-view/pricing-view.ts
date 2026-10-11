@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { ThemeService } from '../../../shared/services/theme.service';
 
 @Component({
   selector: 'app-pricing-view',
@@ -10,6 +11,7 @@ import { RouterModule } from '@angular/router';
   styleUrl: './pricing-view.scss'
 })
 export class PricingView {
+  themeService = inject(ThemeService);
   isAnnual = signal(true);
 
   toggleBilling(): void {
