@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Output, Input, OnChanges, SimpleChanges, inject } from '@angular/core';
+import { Component, EventEmitter, Output, Input, OnInit, OnChanges, SimpleChanges, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../../shared/services/api.service';
@@ -190,7 +190,7 @@ export interface GalleryAsset {
     }
   `]
 })
-export class AssetGalleryPicker implements OnChanges {
+export class AssetGalleryPicker implements OnInit, OnChanges {
   private api = inject(ApiService);
 
   @Input() isOpen = false;
@@ -201,11 +201,48 @@ export class AssetGalleryPicker implements OnChanges {
   searchQuery = '';
   loading = false;
 
+  DEFAULT_BRAND_ASSETS: GalleryAsset[] = [
+    {
+      id: 'brand_1',
+      name: "Pace Travels Welcome Poster",
+      url: "https://messenger.quotedesks.com/wabaptposter.png",
+      category: "BRAND_PUBLIC",
+      tag: "Welcome Banner"
+    },
+    {
+      id: 'brand_2',
+      name: "Pace Tourism Vietnam & Asia Deals",
+      url: "https://pace-messenger-assets.s3.ap-south-1.amazonaws.com/templates/banners/asia_tours.png",
+      category: "BRAND_PUBLIC",
+      tag: "Tour Packages"
+    },
+    {
+      id: 'brand_3',
+      name: "Luxury Cruise & Island Getaway",
+      url: "https://pace-messenger-assets.s3.ap-south-1.amazonaws.com/templates/banners/cruise_deal.png",
+      category: "BRAND_PUBLIC",
+      tag: "Cruise"
+    },
+    {
+      id: 'brand_4',
+      name: "Flights & Group Booking Promo",
+      url: "https://pace-messenger-assets.s3.ap-south-1.amazonaws.com/templates/banners/flight_deals.png",
+      category: "BRAND_PUBLIC",
+      tag: "Flights"
+    }
+  ];
+
   galleryData = {
     teamUploads: [] as GalleryAsset[],
     aiGenerated: [] as GalleryAsset[],
-    brandPublic: [] as GalleryAsset[]
+    brandPublic: this.DEFAULT_BRAND_ASSETS
   };
+
+  ngOnInit(): void {
+    if (this.isOpen) {
+      this.loadGalleryAssets();
+    }
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['isOpen'] && this.isOpen) {
@@ -215,19 +252,53 @@ export class AssetGalleryPicker implements OnChanges {
 
   loadGalleryAssets(): void {
     this.loading = true;
+
+    // Safety timeout to ensure spinner never hangs indefinitely
+    const safetyTimer = setTimeout(() => {
+      this.loading = false;
+    }, 1500);
+
+    // Fetch storage gallery
     this.api.get<any>('storage/gallery').subscribe({
       next: (res: any) => {
+        clearTimeout(safetyTimer);
         this.loading = false;
         const data = res.data || res || {};
         this.galleryData = {
-          teamUploads: data.teamUploads || [],
-          aiGenerated: data.aiGenerated || [],
-          brandPublic: data.brandPublic || []
+          teamUploads: data.teamUploads && data.teamUploads.length > 0 ? data.teamUploads : this.galleryData.teamUploads,
+          aiGenerated: data.aiGenerated && data.aiGenerated.length > 0 ? data.aiGenerated : this.galleryData.aiGenerated,
+          brandPublic: data.brandPublic && data.brandPublic.length > 0 ? data.brandPublic : this.DEFAULT_BRAND_ASSETS
         };
       },
       error: () => {
+        clearTimeout(safetyTimer);
         this.loading = false;
       }
+    });
+
+    // Also query gallery/assets endpoint to pull any S3 MediaAssets uploads
+    this.api.get<any>('gallery/assets').subscribe({
+      next: (res: any) => {
+        const assetsList = res.data || [];
+        if (Array.isArray(assetsList) && assetsList.length > 0) {
+          const mapped: GalleryAsset[] = assetsList.map((m: any) => ({
+            id: `ma_${m.id}`,
+            name: m.title || m.filename,
+            url: m.publicUrl,
+            category: 'TEAM_UPLOADS',
+            tag: m.mediaType
+          }));
+
+          const combined = [...mapped];
+          this.galleryData.teamUploads.forEach(existing => {
+            if (!combined.some(c => c.url === existing.url)) {
+              combined.push(existing);
+            }
+          });
+          this.galleryData.teamUploads = combined;
+        }
+      },
+      error: () => {}
     });
   }
 
