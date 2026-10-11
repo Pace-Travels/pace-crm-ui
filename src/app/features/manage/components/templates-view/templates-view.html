@@ -87,9 +87,43 @@
 
 <!-- Filters & Search Controls Bar -->
 <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+    
+    <!-- Hierarchical Dropdown Controls: Scope, Phone Number & Creator -->
+    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid #f1f5f9;">
+        <div>
+            <label style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">
+                <i class="fa-solid fa-building" style="color: #7c3aed; margin-right: 4px;"></i> Agency Store Scope
+            </label>
+            <select [ngModel]="selectedScope()" (ngModelChange)="selectedScope.set($event)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #0f172a; outline: none;">
+                <option value="AGENCY_ALL">All Agency Shared Templates (Team Store)</option>
+                <option value="MY_TEMPLATES">My Created Templates Only</option>
+            </select>
+        </div>
+
+        <div>
+            <label style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">
+                <i class="fa-solid fa-phone" style="color: #0284c7; margin-right: 4px;"></i> WhatsApp Phone / WABA
+            </label>
+            <select [ngModel]="selectedPhoneNumber()" (ngModelChange)="selectedPhoneNumber.set($event)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #0f172a; outline: none;">
+                <option value="ALL">All WhatsApp Phone Numbers</option>
+                <option *ngFor="let phone of availablePhoneNumbers()" [value]="phone">{{ phone }}</option>
+            </select>
+        </div>
+
+        <div>
+            <label style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">
+                <i class="fa-solid fa-user-pen" style="color: #d97706; margin-right: 4px;"></i> Template Creator
+            </label>
+            <select [ngModel]="selectedCreator()" (ngModelChange)="selectedCreator.set($event)" style="width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #0f172a; outline: none;">
+                <option value="ALL">All Team Creators</option>
+                <option *ngFor="let creator of availableCreators()" [value]="creator">Creator: {{ creator }}</option>
+            </select>
+        </div>
+    </div>
+
     <!-- Template Source Origin Filter Pills -->
     <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px dashed #e2e8f0;">
-        <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-right: 4px;">Template Source:</span>
+        <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-right: 4px;">Source Filter:</span>
         <button type="button" [style.background]="selectedSource() === 'ALL' ? '#0f172a' : '#f8fafc'" [style.color]="selectedSource() === 'ALL' ? 'white' : '#475569'" (click)="selectedSource.set('ALL')" style="padding: 5px 14px; font-size: 12px; border-radius: 20px; border: 1px solid #cbd5e1; font-weight: 700; cursor: pointer;">
             All Sources ({{ templates().length }})
         </button>
@@ -118,7 +152,7 @@
     <!-- Search Input Bar -->
     <div style="position: relative; width: 100%;">
         <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 14px;"></i>
-        <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Search templates by name, keyword, or approval status..." style="width: 100%; padding: 10px 14px 10px 40px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none; font-weight: 500;">
+        <input type="text" [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)" placeholder="Search templates by name, creator, phone number, keyword, or approval status..." style="width: 100%; padding: 10px 14px 10px 40px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; outline: none; font-weight: 500;">
     </div>
 </div>
 
@@ -139,7 +173,7 @@
 
     <div *ngIf="!isLoading() && filteredTemplates().length === 0" style="padding: 48px; text-align: center; color: #64748b; background: white; border: 1px solid #e2e8f0; border-radius: 12px;">
         <p style="font-weight: 700; color: #0f172a; margin: 0 0 4px 0; font-size: 15px;">No templates found</p>
-        <p style="font-size: 13px; margin: 0;">No templates match source filter "{{ selectedSource() }}" and status tab "{{ activeTab() }}".</p>
+        <p style="font-size: 13px; margin: 0;">No templates match the selected scope, phone number, creator, or source filter.</p>
     </div>
 
     <div *ngIf="!isLoading() && filteredTemplates().length > 0" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">
@@ -154,7 +188,7 @@
                 <h5 style="margin: 0 0 4px 0; font-size: 16px; font-weight: 800; color: #0f172a; font-family: monospace;">{{ tpl.templateName }}</h5>
                 <h6 *ngIf="tpl.title" style="margin: 0 0 10px 0; font-size: 12.5px; font-weight: 600; color: #475569;">{{ tpl.title }}</h6>
                 
-                <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
+                <div style="display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap;">
                     <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #e0f2fe; color: #0369a1; padding: 2px 8px; border-radius: 4px;">{{ tpl.category }}</span>
                     <span style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #f1f5f9; color: #475569; padding: 2px 8px; border-radius: 4px;">{{ tpl.language }}</span>
                     
@@ -162,6 +196,16 @@
                     <span *ngIf="tpl.status === 'DRAFT'" style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #f1f5f9; color: #64748b; padding: 2px 8px; border-radius: 4px;">Draft</span>
                     <span *ngIf="tpl.status === 'PENDING' || tpl.status === 'IN_REVIEW'" style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #fef3c7; color: #b45309; padding: 2px 8px; border-radius: 4px;">Pending Meta Review</span>
                     <span *ngIf="tpl.status !== 'APPROVED' && tpl.status !== 'DRAFT' && tpl.status !== 'PENDING' && tpl.status !== 'IN_REVIEW'" style="font-size: 10px; font-weight: 800; text-transform: uppercase; background: #fee2e2; color: #b91c1c; padding: 2px 8px; border-radius: 4px;">{{ tpl.status }}</span>
+                </div>
+
+                <!-- Creator & Phone Number Scoping Badges -->
+                <div style="display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap;">
+                    <span style="font-size: 10.5px; font-weight: 700; background: #fdf4ff; color: #a21caf; border: 1px solid #f0abfc; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-user-pen" style="font-size: 9.5px;"></i> Creator: {{ tpl.creator?.name || 'Agency Admin' }}
+                    </span>
+                    <span *ngIf="tpl.phoneNumber || tpl.phoneNumberId" style="font-size: 10.5px; font-weight: 700; background: #f0fdf4; color: #166534; border: 1px solid #86efac; padding: 2px 8px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;">
+                        <i class="fa-solid fa-phone" style="font-size: 9.5px;"></i> {{ tpl.phoneNumber || tpl.phoneNumberId }}
+                    </span>
                 </div>
 
                 <p style="margin: 0 0 10px 0; font-size: 13px; color: #475569; line-height: 1.5; height: 60px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical;">

@@ -10,6 +10,14 @@ import Swal from 'sweetalert2';
 
 interface MessageTemplate {
   id?: number;
+  agencyId?: number;
+  createdBy?: number;
+  creator?: { id: number; name: string; email: string };
+  wabaId?: string;
+  phoneNumberId?: string;
+  phoneNumber?: string;
+  projectId?: number;
+  project?: { id: number; name: string };
   templateName: string;
   title?: string;
   templateBody: string;
@@ -38,9 +46,12 @@ export class TemplatesView implements OnInit {
   private api = inject(ApiService);
   private fb = inject(FormBuilder);
 
-  // Signal Tab, Brand & Source Filters
+  // Signal Tab, Brand, Phone Number, Creator & Source Filters
   activeTab = signal<string>('All');
+  selectedScope = signal<string>('AGENCY_ALL'); // AGENCY_ALL | MY_TEMPLATES
   selectedBrand = signal<string>('ALL');
+  selectedPhoneNumber = signal<string>('ALL');
+  selectedCreator = signal<string>('ALL');
   selectedSource = signal<string>('ALL'); // ALL | CUSTOM | META_SYNC | META_LIBRARY
   searchQuery = signal<string>('');
 
@@ -55,6 +66,25 @@ export class TemplatesView implements OnInit {
   customCount = computed(() => this.templates().filter(t => (t.source === 'CUSTOM' || !t.source) && !t.isMetaOfficial).length);
   metaSyncedCount = computed(() => this.templates().filter(t => t.source === 'META_SYNC').length);
   metaLibraryCount = computed(() => this.templates().filter(t => t.isMetaOfficial || t.source === 'META_LIBRARY').length);
+
+  // Dynamic Options Computations for Filters
+  availablePhoneNumbers = computed(() => {
+    const set = new Set<string>();
+    this.templates().forEach(t => {
+      if (t.phoneNumber) set.add(t.phoneNumber);
+      else if (t.phoneNumberId) set.add(t.phoneNumberId);
+    });
+    return Array.from(set);
+  });
+
+  availableCreators = computed(() => {
+    const set = new Set<string>();
+    this.templates().forEach(t => {
+      if (t.creator?.name) set.add(t.creator.name);
+      else if (t.createdBy) set.add(`User #${t.createdBy}`);
+    });
+    return Array.from(set);
+  });
 
   // Modal State Controls
   editingTemplateId = signal<number | null>(null);
@@ -100,11 +130,30 @@ export class TemplatesView implements OnInit {
   filteredTemplates = computed(() => {
     let list = this.templates();
     const query = this.searchQuery().toLowerCase().trim();
+    const scope = this.selectedScope();
     const brand = this.selectedBrand();
+    const phoneFilter = this.selectedPhoneNumber();
+    const creatorFilter = this.selectedCreator();
     const tab = this.activeTab();
     const source = this.selectedSource();
 
-    // 1. Source Origin Filter
+    // 1. Scope Filter (Agency Shared vs My Templates)
+    if (scope === 'MY_TEMPLATES') {
+      const currentUserId = Number(localStorage.getItem('userId') || '1');
+      list = list.filter(t => t.createdBy === currentUserId);
+    }
+
+    // 2. Phone Number / WABA Filter
+    if (phoneFilter !== 'ALL') {
+      list = list.filter(t => t.phoneNumber === phoneFilter || t.phoneNumberId === phoneFilter);
+    }
+
+    // 3. Creator User Filter
+    if (creatorFilter !== 'ALL') {
+      list = list.filter(t => t.creator?.name === creatorFilter || `User #${t.createdBy}` === creatorFilter);
+    }
+
+    // 4. Source Origin Filter
     if (source !== 'ALL') {
       if (source === 'CUSTOM') {
         list = list.filter(t => (t.source === 'CUSTOM' || !t.source) && !t.isMetaOfficial);
@@ -115,7 +164,7 @@ export class TemplatesView implements OnInit {
       }
     }
 
-    // 2. Brand Unit Filter
+    // 5. Brand Unit Filter
     if (brand !== 'ALL') {
       if (brand === 'PACE_TRAVELS') list = list.filter(t => t.templateName.startsWith('pace_b2c_') || t.templateName.includes('welcome') || t.templateName.includes('booking') || t.templateName.includes('flight'));
       else if (brand === 'PACE_B2B') list = list.filter(t => t.templateName.startsWith('pace_b2b_'));
@@ -124,17 +173,19 @@ export class TemplatesView implements OnInit {
       else if (brand === 'VIETNAM_PACE') list = list.filter(t => t.templateName.startsWith('vietnam_pace_'));
     }
 
-    // 3. Search Query Filter
+    // 6. Search Query Filter
     if (query) {
       list = list.filter(t => 
         t.templateName.toLowerCase().includes(query) || 
         (t.title && t.title.toLowerCase().includes(query)) ||
         t.status.toLowerCase().includes(query) || 
-        t.templateBody.toLowerCase().includes(query)
+        t.templateBody.toLowerCase().includes(query) ||
+        (t.creator?.name && t.creator.name.toLowerCase().includes(query)) ||
+        (t.phoneNumber && t.phoneNumber.includes(query))
       );
     }
 
-    // 4. Tab Status Filter
+    // 7. Tab Status Filter
     if (tab === 'Draft') {
       return list.filter(t => t.status === 'DRAFT');
     } else if (tab === 'Pending') {
