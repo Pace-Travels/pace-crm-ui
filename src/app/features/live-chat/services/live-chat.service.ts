@@ -135,9 +135,9 @@ export class LiveChatService {
     this.api.get<any>(`messages/list?conversationId=${conv.id}`).subscribe({
       next: (res: any) => {
         const all = res.data || [];
-        const filtered = all.filter((m: any) => m.conversationId === conv.id || Number(m.conversationId) === Number(conv.id));
-        filtered.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-        this.messagesSubject.next(filtered);
+        // Sort chronologically ascending for chat view
+        all.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        this.messagesSubject.next(all);
       },
       error: () => {
         const fallback = (conv.Messages || []).slice().sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
