@@ -51,6 +51,15 @@ export class Sidebar implements OnInit {
     }
   }
 
+  getProjectLabel(p: any): string {
+    if (!p) return '';
+    const num = p.phoneNumber || p.testPhoneNumber || (p.whatsappNumbers && p.whatsappNumbers[0]?.phoneNumber);
+    if (num) {
+      return `${p.name} (${num})`;
+    }
+    return p.name;
+  }
+
   // Exact 19 original menu items categorized for Quote Desks theme
   menuSections: MenuSection[] = [
     {
