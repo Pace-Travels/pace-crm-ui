@@ -79,9 +79,31 @@
                         </div>
                     </div>
                 } @else {
-                    <div class="message-wrapper" style="display: flex; flex-direction: column; width: 100%;" [style.align-items]="msg.direction === 'INBOUND' ? 'flex-start' : 'flex-end'">
-                        <div class="message-bubble" [class.inbound]="msg.direction === 'INBOUND'" [class.outbound]="msg.direction === 'OUTBOUND'" style="max-width: 70%; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 4px;">
+                    <div class="message-wrapper" [attr.id]="'msg-' + msg.id" [attr.data-wamid]="msg.whatsappMessageId" style="display: flex; flex-direction: column; width: 100%; position: relative;" [style.align-items]="msg.direction === 'INBOUND' ? 'flex-start' : 'flex-end'">
+                        <div class="message-bubble" [class.inbound]="msg.direction === 'INBOUND'" [class.outbound]="msg.direction === 'OUTBOUND'" style="max-width: 70%; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 4px; position: relative;">
                             
+                            <!-- Quoted / Reply-To Message Card Preview -->
+                            @if (msg.quotedMessageText || msg.replyToMessageId || msg.replyToWhatsappMessageId) {
+                                <div class="quoted-message-card" 
+                                     [class.inbound-quote]="msg.direction === 'INBOUND'" 
+                                     (click)="scrollToMessage(msg.replyToMessageId || msg.replyToWhatsappMessageId)" 
+                                     title="Click to jump to original message">
+                                    <div class="quoted-bar" [style.background]="msg.direction === 'INBOUND' ? '#25d366' : '#444ce7'"></div>
+                                    <div class="quoted-content">
+                                        <div class="quoted-sender" [style.color]="msg.direction === 'INBOUND' ? '#15803d' : '#444ce7'">
+                                            <i class="fa-solid fa-reply" style="font-size: 10px; margin-right: 4px;"></i>
+                                            {{ msg.quotedSenderName || 'Quoted Message' }}
+                                        </div>
+                                        <div class="quoted-text">{{ msg.quotedMessageText || '[Original Message]' }}</div>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Quick Reply Action Button (visible on hover) -->
+                            <button type="button" class="hover-reply-btn" (click)="setReplyTo(msg)" title="Reply to this message">
+                                <i class="fa-solid fa-reply"></i>
+                            </button>
+
                             <!-- Rich media renderer -->
                             @if (msg.messageType === 'IMAGE') {
                                 <img [src]="getMediaUrl(msg.mediaUrl || msg.content)" style="max-width: 100%; border-radius: 8px; margin-bottom: 8px; display: block; max-height: 240px; object-fit: contain;" />
@@ -107,7 +129,7 @@
                                     <span>{{ getInteractiveLabel(msg.textContent || msg.content) }}</span>
                                 </div>
                             } @else if (msg.messageType !== 'STICKER' && msg.messageType !== 'GIF') {
-                                <div>{{ msg.textContent || msg.content }}</div>
+                                <div class="wa-text">{{ msg.textContent || msg.content }}</div>
                             }
                             
                             <!-- Read receipts & timestamp -->
@@ -135,6 +157,20 @@
         </div>
 
         <div class="input-area" style="position: relative;">
+            <!-- Active Replying-To Banner -->
+            @if (replyingToMessage()) {
+                <div class="active-reply-banner">
+                    <div class="reply-bar" [style.background]="replyingToMessage()?.direction === 'INBOUND' ? '#25d366' : '#444ce7'"></div>
+                    <div class="reply-info">
+                        <div class="reply-title">
+                            Replying to {{ replyingToMessage()?.senderType === 'CONTACT' ? (chatService.selectedConversation()?.Contact?.firstName || 'Customer') : 'Pace Support' }}
+                        </div>
+                        <div class="reply-snippet">{{ replyingToMessage()?.textContent || replyingToMessage()?.content || '[Attachment]' }}</div>
+                    </div>
+                    <button type="button" class="reply-cancel-btn" (click)="cancelReply()" title="Cancel Reply">&times;</button>
+                </div>
+            }
+
             <button class="icon-btn" (click)="toggleEmojiPicker()" title="Emojis, GIFs, Stickers"><i class="fa-regular fa-face-smile" style="font-size: 18px; color: #64748b;"></i></button>
             <button class="icon-btn" (click)="toggleInteractiveModal()" title="Send Quick Reply Buttons"><i class="fa-solid fa-list-check"></i></button>
             <input type="text" placeholder="Type a message..." [ngModel]="chatService.chatInputMessage()" (ngModelChange)="chatService.chatInputMessage.set($event)" (keyup.enter)="sendMessage()">

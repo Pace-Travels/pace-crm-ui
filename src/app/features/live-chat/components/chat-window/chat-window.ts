@@ -109,17 +109,55 @@ export class ChatWindow implements AfterViewChecked {
     return text;
   }
 
+  // Active Quoted Reply Signal
+  replyingToMessage = signal<any | null>(null);
+
+  setReplyTo(msg: any) {
+    this.replyingToMessage.set(msg);
+  }
+
+  cancelReply() {
+    this.replyingToMessage.set(null);
+  }
+
+  scrollToMessage(targetId: number | string | undefined) {
+    if (!targetId) return;
+    const targetStr = String(targetId);
+    
+    // Find element by msg-{id} or wamid-{whatsappMessageId}
+    const elem = document.getElementById(`msg-${targetStr}`) || document.getElementById(`wamid-${targetStr}`);
+    if (elem) {
+      elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Trigger CSS pulse highlight animation
+      elem.classList.remove('highlight-pulse');
+      void elem.offsetWidth; // Force DOM reflow
+      elem.classList.add('highlight-pulse');
+      
+      setTimeout(() => {
+        elem.classList.remove('highlight-pulse');
+      }, 1800);
+    }
+  }
+
   sendMessage() {
     const text = this.chatService.chatInputMessage().trim();
     const conv = this.chatService.selectedConversation();
     if (!text || !conv) return;
 
-    this.chatService.chatInputMessage.set('');
+    const replyMsg = this.replyingToMessage();
 
-    const payload = {
+    this.chatService.chatInputMessage.set('');
+    this.cancelReply();
+
+    const payload: any = {
       conversationId: conv.id,
       textContent: text
     };
+
+    if (replyMsg && replyMsg.id) {
+      payload.replyToMessageId = replyMsg.id;
+    }
 
     this.api.post<any>('messages/send', payload).subscribe({
       next: (res: any) => {

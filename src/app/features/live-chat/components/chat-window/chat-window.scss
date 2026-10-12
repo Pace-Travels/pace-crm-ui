@@ -119,3 +119,171 @@
         font-size: 15px;
     }
 }
+
+// Preserve WhatsApp newlines & linebreaks
+.wa-text {
+    white-space: pre-wrap !important;
+    word-break: break-word;
+}
+
+// Quoted / Reply-To Message Card inside Bubble
+.quoted-message-card {
+    display: flex;
+    background: rgba(15, 23, 42, 0.06);
+    border-radius: 8px;
+    padding: 6px 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    overflow: hidden;
+
+    &:hover {
+        background: rgba(15, 23, 42, 0.12);
+        transform: translateY(-1px);
+    }
+
+    .quoted-bar {
+        width: 4px;
+        min-height: 28px;
+        border-radius: 2px;
+        margin-right: 8px;
+        flex-shrink: 0;
+    }
+
+    .quoted-content {
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .quoted-sender {
+        font-size: 11px;
+        font-weight: 700;
+        margin-bottom: 2px;
+        display: flex;
+        align-items: center;
+    }
+
+    .quoted-text {
+        font-size: 11.5px;
+        color: #475569;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 280px;
+    }
+}
+
+// Hover Reply Button on Message Bubble
+.message-bubble {
+    .hover-reply-btn {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        opacity: 0;
+        visibility: hidden;
+        background: rgba(255, 255, 255, 0.9);
+        border: 1px solid #cbd5e1;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        color: #444ce7;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        z-index: 5;
+
+        &:hover {
+            background: #444ce7;
+            color: white;
+            transform: scale(1.1);
+        }
+    }
+
+    &:hover .hover-reply-btn {
+        opacity: 1;
+        visibility: visible;
+    }
+}
+
+// Active Replying-To Composer Banner
+.active-reply-banner {
+    position: absolute;
+    bottom: 100%;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    border-bottom: 2px solid #cbd5e1;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.06);
+    z-index: 20;
+
+    .reply-bar {
+        width: 4px;
+        height: 32px;
+        border-radius: 2px;
+        flex-shrink: 0;
+    }
+
+    .reply-info {
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .reply-title {
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #444ce7;
+    }
+
+    .reply-snippet {
+        font-size: 12px;
+        color: #64748b;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .reply-cancel-btn {
+        background: transparent;
+        border: none;
+        font-size: 20px;
+        font-weight: bold;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 0 4px;
+
+        &:hover {
+            color: #ef4444;
+        }
+    }
+}
+
+// Smooth Scroll Target Message Pulse Animation
+@keyframes pulseHighlight {
+    0% {
+        box-shadow: 0 0 0 4px rgba(68, 76, 231, 0.4);
+        background-color: #eef2ff !important;
+        transform: scale(1.02);
+    }
+    50% {
+        box-shadow: 0 0 0 6px rgba(68, 76, 231, 0.2);
+        background-color: #e0e7ff !important;
+    }
+    100% {
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        transform: scale(1);
+    }
+}
+
+.highlight-pulse {
+    animation: pulseHighlight 1.8s ease-in-out;
+    border-radius: 12px;
+}
