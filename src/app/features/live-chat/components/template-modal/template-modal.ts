@@ -21,8 +21,8 @@ export interface TemplateDispatchPayload {
           <div class="title-group">
             <i class="fa-solid fa-file-invoice header-icon"></i>
             <div>
-              <h3>Re-Engage with Approved Template</h3>
-              <p class="subtitle">Select an approved Meta template to re-open customer 24h window or initiate chat</p>
+              <h3>Select Message Template</h3>
+              <p class="subtitle">Choose from all Meta templates of this account to send in chat</p>
             </div>
           </div>
           <button type="button" class="btn-close" (click)="closeModal()">&times;</button>
@@ -30,12 +30,12 @@ export interface TemplateDispatchPayload {
 
         <div class="modal-body">
           <div *ngIf="loading" class="loading-spinner">
-            <i class="fa-solid fa-circle-notch fa-spin"></i> Loading approved templates for project...
+            <i class="fa-solid fa-circle-notch fa-spin"></i> Loading account templates...
           </div>
 
           <div *ngIf="!loading && templates.length === 0" class="no-templates-alert">
             <i class="fa-solid fa-triangle-exclamation"></i>
-            <span>No approved templates found for this project. Please create & approve templates in the <strong>Templates Manager</strong> first.</span>
+            <span>No templates found for this account. Create templates in the <strong>Templates Manager</strong>.</span>
           </div>
 
           <div *ngIf="!loading && templates.length > 0" class="template-form-grid">
@@ -44,11 +44,11 @@ export interface TemplateDispatchPayload {
             <div class="form-section">
               <!-- Template Dropdown -->
               <div class="form-group">
-                <label class="input-label">Select Approved Template *</label>
+                <label class="input-label">Select Template *</label>
                 <select class="form-control" [(ngModel)]="selectedTemplateId" (change)="onTemplateChange()">
-                  <option [value]="null" disabled>-- Choose an Approved Template --</option>
+                  <option [value]="null" disabled>-- Choose a Template --</option>
                   <option *ngFor="let t of templates" [value]="t.id">
-                    {{ t.templateName }} ({{ t.category || 'MARKETING' }} - {{ t.language || 'en_US' }})
+                    {{ t.templateName }} [{{ t.status || 'APPROVED' }}] ({{ t.category || 'MARKETING' }} - {{ t.language || 'en_US' }})
                   </option>
                 </select>
               </div>
@@ -219,23 +219,36 @@ export class SendTemplateModal implements OnChanges {
   loadApprovedTemplates(): void {
     this.loading = true;
     const projectId = this.conversation?.projectId || null;
-    let url = 'messagetemplates?status=APPROVED';
-    if (projectId) url += `&projectId=${projectId}`;
+    let url = 'messagetemplates';
+    if (projectId) url += `?projectId=${projectId}`;
 
     this.api.get(url).subscribe({
       next: (res: any) => {
         this.loading = false;
         const list = res.data || res.items || (Array.isArray(res) ? res : []);
-        // Filter APPROVED status
-        this.templates = list.filter((t: any) => !t.status || t.status === 'APPROVED');
+        // Load all templates of this account
+        this.templates = list;
         if (this.templates.length > 0) {
           this.selectedTemplateId = this.templates[0].id;
           this.onTemplateChange();
         }
       },
       error: () => {
-        this.loading = false;
-        this.templates = [];
+        // Fallback: try messagetemplates/list
+        this.api.get('messagetemplates/list').subscribe({
+          next: (res2: any) => {
+            this.loading = false;
+            this.templates = res2.data || res2.items || (Array.isArray(res2) ? res2 : []);
+            if (this.templates.length > 0) {
+              this.selectedTemplateId = this.templates[0].id;
+              this.onTemplateChange();
+            }
+          },
+          error: () => {
+            this.loading = false;
+            this.templates = [];
+          }
+        });
       }
     });
   }

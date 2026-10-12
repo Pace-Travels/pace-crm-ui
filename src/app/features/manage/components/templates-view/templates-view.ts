@@ -24,9 +24,12 @@ interface MessageTemplate {
   language: string;
   category: string;
   status: string;
+  headerType?: string;
+  headerUrl?: string;
   headerText?: string;
   footerText?: string;
-  buttons?: string; // stringified JSON
+  buttons?: string | any[];
+  components?: any[];
   source?: 'CUSTOM' | 'META_SYNC' | 'META_LIBRARY';
   isMetaOfficial?: boolean;
   rejectionReason?: string;
@@ -993,5 +996,44 @@ export class TemplatesView implements OnInit {
 
   navigateTo(path: string) {
     this.router.navigate([path]);
+  }
+
+  getHeaderImageUrl(tpl: MessageTemplate | null): string | null {
+    if (!tpl) return null;
+    if (tpl.headerUrl) return tpl.headerUrl;
+    if (tpl.headerType === 'IMAGE' && tpl.headerUrl) return tpl.headerUrl;
+
+    if (Array.isArray(tpl.components)) {
+      const headerComp = tpl.components.find((c: any) => (c.type === 'HEADER' || c.type === 'header'));
+      if (headerComp) {
+        if (headerComp.format === 'IMAGE' || headerComp.headerType === 'IMAGE') {
+          if (headerComp.example?.header_handle?.[0]) return headerComp.example.header_handle[0];
+          if (headerComp.headerUrl || headerComp.url) return headerComp.headerUrl || headerComp.url;
+          return 'https://pace-messenger-assets.s3.ap-south-1.amazonaws.com/templates/banners/asia_tours.png';
+        }
+      }
+    }
+
+    if (tpl.headerType === 'IMAGE' || (tpl as any).headerFormat === 'IMAGE') {
+      return tpl.headerUrl || 'https://pace-messenger-assets.s3.ap-south-1.amazonaws.com/templates/banners/asia_tours.png';
+    }
+
+    return null;
+  }
+
+  getTemplateButtons(tpl: MessageTemplate | null): any[] {
+    if (!tpl) return [];
+    if (tpl.buttons) {
+      if (typeof tpl.buttons === 'string') {
+        try { return JSON.parse(tpl.buttons); } catch {}
+      } else if (Array.isArray(tpl.buttons)) {
+        return tpl.buttons;
+      }
+    }
+    if (Array.isArray(tpl.components)) {
+      const btnComp = tpl.components.find((c: any) => (c.type === 'BUTTONS' || c.type === 'buttons'));
+      if (btnComp && Array.isArray(btnComp.buttons)) return btnComp.buttons;
+    }
+    return [];
   }
 }
