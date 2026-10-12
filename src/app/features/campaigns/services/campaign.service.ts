@@ -8,6 +8,10 @@ export interface Campaign {
   createdAt: string;
   status: string;
   audience: string;
+  totalRecipients?: number;
+  sentCount?: number;
+  pendingCount?: number;
+  failedCount?: number;
 }
 
 @Injectable({
@@ -41,7 +45,11 @@ export class CampaignService {
               type: item.targetType || 'BROADCAST',
               createdAt: formattedDate,
               status: item.status || 'RUNNING',
-              audience: audienceLabel
+              audience: audienceLabel,
+              totalRecipients: item.totalRecipients || 0,
+              sentCount: item.sentCount !== undefined ? item.sentCount : (item.deliveredCount || 0),
+              pendingCount: item.pendingCount || 0,
+              failedCount: item.failedCount || 0
             };
           });
           this.campaigns.set(mapped);

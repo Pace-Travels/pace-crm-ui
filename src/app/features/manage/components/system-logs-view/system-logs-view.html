@@ -81,18 +81,32 @@
     <table class="logs-table" *ngIf="!isLoading()">
       <thead>
         <tr>
-          <th>Timestamp</th>
+          <th>Sent / Timestamp</th>
+          <th>Sender WABA Number</th>
+          <th>Receiving Number</th>
           <th>Level</th>
           <th>Service Channel</th>
           <th>Meta Code</th>
           <th>Message & Actionable Guidance</th>
-          <th style="text-align: right;">Action</th>
+          <th style="text-align: right; min-width: 210px;">Actions</th>
         </tr>
       </thead>
       <tbody>
         <tr *ngFor="let log of logs()">
-          <td class="col-time">
+          <td class="col-time" style="white-space: nowrap;">
             <i class="fa-regular fa-clock"></i> {{ log.createdAt | date:'medium' }}
+          </td>
+
+          <td style="white-space: nowrap; font-weight: 700; color: #0369a1;">
+            <span style="display: inline-flex; align-items: center; gap: 4px; background: #e0f2fe; border: 1px solid #bae6fd; padding: 3px 8px; border-radius: 6px; font-size: 11.5px;">
+              <i class="fa-solid fa-paper-plane" style="font-size: 10px; color: #0284c7;"></i> {{ log.senderPhone || '+91 80958 44097' }}
+            </span>
+          </td>
+
+          <td style="white-space: nowrap; font-weight: 700; color: #7c3aed;">
+            <span style="display: inline-flex; align-items: center; gap: 4px; background: #f3e8ff; border: 1px solid #e9d5ff; padding: 3px 8px; border-radius: 6px; font-size: 11.5px;">
+              <i class="fa-solid fa-mobile-screen-button" style="font-size: 10px; color: #9333ea;"></i> {{ log.recipientPhone || 'N/A' }}
+            </span>
           </td>
 
           <td class="col-level">
@@ -117,15 +131,20 @@
             </div>
           </td>
 
-          <td class="col-action" style="text-align: right;">
-            <button type="button" class="btn-detail" (click)="viewLogDetail(log)">
-              <i class="fa-solid fa-code"></i> View Raw JSON
-            </button>
+          <td class="col-action" style="text-align: right; white-space: nowrap;">
+            <div style="display: inline-flex; gap: 6px; justify-content: flex-end;">
+              <button type="button" class="btn-detail" (click)="viewLogDetail(log)" title="Inspect raw JSON stack trace">
+                <i class="fa-solid fa-code"></i> JSON
+              </button>
+              <button type="button" style="background: #1877f2; border: 1px solid #166fe5; color: white; padding: 5px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: all 0.2s;" (click)="openMetaReportModal(log)" title="Report issue to Meta Support">
+                <i class="fa-brands fa-meta"></i> Report to Meta
+              </button>
+            </div>
           </td>
         </tr>
 
         <tr *ngIf="logs().length === 0">
-          <td colspan="6" class="empty-state">
+          <td colspan="8" class="empty-state">
             <i class="fa-regular fa-face-smile"></i>
             <p>No system error logs found for the selected filter criteria.</p>
           </td>
@@ -156,6 +175,8 @@
           <div><strong>Log ID:</strong> {{ selectedLogDetail()?.id }}</div>
           <div><strong>Timestamp:</strong> {{ selectedLogDetail()?.createdAt | date:'medium' }}</div>
           <div><strong>Service:</strong> {{ selectedLogDetail()?.service }}</div>
+          <div><strong>Sender Number:</strong> {{ selectedLogDetail()?.senderPhone || '+91 80958 44097' }}</div>
+          <div><strong>Receiving Number:</strong> {{ selectedLogDetail()?.recipientPhone || 'N/A' }}</div>
         </div>
 
         <label class="json-label">Raw Request & Response Meta Payload (JSON):</label>
@@ -163,6 +184,55 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-close-modal" (click)="closeDetailModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Meta Support Escalation Modal -->
+  <div class="modal-overlay" *ngIf="selectedMetaReport()" (click)="closeMetaReportModal()">
+    <div class="modal-card" style="max-width: 680px;" (click)="$event.stopPropagation()">
+      <div class="modal-header" style="background: linear-gradient(135deg, #1877f2, #0056b3); color: white;">
+        <h3 style="color: white; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-brands fa-meta" style="font-size: 20px;"></i> Meta Business Support Incident Reporter
+        </h3>
+        <button type="button" class="btn-close" style="color: white; opacity: 0.8;" (click)="closeMetaReportModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" style="padding: 20px;">
+        <p style="font-size: 13px; color: #475569; margin: 0 0 16px 0;">
+          Generate an official WhatsApp API incident report to file directly with <strong>Meta Direct Business Support</strong>.
+        </p>
+
+        <!-- Incident Metadata Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; font-size: 12.5px; margin-bottom: 16px;">
+          <div><strong style="color: #64748b;">Sender WABA Number:</strong> <span style="font-weight: 700; color: #0284c7;">{{ selectedMetaReport()?.senderPhone || '+91 80958 44097' }}</span></div>
+          <div><strong style="color: #64748b;">Receiving Customer:</strong> <span style="font-weight: 700; color: #9333ea;">{{ selectedMetaReport()?.recipientPhone || 'N/A' }}</span></div>
+          <div><strong style="color: #64748b;">Sent / Attempted Time:</strong> <span style="font-weight: 600; color: #334155;">{{ selectedMetaReport()?.createdAt | date:'medium' }}</span></div>
+          <div><strong style="color: #64748b;">Meta Error Code:</strong> <span style="font-weight: 800; color: #dc2626;">#{{ selectedMetaReport()?.errorCode || '190 / OAuth Expired' }}</span></div>
+        </div>
+
+        <!-- Pre-Formatted Ticket Text Area -->
+        <label style="display: block; font-weight: 700; font-size: 12.5px; color: #1e293b; margin-bottom: 6px;">
+          Formatted Escalation Ticket Text (Ready for Meta Support):
+        </label>
+        <textarea 
+          readonly 
+          rows="9" 
+          style="width: 100%; font-family: monospace; font-size: 11.5px; padding: 12px; border: 1px solid #cbd5e1; border-radius: 6px; background: #0f172a; color: #38bdf8; outline: none; resize: vertical;"
+          [value]="generateMetaTicketText(selectedMetaReport())"
+        ></textarea>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc;">
+        <button type="button" class="btn btn-close-modal" (click)="closeMetaReportModal()">Close</button>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" (click)="copyMetaTicketText(selectedMetaReport())" style="background: #e0e7ff; border: 1px solid #c7d2fe; color: #4338ca; padding: 8px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-regular fa-copy"></i> Copy Ticket Text
+          </button>
+          <button type="button" (click)="openMetaSupportPortal()" style="background: #1877f2; border: 1px solid #166fe5; color: white; padding: 8px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Meta Direct Support Portal
+          </button>
+        </div>
       </div>
     </div>
   </div>

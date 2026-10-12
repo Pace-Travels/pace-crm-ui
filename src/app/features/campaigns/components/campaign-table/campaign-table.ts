@@ -28,8 +28,8 @@ export class CampaignTable implements OnInit {
   selectedCampaign = signal<Campaign | null>(null);
   recipientResponses = signal<any[]>([]);
   isLoadingResponses = signal<boolean>(false);
-  campaignStats = signal<{ total: number; sent: number; delivered: number; read: number; failed: number }>({
-    total: 0, sent: 0, delivered: 0, read: 0, failed: 0
+  campaignStats = signal<{ total: number; sent: number; pending: number; delivered: number; read: number; failed: number }>({
+    total: 0, sent: 0, pending: 0, delivered: 0, read: 0, failed: 0
   });
 
   ngOnInit() {
@@ -90,9 +90,10 @@ export class CampaignTable implements OnInit {
           this.campaignStats.set({
             total: list.length,
             sent: list.filter((r: any) => r.status === 'SENT' || r.status === 'DELIVERED' || r.status === 'READ').length,
+            pending: list.filter((r: any) => r.status === 'QUEUED' || r.status === 'PENDING' || r.status === 'SCHEDULED' || r.status === 'PROCESSING').length,
             delivered: list.filter((r: any) => r.status === 'DELIVERED' || r.status === 'READ').length,
             read: list.filter((r: any) => r.status === 'READ').length,
-            failed: list.filter((r: any) => r.status === 'FAILED').length
+            failed: list.filter((r: any) => r.status === 'FAILED' || r.status === 'BOUNCED' || r.status === 'ERROR').length
           });
         }
         this.isLoadingResponses.set(false);

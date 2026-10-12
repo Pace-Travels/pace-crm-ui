@@ -20,16 +20,17 @@
                 <th>TYPE</th>
                 <th>CREATED AT</th>
                 <th>STATUS</th>
+                <th>DELIVERY STATE (SENT / PENDING / BOUNCED)</th>
                 <th>TARGET AUDIENCE</th>
                 <th style="text-align: right; padding-right: 24px;">ACTION</th>
             </tr>
         </thead>
         <tbody>
             @if (campaignService.isLoading()) {
-                <tr><td colspan="6" class="text-center" style="padding: 30px; color: #64748b;">Loading active campaigns...</td></tr>
+                <tr><td colspan="7" class="text-center" style="padding: 30px; color: #64748b;">Loading active campaigns...</td></tr>
             } @else if (filteredCampaigns.length === 0) {
                 <tr>
-                    <td colspan="6" class="empty-state-cell" style="padding: 40px; text-align: center;">
+                    <td colspan="7" class="empty-state-cell" style="padding: 40px; text-align: center;">
                         <p style="font-weight: 700; color: #1e293b; margin: 0 0 4px 0;">No campaigns found</p>
                         <p class="subtext" style="color: #64748b; font-size: 13px; margin: 0;">Create a new broadcast campaign to launch marketing dispatches.</p>
                     </td>
@@ -43,11 +44,24 @@
                                 {{ campaign.type }}
                             </span>
                         </td>
-                        <td style="font-size: 13px; color: #475569;">{{ campaign.createdAt }}</td>
+                        <td style="font-size: 13px; color: #475569; white-space: nowrap;">{{ campaign.createdAt }}</td>
                         <td>
-                            <span [style.background]="campaign.status === 'RUNNING' || campaign.status === 'Completed' ? '#dcfce7' : '#fef3c7'" [style.color]="campaign.status === 'RUNNING' || campaign.status === 'Completed' ? '#15803d' : '#b45309'" style="padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;">
+                            <span [style.background]="campaign.status === 'RUNNING' || campaign.status === 'Completed' || campaign.status === 'COMPLETED' ? '#dcfce7' : '#fef3c7'" [style.color]="campaign.status === 'RUNNING' || campaign.status === 'Completed' || campaign.status === 'COMPLETED' ? '#15803d' : '#b45309'" style="padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;">
                                 {{ campaign.status }}
                             </span>
+                        </td>
+                        <td>
+                            <div style="display: inline-flex; align-items: center; gap: 6px; flex-wrap: nowrap;">
+                                <span style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Delivered / Sent messages">
+                                    <i class="fa-solid fa-circle-check" style="font-size: 10px;"></i> {{ campaign.sentCount || 0 }} Sent
+                                </span>
+                                <span style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Pending / Queued messages">
+                                    <i class="fa-solid fa-clock" style="font-size: 10px;"></i> {{ campaign.pendingCount || 0 }} Pending
+                                </span>
+                                <span style="background: #fecaca; color: #dc2626; border: 1px solid #fca5a5; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Failed / Bounced messages">
+                                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 10px;"></i> {{ campaign.failedCount || 0 }} Bounced
+                                </span>
+                            </div>
                         </td>
                         <td style="font-size: 13px; color: #334155;">{{ campaign.audience }}</td>
                         <td style="text-align: right; padding-right: 24px;" (click)="$event.stopPropagation()">
@@ -99,20 +113,20 @@
                 <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">Total Targeted</span>
                 <span style="display: block; font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 4px;">{{ campaignStats().total }}</span>
             </div>
-            <div style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 14px; border-radius: 10px; text-align: center;">
-                <span style="font-size: 11px; font-weight: 800; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.04em;">Sent</span>
-                <span style="display: block; font-size: 22px; font-weight: 800; color: #1e40af; margin-top: 4px;">{{ campaignStats().sent }}</span>
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; text-align: center;">
+                <span style="font-size: 11px; font-weight: 800; color: #15803d; text-transform: uppercase; letter-spacing: 0.04em;"><i class="fa-solid fa-circle-check" style="margin-right: 4px;"></i> Sent / Delivered</span>
+                <span style="display: block; font-size: 22px; font-weight: 800; color: #15803d; margin-top: 4px;">{{ campaignStats().sent }}</span>
             </div>
-            <div style="background: #f5f3ff; border: 1px solid #ddd6fe; padding: 14px; border-radius: 10px; text-align: center;">
-                <span style="font-size: 11px; font-weight: 800; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.04em;">Delivered</span>
-                <span style="display: block; font-size: 22px; font-weight: 800; color: #6d28d9; margin-top: 4px;">{{ campaignStats().delivered }}</span>
+            <div style="background: #fef3c7; border: 1px solid #fde68a; padding: 14px; border-radius: 10px; text-align: center;">
+                <span style="font-size: 11px; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.04em;"><i class="fa-solid fa-clock" style="margin-right: 4px;"></i> Pending</span>
+                <span style="display: block; font-size: 22px; font-weight: 800; color: #b45309; margin-top: 4px;">{{ campaignStats().pending }}</span>
             </div>
-            <div style="background: #f0fdf4; border: 1px solid #86efac; padding: 14px; border-radius: 10px; text-align: center;">
-                <span style="font-size: 11px; font-weight: 800; color: #15803d; text-transform: uppercase; letter-spacing: 0.04em;"><i class="fa-solid fa-check-double" style="color: #16a34a; margin-right: 4px;"></i> Read Receipts</span>
-                <span style="display: block; font-size: 22px; font-weight: 800; color: #16a34a; margin-top: 4px;">{{ campaignStats().read }}</span>
+            <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 14px; border-radius: 10px; text-align: center;">
+                <span style="font-size: 11px; font-weight: 800; color: #047857; text-transform: uppercase; letter-spacing: 0.04em;"><i class="fa-solid fa-check-double" style="margin-right: 4px;"></i> Read Receipts</span>
+                <span style="display: block; font-size: 22px; font-weight: 800; color: #047857; margin-top: 4px;">{{ campaignStats().read }}</span>
             </div>
             <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 14px; border-radius: 10px; text-align: center;">
-                <span style="font-size: 11px; font-weight: 800; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.04em;">Failed / Bounced</span>
+                <span style="font-size: 11px; font-weight: 800; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.04em;"><i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px;"></i> Failed / Bounced</span>
                 <span style="display: block; font-size: 22px; font-weight: 800; color: #dc2626; margin-top: 4px;">{{ campaignStats().failed }}</span>
             </div>
         </div>
