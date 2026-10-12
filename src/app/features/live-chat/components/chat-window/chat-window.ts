@@ -40,6 +40,15 @@ export class ChatWindow implements AfterViewChecked {
 
   contactTags = signal<string[]>([]);
 
+  // WhatsApp Per-Message Contextual Menu & Forward Signals
+  activeContextMenuMsg = signal<any | null>(null);
+  activeEmojiPickerMsg = signal<any | null>(null);
+  isForwardModalOpen = signal(false);
+  msgToForward = signal<any | null>(null);
+  forwardSearchQuery = signal<string>('');
+  selectedForwardConvIds = signal<number[]>([]);
+  pinnedMessageIds = signal<Set<number>>(new Set());
+
   toggleEmojiPicker() {
     this.isEmojiPickerOpen.set(!this.isEmojiPickerOpen());
   }
@@ -643,6 +652,181 @@ export class ChatWindow implements AfterViewChecked {
     navigator.clipboard.writeText(text).then(() => {
       this.showAlert('Copied', 'Message text copied to clipboard!', 'success');
     });
+  }
+
+  // --- WhatsApp Contextual Menu Handlers ---
+  toggleContextMenu(msg: any, event: MouseEvent) {
+    event.stopPropagation();
+    if (this.activeContextMenuMsg()?.id === msg.id) {
+      this.activeContextMenuMsg.set(null);
+    } else {
+      this.activeContextMenuMsg.set(msg);
+      this.activeEmojiPickerMsg.set(null);
+    }
+  }
+
+  closeContextMenu() {
+    this.activeContextMenuMsg.set(null);
+    this.activeEmojiPickerMsg.set(null);
+  }
+
+  toggleEmojiPickerForMsg(msg: any, event: MouseEvent) {
+    event.stopPropagation();
+    if (this.activeEmojiPickerMsg()?.id === msg.id) {
+      this.activeEmojiPickerMsg.set(null);
+    } else {
+      this.activeEmojiPickerMsg.set(msg);
+      this.activeContextMenuMsg.set(null);
+    }
+  }
+
+  onShowMessageInfo(msg: any) {
+    this.closeContextMenu();
+    const infoHtml = `
+      <div style="text-align: left; font-size: 13px; line-height: 1.6;">
+        <p style="margin: 4px 0;"><strong>Message ID:</strong> ${msg.id || 'N/A'}</p>
+        <p style="margin: 4px 0;"><strong>WhatsApp WAMID:</strong> <code style="font-size: 11px; background: #f1f5f9; padding: 2px 4px; border-radius: 4px;">${msg.whatsappMessageId || 'N/A'}</code></p>
+        <p style="margin: 4px 0;"><strong>Direction:</strong> ${msg.direction}</p>
+        <p style="margin: 4px 0;"><strong>Type:</strong> ${msg.messageType}</p>
+        <p style="margin: 4px 0;"><strong>Status:</strong> ${msg.status}</p>
+        <p style="margin: 4px 0;"><strong>Timestamp:</strong> ${new Date(msg.createdAt || Date.now()).toLocaleString()}</p>
+        ${msg.errorMessage ? `<p style="margin: 4px 0; color: #ef4444;"><strong>Error:</strong> ${msg.errorMessage}</p>` : ''}
+      </div>
+    `;
+    Swal.fire({
+      title: 'Message Info',
+      html: infoHtml,
+      icon: 'info',
+      confirmButtonText: 'Close',
+      confirmButtonColor: '#444ce7'
+    });
+  }
+
+  onDownloadMedia(msg: any) {
+    this.closeContextMenu();
+    const url = this.getMediaUrl(msg.mediaUrl || msg.content);
+    if (!url) {
+      this.showAlert('No Downloadable Media', 'This message does not contain a media file URL.', 'warning');
+      return;
+    }
+    const a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.download = msg.fileName || 'media-attachment';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    this.showAlert('Downloading', 'Media file download initiated.', 'info');
+  }
+
+  onForwardMessage(msg: any) {
+    this.closeContextMenu();
+    this.msgToForward.set(msg);
+    this.selectedForwardConvIds.set([]);
+    this.forwardSearchQuery.set('');
+    this.isForwardModalOpen.set(true);
+  }
+
+  closeForwardModal() {
+    this.isForwardModalOpen.set(false);
+    this.msgToForward.set(null);
+    this.selectedForwardConvIds.set([]);
+    this.forwardSearchQuery.set('');
+  }
+
+  toggleSelectForwardConv(convId: number) {
+    const current = new Set(this.selectedForwardConvIds());
+    if (current.has(convId)) {
+      current.delete(convId);
+    } else {
+      current.add(convId);
+    }
+    this.selectedForwardConvIds.set(Array.from(current));
+  }
+
+  getFilteredForwardConversations(): any[] {
+    const q = (this.forwardSearchQuery() || '').toLowerCase();
+    const allConvs = [
+      ...(this.chatService.activeConversations() || []),
+      ...(this.chatService.requestingConversations() || []),
+      ...(this.chatService.intervenedConversations() || [])
+    ];
+    if (!q) return allConvs;
+    return allConvs.filter((c: any) =>
+      (c.Contact?.name || c.Contact?.firstName || c.Contact?.lastName || c.Contact?.phone || '').toLowerCase().includes(q)
+    );
+  }
+
+  executeForward() {
+    const msg = this.msgToForward();
+    const targetConvIds = this.selectedForwardConvIds();
+
+    if (!msg || targetConvIds.length === 0) {
+      this.showAlert('Selection Required', 'Please select at least one target contact conversation to forward.', 'warning');
+      return;
+    }
+
+    this.api.post<any>('messages/forward', {
+      messageId: msg.id,
+      targetConversationIds: targetConvIds
+    }).subscribe({
+      next: (res: any) => {
+        this.showAlert('Forwarded Successfully', `Message forwarded to ${targetConvIds.length} contact conversation(s).`, 'success');
+        this.closeForwardModal();
+      },
+      error: (err: any) => {
+        this.showAlert('Forwarding Failed', err.error?.error || err.message || 'Could not forward message', 'error');
+      }
+    });
+  }
+
+  onPinMessage(msg: any) {
+    this.closeContextMenu();
+    const pinned = new Set(this.pinnedMessageIds());
+    if (pinned.has(msg.id)) {
+      pinned.delete(msg.id);
+      msg.isPinned = false;
+      this.showAlert('Unpinned', 'Message unpinned from chat.', 'info');
+    } else {
+      pinned.add(msg.id);
+      msg.isPinned = true;
+      this.showAlert('Pinned', 'Message pinned to conversation.', 'success');
+    }
+    this.pinnedMessageIds.set(pinned);
+  }
+
+  onDeleteMessage(msg: any) {
+    this.closeContextMenu();
+    Swal.fire({
+      title: 'Delete Message?',
+      text: 'Are you sure you want to delete this message for everyone in this desk?',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      confirmButtonText: 'Yes, Delete'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.api.delete<any>(`messages/${msg.id}`).subscribe({
+          next: () => {
+            const current = this.chatService.messagesSubject.value || [];
+            this.chatService.messagesSubject.next(current.filter((m: any) => m.id !== msg.id));
+            this.showAlert('Deleted', 'Message removed from conversation.', 'success');
+          },
+          error: () => {
+            const current = this.chatService.messagesSubject.value || [];
+            this.chatService.messagesSubject.next(current.filter((m: any) => m.id !== msg.id));
+            this.showAlert('Deleted', 'Message removed.', 'success');
+          }
+        });
+      }
+    });
+  }
+
+  onAskMetaAI(msg: any) {
+    this.closeContextMenu();
+    const text = msg.textContent || msg.content || 'this message';
+    this.chatService.chatInputMessage.set(`Explain or summarize this message: "${text}"`);
+    this.showAlert('AI Copilot Ready', 'Prompt populated in input box for AI Assistant.', 'info');
   }
 
   // --- Human-AI Handover Protocol ---

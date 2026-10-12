@@ -125,9 +125,79 @@
                         <div class="message-wrapper" [attr.id]="'msg-' + msg.id" [attr.data-wamid]="msg.whatsappMessageId" style="display: flex; flex-direction: column; width: 100%; position: relative;" [style.align-items]="msg.direction === 'INBOUND' ? 'flex-start' : 'flex-end'">
                             <div class="message-bubble" [class.inbound]="msg.direction === 'INBOUND'" [class.outbound]="msg.direction === 'OUTBOUND'" style="max-width: 70%; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 4px; position: relative;">
                                 
-                                <!-- Starred Indicator Badge -->
+                                <!-- Badges & Forward Tag -->
+                                @if (msg.isPinned) {
+                                    <span style="position: absolute; top: 4px; left: 6px; color: #444ce7; font-size: 10px;" title="Pinned Message"><i class="fa-solid fa-thumbtack"></i></span>
+                                }
                                 @if (msg.isStarred) {
-                                    <span style="position: absolute; top: 4px; right: 6px; color: #eab308; font-size: 11px;" title="Bookmarked Message"><i class="fa-solid fa-star"></i></span>
+                                    <span style="position: absolute; top: 4px; right: 26px; color: #eab308; font-size: 11px;" title="Bookmarked Message"><i class="fa-solid fa-star"></i></span>
+                                }
+
+                                <!-- WhatsApp Dropdown Menu Chevron Trigger -->
+                                <button type="button" class="wa-chevron-trigger" (click)="toggleContextMenu(msg, $event)" title="Message options">
+                                    <i class="fa-solid fa-chevron-down"></i>
+                                </button>
+
+                                <!-- WhatsApp Contextual Dropdown Menu -->
+                                @if (activeContextMenuMsg()?.id === msg.id) {
+                                    <div class="wa-context-menu" (click)="$event.stopPropagation()">
+                                        <div class="wa-menu-item" (click)="onShowMessageInfo(msg)">
+                                            <i class="fa-solid fa-circle-info"></i>
+                                            <span>Message info</span>
+                                        </div>
+                                        <div class="wa-menu-item" (click)="setReplyTo(msg); closeContextMenu()">
+                                            <i class="fa-solid fa-reply"></i>
+                                            <span>Reply</span>
+                                        </div>
+                                        <div class="wa-menu-item" (click)="toggleEmojiPickerForMsg(msg, $event)">
+                                            <i class="fa-regular fa-face-smile"></i>
+                                            <span>React</span>
+                                        </div>
+                                        @if (msg.mediaUrl || msg.content) {
+                                            <div class="wa-menu-item" (click)="onDownloadMedia(msg)">
+                                                <i class="fa-solid fa-download"></i>
+                                                <span>Download</span>
+                                            </div>
+                                        }
+                                        <div class="wa-menu-item" (click)="onForwardMessage(msg)">
+                                            <i class="fa-solid fa-share" style="transform: scaleX(-1);"></i>
+                                            <span>Forward</span>
+                                        </div>
+                                        <div class="wa-menu-item" (click)="onPinMessage(msg)">
+                                            <i class="fa-solid fa-thumbtack"></i>
+                                            <span>{{ msg.isPinned ? 'Unpin' : 'Pin' }}</span>
+                                        </div>
+                                        <div class="wa-menu-item" (click)="onAskMetaAI(msg)">
+                                            <i class="fa-solid fa-wand-magic-sparkles" style="color: #6366f1;"></i>
+                                            <span>Ask Meta AI</span>
+                                        </div>
+                                        <div class="wa-menu-item" (click)="toggleStar(msg); closeContextMenu()">
+                                            <i class="fa-regular fa-star"></i>
+                                            <span>{{ msg.isStarred ? 'Unstar' : 'Star' }}</span>
+                                        </div>
+                                        <div class="wa-menu-item danger" (click)="onDeleteMessage(msg)">
+                                            <i class="fa-solid fa-trash"></i>
+                                            <span>Delete</span>
+                                        </div>
+                                    </div>
+                                }
+
+                                <!-- Floating Quick Emoji Reactions Palette (on hover or react trigger) -->
+                                <div class="wa-floating-reactions-bar" [class.show]="activeEmojiPickerMsg()?.id === msg.id">
+                                    <span (click)="reactToMessage(msg, '👍')">👍</span>
+                                    <span (click)="reactToMessage(msg, '❤️')">❤️</span>
+                                    <span (click)="reactToMessage(msg, '😂')">😂</span>
+                                    <span (click)="reactToMessage(msg, '😮')">😮</span>
+                                    <span (click)="reactToMessage(msg, '😢')">😢</span>
+                                    <span (click)="reactToMessage(msg, '🙏')">🙏</span>
+                                    <span class="plus-btn" (click)="toggleEmojiPickerForMsg(msg, $event)" title="More reactions">+</span>
+                                </div>
+
+                                <!-- Forwarded Indicator Badge -->
+                                @if (msg.isForwarded) {
+                                    <div class="forwarded-indicator" style="font-size: 11px; font-style: italic; color: #64748b; margin-bottom: 4px; display: flex; align-items: center; gap: 4px;">
+                                        <i class="fa-solid fa-share" style="font-size: 10px; transform: scaleX(-1);"></i> Forwarded
+                                    </div>
                                 }
 
                                 <!-- Quoted / Reply-To Message Card Preview -->
@@ -146,23 +216,6 @@
                                         </div>
                                     </div>
                                 }
-
-                                <!-- Message Action Buttons (visible on hover) -->
-                                <div class="hover-message-actions">
-                                    <button type="button" class="action-item" (click)="setReplyTo(msg)" title="Reply"><i class="fa-solid fa-reply"></i></button>
-                                    <button type="button" class="action-item" (click)="toggleStar(msg)" [title]="msg.isStarred ? 'Unstar Message' : 'Star Message'"><i class="fa-solid fa-star" [style.color]="msg.isStarred ? '#eab308' : '#94a3b8'"></i></button>
-                                    <button type="button" class="action-item" (click)="copyText(msg.textContent || msg.content)" title="Copy Text"><i class="fa-solid fa-copy"></i></button>
-
-                                    <!-- Quick Emoji Reactions Popover Bar -->
-                                    <div class="reaction-palette">
-                                        <span (click)="reactToMessage(msg, '👍')">👍</span>
-                                        <span (click)="reactToMessage(msg, '❤️')">❤️</span>
-                                        <span (click)="reactToMessage(msg, '😂')">😂</span>
-                                        <span (click)="reactToMessage(msg, '😮')">😮</span>
-                                        <span (click)="reactToMessage(msg, '😢')">😢</span>
-                                        <span (click)="reactToMessage(msg, '🙏')">🙏</span>
-                                    </div>
-                                </div>
 
                                 <!-- Floating Reaction Emoji Badge -->
                                 @if (msg.reactionEmoji) {
@@ -412,6 +465,62 @@
                     </div>
                 </div>
             }
+        </div>
+    }
+
+    <!-- Forward Message Modal -->
+    @if (isForwardModalOpen()) {
+        <div class="forward-modal-overlay" (click)="closeForwardModal()">
+            <div class="forward-modal-box" (click)="$event.stopPropagation()">
+                <div class="modal-header">
+                    <h4><i class="fa-solid fa-share" style="transform: scaleX(-1); color: #444ce7;"></i> Forward message to...</h4>
+                    <button type="button" class="btn-close" (click)="closeForwardModal()">&times;</button>
+                </div>
+
+                @if (msgToForward()) {
+                    <div class="forward-preview-strip">
+                        <span class="preview-label">Selected Message:</span>
+                        <div class="preview-text">{{ msgToForward()?.textContent || msgToForward()?.content || '[Media Attachment]' }}</div>
+                    </div>
+                }
+
+                <div class="forward-search-bar">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" [ngModel]="forwardSearchQuery()" (ngModelChange)="forwardSearchQuery.set($event)" placeholder="Search contacts by name or phone..." />
+                </div>
+
+                <div class="contacts-selection-list">
+                    @for (conv of getFilteredForwardConversations(); track conv.id) {
+                        <div class="contact-card-item" [class.selected]="selectedForwardConvIds().includes(conv.id)" (click)="toggleSelectForwardConv(conv.id)">
+                            <div class="avatar">
+                                {{ (conv.Contact?.name || conv.Contact?.firstName || 'C').charAt(0).toUpperCase() }}
+                            </div>
+                            <div class="info">
+                                <div class="name">{{ conv.Contact?.name || (conv.Contact?.firstName + ' ' + (conv.Contact?.lastName || '')) || 'Customer' }}</div>
+                                <div class="phone">{{ conv.Contact?.phone || 'No Phone' }}</div>
+                            </div>
+                            <div class="checkbox-wrapper">
+                                <input type="checkbox" [checked]="selectedForwardConvIds().includes(conv.id)" (click)="$event.stopPropagation(); toggleSelectForwardConv(conv.id)" />
+                            </div>
+                        </div>
+                    } @empty {
+                        <div class="empty-forward-state">
+                            <i class="fa-solid fa-user-slash"></i>
+                            <p>No contact conversations found.</p>
+                        </div>
+                    }
+                </div>
+
+                <div class="modal-footer">
+                    <span class="selection-count">{{ selectedForwardConvIds().length }} contact(s) selected</span>
+                    <div class="actions">
+                        <button type="button" class="btn-cancel" (click)="closeForwardModal()">Cancel</button>
+                        <button type="button" class="btn-forward-submit" [disabled]="selectedForwardConvIds().length === 0" (click)="executeForward()">
+                            Forward Message <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     }
 

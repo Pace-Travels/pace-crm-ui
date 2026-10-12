@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProjectService } from '../services/project.service';
@@ -34,8 +34,92 @@ export class ProjectsView implements OnInit {
   selectedProjectIdForPhone = signal<number | null>(null);
   addPhoneForm: FormGroup;
 
+  // Search & Filter State
+  searchQuery = signal<string>('');
+  filterMode = signal<'ALL' | 'LIVE' | 'DEV'>('ALL');
+
   private router = inject(Router);
   private api = inject(ApiService);
+
+  onSearchInput(event: Event) {
+    const val = (event.target as HTMLInputElement).value;
+    this.searchQuery.set(val);
+
+    if (val.trim()) {
+      const query = val.toLowerCase().trim();
+      const cleanDigits = query.replace(/\D/g, '');
+      const expanded = new Set<number>();
+
+      this.projectService.projects().forEach((p: any) => {
+        const pName = (p.name || '').toLowerCase();
+        const pWaba = String(p.wabaId || '').toLowerCase();
+        const pPhoneId = String(p.phoneNumberId || '').toLowerCase();
+        const pPhone = String(p.phoneNumber || '').toLowerCase();
+        const pTestPhoneId = String(p.testPhoneNumberId || '').toLowerCase();
+        const pTestPhone = String(p.testPhoneNumber || '').toLowerCase();
+
+        const pPhoneDigits = pPhone.replace(/\D/g, '');
+        const pTestPhoneDigits = pTestPhone.replace(/\D/g, '');
+
+        const hasMatch = pName.includes(query) ||
+          pWaba.includes(query) ||
+          pPhoneId.includes(query) ||
+          pPhone.includes(query) ||
+          pTestPhoneId.includes(query) ||
+          pTestPhone.includes(query) ||
+          (cleanDigits.length >= 3 && (pPhoneDigits.includes(cleanDigits) || pTestPhoneDigits.includes(cleanDigits)));
+
+        if (hasMatch) {
+          expanded.add(p.id);
+        }
+      });
+
+      this.expandedProjectIds.set(expanded);
+    }
+  }
+
+  clearSearch() {
+    this.searchQuery.set('');
+  }
+
+  filteredProjects = computed(() => {
+    const query = this.searchQuery().toLowerCase().trim();
+    const cleanDigits = query.replace(/\D/g, '');
+    const mode = this.filterMode();
+
+    return this.projectService.projects().filter((p: any) => {
+      if (mode === 'LIVE' && !p.phoneNumber) return false;
+      if (mode === 'DEV' && !p.testPhoneNumber && !p.testPhoneNumberId) return false;
+
+      if (!query) return true;
+
+      const pName = (p.name || '').toLowerCase();
+      const pWaba = String(p.wabaId || '').toLowerCase();
+      const pPhoneId = String(p.phoneNumberId || '').toLowerCase();
+      const pPhone = String(p.phoneNumber || '').toLowerCase();
+      const pTestPhoneId = String(p.testPhoneNumberId || '').toLowerCase();
+      const pTestPhone = String(p.testPhoneNumber || '').toLowerCase();
+
+      const pPhoneDigits = pPhone.replace(/\D/g, '');
+      const pTestPhoneDigits = pTestPhone.replace(/\D/g, '');
+
+      const customMatches = (p.whatsappNumbers || []).some((w: any) => {
+        const num = String(w.phoneNumber || '').toLowerCase();
+        const numId = String(w.phoneNumberId || '').toLowerCase();
+        const numDigits = num.replace(/\D/g, '');
+        return num.includes(query) || numId.includes(query) || (cleanDigits.length >= 3 && numDigits.includes(cleanDigits));
+      });
+
+      return pName.includes(query) ||
+        pWaba.includes(query) ||
+        pPhoneId.includes(query) ||
+        pPhone.includes(query) ||
+        pTestPhoneId.includes(query) ||
+        pTestPhone.includes(query) ||
+        (cleanDigits.length >= 3 && (pPhoneDigits.includes(cleanDigits) || pTestPhoneDigits.includes(cleanDigits))) ||
+        customMatches;
+    });
+  });
 
   toggleCreateForm() {
     this.showCreateForm.set(!this.showCreateForm());

@@ -25,27 +25,20 @@
             <span class="upgrade-tag">Upgrade</span>
         </div>
 
-        <!-- Active Context Phone Number Badge Pill (Always visible in Topbar beside Plan) -->
-        <div class="active-phone-badge desktop-only" (click)="toggleMetaStatusModal()" title="Active Context WhatsApp Line (Click to switch mode or manage)">
-            <span class="phone-status-dot" [class.connected]="onboardingService.state().connectMeta"></span>
-            <i class="fa-brands fa-whatsapp phone-icon"></i>
-            <div class="phone-details">
-                <span class="phone-label">Active Line:</span>
-                <strong class="phone-number">{{ displayActivePhoneNumber() }}</strong>
+        <!-- Active Context WhatsApp Line Badge & Hub Popover -->
+        <div class="active-phone-container desktop-only" style="position: relative;">
+            <div class="active-phone-badge" (click)="toggleMetaStatusModal()" [class.active]="showMetaStatusModal()" title="Active Context WhatsApp Line (Click to switch mode or manage)">
+                <span class="phone-status-dot" [class.connected]="onboardingService.state().connectMeta"></span>
+                <i class="fa-brands fa-whatsapp phone-icon"></i>
+                <div class="phone-details">
+                    <span class="phone-label">Active Line:</span>
+                    <strong class="phone-number">{{ displayActivePhoneNumber() }}</strong>
+                </div>
+                <span class="mode-tag" [class.live]="envModeService.currentMode() === 'PRODUCTION'">
+                    {{ envModeService.currentMode() === 'DEVELOPMENT' ? 'DEV' : 'LIVE' }}
+                </span>
+                <i class="fa-solid fa-angle-down arrow-icon" style="font-size: 11px; color: #166534; margin-left: 2px;"></i>
             </div>
-            <span class="mode-tag" [class.live]="envModeService.currentMode() === 'PRODUCTION'">
-                {{ envModeService.currentMode() === 'DEVELOPMENT' ? 'DEV' : 'LIVE' }}
-            </span>
-        </div>
-
-        <!-- Consolidated Meta WhatsApp & Dev Environment Hub -->
-        <div class="meta-hub-container desktop-only" style="position: relative;">
-            <button class="meta-hub-pill" (click)="toggleMetaStatusModal()" [class.active]="showMetaStatusModal()">
-                <span class="status-dot" [class.connected]="onboardingService.state().connectMeta"></span>
-                <i class="fa-brands fa-whatsapp mode-icon"></i>
-                <span class="mode-text">{{ envModeService.currentMode() === 'DEVELOPMENT' ? 'Dev Mode' : 'Live Mode' }}</span>
-                <i class="fa-solid fa-angle-down arrow-icon"></i>
-            </button>
 
             <!-- Meta Hub Dropdown Popover -->
             <div *ngIf="showMetaStatusModal()" class="header-popover meta-popover">
