@@ -81,11 +81,15 @@ export class ChatWindow implements AfterViewChecked {
     });
   }
 
+  private shouldAutoScroll = true;
+
   ngAfterViewChecked() {
     this.scrollToBottom();
   }
 
-  private scrollToBottom() {
+  private scrollToBottom(force = false) {
+    if (this.isSearchOpen() && !force) return;
+    if (!this.shouldAutoScroll && !force) return;
     try {
       if (this.messagesArea) {
         this.messagesArea.nativeElement.scrollTop = this.messagesArea.nativeElement.scrollHeight;
@@ -122,22 +126,37 @@ export class ChatWindow implements AfterViewChecked {
 
   scrollToMessage(targetId: number | string | undefined) {
     if (!targetId) return;
+    this.shouldAutoScroll = false;
     const targetStr = String(targetId);
-    
-    // Find element by msg-{id} or wamid-{whatsappMessageId}
-    const elem = document.getElementById(`msg-${targetStr}`) || document.getElementById(`wamid-${targetStr}`);
-    if (elem) {
-      elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      
-      // Trigger CSS pulse highlight animation
-      elem.classList.remove('highlight-pulse');
-      void elem.offsetWidth; // Force DOM reflow
-      elem.classList.add('highlight-pulse');
-      
-      setTimeout(() => {
+
+    setTimeout(() => {
+      let elem: HTMLElement | null = document.getElementById(`msg-${targetStr}`);
+      if (!elem) {
+        elem = document.getElementById(`wamid-${targetStr}`);
+      }
+      if (!elem) {
+        elem = document.getElementById(targetStr);
+      }
+      if (!elem) {
+        elem = document.querySelector(`[data-wamid="${targetStr}"]`);
+      }
+      if (!elem && this.messagesArea) {
+        elem = this.messagesArea.nativeElement.querySelector(`[id$="${targetStr}"]`);
+      }
+
+      if (elem) {
+        elem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Trigger CSS pulse highlight animation
         elem.classList.remove('highlight-pulse');
-      }, 1800);
-    }
+        void elem.offsetWidth; // Force DOM reflow
+        elem.classList.add('highlight-pulse');
+
+        setTimeout(() => {
+          elem?.classList.remove('highlight-pulse');
+        }, 2200);
+      }
+    }, 60);
   }
 
   sendMessage() {
@@ -654,25 +673,40 @@ export class ChatWindow implements AfterViewChecked {
 
   // --- In-Chat Search ---
   toggleSearch() {
-    this.isSearchOpen.set(!this.isSearchOpen());
-    if (!this.isSearchOpen()) {
+    const nextState = !this.isSearchOpen();
+    this.isSearchOpen.set(nextState);
+    if (!nextState) {
       this.searchQuery.set('');
       this.searchResults.set([]);
+      this.shouldAutoScroll = true;
+      this.scrollToBottom(true);
+    } else {
+      this.shouldAutoScroll = false;
     }
+  }
+
+  onSearchQueryChange(newQuery: string) {
+    this.searchQuery.set(newQuery);
+    this.performSearch();
   }
 
   performSearch() {
     const q = this.searchQuery().trim().toLowerCase();
     if (!q) {
       this.searchResults.set([]);
+      this.shouldAutoScroll = true;
       return;
     }
+    this.shouldAutoScroll = false;
     const msgs = this.chatService.messagesSubject.value || [];
-    const matches = msgs.filter((m: any) => (m.textContent || m.content || '').toLowerCase().includes(q));
+    const matches = msgs.filter((m: any) =>
+      (m.textContent || m.content || m.mediaUrl || m.fileName || '').toLowerCase().includes(q)
+    );
     this.searchResults.set(matches);
     this.currentSearchIndex.set(0);
     if (matches.length > 0) {
-      this.scrollToMessage(matches[0].id);
+      const match = matches[0];
+      this.scrollToMessage(match.id || match.whatsappMessageId);
     }
   }
 
@@ -680,6 +714,7 @@ export class ChatWindow implements AfterViewChecked {
     const results = this.searchResults();
     if (results.length === 0) return;
 
+    this.shouldAutoScroll = false;
     let idx = this.currentSearchIndex();
     if (dir === 'next') {
       idx = (idx + 1) % results.length;
@@ -687,7 +722,10 @@ export class ChatWindow implements AfterViewChecked {
       idx = (idx - 1 + results.length) % results.length;
     }
     this.currentSearchIndex.set(idx);
-    this.scrollToMessage(results[idx].id);
+    const match = results[idx];
+    if (match) {
+      this.scrollToMessage(match.id || match.whatsappMessageId);
+    }
   }
 
   // --- In-Browser Voice Note Recording ---

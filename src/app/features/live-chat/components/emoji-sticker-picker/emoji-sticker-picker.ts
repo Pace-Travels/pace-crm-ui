@@ -33,14 +33,32 @@ export class EmojiStickerPicker {
   activeEmojiCategory = signal<string>('smileys');
   searchQuery = signal<string>('');
 
-  // Sample GIFs list
+  // Curated 24+ working Giphy direct CDN GIF list
   sampleGifs = [
-    { id: '1', title: 'Thumbs Up', url: 'https://media.giphy.com/media/3o7abKhOpu0NwenH3O/giphy.gif' },
-    { id: '2', title: 'Celebration', url: 'https://media.giphy.com/media/lszAB3TzFtYXm/giphy.gif' },
-    { id: '3', title: 'Thank You', url: 'https://media.giphy.com/media/3o6fdNfF649B2l4NJS/giphy.gif' },
-    { id: '4', title: 'Welcome', url: 'https://media.giphy.com/media/l0MYC0LajbaPoEADu/giphy.gif' },
-    { id: '5', title: 'Deal Closed', url: 'https://media.giphy.com/media/xT0xezQGU5xCDJuCPe/giphy.gif' },
-    { id: '6', title: 'Flight Takeoff', url: 'https://media.giphy.com/media/l0HlHFRbmaZtBRhXG/giphy.gif' }
+    { id: '1', title: 'Thumbs Up', url: 'https://i.giphy.com/3o7abKhOpu0NwenH3O.gif' },
+    { id: '2', title: 'Celebration', url: 'https://i.giphy.com/l2JIdnF6aJnAqzDgY.gif' },
+    { id: '3', title: 'Thank You', url: 'https://i.giphy.com/l3q2u6MXJ28MORy1y.gif' },
+    { id: '4', title: 'Welcome', url: 'https://i.giphy.com/dZA8p3R2uWdG0.gif' },
+    { id: '5', title: 'Deal Closed', url: 'https://i.giphy.com/l0KnN6LqXoZlJ0b4s.gif' },
+    { id: '6', title: 'Flight Takeoff', url: 'https://i.giphy.com/l0HlHFRbmaZtBRhXG.gif' },
+    { id: '7', title: 'Happy Dance', url: 'https://i.giphy.com/111ebonMs92l7W.gif' },
+    { id: '8', title: 'Applause & Clapping', url: 'https://i.giphy.com/26tknCqiYweyuLu2A.gif' },
+    { id: '9', title: 'Big Win Success', url: 'https://i.giphy.com/xT0xezQGU5xCDJuCPe.gif' },
+    { id: '10', title: 'Plane Window View', url: 'https://i.giphy.com/3o6Zt8qDiPE2nq3kay.gif' },
+    { id: '11', title: 'Mind Blown', url: 'https://i.giphy.com/3o7TKsjLu903G5wS2Y.gif' },
+    { id: '12', title: 'High Five', url: 'https://i.giphy.com/3o7qDSOv7X94veU2T6.gif' },
+    { id: '13', title: 'Coffee Time', url: 'https://i.giphy.com/26u4b45b8KxyCitkY.gif' },
+    { id: '14', title: 'Yes Agreed', url: 'https://i.giphy.com/l3vR85PnL61f6xFLG.gif' },
+    { id: '15', title: 'Money Rain', url: 'https://i.giphy.com/3o6gDWzmAzrpi5DQU8.gif' },
+    { id: '16', title: 'Love Heart', url: 'https://i.giphy.com/26fldmqs2tIEtPcmY.gif' },
+    { id: '17', title: 'Good Morning', url: 'https://i.giphy.com/3o7TKMt1VVNkHV2PaE.gif' },
+    { id: '18', title: 'Special Offer Discount', url: 'https://i.giphy.com/l0HlvcRywy1WXmvMG.gif' },
+    { id: '19', title: 'Customer Support', url: 'https://i.giphy.com/3o7bu3XilJ5BOiSGic.gif' },
+    { id: '20', title: 'Let\'s Go Excited', url: 'https://i.giphy.com/3o7TKVfdt7s4qO4fS0.gif' },
+    { id: '21', title: 'Tropical Vacation', url: 'https://i.giphy.com/3oKIPnAiaMCws8nOsE.gif' },
+    { id: '22', title: 'Passport Ready', url: 'https://i.giphy.com/l2JdZOPZ3kLp4b4ze.gif' },
+    { id: '23', title: 'Fireworks Party', url: 'https://i.giphy.com/3o7TKwnM2w4c2Cflte.gif' },
+    { id: '24', title: 'Great Job OK', url: 'https://i.giphy.com/l0HlQXkh1wx1RRTXi.gif' }
   ];
 
   // Built-in Sticker Packs System (Extendable)

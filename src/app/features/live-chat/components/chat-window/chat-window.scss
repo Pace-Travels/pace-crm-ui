@@ -428,3 +428,30 @@
     transition: all 0.3s ease;
 }
 
+// Search Result & Quoted Message Highlight Pulse
+.message-wrapper.highlight-pulse, .message-bubble.highlight-pulse {
+    animation: messagePulse 2.2s ease-in-out;
+}
+
+@keyframes messagePulse {
+    0% {
+        transform: scale(1);
+        background-color: transparent;
+    }
+    20% {
+        transform: scale(1.02);
+        background-color: rgba(254, 240, 138, 0.7);
+        box-shadow: 0 0 14px rgba(234, 179, 8, 0.6);
+        border-radius: 8px;
+    }
+    60% {
+        transform: scale(1.01);
+        background-color: rgba(254, 240, 138, 0.35);
+    }
+    100% {
+        transform: scale(1);
+        background-color: transparent;
+    }
+}
+
+
