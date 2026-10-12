@@ -227,14 +227,39 @@ export class CreateCampaignView implements OnInit {
 
   selectTemplate(tpl: any) {
     this.selectedTemplate.set(tpl);
-    const matches = tpl.templateBody?.match(/\{\{\d+\}\}/g) || [];
+    const matches = tpl?.templateBody?.match(/\{\{\d+\}\}/g) || [];
     const paramsMap: any = {};
     matches.forEach((match: string) => {
       const num = match.replace(/[\{\}]/g, '');
       paramsMap[num] = '';
     });
     this.templateParams.set(paramsMap);
-    this.headerImageUrl.set(''); // Reset image URL when template changes
+
+    // Auto-extract image URL from template if present
+    let imgUrl = tpl?.headerMediaUrl || tpl?.headerUrl || '';
+    if (!imgUrl && tpl?.components && Array.isArray(tpl.components)) {
+      const headComp = tpl.components.find((c: any) => (c.type || '').toUpperCase() === 'HEADER');
+      if (headComp && headComp.example?.header_handle?.[0]) {
+        imgUrl = headComp.example.header_handle[0];
+      } else if (headComp && headComp.example?.header_url?.[0]) {
+        imgUrl = headComp.example.header_url[0];
+      }
+    }
+    this.headerImageUrl.set(imgUrl);
+  }
+
+  getHeaderMediaUrl(): string {
+    if (this.headerImageUrl()) return this.headerImageUrl();
+    const tpl = this.selectedTemplate();
+    if (!tpl) return '';
+    if (tpl.headerMediaUrl) return tpl.headerMediaUrl;
+    if (tpl.headerUrl) return tpl.headerUrl;
+    if (tpl.components && Array.isArray(tpl.components)) {
+      const headComp = tpl.components.find((c: any) => (c.type || '').toUpperCase() === 'HEADER');
+      if (headComp?.example?.header_handle?.[0]) return headComp.example.header_handle[0];
+      if (headComp?.example?.header_url?.[0]) return headComp.example.header_url[0];
+    }
+    return '';
   }
 
   getTemplateParamKeys() {
