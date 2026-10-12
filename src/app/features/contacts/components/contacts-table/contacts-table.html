@@ -370,8 +370,8 @@
 
                         <td style="padding: 14px 16px; min-width: 155px;">
                             <div style="display: flex; align-items: center; gap: 8px;">
-                                <span [style.background]="contact.readinessStatus === 'READY' ? '#dcfce7' : '#fecaca'" 
-                                      [style.color]="contact.readinessStatus === 'READY' ? '#6d28d9' : '#991b1b'"
+                                <span [style.background]="contact.readinessStatus === 'READY' ? '#dcfce7' : (contact.readinessStatus === 'EXISTS' ? '#f3e8ff' : '#fecaca')" 
+                                      [style.color]="contact.readinessStatus === 'READY' ? '#15803d' : (contact.readinessStatus === 'EXISTS' ? '#6b21a8' : '#991b1b')"
                                       style="font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; display: inline-block; vertical-align: middle;">
                                     {{ contact.readinessStatus || 'READY' }}
                                 </span>
