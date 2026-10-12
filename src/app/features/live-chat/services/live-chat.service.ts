@@ -12,6 +12,13 @@ export interface Conversation {
   assignedToType?: string;
   assignedToUserId?: number | null;
   controlOwner?: string;
+  isPinned?: boolean;
+  pinnedAt?: string | null;
+  isArchived?: boolean;
+  isMuted?: boolean;
+  muteUntil?: string | null;
+  isFavourite?: boolean;
+  unreadCount?: number;
   Contact?: {
     id?: number;
     name?: string;
@@ -70,7 +77,9 @@ export class LiveChatService {
 
     this.socket.on('new_message', (data: any) => {
       const active = this.selectedConversation();
-      if (active && (data.conversationId === active.id || Number(data.conversationId) === Number(active.id))) {
+      const isCurrentActive = active && (data.conversationId === active.id || Number(data.conversationId) === Number(active.id));
+
+      if (isCurrentActive) {
         const current = this.messagesSubject.value;
         const existingIndex = current.findIndex((m: any) => m.id === data.id);
         if (existingIndex > -1) {
@@ -81,6 +90,9 @@ export class LiveChatService {
           this.messagesSubject.next([...current, data]);
         }
       }
+
+      // Live update contact list & auto-resort
+      this.handleIncomingMessageContactListUpdate(data, !isCurrentActive);
 
       if (data.direction === 'INBOUND' || data.senderType === 'CONTACT' || data.senderType === 'CUSTOMER') {
         this.triggerIncomingMessageNotification(data);
@@ -105,6 +117,45 @@ export class LiveChatService {
         return m;
       });
       this.messagesSubject.next(current);
+    });
+  }
+
+  private handleIncomingMessageContactListUpdate(data: any, shouldIncrementUnread: boolean) {
+    const updateList = (list: Conversation[]) => {
+      const updated = list.map(conv => {
+        if (conv.id === data.conversationId || Number(conv.id) === Number(data.conversationId)) {
+          return {
+            ...conv,
+            lastActivityAt: data.createdAt || new Date().toISOString(),
+            unreadCount: shouldIncrementUnread ? (conv.unreadCount || 0) + 1 : conv.unreadCount || 0,
+            Messages: [data]
+          };
+        }
+        return conv;
+      });
+      return this.sortConversations(updated);
+    };
+
+    this.activeConversations.update(list => updateList(list));
+    this.requestingConversations.update(list => updateList(list));
+    this.intervenedConversations.update(list => updateList(list));
+  }
+
+  public sortConversations(list: Conversation[]): Conversation[] {
+    return [...list].sort((a, b) => {
+      // 1. Pinned conversations anchored first
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      if (a.isPinned && b.isPinned) {
+        const timeA = a.pinnedAt ? new Date(a.pinnedAt).getTime() : 0;
+        const timeB = b.pinnedAt ? new Date(b.pinnedAt).getTime() : 0;
+        return timeB - timeA;
+      }
+
+      // 2. Unpinned conversations sorted by lastActivityAt DESC
+      const dateA = a.lastActivityAt ? new Date(a.lastActivityAt).getTime() : 0;
+      const dateB = b.lastActivityAt ? new Date(b.lastActivityAt).getTime() : 0;
+      return dateB - dateA;
     });
   }
 
@@ -149,7 +200,6 @@ export class LiveChatService {
     }
   }
 
-
   fetchConversations() {
     this.api.get<any>('conversations/list').subscribe({
       next: (res: any) => {
@@ -167,9 +217,9 @@ export class LiveChatService {
             };
           });
 
-          const active = list.filter((c: any) => !c.status || c.status === 'OPEN' || c.status === 'ACTIVE');
-          const requesting = list.filter((c: any) => c.status === 'PENDING' || c.status === 'REQUESTING');
-          const intervened = list.filter((c: any) => c.status === 'CLOSED' || c.assignedToType === 'HUMAN');
+          const active = this.sortConversations(list.filter((c: any) => (!c.status || c.status === 'OPEN' || c.status === 'ACTIVE') && !c.isArchived));
+          const requesting = this.sortConversations(list.filter((c: any) => (c.status === 'PENDING' || c.status === 'REQUESTING') && !c.isArchived));
+          const intervened = this.sortConversations(list.filter((c: any) => (c.status === 'CLOSED' || c.assignedToType === 'HUMAN') && !c.isArchived));
 
           this.activeConversations.set(active);
           this.requestingConversations.set(requesting);
@@ -181,7 +231,7 @@ export class LiveChatService {
         }
       },
       error: (err) => {
-        console.warn('Fetch conversations error, utilizing local active fallback', err);
+        console.warn('Fetch conversations error', err);
       }
     });
   }
@@ -192,6 +242,11 @@ export class LiveChatService {
       this.socket.emit('leave_conversation', prev.id);
     }
 
+    // Automatically mark as read when selecting conversation
+    if (conv.unreadCount && conv.unreadCount > 0) {
+      this.toggleUnread(conv, 0);
+    }
+
     this.selectedConversation.set(conv);
     this.socket.emit('join_conversation', conv.id);
     
@@ -199,7 +254,6 @@ export class LiveChatService {
     this.api.get<any>(`messages/list?conversationId=${conv.id}`).subscribe({
       next: (res: any) => {
         const all = res.data || [];
-        // Sort chronologically ascending for chat view
         all.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
         this.messagesSubject.next(all);
       },
@@ -223,5 +277,80 @@ export class LiveChatService {
     if (match) {
       this.selectConversation(match);
     }
+  }
+
+  // -------------------------------------------------------------
+  // CONTEXTUAL MENU API METHODS
+  // -------------------------------------------------------------
+
+  togglePin(conv: Conversation, forceState?: boolean) {
+    const targetState = forceState !== undefined ? forceState : !conv.isPinned;
+    this.api.put<any>(`conversations/${conv.id}/pin`, { isPinned: targetState }).subscribe({
+      next: () => {
+        const updateItem = (list: Conversation[]) => {
+          const updated = list.map(c => c.id === conv.id ? { ...c, isPinned: targetState, pinnedAt: targetState ? new Date().toISOString() : null } : c);
+          return this.sortConversations(updated);
+        };
+        this.activeConversations.update(list => updateItem(list));
+        this.requestingConversations.update(list => updateItem(list));
+        this.intervenedConversations.update(list => updateItem(list));
+      }
+    });
+  }
+
+  toggleArchive(conv: Conversation, forceState?: boolean) {
+    const targetState = forceState !== undefined ? forceState : !conv.isArchived;
+    this.api.put<any>(`conversations/${conv.id}/archive`, { isArchived: targetState }).subscribe({
+      next: () => {
+        this.fetchConversations();
+      }
+    });
+  }
+
+  toggleMute(conv: Conversation, forceState?: boolean, muteUntil?: string) {
+    const targetState = forceState !== undefined ? forceState : !conv.isMuted;
+    this.api.put<any>(`conversations/${conv.id}/mute`, { isMuted: targetState, muteUntil }).subscribe({
+      next: () => {
+        const updateItem = (list: Conversation[]) => list.map(c => c.id === conv.id ? { ...c, isMuted: targetState, muteUntil } : c);
+        this.activeConversations.update(list => updateItem(list));
+        this.requestingConversations.update(list => updateItem(list));
+        this.intervenedConversations.update(list => updateItem(list));
+      }
+    });
+  }
+
+  toggleUnread(conv: Conversation, forceCount?: number) {
+    const targetCount = forceCount !== undefined ? forceCount : (conv.unreadCount && conv.unreadCount > 0 ? 0 : 1);
+    this.api.put<any>(`conversations/${conv.id}/unread`, { unreadCount: targetCount }).subscribe({
+      next: () => {
+        const updateItem = (list: Conversation[]) => list.map(c => c.id === conv.id ? { ...c, unreadCount: targetCount } : c);
+        this.activeConversations.update(list => updateItem(list));
+        this.requestingConversations.update(list => updateItem(list));
+        this.intervenedConversations.update(list => updateItem(list));
+      }
+    });
+  }
+
+  toggleFavourite(conv: Conversation, forceState?: boolean) {
+    const targetState = forceState !== undefined ? forceState : !conv.isFavourite;
+    this.api.put<any>(`conversations/${conv.id}/favourite`, { isFavourite: targetState }).subscribe({
+      next: () => {
+        const updateItem = (list: Conversation[]) => list.map(c => c.id === conv.id ? { ...c, isFavourite: targetState } : c);
+        this.activeConversations.update(list => updateItem(list));
+        this.requestingConversations.update(list => updateItem(list));
+        this.intervenedConversations.update(list => updateItem(list));
+      }
+    });
+  }
+
+  clearChat(conv: Conversation) {
+    this.api.delete<any>(`conversations/${conv.id}/clear`).subscribe({
+      next: () => {
+        if (this.selectedConversation()?.id === conv.id) {
+          this.messagesSubject.next([]);
+        }
+        this.fetchConversations();
+      }
+    });
   }
 }

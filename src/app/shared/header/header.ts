@@ -79,7 +79,7 @@ export class Header implements OnInit {
     const raw = this.envModeService.activePhoneNumber() || 
                 this.projectService.currentProject()?.phoneNumber || 
                 this.projectService.currentProject()?.testPhoneNumber || 
-                '919019077383';
+                '917619568383';
     if (!raw) return 'No Phone Connected';
     let digits = String(raw).replace(/\D/g, '');
     if (digits.length === 12 && digits.startsWith('91')) {

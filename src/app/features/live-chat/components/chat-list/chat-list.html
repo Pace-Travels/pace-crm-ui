@@ -27,29 +27,58 @@
         <div *ngFor="let conv of displayedConversations()" 
              class="chat-item" 
              [class.selected]="chatService.selectedConversation()?.id === conv.id"
-             (click)="selectChat(conv)">
+             [class.unread-item]="conv.unreadCount && conv.unreadCount > 0"
+             [class.pinned-item]="conv.isPinned"
+             (click)="selectChat(conv)"
+             (contextmenu)="onContextMenu($event, conv)">
             
-            <div class="avatar">
+            <div class="avatar" [class.unread-avatar]="conv.unreadCount && conv.unreadCount > 0">
                 {{ getAvatarInitial(conv.Contact?.firstName || conv.Contact?.name) }}
             </div>
             
             <div class="chat-info" style="flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center;">
-                <div class="chat-name" style="display: flex; justify-content: space-between; align-items: center; font-weight: 700; color: #0f172a; font-size: 13.5px; margin-bottom: 2px;">
-                    <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px;">
+                <div class="chat-name-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                    <span class="contact-name" [style.font-weight]="(conv.unreadCount && conv.unreadCount > 0) ? '800' : '600'" 
+                          [style.color]="(conv.unreadCount && conv.unreadCount > 0) ? '#0f172a' : '#334155'"
+                          style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; font-size: 13.5px;">
+                        <i *ngIf="conv.isPinned" class="fa-solid fa-thumbtack pin-icon" title="Pinned Chat" style="color: #7c3aed; margin-right: 4px; font-size: 11px;"></i>
+                        <i *ngIf="conv.isMuted" class="fa-solid fa-bell-slash mute-icon" title="Muted" style="color: #94a3b8; margin-right: 4px; font-size: 11px;"></i>
                         {{ conv.Contact?.name || ((conv.Contact?.firstName || 'Contact') + ' ' + (conv.Contact?.lastName || '')) }}
                     </span>
-                    <span *ngIf="conv.lastActivityAt" style="font-size: 10.5px; color: #94a3b8; font-weight: 500;">
-                        {{ conv.lastActivityAt | date:'shortTime' }}
-                    </span>
+
+                    <div class="meta-right" style="display: flex; align-items: center; gap: 6px;">
+                        <span *ngIf="conv.lastActivityAt" 
+                              [class.unread-time]="conv.unreadCount && conv.unreadCount > 0"
+                              style="font-size: 10.5px; font-weight: 500;"
+                              [style.color]="(conv.unreadCount && conv.unreadCount > 0) ? '#16a34a' : '#94a3b8'">
+                            {{ conv.lastActivityAt | date:'shortTime' }}
+                        </span>
+                        
+                        <!-- Dropdown Chevron Button -->
+                        <button class="chevron-menu-btn" (click)="openChevronMenu($event, conv)" title="Chat options">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="chat-phone-preview" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span class="chat-preview" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; color: #64748b; max-width: 180px;">
+                    <span class="chat-preview" 
+                          [style.font-weight]="(conv.unreadCount && conv.unreadCount > 0) ? '700' : '400'"
+                          [style.color]="(conv.unreadCount && conv.unreadCount > 0) ? '#0f172a' : '#64748b'"
+                          style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; max-width: 170px;">
                         {{ formatPreview(conv.Messages?.[0]) }}
                     </span>
-                    <span *ngIf="conv.Contact?.phone" style="font-size: 10px; color: #0284c7; background: #f0f9ff; padding: 1px 6px; border-radius: 8px; font-weight: 600;">
-                        {{ conv.Contact?.phone }}
-                    </span>
+
+                    <div class="badges-row" style="display: flex; align-items: center; gap: 6px;">
+                        <!-- Unread Circle Badge -->
+                        <span *ngIf="conv.unreadCount && conv.unreadCount > 0" class="unread-badge">
+                            {{ conv.unreadCount }}
+                        </span>
+
+                        <span *ngIf="conv.Contact?.phone" class="phone-badge" style="font-size: 10px; color: #0284c7; background: #f0f9ff; padding: 1px 6px; border-radius: 8px; font-weight: 600;">
+                            {{ conv.Contact?.phone }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -59,4 +88,48 @@
             No conversations found in this tab.
         </div>
     </div>
+</div>
+
+<!-- Contextual Floating Dropdown Menu -->
+<div *ngIf="contextMenuConv()" 
+     class="context-menu-popover"
+     [style.top.px]="contextMenuPos().y" 
+     [style.left.px]="contextMenuPos().x"
+     (click)="$event.stopPropagation()">
+    
+    <div class="context-menu-header">
+        {{ contextMenuConv()?.Contact?.name || 'Chat Options' }}
+    </div>
+
+    <button class="context-menu-item" (click)="toggleArchive(contextMenuConv()!)">
+        <i class="fa-solid fa-box-archive"></i>
+        <span>{{ contextMenuConv()?.isArchived ? 'Unarchive chat' : 'Archive chat' }}</span>
+    </button>
+
+    <button class="context-menu-item" (click)="toggleMute(contextMenuConv()!)">
+        <i class="fa-solid" [class.fa-bell-slash]="!contextMenuConv()?.isMuted" [class.fa-bell]="contextMenuConv()?.isMuted"></i>
+        <span>{{ contextMenuConv()?.isMuted ? 'Unmute notifications' : 'Mute notifications' }}</span>
+    </button>
+
+    <button class="context-menu-item" (click)="togglePin(contextMenuConv()!)">
+        <i class="fa-solid fa-thumbtack"></i>
+        <span>{{ contextMenuConv()?.isPinned ? 'Unpin chat' : 'Pin chat' }}</span>
+    </button>
+
+    <button class="context-menu-item" (click)="toggleUnread(contextMenuConv()!)">
+        <i class="fa-solid" [class.fa-envelope-open]="contextMenuConv()?.unreadCount && contextMenuConv()?.unreadCount! > 0" [class.fa-envelope]="!contextMenuConv()?.unreadCount || contextMenuConv()?.unreadCount === 0"></i>
+        <span>{{ (contextMenuConv()?.unreadCount && contextMenuConv()?.unreadCount! > 0) ? 'Mark as read' : 'Mark as unread' }}</span>
+    </button>
+
+    <button class="context-menu-item" (click)="toggleFavourite(contextMenuConv()!)">
+        <i class="fa-solid fa-heart" [style.color]="contextMenuConv()?.isFavourite ? '#ef4444' : 'inherit'"></i>
+        <span>{{ contextMenuConv()?.isFavourite ? 'Remove favourite' : 'Add to favourites' }}</span>
+    </button>
+
+    <div class="menu-divider"></div>
+
+    <button class="context-menu-item danger" (click)="clearChat(contextMenuConv()!)">
+        <i class="fa-solid fa-eraser"></i>
+        <span>Clear chat</span>
+    </button>
 </div>

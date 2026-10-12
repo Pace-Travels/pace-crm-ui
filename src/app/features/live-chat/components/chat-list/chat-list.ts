@@ -1,4 +1,4 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LiveChatService, Conversation } from '../../services/live-chat.service';
@@ -13,6 +13,10 @@ import { LiveChatService, Conversation } from '../../services/live-chat.service'
 export class ChatList {
   activeTab = signal<'ACTIVE' | 'REQUESTING' | 'INTERVENED'>('ACTIVE');
   searchQuery = signal<string>('');
+
+  // Context Menu State
+  contextMenuConv = signal<Conversation | null>(null);
+  contextMenuPos = signal<{ x: number; y: number }>({ x: 0, y: 0 });
 
   constructor(public chatService: LiveChatService) {}
 
@@ -35,7 +39,62 @@ export class ChatList {
   });
 
   selectChat(conv: Conversation) {
+    this.closeContextMenu();
     this.chatService.selectConversation(conv);
+  }
+
+  onContextMenu(event: MouseEvent, conv: Conversation) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.contextMenuConv.set(conv);
+    this.contextMenuPos.set({ x: event.clientX, y: event.clientY });
+  }
+
+  openChevronMenu(event: MouseEvent, conv: Conversation) {
+    event.preventDefault();
+    event.stopPropagation();
+    const target = event.currentTarget as HTMLElement;
+    const rect = target.getBoundingClientRect();
+    this.contextMenuConv.set(conv);
+    this.contextMenuPos.set({ x: rect.left - 140, y: rect.bottom + 4 });
+  }
+
+  @HostListener('document:click')
+  closeContextMenu() {
+    this.contextMenuConv.set(null);
+  }
+
+  // Context Menu Actions
+  togglePin(conv: Conversation) {
+    this.chatService.togglePin(conv);
+    this.closeContextMenu();
+  }
+
+  toggleArchive(conv: Conversation) {
+    this.chatService.toggleArchive(conv);
+    this.closeContextMenu();
+  }
+
+  toggleMute(conv: Conversation) {
+    this.chatService.toggleMute(conv);
+    this.closeContextMenu();
+  }
+
+  toggleUnread(conv: Conversation) {
+    this.chatService.toggleUnread(conv);
+    this.closeContextMenu();
+  }
+
+  toggleFavourite(conv: Conversation) {
+    this.chatService.toggleFavourite(conv);
+    this.closeContextMenu();
+  }
+
+  clearChat(conv: Conversation) {
+    if (confirm(`Are you sure you want to clear all messages for ${conv.Contact?.name || 'this chat'}?`)) {
+      this.chatService.clearChat(conv);
+    }
+    this.closeContextMenu();
   }
 
   getAvatarInitial(name: string | undefined): string {
