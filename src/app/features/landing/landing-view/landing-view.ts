@@ -29,6 +29,15 @@ export class LandingView implements AfterViewInit {
   userInput = signal('');
   isTyping = signal(false);
   isAnnual = signal(false);
+  mobileMenuOpen = signal(false);
+
+  toggleMobileMenu() {
+    this.mobileMenuOpen.update(v => !v);
+  }
+
+  closeMobileMenu() {
+    this.mobileMenuOpen.set(false);
+  }
 
   toggleBilling() {
     this.isAnnual.set(!this.isAnnual());

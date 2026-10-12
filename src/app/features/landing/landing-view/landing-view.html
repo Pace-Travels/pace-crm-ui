@@ -6,14 +6,20 @@
       <img src="quotedesks-logo.png" alt="QuoteDesks Logo" class="brand-logo-img">
       <span class="brand-badge">Messenger</span>
     </a>
-    <div class="navbar-menu">
-      <a routerLink="/" class="nav-link active">Home</a>
-      <a routerLink="/features" class="nav-link">Features</a>
-      <a routerLink="/pricing" class="nav-link">Pricing</a>
-      <a routerLink="/about" class="nav-link">About Us</a>
-      <a routerLink="/blog" class="nav-link">Blog</a>
-      <a routerLink="/contact" class="nav-link">Contact</a>
+
+    <div class="navbar-menu" [class.mobile-open]="mobileMenuOpen()">
+      <a routerLink="/" class="nav-link active" (click)="closeMobileMenu()">Home</a>
+      <a routerLink="/features" class="nav-link" (click)="closeMobileMenu()">Features</a>
+      <a routerLink="/pricing" class="nav-link" (click)="closeMobileMenu()">Pricing</a>
+      <a routerLink="/about" class="nav-link" (click)="closeMobileMenu()">About Us</a>
+      <a routerLink="/blog" class="nav-link" (click)="closeMobileMenu()">Blog</a>
+      <a routerLink="/contact" class="nav-link" (click)="closeMobileMenu()">Contact</a>
+      <div class="mobile-only-actions">
+        <a routerLink="/login" class="btn-login" (click)="closeMobileMenu()">Sign In</a>
+        <a routerLink="/signup" class="btn-signup" (click)="closeMobileMenu()"><i class="fa-solid fa-rocket"></i> Get Started Free</a>
+      </div>
     </div>
+
     <div class="navbar-actions">
       <button type="button" class="btn-theme-toggle" (click)="themeService.toggleTheme()" [title]="'Switch to ' + (themeService.currentTheme() === 'light' ? 'Dark' : 'Light') + ' Mode'" [aria-label]="'Switch to ' + (themeService.currentTheme() === 'light' ? 'Dark' : 'Light') + ' Mode'">
         @if (themeService.currentTheme() === 'light') {
@@ -22,8 +28,12 @@
           <i class="fa-solid fa-sun"></i>
         }
       </button>
-      <a routerLink="/login" class="btn-login">Sign In</a>
-      <a routerLink="/signup" class="btn-signup"><i class="fa-solid fa-rocket"></i> Get Started Free</a>
+      <a routerLink="/login" class="btn-login desktop-only">Sign In</a>
+      <a routerLink="/signup" class="btn-signup desktop-only"><i class="fa-solid fa-rocket"></i> Get Started Free</a>
+      
+      <button type="button" class="btn-hamburger" (click)="toggleMobileMenu()" aria-label="Toggle navigation menu">
+        <i class="fa-solid" [class.fa-bars]="!mobileMenuOpen()" [class.fa-xmark]="mobileMenuOpen()"></i>
+      </button>
     </div>
   </nav>
 
