@@ -55,26 +55,52 @@ export class ProjectsView implements OnInit {
     return this.expandedProjectIds().has(projectId);
   }
 
-  getProjectPhoneDisplay(project: any): { primary: string; count: number; extraCount: number; allNumbers: string[] } {
-    const numbers: string[] = [];
-    if (Array.isArray(project.whatsappNumbers) && project.whatsappNumbers.length > 0) {
-      project.whatsappNumbers.forEach((w: any) => {
-        if (w.phoneNumber && !numbers.includes(w.phoneNumber)) numbers.push(w.phoneNumber);
-      });
+  formatPhoneClean(raw: string | null | undefined): string {
+    if (!raw) return '';
+    let digits = String(raw).replace(/\D/g, '');
+    if (!digits) return '';
+    if (digits.length === 12 && digits.startsWith('91')) {
+      return `+91 ${digits.slice(2, 7)} ${digits.slice(7)}`;
     }
-    if (numbers.length === 0) {
-      if (project.phoneNumber && !numbers.includes(project.phoneNumber)) numbers.push(project.phoneNumber);
-      if (project.testPhoneNumber && !numbers.includes(project.testPhoneNumber)) numbers.push(project.testPhoneNumber);
+    if (digits.length === 10) {
+      return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;
     }
+    return `+${digits}`;
+  }
 
-    const count = numbers.length;
-    const rawPrimary = count > 0 ? numbers[0] : '';
-    const primary = rawPrimary ? (rawPrimary.startsWith('+') ? rawPrimary : '+' + rawPrimary) : 'No Phone Number Attached';
+  getProjectPhoneDisplay(project: any): { 
+    primary: string; 
+    totalLines: number; 
+    liveCount: number; 
+    devCount: number; 
+    summaryLabel: string;
+    uniqueWhatsappNumbers: any[];
+  } {
+    const livePhone = project.phoneNumber ? this.formatPhoneClean(project.phoneNumber) : null;
+    const testPhone = project.testPhoneNumber ? this.formatPhoneClean(project.testPhoneNumber) : null;
+    
+    const liveCount = livePhone ? 1 : 0;
+    const devCount = (testPhone && testPhone !== livePhone) ? 1 : 0;
+
+    const cleanLiveDigits = project.phoneNumber ? String(project.phoneNumber).replace(/\D/g, '') : null;
+    const cleanTestDigits = project.testPhoneNumber ? String(project.testPhoneNumber).replace(/\D/g, '') : null;
+
+    const uniqueWhatsappNumbers = (project.whatsappNumbers || []).filter((w: any) => {
+      const numDigits = w.phoneNumber ? String(w.phoneNumber).replace(/\D/g, '') : '';
+      return numDigits && numDigits !== cleanLiveDigits && numDigits !== cleanTestDigits;
+    });
+
+    const totalLines = liveCount + devCount + uniqueWhatsappNumbers.length;
+    const primary = livePhone || testPhone || 'No Phone Number Attached';
+    const summaryLabel = `${totalLines} Line${totalLines === 1 ? '' : 's'}`;
+
     return {
       primary,
-      count,
-      extraCount: count > 1 ? count - 1 : 0,
-      allNumbers: numbers
+      totalLines,
+      liveCount,
+      devCount,
+      summaryLabel,
+      uniqueWhatsappNumbers
     };
   }
 
