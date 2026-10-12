@@ -175,8 +175,13 @@
                                 </div>
                             </td>
                             <td style="padding: 14px 16px; font-weight: 600;" [style.color]="item.responseReceived ? '#7c3aed' : '#94a3b8'">
-                                {{ item.responseReceived || 'No Response Yet' }}
-                                <div *ngIf="item.respondedAt" style="font-size: 11px; color: #64748b; font-weight: 400;">
+                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                    <span>{{ item.responseReceived || 'No Response Yet' }}</span>
+                                    <button *ngIf="item.responseReceived" (click)="openLiveChatForRecipient(item)" title="Open in Live Chat" style="background: rgba(124, 58, 237, 0.1); color: #7c3aed; border: none; border-radius: 4px; padding: 2px 6px; font-size: 10.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
+                                        <i class="fa-solid fa-up-right-from-square" style="font-size: 9px;"></i> Live Chat
+                                    </button>
+                                </div>
+                                <div *ngIf="item.respondedAt" style="font-size: 11px; color: #64748b; font-weight: 400; margin-top: 2px;">
                                     At {{ item.respondedAt | date:'short' }}
                                 </div>
                             </td>
@@ -186,9 +191,14 @@
                                 </span>
                             </td>
                             <td style="padding: 14px 16px; text-align: right;">
-                                <button (click)="syncResponseToCrm(item)" [disabled]="item.crmSyncStatus === 'SYNCED'" style="background: #10b981; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s ease;" [style.opacity]="item.crmSyncStatus === 'SYNCED' ? 0.6 : 1">
-                                    {{ item.crmSyncStatus === 'SYNCED' ? 'Synced' : 'Sync to CRM' }}
-                                </button>
+                                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+                                    <button (click)="openLiveChatForRecipient(item)" title="Open Live Chat for this contact" style="background: #444ce7; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(68, 76, 231, 0.2); transition: all 0.2s ease;">
+                                        <i class="fa-solid fa-comments"></i> Chat
+                                    </button>
+                                    <button (click)="syncResponseToCrm(item)" [disabled]="item.crmSyncStatus === 'SYNCED'" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s ease;" [style.opacity]="item.crmSyncStatus === 'SYNCED' ? 0.6 : 1">
+                                        {{ item.crmSyncStatus === 'SYNCED' ? 'Synced' : 'Sync to CRM' }}
+                                    </button>
+                                </div>
                             </td>
                         </tr>
                     </ng-container>

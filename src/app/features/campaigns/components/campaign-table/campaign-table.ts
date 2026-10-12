@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { CampaignService, Campaign } from '../../services/campaign.service';
 import { ContactService } from '../../../contacts/services/contact.service';
 import { SocketService } from '../../../../shared/services/socket.service';
@@ -17,6 +18,7 @@ export class CampaignTable implements OnInit {
   campaignService = inject(CampaignService);
   contactService = inject(ContactService);
   socketService = inject(SocketService);
+  router = inject(Router);
   
   activeTab = signal<string>('All');
   searchQuery = signal<string>('');
@@ -106,6 +108,16 @@ export class CampaignTable implements OnInit {
     this.showResponsesModal.set(false);
     this.selectedCampaign.set(null);
     this.recipientResponses.set([]);
+  }
+
+  openLiveChatForRecipient(item: any) {
+    const phone = item.Contact?.phone || item.phone;
+    if (!phone) {
+      Swal.fire('No Phone Number', 'No phone number registered for this contact.', 'warning');
+      return;
+    }
+    this.closeResponsesModal();
+    this.router.navigate(['/live-chat'], { queryParams: { phone: phone } });
   }
 
   syncResponseToCrm(recipient: any) {
