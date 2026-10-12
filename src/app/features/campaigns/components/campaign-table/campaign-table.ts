@@ -32,6 +32,9 @@ export class CampaignTable implements OnInit {
     total: 0, sent: 0, pending: 0, delivered: 0, read: 0, failed: 0
   });
 
+  isResendingMap = signal<{ [key: number]: boolean }>({});
+  isResendingAll = signal<boolean>(false);
+
   ngOnInit() {
     this.campaignService.fetchCampaigns();
     this.contactService.fetchContacts();
@@ -158,6 +161,56 @@ export class CampaignTable implements OnInit {
     unsynced.forEach(recipient => {
       this.syncResponseToCrm(recipient);
       syncedCount++;
+    });
+  }
+
+  resendCampaignToRecipient(recipient: any) {
+    const currentMap = { ...this.isResendingMap(), [recipient.id]: true };
+    this.isResendingMap.set(currentMap);
+
+    this.campaignService.resendRecipient(recipient.id).subscribe({
+      next: (res: any) => {
+        const resetMap = { ...this.isResendingMap(), [recipient.id]: false };
+        this.isResendingMap.set(resetMap);
+
+        recipient.status = 'SENT';
+        
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: res.message || `Resent message to ${recipient.Contact?.name || 'Contact'}`,
+          timer: 3000,
+          showConfirmButton: false
+        });
+
+        if (this.selectedCampaign()) {
+          this.openResponsesModal(this.selectedCampaign()!);
+        }
+      },
+      error: (err: any) => {
+        const resetMap = { ...this.isResendingMap(), [recipient.id]: false };
+        this.isResendingMap.set(resetMap);
+        Swal.fire('Resend Failed', err.error?.message || err.message || 'Failed to resend template message', 'error');
+      }
+    });
+  }
+
+  resendAllFailedOrPending() {
+    const campaign = this.selectedCampaign();
+    if (!campaign) return;
+
+    this.isResendingAll.set(true);
+    this.campaignService.resendFailedRecipients(campaign.id).subscribe({
+      next: (res: any) => {
+        this.isResendingAll.set(false);
+        Swal.fire('Resend Complete', res.message || `Resent campaign to ${res.count || 0} recipients`, 'success');
+        this.openResponsesModal(campaign);
+      },
+      error: (err: any) => {
+        this.isResendingAll.set(false);
+        Swal.fire('Error', 'Failed to resend campaign messages: ' + (err.error?.message || err.message), 'error');
+      }
     });
   }
 

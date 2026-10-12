@@ -99,8 +99,12 @@
                     Campaign: <strong>{{ selectedCampaign()?.campaignName }}</strong> — Real-time WhatsApp delivery logs, read receipts, and user responses.
                 </span>
             </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <button (click)="syncAllResponsesToCrm()" style="background: #7c3aed; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button (click)="resendAllFailedOrPending()" [disabled]="isResendingAll()" style="background: #ea580c; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);" [style.opacity]="isResendingAll() ? 0.6 : 1">
+                    <i class="fa-solid" [class.fa-rotate-right]="!isResendingAll()" [class.fa-spinner]="isResendingAll()" [class.fa-spin]="isResendingAll()"></i>
+                    {{ isResendingAll() ? 'Resending...' : 'Resend Failed / Pending' }}
+                </button>
+                <button (click)="syncAllResponsesToCrm()" style="background: #7c3aed; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);">
                     <i class="fa-solid fa-arrows-rotate"></i> Sync All to CRM
                 </button>
                 <button (click)="closeResponsesModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">✕</button>
@@ -207,6 +211,10 @@
                             </td>
                             <td style="padding: 14px 16px; text-align: right;">
                                 <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
+                                    <button (click)="resendCampaignToRecipient(item)" [disabled]="isResendingMap()[item.id]" title="Resend campaign template message to this contact" style="background: #f97316; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(249, 115, 22, 0.2); transition: all 0.2s ease;" [style.opacity]="isResendingMap()[item.id] ? 0.6 : 1">
+                                        <i class="fa-solid" [class.fa-paper-plane]="!isResendingMap()[item.id]" [class.fa-spinner]="isResendingMap()[item.id]" [class.fa-spin]="isResendingMap()[item.id]"></i>
+                                        {{ isResendingMap()[item.id] ? 'Sending...' : 'Resend' }}
+                                    </button>
                                     <button (click)="openLiveChatForRecipient(item)" title="Open Live Chat for this contact" style="background: #444ce7; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(68, 76, 231, 0.2); transition: all 0.2s ease;">
                                         <i class="fa-solid fa-comments"></i> Chat
                                     </button>

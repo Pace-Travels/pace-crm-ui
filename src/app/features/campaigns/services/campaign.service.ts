@@ -75,4 +75,12 @@ export class CampaignService {
   syncResponseToCrm(payload: { recipientId: number; leadStage?: string; readinessStatus?: string; appendTag?: string; targetField?: string; targetValue?: any }) {
     return this.api.post<any>('campaigns/sync-response', payload);
   }
+
+  resendRecipient(recipientId: number) {
+    return this.api.post<any>(`campaigns/resend-recipient/${recipientId}`, {});
+  }
+
+  resendFailedRecipients(campaignId: number) {
+    return this.api.post<any>(`campaigns/resend-failed/${campaignId}`, {});
+  }
 }
