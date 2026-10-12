@@ -152,41 +152,112 @@
         }
     }
 
-    /* Project Selector */
+    /* Project Selector Button & Trigger */
     .project-selector-wrapper {
         padding: 8px 16px 14px 16px;
         border-bottom: 1px solid var(--sidebar-border, #1E2338);
 
-        .project-label {
-            font-size: 10px;
-            font-weight: 700;
-            color: var(--sidebar-section-title, #94A3B8);
-            text-transform: uppercase;
-            letter-spacing: 0.9px;
+        .project-label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             margin-bottom: 6px;
+
+            .project-label {
+                font-size: 10px;
+                font-weight: 700;
+                color: var(--sidebar-section-title, #94A3B8);
+                text-transform: uppercase;
+                letter-spacing: 0.9px;
+            }
+
+            .shortcut-pill {
+                font-size: 9px;
+                font-weight: 600;
+                color: #818CF8;
+                background: rgba(99, 102, 241, 0.12);
+                border: 1px solid rgba(99, 102, 241, 0.25);
+                padding: 1px 6px;
+                border-radius: 4px;
+                font-family: inherit;
+            }
         }
 
-        .project-select {
+        .project-switcher-btn {
             width: 100%;
             background-color: #1E2338;
             border: 1px solid #2A314C;
             color: #F1F5F9;
-            font-size: 12px;
-            font-weight: 600;
-            border-radius: 8px;
-            padding: 8px 10px;
-            outline: none;
+            border-radius: 9px;
+            padding: 9px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             cursor: pointer;
-            transition: border-color 0.2s ease;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 
-            &:focus {
-                border-color: #6366F1;
-                box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+            .btn-left {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                min-width: 0;
+                flex: 1;
+
+                .active-dot {
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    background-color: #10B981;
+                    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+                    flex-shrink: 0;
+                }
+
+                .brand-text {
+                    display: flex;
+                    flex-direction: column;
+                    min-width: 0;
+
+                    .brand-name {
+                        font-size: 12.5px;
+                        font-weight: 700;
+                        color: #F8FAFC;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        line-height: 1.2;
+                    }
+
+                    .phone-number {
+                        font-size: 11px;
+                        font-weight: 500;
+                        color: #94A3B8;
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        margin-top: 2px;
+                    }
+                }
             }
 
-            option {
-                background-color: #111422;
-                color: #F1F5F9;
+            .switch-icon {
+                font-size: 11px;
+                color: #818CF8;
+                margin-left: 8px;
+                flex-shrink: 0;
+                transition: transform 0.2s ease;
+            }
+
+            &:hover {
+                background-color: #272F4B;
+                border-color: #4F46E5;
+                box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+
+                .switch-icon {
+                    color: #A5B4FC;
+                    transform: translateY(1px);
+                }
             }
         }
     }

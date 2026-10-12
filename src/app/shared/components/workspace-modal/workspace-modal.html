@@ -1,0 +1,92 @@
+<div *ngIf="isOpen()" class="workspace-modal-overlay" (click)="closeModal()">
+    <div class="workspace-modal-card" (click)="$event.stopPropagation()">
+        
+        <!-- Modal Header -->
+        <div class="modal-header">
+            <div class="header-left">
+                <div class="header-icon">
+                    <i class="fa-solid fa-layer-group"></i>
+                </div>
+                <div>
+                    <h3 class="modal-title">Select Active Workspace</h3>
+                    <p class="modal-subtitle">Switch operations between registered brand projects & WhatsApp phone lines</p>
+                </div>
+            </div>
+            <button class="close-btn" (click)="closeModal()" title="Close (Esc)">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="modal-search-bar">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input type="text" 
+                   [ngModel]="searchQuery()" 
+                   (ngModelChange)="searchQuery.set($event)" 
+                   placeholder="Search project name, phone number (+91 76195...), WABA ID, or Phone ID...">
+            <button *ngIf="searchQuery()" class="clear-search-btn" (click)="searchQuery.set('')">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Projects Cards Grid -->
+        <div class="modal-body scrollable">
+            <div class="projects-grid">
+                <div *ngFor="let proj of filteredProjects()" 
+                     class="project-card" 
+                     [class.active-card]="projectService.currentProject()?.id === proj.id"
+                     (click)="selectProject(proj)">
+                    
+                    <div class="card-avatar" [class.active-avatar]="projectService.currentProject()?.id === proj.id">
+                        {{ getAvatarInitial(proj.name) }}
+                    </div>
+
+                    <div class="card-details">
+                        <div class="card-title-row">
+                            <h4 class="project-name">{{ proj.name }}</h4>
+                            <span *ngIf="projectService.currentProject()?.id === proj.id" class="active-badge">
+                                <i class="fa-solid fa-circle-check"></i> Active Workspace
+                            </span>
+                        </div>
+
+                        <div class="card-pills-row">
+                            <span class="phone-pill">
+                                <i class="fa-brands fa-whatsapp text-green"></i>
+                                {{ formatPhone(proj.phoneNumber || proj.testPhoneNumber) }}
+                            </span>
+                            <span *ngIf="proj.wabaId" class="meta-pill">
+                                WABA: {{ proj.wabaId }}
+                            </span>
+                            <span *ngIf="proj.phoneNumberId" class="meta-pill">
+                                ID: {{ proj.phoneNumberId }}
+                            </span>
+                            <span class="mode-pill" [class.dev-mode]="proj.mode === 'DEVELOPMENT'">
+                                {{ proj.mode || 'PRODUCTION' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-arrow">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Empty Search State -->
+            <div *ngIf="filteredProjects().length === 0" class="empty-state">
+                <i class="fa-solid fa-building-circle-exclamation empty-icon"></i>
+                <p>No matching brand projects found.</p>
+                <span class="empty-sub">Try searching with a different brand name or phone number.</span>
+            </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer">
+            <div class="shortcut-hint">
+                <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>W</kbd> <span>to toggle workspace switcher anytime</span>
+            </div>
+            <button class="done-btn" (click)="closeModal()">Done</button>
+        </div>
+
+    </div>
+</div>

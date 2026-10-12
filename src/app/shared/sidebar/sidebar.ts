@@ -7,6 +7,8 @@ import { AuthService } from '../services/auth.service';
 import { SearchService } from '../services/search.service';
 import Swal from 'sweetalert2';
 
+import { WorkspaceModalComponent } from '../components/workspace-modal/workspace-modal';
+
 export interface MenuItem {
   icon: string;
   title: string;
@@ -24,7 +26,7 @@ export interface MenuSection {
 @Component({
   selector: 'app-sidebar',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, WorkspaceModalComponent],
   templateUrl: './sidebar.html',
   styleUrl: './sidebar.scss',
 })
@@ -58,6 +60,21 @@ export class Sidebar implements OnInit {
       return `${p.name} (${num})`;
     }
     return p.name;
+  }
+
+  getActivePhoneSubtext(): string {
+    const p = this.projectService.currentProject();
+    if (!p) return 'No active workspace';
+    const num = p.phoneNumber || p.testPhoneNumber || (p.whatsappNumbers && p.whatsappNumbers[0]?.phoneNumber);
+    if (!num) return 'No phone connected';
+    let digits = String(num).replace(/\D/g, '');
+    if (digits.length === 12 && digits.startsWith('91')) {
+      return `+91 ${digits.slice(2, 7)} ${digits.slice(7)}`;
+    }
+    if (digits.length === 10) {
+      return `+91 ${digits.slice(0, 5)} ${digits.slice(5)}`;
+    }
+    return `+${digits}`;
   }
 
   // Exact 19 original menu items categorized for Quote Desks theme

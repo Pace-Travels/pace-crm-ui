@@ -20,22 +20,28 @@
         </div>
     }
 
-    <!-- Active Brand Project Selector Dropdown -->
+    <!-- Active Brand Project Selector Button -->
     @if (!collapsed()) {
         <div class="project-selector-wrapper">
-            <div class="project-label">Active Workspace</div>
-            <select class="project-select" 
-                    [ngModel]="projectService.currentProject()?.id" 
-                    (ngModelChange)="onProjectSelectChange($event)">
-                @if (projectService.projects().length === 0) {
-                    <option [value]="0">No projects active</option>
-                }
-                @for (p of projectService.projects(); track p.id) {
-                    <option [value]="p.id">{{ getProjectLabel(p) }}</option>
-                }
-            </select>
+            <div class="project-label-row">
+                <span class="project-label">Active Workspace</span>
+                <span class="shortcut-pill">Ctrl+Shift+W</span>
+            </div>
+            <button class="project-switcher-btn" (click)="workspaceModal.openModal()" type="button" title="Switch active workspace (Ctrl + Shift + W)">
+                <div class="btn-left">
+                    <div class="active-dot"></div>
+                    <div class="brand-text">
+                        <span class="brand-name">{{ projectService.currentProject()?.name || 'Select Workspace' }}</span>
+                        <span class="phone-number">{{ getActivePhoneSubtext() }}</span>
+                    </div>
+                </div>
+                <i class="fa-solid fa-chevron-down switch-icon"></i>
+            </button>
         </div>
     }
+
+    <!-- Workspace Modal Switcher Component -->
+    <app-workspace-modal #workspaceModal></app-workspace-modal>
 
     <!-- Categorized Menu Sections -->
     <div class="sidebar-menu">
