@@ -131,9 +131,53 @@ export class ChatProfile implements OnInit {
 
   useSuggestedAction() {
     const suggestion = this.aiSuggestion();
-    if (suggestion) {
-      this.chatService.chatInputMessage.set(suggestion.recommendedAction);
-    }
+    const conv = this.chatService.selectedConversation();
+    if (!suggestion || !conv) return;
+
+    this.api.post<any>('messages/send', {
+      conversationId: conv.id,
+      textContent: suggestion.recommendedAction
+    }).subscribe({
+      next: (res: any) => {
+        const newMsg = res.data || res;
+        if (newMsg && newMsg.id) {
+          const current = this.chatService.messagesSubject.value;
+          const existingIdx = current.findIndex((m: any) => m.id === newMsg.id);
+          if (existingIdx > -1) {
+            const updated = [...current];
+            updated[existingIdx] = { ...updated[existingIdx], ...newMsg };
+            this.chatService.messagesSubject.next(updated);
+          } else {
+            this.chatService.messagesSubject.next([...current, newMsg]);
+          }
+        }
+        if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
+          Swal.fire({
+            title: 'AI Smart Reply Sent!',
+            text: 'Copilot suggested reply delivered to chat.',
+            icon: 'success',
+            toast: true,
+            position: 'top-end',
+            timer: 3000,
+            showConfirmButton: false
+          });
+        }
+      },
+      error: (err: any) => {
+        if (typeof Swal !== 'undefined' && Swal && Swal.fire) {
+          Swal.fire({
+            title: 'Send Error',
+            text: err.error?.error || err.message || 'Failed to dispatch suggested reply',
+            icon: 'error',
+            toast: true,
+            position: 'top-end',
+            timer: 3000,
+            showConfirmButton: false
+          });
+        }
+      }
+    });
   }
+
 }
 

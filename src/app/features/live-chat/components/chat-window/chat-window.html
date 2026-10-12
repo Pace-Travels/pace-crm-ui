@@ -243,14 +243,15 @@
                                     </div>
                                 }
 
-                                @if (msg.messageType === 'INTERACTIVE') {
-                                    <div style="background: rgba(68, 76, 231, 0.08); border-left: 3px solid #444ce7; padding: 6px 10px; border-radius: 6px; font-weight: 600; color: #444ce7; display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 4px;">
-                                        <i class="fa-solid fa-list-check" style="color: #444ce7;"></i>
-                                        <span>{{ getInteractiveLabel(msg.textContent || msg.content) }}</span>
+                                @if (msg.messageType === 'INTERACTIVE' || (msg.textContent || msg.content || '').includes('[Interactive Selection]')) {
+                                    <div class="smart-interactive-chip" style="background: rgba(68, 76, 231, 0.08); border-left: 3px solid #444ce7; padding: 8px 12px; border-radius: 8px; font-weight: 600; color: #1e293b; display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 4px;">
+                                        <i class="fa-solid fa-list-check" style="color: #444ce7; font-size: 15px;"></i>
+                                        <span [innerHTML]="formatMessageText(getInteractiveLabel(msg.textContent || msg.content))"></span>
                                     </div>
                                 } @else if (msg.messageType !== 'STICKER' && msg.messageType !== 'GIF') {
-                                    <div class="wa-text">{{ msg.textContent || msg.content }}</div>
+                                    <div class="wa-text" [innerHTML]="formatMessageText(msg.textContent || msg.content)"></div>
                                 }
+
                                 
                                 <!-- Read receipts & timestamp -->
                                 <div style="font-size: 9px; color: #64748b; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-bottom: 0;">

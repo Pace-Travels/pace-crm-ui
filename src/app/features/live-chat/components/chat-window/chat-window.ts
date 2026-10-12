@@ -1,6 +1,7 @@
 import { Component, signal, inject, ViewChild, ElementRef, AfterViewChecked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { LiveChatService } from '../../services/live-chat.service';
 import { ApiService } from '../../../../shared/services/api.service';
 import Swal from 'sweetalert2';
@@ -21,6 +22,7 @@ import { AssetGalleryPicker } from '../../../campaigns/components/asset-gallery-
 export class ChatWindow implements AfterViewChecked {
   chatService = inject(LiveChatService);
   api = inject(ApiService);
+  sanitizer = inject(DomSanitizer);
 
   @ViewChild('messagesArea') private messagesArea!: ElementRef;
 
@@ -117,9 +119,45 @@ export class ChatWindow implements AfterViewChecked {
 
   getInteractiveLabel(text: string | undefined): string {
     if (!text) return 'Interactive Button Selection';
-    if (text === '[Interactive Selection]') return '🔘 Interactive Quick Reply Selected';
-    if (text.includes('[Interactive Selection]')) return text.replace('[Interactive Selection]', '🔘 Quick Reply Selection');
+    if (text === '[Interactive Selection]') return '🔘 Quick Reply Selected';
+    if (text.startsWith('[Interactive Selection:')) {
+      const clean = text.replace('[Interactive Selection:', '').replace(/\]$/, '').trim();
+      return `🔘 Selected Option: ${clean}`;
+    }
+    if (text.includes('[Interactive Selection]')) {
+      return text.replace('[Interactive Selection]', '🔘 Quick Reply Selection');
+    }
     return text;
+  }
+
+  formatMessageText(text?: string): SafeHtml {
+    if (!text) return this.sanitizer.bypassSecurityTrustHtml('');
+
+    let formatted = String(text)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // WhatsApp Bold: *text* -> <strong>text</strong>
+    formatted = formatted.replace(/\*([^\*]+)\*/g, '<strong>$1</strong>');
+
+    // WhatsApp Italic: _text_ -> <em>text</em>
+    formatted = formatted.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+    // WhatsApp Strikethrough: ~text~ -> <del>text</del>
+    formatted = formatted.replace(/~([^~]+)~/g, '<del>$1</del>');
+
+    // WhatsApp Monospace / Code: `text` -> <code>text</code>
+    formatted = formatted.replace(/`([^`]+)`/g, '<code style="background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 12px;">$1</code>');
+
+    // Auto-link URLs
+    const urlRegex = /(https?:\/\/[^\s<]+)/g;
+    formatted = formatted.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener" style="color: #444ce7; font-weight: 600; text-decoration: underline;">$1</a>');
+
+    // Preserve newlines
+    formatted = formatted.replace(/\n/g, '<br>');
+
+    return this.sanitizer.bypassSecurityTrustHtml(formatted);
   }
 
   // Active Quoted Reply Signal
@@ -201,9 +239,13 @@ export class ChatWindow implements AfterViewChecked {
             this.chatService.messagesSubject.next([...current, newMsg]);
           }
         }
+        this.shouldAutoScroll = true;
+        setTimeout(() => this.scrollToBottom(true), 50);
+
         if (newMsg?.status === 'FAILED') {
           this.showAlert('Delivery Failed', newMsg.errorMessage || 'WhatsApp message failed to deliver', 'warning');
         }
+
       },
       error: (err: any) => {
         this.showAlert('Delivery Failed', err.error?.error || err.message || 'Failed to send message', 'error');
