@@ -48,7 +48,7 @@ export interface TemplateDispatchPayload {
                 <select class="form-control" [(ngModel)]="selectedTemplateId" (change)="onTemplateChange()">
                   <option [value]="null" disabled>-- Choose a Template --</option>
                   <option *ngFor="let t of templates" [value]="t.id">
-                    {{ t.templateName }} [{{ t.status || 'APPROVED' }}] ({{ t.category || 'MARKETING' }} - {{ t.language || 'en_US' }})
+                    {{ t.templateName }} [{{ t.status || 'APPROVED' }}] ({{ t.category || 'MARKETING' }} - {{ t.language || 'en' }})
                   </option>
                 </select>
               </div>
@@ -77,12 +77,13 @@ export interface TemplateDispatchPayload {
               <label class="preview-label">Live WhatsApp Preview:</label>
               
               <div class="wa-chat-bubble">
-                <!-- Header Media/Text -->
-                <div *ngIf="selectedTemplate.headerType === 'IMAGE' || selectedTemplate.headerUrl" class="wa-header-media">
-                  <img [src]="selectedTemplate.headerUrl || 'assets/placeholder-media.png'" alt="Header" />
+                <!-- Header Media -->
+                <div *ngIf="getHeaderImageUrl(selectedTemplate)" class="wa-header-media">
+                  <img [src]="getHeaderImageUrl(selectedTemplate)" alt="Header Media" />
                 </div>
-                <div *ngIf="selectedTemplate.headerType === 'TEXT' && selectedTemplate.headerText" class="wa-header-text">
-                  {{ selectedTemplate.headerText }}
+                <!-- Header Text -->
+                <div *ngIf="getHeaderText(selectedTemplate)" class="wa-header-text">
+                  {{ getHeaderText(selectedTemplate) }}
                 </div>
 
                 <!-- Body Text with Replaced Variables -->
@@ -91,12 +92,12 @@ export interface TemplateDispatchPayload {
                 </div>
 
                 <!-- Footer Text -->
-                <div *ngIf="selectedTemplate.footerText" class="wa-footer-text">
-                  {{ selectedTemplate.footerText }}
+                <div *ngIf="getFooterText(selectedTemplate)" class="wa-footer-text">
+                  {{ getFooterText(selectedTemplate) }}
                 </div>
 
                 <!-- Action Buttons Preview -->
-                <div *ngIf="selectedTemplate.components || selectedTemplate.buttons" class="wa-buttons-list">
+                <div *ngIf="getButtonsList(selectedTemplate).length > 0" class="wa-buttons-list">
                   <div class="wa-btn-item" *ngFor="let btn of getButtonsList(selectedTemplate)">
                     <i class="fa-solid fa-reply" *ngIf="btn.type === 'QUICK_REPLY'"></i>
                     <i class="fa-solid fa-arrow-up-right-from-square" *ngIf="btn.type === 'URL'"></i>
@@ -226,7 +227,6 @@ export class SendTemplateModal implements OnChanges {
       next: (res: any) => {
         this.loading = false;
         const list = res.data || res.items || (Array.isArray(res) ? res : []);
-        // Load all templates of this account
         this.templates = list;
         if (this.templates.length > 0) {
           this.selectedTemplateId = this.templates[0].id;
@@ -234,7 +234,6 @@ export class SendTemplateModal implements OnChanges {
         }
       },
       error: () => {
-        // Fallback: try messagetemplates/list
         this.api.get('messagetemplates/list').subscribe({
           next: (res2: any) => {
             this.loading = false;
@@ -253,6 +252,56 @@ export class SendTemplateModal implements OnChanges {
     });
   }
 
+  getTemplateBodyRaw(template: any): string {
+    if (!template) return '';
+    if (template.templateBody) return template.templateBody;
+    if (template.bodyText) return template.bodyText;
+    if (template.content) return template.content;
+    if (template.text) return template.text;
+    if (Array.isArray(template.components)) {
+      const bodyComp = template.components.find((c: any) => c.type === 'BODY' || c.type === 'body');
+      if (bodyComp && bodyComp.text) return bodyComp.text;
+    }
+    return '';
+  }
+
+  getHeaderImageUrl(template: any): string | null {
+    if (!template) return null;
+    let url = template.headerMediaUrl || template.headerUrl || template.mediaUrl || null;
+    if (!url && Array.isArray(template.components)) {
+      const headComp = template.components.find((c: any) => c.type === 'HEADER' || c.type === 'header');
+      if (headComp && headComp.example && headComp.example.header_handle && Array.isArray(headComp.example.header_handle)) {
+        url = headComp.example.header_handle[0];
+      }
+    }
+    if (!url || typeof url !== 'string') return null;
+    url = url.trim();
+    if (!url || url === 'undefined' || url === 'null') return null;
+    if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url;
+    const base = this.api.baseUrl.replace(/\/api\/v1\/?$/, '');
+    return `${base}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
+  getHeaderText(template: any): string {
+    if (!template) return '';
+    if (template.headerText) return template.headerText;
+    if (Array.isArray(template.components)) {
+      const headComp = template.components.find((c: any) => c.type === 'HEADER' || c.type === 'header');
+      if (headComp && headComp.format === 'TEXT' && headComp.text) return headComp.text;
+    }
+    return '';
+  }
+
+  getFooterText(template: any): string {
+    if (!template) return '';
+    if (template.footerText) return template.footerText;
+    if (Array.isArray(template.components)) {
+      const footComp = template.components.find((c: any) => c.type === 'FOOTER' || c.type === 'footer');
+      if (footComp && footComp.text) return footComp.text;
+    }
+    return '';
+  }
+
   onTemplateChange(): void {
     if (!this.selectedTemplateId) {
       this.selectedTemplate = null;
@@ -264,8 +313,7 @@ export class SendTemplateModal implements OnChanges {
     this.selectedTemplate = this.templates.find(t => t.id == this.selectedTemplateId) || null;
     if (!this.selectedTemplate) return;
 
-    // Extract dynamic variables like {{1}}, {{2}} or {{name}}, {{phone}}
-    const bodyText = this.selectedTemplate.bodyText || this.selectedTemplate.content || '';
+    const bodyText = this.getTemplateBodyRaw(this.selectedTemplate);
     const matches = bodyText.match(/\{\{([a-zA-Z0-9_]+)\}\}/g);
     
     this.templateVariables = [];
@@ -279,7 +327,6 @@ export class SendTemplateModal implements OnChanges {
           keysSeen.add(key);
           this.templateVariables.push({ key });
 
-          // Auto-fill smart default values from conversation Contact details
           const contact = this.conversation?.Contact || {};
           if (idx === 0 || key === 'name' || key === 'first_name' || key === '1') {
             this.variableValues[key] = contact.firstName || contact.name || 'Customer';
@@ -297,7 +344,8 @@ export class SendTemplateModal implements OnChanges {
 
   getPreviewBodyText(): string {
     if (!this.selectedTemplate) return '';
-    let text = this.selectedTemplate.bodyText || this.selectedTemplate.content || '';
+    let text = this.getTemplateBodyRaw(this.selectedTemplate);
+    if (!text) return 'Template message body';
     Object.keys(this.variableValues).forEach(key => {
       const val = this.variableValues[key] || `{{${key}}}`;
       text = text.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), val);
@@ -307,9 +355,9 @@ export class SendTemplateModal implements OnChanges {
 
   getButtonsList(template: any): any[] {
     if (!template) return [];
-    if (Array.isArray(template.buttons)) return template.buttons;
+    if (Array.isArray(template.buttons) && template.buttons.length > 0) return template.buttons;
     if (Array.isArray(template.components)) {
-      const btnComp = template.components.find((c: any) => c.type === 'BUTTONS');
+      const btnComp = template.components.find((c: any) => c.type === 'BUTTONS' || c.type === 'buttons');
       if (btnComp && Array.isArray(btnComp.buttons)) return btnComp.buttons;
     }
     return [];
