@@ -133,6 +133,79 @@
       }
     }
 
+    .active-phone-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      padding: 0.35rem 0.85rem;
+      border-radius: 20px;
+      font-size: 0.78125rem;
+      color: #166534;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 1px 2px rgba(16, 185, 129, 0.05);
+
+      &:hover {
+        background: #dcfce7;
+        border-color: #86efac;
+        box-shadow: 0 2px 6px rgba(16, 185, 129, 0.12);
+      }
+
+      .phone-status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ef4444;
+
+        &.connected {
+          background: #10b981;
+          box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+        }
+      }
+
+      .phone-icon {
+        color: #16a34a;
+        font-size: 0.95rem;
+      }
+
+      .phone-details {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+
+        .phone-label {
+          color: #475569;
+          font-weight: 500;
+          font-size: 0.75rem;
+        }
+
+        .phone-number {
+          color: #0f172a;
+          font-weight: 700;
+          font-size: 0.8125rem;
+          letter-spacing: 0.2px;
+        }
+      }
+
+      .mode-tag {
+        background: #dbeafe;
+        color: #1e40af;
+        padding: 0.12rem 0.5rem;
+        border-radius: 10px;
+        font-size: 0.625rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+
+        &.live {
+          background: #15803d;
+          color: #ffffff;
+        }
+      }
+    }
+
     .meta-hub-container {
       .meta-hub-pill {
         display: flex;
