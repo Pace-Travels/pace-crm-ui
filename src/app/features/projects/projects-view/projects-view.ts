@@ -55,6 +55,29 @@ export class ProjectsView implements OnInit {
     return this.expandedProjectIds().has(projectId);
   }
 
+  getProjectPhoneDisplay(project: any): { primary: string; count: number; extraCount: number; allNumbers: string[] } {
+    const numbers: string[] = [];
+    if (Array.isArray(project.whatsappNumbers) && project.whatsappNumbers.length > 0) {
+      project.whatsappNumbers.forEach((w: any) => {
+        if (w.phoneNumber && !numbers.includes(w.phoneNumber)) numbers.push(w.phoneNumber);
+      });
+    }
+    if (numbers.length === 0) {
+      if (project.phoneNumber && !numbers.includes(project.phoneNumber)) numbers.push(project.phoneNumber);
+      if (project.testPhoneNumber && !numbers.includes(project.testPhoneNumber)) numbers.push(project.testPhoneNumber);
+    }
+
+    const count = numbers.length;
+    const rawPrimary = count > 0 ? numbers[0] : '';
+    const primary = rawPrimary ? (rawPrimary.startsWith('+') ? rawPrimary : '+' + rawPrimary) : 'No Phone Number Attached';
+    return {
+      primary,
+      count,
+      extraCount: count > 1 ? count - 1 : 0,
+      allNumbers: numbers
+    };
+  }
+
   constructor(
     public projectService: ProjectService,
     private fb: FormBuilder
