@@ -32,6 +32,8 @@ export interface Contact {
   readinessReason?: string;
   isActive?: boolean;
   isOptedIn?: boolean;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
 }
 
 export interface ContactGroup {

@@ -42,8 +42,8 @@ export class ContactsTable implements OnInit {
   filterCountry = signal('');
   filterOwnerMode = signal<'ALL' | 'MY_CONTACTS' | 'UNASSIGNED' | 'SPECIFIC'>('ALL');
   selectedOwnerFilter = signal<string>('');
-  sortColumn = signal<string>('name');
-  sortDirection = signal<'asc' | 'desc'>('asc');
+  sortColumn = signal<string>('createdAt');
+  sortDirection = signal<'asc' | 'desc'>('desc');
 
   myContactsCount = computed(() => {
     const user = this.getLoggedInUserName().toLowerCase();
@@ -201,8 +201,17 @@ export class ContactsTable implements OnInit {
     const dir = this.sortDirection() === 'asc' ? 1 : -1;
 
     list = [...list].sort((a: any, b: any) => {
-      const valA = (a[col] || '').toString().toLowerCase();
-      const valB = (b[col] || '').toString().toLowerCase();
+      let valA = a[col];
+      let valB = b[col];
+
+      if (col === 'createdAt' || col === 'updatedAt' || col === 'importedAt') {
+        const timeA = valA ? new Date(valA).getTime() : 0;
+        const timeB = valB ? new Date(valB).getTime() : 0;
+        return (timeA - timeB) * dir;
+      }
+
+      valA = (valA || '').toString().toLowerCase();
+      valB = (valB || '').toString().toLowerCase();
       if (valA < valB) return -1 * dir;
       if (valA > valB) return 1 * dir;
       return 0;
@@ -1128,6 +1137,25 @@ openCreateGroup() {
         },
         error: (err: any) => Swal.fire("Delivery Failed", err.error?.error || err.message, 'error')
       });
+    }
+  }
+
+  // Date & Time Formatter Helper
+  formatDateTime(dateStr?: string | Date): string {
+    if (!dateStr) return '—';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '—';
+      return d.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } catch (e) {
+      return '—';
     }
   }
 
