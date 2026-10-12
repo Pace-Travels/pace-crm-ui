@@ -84,6 +84,16 @@ export class LiveChatService {
       });
       this.messagesSubject.next(current);
     });
+
+    this.socket.on('message_reaction_update', (data: any) => {
+      const current = this.messagesSubject.value.map((m: any) => {
+        if (m.id === data.messageId || Number(m.id) === Number(data.messageId)) {
+          return { ...m, reactionEmoji: data.emoji, reactionSender: data.senderName };
+        }
+        return m;
+      });
+      this.messagesSubject.next(current);
+    });
   }
 
   fetchConversations() {

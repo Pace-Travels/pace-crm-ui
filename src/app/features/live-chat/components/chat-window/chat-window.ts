@@ -474,6 +474,277 @@ export class ChatWindow implements AfterViewChecked {
     });
   }
 
+  // --- WhatsApp Superpowers Signals & Methods ---
+  isContactInfoOpen = signal(false);
+  activeDrawerTab = signal<'details' | 'media' | 'notes' | 'starred'>('details');
+  mediaGallery = signal<any>({ images: [], videos: [], documents: [], audio: [], links: [], starred: [] });
+  notesList = signal<any[]>([]);
+  newNoteText = signal('');
+
+  // Wallpaper Theme State
+  currentWallpaper = signal<string>(localStorage.getItem('chat_wallpaper') || 'doodle-light');
+
+  // Search State
+  isSearchOpen = signal(false);
+  searchQuery = signal('');
+  searchResults = signal<any[]>([]);
+  currentSearchIndex = signal(0);
+
+  // Voice Note Recorder State
+  isRecording = signal(false);
+  recordingTime = signal(0);
+  private mediaRecorder: MediaRecorder | null = null;
+  private audioChunks: Blob[] = [];
+  private recordingInterval: any = null;
+
+  toggleContactInfo() {
+    const nextState = !this.isContactInfoOpen();
+    this.isContactInfoOpen.set(nextState);
+    if (nextState) {
+      this.loadContactDrawerData();
+    }
+  }
+
+  setWallpaper(theme: string) {
+    this.currentWallpaper.set(theme);
+    localStorage.setItem('chat_wallpaper', theme);
+  }
+
+  loadContactDrawerData() {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) return;
+
+    // Load Media Gallery
+    this.api.get<any>(`conversations/${conv.id}/media-gallery`).subscribe({
+      next: (res: any) => {
+        if (res && res.data) {
+          this.mediaGallery.set(res.data);
+        }
+      }
+    });
+
+    // Load Contact Notes
+    if (conv.contactId || conv.Contact?.id) {
+      const cId = conv.contactId || conv.Contact?.id;
+      this.api.get<any>(`contacts/${cId}/notes`).subscribe({
+        next: (res: any) => {
+          if (res && res.data) {
+            this.notesList.set(res.data);
+          }
+        }
+      });
+    }
+  }
+
+  addNote() {
+    const conv = this.chatService.selectedConversation();
+    const text = this.newNoteText().trim();
+    const cId = conv?.contactId || conv?.Contact?.id;
+    if (!conv || !cId || !text) return;
+
+    this.api.post<any>(`contacts/${cId}/notes`, { noteText: text }).subscribe({
+      next: (res: any) => {
+        this.newNoteText.set('');
+        if (res && res.note) {
+          this.notesList.set([res.note, ...this.notesList()]);
+        }
+        this.showAlert('Note Saved', 'Internal note added for team.', 'success');
+      },
+      error: (err: any) => {
+        this.showAlert('Error', err.error?.error || 'Failed to add note', 'error');
+      }
+    });
+  }
+
+  blockContact() {
+    const conv = this.chatService.selectedConversation();
+    const cId = conv?.contactId || conv?.Contact?.id;
+    if (!conv || !cId) return;
+
+    Swal.fire({
+      title: 'Block Contact?',
+      text: 'Blocked contacts will not receive broadcast campaigns or automated responses.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      confirmButtonText: 'Yes, Block Contact'
+    }).then((res) => {
+      if (res.isConfirmed) {
+        this.api.post<any>(`contacts/${cId}/block`, { reason: 'Blocked via Live Chat' }).subscribe({
+          next: () => {
+            if (conv.Contact) conv.Contact.isBlocked = true;
+            this.showAlert('Blocked', 'Contact has been blocked.', 'success');
+          }
+        });
+      }
+    });
+  }
+
+  unblockContact() {
+    const conv = this.chatService.selectedConversation();
+    const cId = conv?.contactId || conv?.Contact?.id;
+    if (!conv || !cId) return;
+
+    this.api.post<any>(`contacts/${cId}/unblock`, {}).subscribe({
+      next: () => {
+        if (conv.Contact) conv.Contact.isBlocked = false;
+        this.showAlert('Unblocked', 'Contact has been unblocked.', 'success');
+      }
+    });
+  }
+
+  // --- Emoji Reactions & Starred ---
+  reactToMessage(msg: any, emoji: string) {
+    if (!msg || !msg.id) return;
+    const targetEmoji = (msg.reactionEmoji === emoji) ? '' : emoji;
+
+    this.api.post<any>('messages/react', {
+      messageId: msg.id,
+      emoji: targetEmoji,
+      senderName: 'Support Agent'
+    }).subscribe({
+      next: (res: any) => {
+        msg.reactionEmoji = targetEmoji;
+      }
+    });
+  }
+
+  toggleStar(msg: any) {
+    if (!msg || !msg.id) return;
+    this.api.post<any>(`messages/${msg.id}/star`, {}).subscribe({
+      next: () => {
+        msg.isStarred = !msg.isStarred;
+        this.showAlert(msg.isStarred ? 'Starred' : 'Unstarred', msg.isStarred ? 'Message bookmarked' : 'Bookmark removed', 'info');
+      }
+    });
+  }
+
+  copyText(text: string) {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      this.showAlert('Copied', 'Message text copied to clipboard!', 'success');
+    });
+  }
+
+  // --- In-Chat Search ---
+  toggleSearch() {
+    this.isSearchOpen.set(!this.isSearchOpen());
+    if (!this.isSearchOpen()) {
+      this.searchQuery.set('');
+      this.searchResults.set([]);
+    }
+  }
+
+  performSearch() {
+    const q = this.searchQuery().trim().toLowerCase();
+    if (!q) {
+      this.searchResults.set([]);
+      return;
+    }
+    const msgs = this.chatService.messagesSubject.value || [];
+    const matches = msgs.filter((m: any) => (m.textContent || m.content || '').toLowerCase().includes(q));
+    this.searchResults.set(matches);
+    this.currentSearchIndex.set(0);
+    if (matches.length > 0) {
+      this.scrollToMessage(matches[0].id);
+    }
+  }
+
+  navigateSearch(dir: 'next' | 'prev') {
+    const results = this.searchResults();
+    if (results.length === 0) return;
+
+    let idx = this.currentSearchIndex();
+    if (dir === 'next') {
+      idx = (idx + 1) % results.length;
+    } else {
+      idx = (idx - 1 + results.length) % results.length;
+    }
+    this.currentSearchIndex.set(idx);
+    this.scrollToMessage(results[idx].id);
+  }
+
+  // --- In-Browser Voice Note Recording ---
+  startRecording() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      this.showAlert('Not Supported', 'Microphone access is not supported by your browser.', 'error');
+      return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+      this.mediaRecorder = new MediaRecorder(stream);
+      this.audioChunks = [];
+      this.mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          this.audioChunks.push(event.data);
+        }
+      };
+      this.mediaRecorder.start();
+      this.isRecording.set(true);
+      this.recordingTime.set(0);
+
+      this.recordingInterval = setInterval(() => {
+        this.recordingTime.set(this.recordingTime() + 1);
+      }, 1000);
+    }).catch((err) => {
+      this.showAlert('Microphone Error', 'Could not access microphone: ' + err.message, 'error');
+    });
+  }
+
+  stopRecording(send: boolean) {
+    if (!this.mediaRecorder) return;
+    
+    clearInterval(this.recordingInterval);
+    this.isRecording.set(false);
+
+    this.mediaRecorder.onstop = () => {
+      if (send && this.audioChunks.length > 0) {
+        const audioBlob = new Blob(this.audioChunks, { type: 'audio/ogg' });
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        reader.onloadend = () => {
+          const base64data = reader.result as string;
+          const conv = this.chatService.selectedConversation();
+          if (!conv) return;
+
+          const payload = {
+            conversationId: conv.id,
+            senderType: 'HUMAN',
+            messageType: 'AUDIO',
+            content: base64data,
+            mediaUrl: base64data,
+            textContent: '[Voice Note Recording]',
+            direction: 'OUTBOUND'
+          };
+
+          this.api.post<any>('messages/add', payload).subscribe({
+            next: (res: any) => {
+              const newMsg = res.data || res;
+              if (newMsg && newMsg.id) {
+                const current = this.chatService.messagesSubject.value;
+                this.chatService.messagesSubject.next([...current, newMsg]);
+              }
+              this.showAlert('Voice Note Sent', 'Voice note recording delivered.', 'success');
+            }
+          });
+        };
+      }
+      // Stop all audio tracks
+      if (this.mediaRecorder && this.mediaRecorder.stream) {
+        this.mediaRecorder.stream.getTracks().forEach(t => t.stop());
+      }
+      this.mediaRecorder = null;
+    };
+
+    this.mediaRecorder.stop();
+  }
+
+  formatTime(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+
   hasWindowClosedError(): boolean {
     const msgs = this.chatService.messagesSubject.value || [];
     if (msgs.length === 0) return false;

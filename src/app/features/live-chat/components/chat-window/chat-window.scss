@@ -287,3 +287,144 @@
     animation: pulseHighlight 1.8s ease-in-out;
     border-radius: 12px;
 }
+
+// Wallpaper Themes for Messages Area
+.messages-area {
+    &.doodle-light {
+        background-color: #efeae2;
+        background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png');
+        background-repeat: repeat;
+        background-size: 400px;
+    }
+
+    &.doodle-dark {
+        background-color: #0b141a;
+        background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        background-size: 20px 20px;
+
+        .message-bubble.inbound {
+            background: #202c33;
+            color: #e9edef;
+        }
+
+        .message-bubble.outbound {
+            background: #005c4b;
+            color: #e9edef;
+        }
+
+        .quoted-message-card {
+            background: rgba(255, 255, 255, 0.08);
+            .quoted-text { color: #cbd5e1; }
+        }
+    }
+
+    &.teal-dark {
+        background-color: #075e54;
+        background-image: none;
+
+        .message-bubble.inbound {
+            background: #ffffff;
+            color: #0f172a;
+        }
+
+        .message-bubble.outbound {
+            background: #dcfce7;
+            color: #0f172a;
+        }
+    }
+}
+
+// Hover Message Actions & Reaction Popover Palette
+.message-bubble {
+    position: relative;
+
+    .hover-message-actions {
+        position: absolute;
+        top: -34px;
+        right: 12px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 20px;
+        padding: 4px 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.2s ease-in-out;
+        z-index: 25;
+
+        .action-item {
+            background: transparent;
+            border: none;
+            color: #64748b;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 2px 6px;
+            border-radius: 4px;
+
+            &:hover {
+                background: #f1f5f9;
+                color: #444ce7;
+            }
+        }
+
+        .reaction-palette {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border-left: 1px solid #e2e8f0;
+            padding-left: 6px;
+            margin-left: 2px;
+
+            span {
+                font-size: 16px;
+                cursor: pointer;
+                transition: transform 0.15s ease;
+
+                &:hover {
+                    transform: scale(1.35);
+                }
+            }
+        }
+    }
+
+    &:hover .hover-message-actions {
+        opacity: 1;
+        visibility: visible;
+        top: -38px;
+    }
+}
+
+// Floating Reaction Emoji Badge Pill
+.reaction-badge-pill {
+    position: absolute;
+    bottom: -10px;
+    right: 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 1px 6px;
+    font-size: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    z-index: 10;
+    cursor: default;
+}
+
+// Audio Recording Pulsing Animation
+@keyframes blink {
+    0% { opacity: 1; }
+    50% { opacity: 0.3; }
+    100% { opacity: 1; }
+}
+
+// Contact Info Right Drawer Styling
+.contact-info-drawer {
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
