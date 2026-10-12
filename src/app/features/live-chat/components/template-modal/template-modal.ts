@@ -135,7 +135,7 @@ export interface TemplateDispatchPayload {
       z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;
     }
     .modal-card {
-      background: #ffffff; width: 100%; max-width: 760px; border-radius: 20px;
+      background: #ffffff; width: 90vw; max-width: 920px; border-radius: 20px;
       box-shadow: 0 20px 45px rgba(0,0,0,0.2); overflow: hidden;
       animation: modalFadeIn 0.25s ease-out;
     }
