@@ -81,6 +81,10 @@ export class LiveChatService {
           this.messagesSubject.next([...current, data]);
         }
       }
+
+      if (data.direction === 'INBOUND' || data.senderType === 'CONTACT' || data.senderType === 'CUSTOMER') {
+        this.triggerIncomingMessageNotification(data);
+      }
     });
 
     this.socket.on('message_status_update', (data: any) => {
@@ -103,6 +107,48 @@ export class LiveChatService {
       this.messagesSubject.next(current);
     });
   }
+
+  triggerIncomingMessageNotification(data: any) {
+    const senderName = data.Conversation?.Contact?.name || data.recipientName || 'Customer';
+    const phone = data.Conversation?.Contact?.phone || data.recipientPhone || '';
+    const textContent = data.textContent || data.content || '[Incoming Message]';
+
+    // 1. Browser Native Notification
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        const notification = new Notification(`💬 New Message from ${senderName}`, {
+          body: textContent,
+          icon: '/assets/icon.png'
+        });
+        notification.onclick = () => {
+          window.focus();
+          this.selectConversationByPhone(phone);
+        };
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission();
+      }
+    }
+
+    // 2. Interactive Toast Popup
+    const SwalObj = (window as any).Swal;
+    if (SwalObj && SwalObj.fire) {
+      SwalObj.fire({
+        title: `💬 ${senderName}`,
+        text: textContent,
+        icon: 'info',
+        position: 'top-end',
+        showConfirmButton: true,
+        confirmButtonText: 'Open Live Chat',
+        timer: 6000,
+        toast: true
+      }).then((result: any) => {
+        if (result.isConfirmed) {
+          this.selectConversationByPhone(phone);
+        }
+      });
+    }
+  }
+
 
   fetchConversations() {
     this.api.get<any>('conversations/list').subscribe({

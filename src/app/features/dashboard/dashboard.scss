@@ -72,7 +72,19 @@
         grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
         gap: 20px;
         margin-bottom: 28px;
+
+        .kpi-card.clickable {
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+
+            &:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 24px rgba(68, 76, 231, 0.15);
+                border-color: #6366f1;
+            }
+        }
     }
+
 
     /* Workspace 2-Column Grid */
     .workspace-grid {

@@ -21,7 +21,7 @@
     <div class="kpi-grid">
         
         <!-- Total Messages -->
-        <div class="kpi-card">
+        <div class="kpi-card clickable" (click)="navigateTo('/history')" title="Click to view all Message Logs & History">
             <div class="kpi-content">
                 <span class="kpi-title">TOTAL MESSAGES</span>
                 <div class="kpi-value">{{ analytics().totalMessages ?? analytics().totalEnquiries ?? 0 }}</div>
@@ -35,7 +35,7 @@
         </div>
 
         <!-- Broadcasts Sent -->
-        <div class="kpi-card">
+        <div class="kpi-card clickable" (click)="navigateTo('/campaigns')" title="Click to view Broadcast Campaigns">
             <div class="kpi-content">
                 <span class="kpi-title">BROADCASTS SENT</span>
                 <div class="kpi-value">{{ analytics().messagesSent ?? analytics().quotationsSent ?? 0 }}</div>
@@ -49,7 +49,7 @@
         </div>
 
         <!-- Active Conversations -->
-        <div class="kpi-card">
+        <div class="kpi-card clickable" (click)="navigateTo('/chat')" title="Click to open Live Chat Desk">
             <div class="kpi-content">
                 <span class="kpi-title">ACTIVE CONVERSATIONS</span>
                 <div class="kpi-value">{{ analytics().activeConversations ?? analytics().confirmedBookings ?? 0 }}</div>
@@ -63,7 +63,7 @@
         </div>
 
         <!-- Failed / Opt-Outs -->
-        <div class="kpi-card">
+        <div class="kpi-card clickable" (click)="navigateTo('/campaigns')" title="Click to view Failed dispatches & Opt-outs">
             <div class="kpi-content">
                 <span class="kpi-title">FAILED / OPT-OUTS</span>
                 <div class="kpi-value">{{ analytics().failedMessages ?? analytics().cancelledCount ?? 0 }}</div>
@@ -85,10 +85,13 @@
             <div class="card-header">
                 <h3>Delivery & Read Engagement</h3>
                 <div class="card-action">
-                    <select class="select-filter" [ngModel]="selectedYearFilter">
-                        <option value="This Year">This Year</option>
-                        <option value="Last Year">Last Year</option>
-                        <option value="All Time">All Time</option>
+                    <select class="select-filter" [ngModel]="selectedTimeframe()" (ngModelChange)="onTimeframeChange($event)">
+                        <option value="Today">Today</option>
+                        <option value="This Week">This Week</option>
+                        <option value="This Month">This Month</option>
+                        <option value="3 Months">3 Months</option>
+                        <option value="6 Months">6 Months</option>
+                        <option value="Full Year">Full Year</option>
                     </select>
                 </div>
             </div>
@@ -96,30 +99,21 @@
             <div class="chart-body">
                 <div class="conversion-summary">
                     <div class="rate-large">{{ analytics().readRate || analytics().conversionRate || '0.0' }}%</div>
-                    <div class="rate-subtitle">Average Delivery to Customer Read Engagement Ratio</div>
+                    <div class="rate-subtitle">Average Delivery to Customer Read Engagement Ratio ({{ selectedTimeframe() }})</div>
                 </div>
 
-                <!-- Visual Bar Chart Representation -->
+                <!-- Granular Bar Chart Representation -->
                 <div class="mock-chart-container">
-                    <div class="chart-bar-group">
-                        <div class="bar-fill" style="height: 45%;"></div>
-                        <span class="bar-label">Q1</span>
-                    </div>
-                    <div class="chart-bar-group">
-                        <div class="bar-fill" style="height: 65%;"></div>
-                        <span class="bar-label">Q2</span>
-                    </div>
-                    <div class="chart-bar-group">
-                        <div class="bar-fill active" style="height: 82%;"></div>
-                        <span class="bar-label">Q3</span>
-                    </div>
-                    <div class="chart-bar-group">
-                        <div class="bar-fill" style="height: 55%;"></div>
-                        <span class="bar-label">Q4</span>
-                    </div>
+                    @for (bar of chartBars(); track bar.label) {
+                        <div class="chart-bar-group">
+                            <div class="bar-fill" [class.active]="bar.active" [style.height]="bar.height" [title]="bar.label + ': ' + bar.height"></div>
+                            <span class="bar-label">{{ bar.label }}</span>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
+
 
         <!-- Right Column: Recent Customer Conversations Table -->
         <div class="qd-card table-card">

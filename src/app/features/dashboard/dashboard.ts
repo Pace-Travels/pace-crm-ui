@@ -26,7 +26,76 @@ export class Dashboard implements OnInit {
   projectService = inject(ProjectService);
 
   selectedDateRange = '7_DAYS';
-  selectedYearFilter = 'This Year';
+  selectedTimeframe = signal<string>('This Month');
+
+  chartBars = computed(() => {
+    const tf = this.selectedTimeframe();
+    if (tf === 'Today') {
+      return [
+        { label: '12 AM', height: '20%' },
+        { label: '3 AM', height: '10%' },
+        { label: '6 AM', height: '30%' },
+        { label: '9 AM', height: '65%' },
+        { label: '12 PM', height: '85%' },
+        { label: '3 PM', height: '92%', active: true },
+        { label: '6 PM', height: '70%' },
+        { label: '9 PM', height: '40%' }
+      ];
+    } else if (tf === 'This Week') {
+      return [
+        { label: 'Mon', height: '45%' },
+        { label: 'Tue', height: '60%' },
+        { label: 'Wed', height: '78%' },
+        { label: 'Thu', height: '88%', active: true },
+        { label: 'Fri', height: '82%' },
+        { label: 'Sat', height: '52%' },
+        { label: 'Sun', height: '35%' }
+      ];
+    } else if (tf === 'This Month') {
+      return [
+        { label: 'Week 1', height: '52%' },
+        { label: 'Week 2', height: '74%' },
+        { label: 'Week 3', height: '94%', active: true },
+        { label: 'Week 4', height: '68%' }
+      ];
+    } else if (tf === '3 Months') {
+      return [
+        { label: 'Aug', height: '58%' },
+        { label: 'Sep', height: '76%' },
+        { label: 'Oct', height: '94%', active: true }
+      ];
+    } else if (tf === '6 Months') {
+      return [
+        { label: 'May', height: '42%' },
+        { label: 'Jun', height: '56%' },
+        { label: 'Jul', height: '64%' },
+        { label: 'Aug', height: '74%' },
+        { label: 'Sep', height: '84%' },
+        { label: 'Oct', height: '96%', active: true }
+      ];
+    } else { // Full Year
+      return [
+        { label: 'Jan', height: '32%' },
+        { label: 'Feb', height: '38%' },
+        { label: 'Mar', height: '48%' },
+        { label: 'Apr', height: '54%' },
+        { label: 'May', height: '62%' },
+        { label: 'Jun', height: '68%' },
+        { label: 'Jul', height: '72%' },
+        { label: 'Aug', height: '78%' },
+        { label: 'Sep', height: '85%' },
+        { label: 'Oct', height: '98%', active: true },
+        { label: 'Nov', height: '65%' },
+        { label: 'Dec', height: '42%' }
+      ];
+    }
+  });
+
+  onTimeframeChange(newTf: string) {
+    this.selectedTimeframe.set(newTf);
+    this.fetchAnalytics();
+  }
+
 
   userName = computed(() => {
     try {
@@ -78,8 +147,9 @@ export class Dashboard implements OnInit {
   fetchAnalytics() {
     const proj = this.projectService.currentProject();
     const projId = proj ? proj.id : (localStorage.getItem('activeProjectId') || '1');
+    const tf = this.selectedTimeframe();
     
-    this.api.get<any>(`customreports/analytics?range=${this.selectedDateRange}&projectId=${projId}`).subscribe({
+    this.api.get<any>(`customreports/analytics?range=${this.selectedDateRange}&timeframe=${encodeURIComponent(tf)}&projectId=${projId}`).subscribe({
       next: (res) => {
         if (res.success && res.analytics) {
           this.analytics.set(res.analytics);
@@ -88,6 +158,7 @@ export class Dashboard implements OnInit {
       error: (err) => console.warn('Fetch dashboard analytics error', err)
     });
   }
+
 
   onRangeChange(event: Event) {
     const target = event.target as HTMLSelectElement;
