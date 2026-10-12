@@ -201,41 +201,10 @@ export class AssetGalleryPicker implements OnInit, OnChanges {
   searchQuery = '';
   loading = false;
 
-  DEFAULT_BRAND_ASSETS: GalleryAsset[] = [
-    {
-      id: 'brand_1',
-      name: "Pace Travels Welcome Poster",
-      url: "https://messenger.quotedesks.com/wabaptposter.png",
-      category: "BRAND_PUBLIC",
-      tag: "Welcome Banner"
-    },
-    {
-      id: 'brand_2',
-      name: "Pace Tourism Vietnam & Asia Deals",
-      url: "https://pace-messenger-assets.s3.ap-south-1.amazonaws.com/templates/banners/asia_tours.png",
-      category: "BRAND_PUBLIC",
-      tag: "Tour Packages"
-    },
-    {
-      id: 'brand_3',
-      name: "Luxury Cruise & Island Getaway",
-      url: "https://pace-messenger-assets.s3.ap-south-1.amazonaws.com/templates/banners/cruise_deal.png",
-      category: "BRAND_PUBLIC",
-      tag: "Cruise"
-    },
-    {
-      id: 'brand_4',
-      name: "Flights & Group Booking Promo",
-      url: "https://pace-messenger-assets.s3.ap-south-1.amazonaws.com/templates/banners/flight_deals.png",
-      category: "BRAND_PUBLIC",
-      tag: "Flights"
-    }
-  ];
-
   galleryData = {
     teamUploads: [] as GalleryAsset[],
     aiGenerated: [] as GalleryAsset[],
-    brandPublic: this.DEFAULT_BRAND_ASSETS
+    brandPublic: [] as GalleryAsset[]
   };
 
   ngOnInit(): void {
@@ -267,7 +236,7 @@ export class AssetGalleryPicker implements OnInit, OnChanges {
         this.galleryData = {
           teamUploads: data.teamUploads && data.teamUploads.length > 0 ? data.teamUploads : this.galleryData.teamUploads,
           aiGenerated: data.aiGenerated && data.aiGenerated.length > 0 ? data.aiGenerated : this.galleryData.aiGenerated,
-          brandPublic: data.brandPublic && data.brandPublic.length > 0 ? data.brandPublic : this.DEFAULT_BRAND_ASSETS
+          brandPublic: data.brandPublic || []
         };
       },
       error: () => {
