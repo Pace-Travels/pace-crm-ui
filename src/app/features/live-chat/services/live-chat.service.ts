@@ -11,15 +11,23 @@ export interface Conversation {
   status: string;
   assignedToType?: string;
   assignedToUserId?: number | null;
+  controlOwner?: string;
   Contact?: {
     id?: number;
     name?: string;
     phone?: string;
     firstName?: string;
     lastName?: string;
+    isBlocked?: boolean;
+    profilePicUrl?: string;
+    aboutStatus?: string;
+    leadStage?: string;
+    readinessStatus?: string;
+    [key: string]: any;
   };
   Messages?: any[];
   lastActivityAt?: string;
+  [key: string]: any;
 }
 
 @Injectable({

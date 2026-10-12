@@ -49,6 +49,16 @@
             </div>
 
             <div style="display: flex; align-items: center; gap: 6px;">
+                @if (chatService.selectedConversation()?.controlOwner === 'BOT' || chatService.selectedConversation()?.assignedToType === 'AI') {
+                    <button type="button" (click)="takeControl()" title="Click to Take Over Thread Control from AI Bot" style="background: #eff6ff; border: 1px solid #3b82f6; color: #1d4ed8; padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                        <i class="fa-solid fa-robot" style="color: #3b82f6;"></i> AI Handover (Take Over)
+                    </button>
+                } @else {
+                    <button type="button" (click)="passControl()" title="Click to Release Thread Control Back to AI Bot" style="background: #f0fdf4; border: 1px solid #22c55e; color: #15803d; padding: 6px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                        <i class="fa-solid fa-user-gear" style="color: #16a34a;"></i> Agent Active (Pass to AI)
+                    </button>
+                }
+
                 <button type="button" class="btn btn-icon-only" (click)="toggleSearch()" [title]="isSearchOpen() ? 'Close Search' : 'Search in Conversation'" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; width: 32px; height: 32px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                     <i class="fa-solid fa-magnifying-glass" style="font-size: 13px;"></i>
                 </button>

@@ -619,12 +619,38 @@ export class ChatWindow implements AfterViewChecked {
     });
   }
 
-  copyText(text: string) {
+  copyText(text?: string) {
     if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
       this.showAlert('Copied', 'Message text copied to clipboard!', 'success');
     });
   }
+
+  // --- Human-AI Handover Protocol ---
+  takeControl() {
+    const conv = this.chatService.selectedConversation();
+    if (!conv || !conv.id) return;
+    this.api.post<any>(`conversations/${conv.id}/take-control`, {}).subscribe({
+      next: (res: any) => {
+        conv.controlOwner = 'HUMAN';
+        conv.assignedToType = 'HUMAN';
+        this.showAlert('Handover Took Over', 'You now have live human control of this chat thread.', 'success');
+      }
+    });
+  }
+
+  passControl() {
+    const conv = this.chatService.selectedConversation();
+    if (!conv || !conv.id) return;
+    this.api.post<any>(`conversations/${conv.id}/pass-control`, {}).subscribe({
+      next: (res: any) => {
+        conv.controlOwner = 'BOT';
+        conv.assignedToType = 'AI';
+        this.showAlert('Passed to AI', 'Thread control released back to Gemini AI Bot.', 'info');
+      }
+    });
+  }
+
 
   // --- In-Chat Search ---
   toggleSearch() {
