@@ -14,6 +14,7 @@ export interface SystemLogItem {
   metaParsed?: any;
   senderPhone?: string;
   recipientPhone?: string;
+  recipientName?: string;
   createdAt: string;
 }
 
