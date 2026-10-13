@@ -221,10 +221,63 @@ export class ChatWindow implements AfterViewChecked {
     }, 60);
   }
 
+  private typingDebounceTimer: any = null;
+  private isTypingActiveSent = false;
+
+  onComposerInput(value: string) {
+    this.chatService.chatInputMessage.set(value);
+    const conv = this.chatService.selectedConversation();
+    if (!conv) return;
+
+    if (value.trim().length > 0) {
+      if (!this.isTypingActiveSent) {
+        this.isTypingActiveSent = true;
+        this.chatService.sendTyping(conv.id, true);
+      }
+
+      if (this.typingDebounceTimer) {
+        clearTimeout(this.typingDebounceTimer);
+      }
+
+      this.typingDebounceTimer = setTimeout(() => {
+        if (this.isTypingActiveSent) {
+          this.isTypingActiveSent = false;
+          this.chatService.sendTyping(conv.id, false);
+        }
+      }, 2500);
+    } else {
+      if (this.isTypingActiveSent) {
+        this.isTypingActiveSent = false;
+        if (this.typingDebounceTimer) clearTimeout(this.typingDebounceTimer);
+        this.chatService.sendTyping(conv.id, false);
+      }
+    }
+  }
+
+  isCurrentConvTyping(): boolean {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) return false;
+    const t = this.chatService.typingMap()[conv.id];
+    return !!(t && t.isTyping);
+  }
+
+  currentConvTypingAuthor(): string {
+    const conv = this.chatService.selectedConversation();
+    if (!conv) return '';
+    const t = this.chatService.typingMap()[conv.id];
+    return t?.authorName || (conv.Contact?.firstName || 'Customer');
+  }
+
   sendMessage() {
     const text = this.chatService.chatInputMessage().trim();
     const conv = this.chatService.selectedConversation();
     if (!text || !conv) return;
+
+    if (this.typingDebounceTimer) clearTimeout(this.typingDebounceTimer);
+    if (this.isTypingActiveSent) {
+      this.isTypingActiveSent = false;
+      this.chatService.sendTyping(conv.id, false);
+    }
 
     const replyMsg = this.replyingToMessage();
 

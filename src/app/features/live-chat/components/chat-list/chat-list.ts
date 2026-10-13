@@ -38,6 +38,11 @@ export class ChatList {
     });
   });
 
+  isTyping(convId: number): boolean {
+    const t = this.chatService.typingMap()[convId];
+    return !!(t && t.isTyping);
+  }
+
   selectChat(conv: Conversation) {
     this.closeContextMenu();
     this.chatService.selectConversation(conv);

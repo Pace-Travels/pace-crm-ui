@@ -42,8 +42,14 @@
                         }
                     </h4>
                     <div style="font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 6px;">
-                        <span>{{ chatService.selectedConversation()?.Contact?.phone }}</span>
-                        <span style="background: #dcfce7; color: #15803d; padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 9px;">ACTIVE</span>
+                        @if (isCurrentConvTyping()) {
+                            <span class="header-typing-indicator" style="color: #16a34a; font-weight: 700; display: flex; align-items: center; gap: 5px;">
+                                <i class="fa-solid fa-pen-nib" style="font-size: 10px;"></i> {{ currentConvTypingAuthor() }} typing...
+                            </span>
+                        } @else {
+                            <span>{{ chatService.selectedConversation()?.Contact?.phone }}</span>
+                            <span style="background: #dcfce7; color: #15803d; padding: 1px 6px; border-radius: 4px; font-weight: 700; font-size: 9px;">ACTIVE</span>
+                        }
                     </div>
                 </div>
             </div>
@@ -416,6 +422,18 @@
                     </div>
                 </div>
             }
+
+            <!-- WhatsApp Authentic 3-Dot Bouncing Typing Bubble -->
+            @if (isCurrentConvTyping()) {
+                <div class="whatsapp-typing-row">
+                    <div class="whatsapp-typing-bubble">
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                    </div>
+                    <span class="whatsapp-typing-name">{{ currentConvTypingAuthor() }} is typing...</span>
+                </div>
+            }
         </div>
 
         <div class="input-area" style="position: relative;">
@@ -450,7 +468,7 @@
             } @else {
                 <button class="icon-btn" (click)="toggleEmojiPicker()" title="Emojis, GIFs, Stickers"><i class="fa-regular fa-face-smile" style="font-size: 18px; color: #64748b;"></i></button>
                 <button class="icon-btn" (click)="toggleInteractiveModal()" title="Send Quick Reply Buttons"><i class="fa-solid fa-list-check"></i></button>
-                <input type="text" placeholder="Type a message..." [ngModel]="chatService.chatInputMessage()" (ngModelChange)="chatService.chatInputMessage.set($event)" (keyup.enter)="sendMessage()">
+                <input type="text" placeholder="Type a message..." [ngModel]="chatService.chatInputMessage()" (ngModelChange)="onComposerInput($event)" (keyup.enter)="sendMessage()">
                 <button class="icon-btn" (click)="startRecording()" title="Record Voice Note" style="color: #ef4444;"><i class="fa-solid fa-microphone"></i></button>
                 <button class="icon-btn" (click)="sendMessage()" title="Send Message"><i class="fa-solid fa-paper-plane"></i></button>
             }

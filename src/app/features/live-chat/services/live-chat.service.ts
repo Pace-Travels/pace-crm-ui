@@ -53,6 +53,10 @@ export class LiveChatService {
   // Buffer input message
   chatInputMessage = signal('');
 
+  // Real-time typing indicators state
+  typingMap = signal<{ [conversationId: number]: { isTyping: boolean; authorName?: string } }>({});
+  private typingTimeouts: { [conversationId: number]: any } = {};
+
   // BehaviorSubject for messages so chat window can subscribe
   messagesSubject = new BehaviorSubject<any[]>([]);
   messages$ = this.messagesSubject.asObservable();
@@ -78,6 +82,10 @@ export class LiveChatService {
     this.socket.on('new_message', (data: any) => {
       const active = this.selectedConversation();
       const isCurrentActive = active && (data.conversationId === active.id || Number(data.conversationId) === Number(active.id));
+
+      if (data && data.conversationId) {
+        this.clearTyping(Number(data.conversationId));
+      }
 
       if (isCurrentActive) {
         const current = this.messagesSubject.value;
@@ -119,6 +127,62 @@ export class LiveChatService {
         return m;
       });
       this.messagesSubject.next(current);
+    });
+
+    // Real-time typing indicators from other users / AI assistant
+    this.socket.on('user_typing', (data: any) => {
+      this.handleTypingEvent(data);
+    });
+
+    this.socket.on('conversation_typing', (data: any) => {
+      this.handleTypingEvent(data);
+    });
+  }
+
+  handleTypingEvent(data: any) {
+    if (!data || !data.conversationId) return;
+    const convId = Number(data.conversationId);
+    const isTyping = !!data.isTyping;
+    const authorName = data.authorName || 'Someone';
+
+    this.typingMap.update(map => ({
+      ...map,
+      [convId]: { isTyping, authorName }
+    }));
+
+    if (this.typingTimeouts[convId]) {
+      clearTimeout(this.typingTimeouts[convId]);
+    }
+
+    if (isTyping) {
+      // Auto-clear indicator after 5 seconds of inactivity
+      this.typingTimeouts[convId] = setTimeout(() => {
+        this.clearTyping(convId);
+      }, 5000);
+    }
+  }
+
+  clearTyping(convId: number) {
+    if (this.typingTimeouts[convId]) {
+      clearTimeout(this.typingTimeouts[convId]);
+      delete this.typingTimeouts[convId];
+    }
+    this.typingMap.update(map => {
+      if (!map[convId]?.isTyping) return map;
+      return {
+        ...map,
+        [convId]: { isTyping: false, authorName: '' }
+      };
+    });
+  }
+
+  sendTyping(conversationId: number, isTyping: boolean) {
+    if (!conversationId) return;
+    if (this.socket) {
+      this.socket.emit('typing', { conversationId, isTyping });
+    }
+    this.api.post<any>('messages/typing', { conversationId, isTyping }).subscribe({
+      error: () => {}
     });
   }
 
