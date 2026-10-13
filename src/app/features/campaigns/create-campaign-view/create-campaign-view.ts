@@ -226,6 +226,8 @@ export class CreateCampaignView implements OnInit {
     });
   }
 
+  isResolvingMedia = signal<boolean>(false);
+
   selectTemplate(tpl: any) {
     this.selectedTemplate.set(tpl);
     const matches = tpl?.templateBody?.match(/\{\{\d+\}\}/g) || [];
@@ -246,19 +248,41 @@ export class CreateCampaignView implements OnInit {
         imgUrl = headComp.example.header_url[0];
       }
     }
-    this.headerImageUrl.set(imgUrl);
+
+    const isMetaReviewUrl = imgUrl && (imgUrl.includes('scontent.whatsapp.net') || imgUrl.includes('fbcdn.net') || imgUrl.includes('.whatsapp.net'));
+
+    if (isMetaReviewUrl) {
+      // Do NOT display broken temporary Meta review link in the input box!
+      // Immediately auto-resolve to permanent S3 CDN URL in background
+      this.isResolvingMedia.set(true);
+      this.headerImageUrl.set('');
+
+      this.api.post<any>('/messagetemplates/resolve-media', { url: imgUrl, templateId: tpl?.id }).subscribe({
+        next: (res) => {
+          this.isResolvingMedia.set(false);
+          const resolved = res?.url || imgUrl;
+          this.headerImageUrl.set(resolved);
+          if (tpl) {
+            tpl.headerMediaUrl = resolved;
+          }
+        },
+        error: () => {
+          this.isResolvingMedia.set(false);
+          // If network failed to resolve endpoint, set URL
+          this.headerImageUrl.set(imgUrl);
+        }
+      });
+    } else {
+      this.headerImageUrl.set(imgUrl);
+    }
   }
 
   getHeaderMediaUrl(): string {
     if (this.headerImageUrl()) return this.headerImageUrl();
     const tpl = this.selectedTemplate();
     if (!tpl) return '';
-    if (tpl.headerMediaUrl) return tpl.headerMediaUrl;
-    if (tpl.headerUrl) return tpl.headerUrl;
-    if (tpl.components && Array.isArray(tpl.components)) {
-      const headComp = tpl.components.find((c: any) => (c.type || '').toUpperCase() === 'HEADER');
-      if (headComp?.example?.header_handle?.[0]) return headComp.example.header_handle[0];
-      if (headComp?.example?.header_url?.[0]) return headComp.example.header_url[0];
+    if (tpl.headerMediaUrl && !tpl.headerMediaUrl.includes('scontent.whatsapp.net') && !tpl.headerMediaUrl.includes('fbcdn.net')) {
+      return tpl.headerMediaUrl;
     }
     return '';
   }

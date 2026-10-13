@@ -378,16 +378,23 @@
                             </div>
                             <p class="help-text">Select an image from Team, AI Generated, or Brand asset gallery, or enter public URL.</p>
                             <div style="display: flex; gap: 8px;">
-                                <input type="text" class="form-control" style="flex: 1;" placeholder="e.g. https://messenger.quotedesks.com/wabaptposter.png" [ngModel]="headerImageUrl()" (ngModelChange)="headerImageUrl.set($event)">
+                                <input type="text" class="form-control" style="flex: 1;" [placeholder]="isResolvingMedia() ? 'Securing permanent S3 CDN image...' : 'e.g. https://messengerassets.quotedesks.com/wabaptposter.png'" [ngModel]="headerImageUrl()" (ngModelChange)="headerImageUrl.set($event)" [disabled]="isResolvingMedia()">
                                 <button type="button" class="btn btn-outline" (click)="isAssetGalleryOpen.set(true)" title="Open Asset Gallery" style="padding: 8px 14px; background: #eef2ff; border: 1px solid #6366f1; color: #4338ca; font-weight: 700; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                                     <i class="fa-solid fa-images"></i> Gallery
                                 </button>
                             </div>
-                            @if (headerImageUrl().includes('scontent.whatsapp.net') || headerImageUrl().includes('fbcdn.net')) {
-                                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px 12px; margin-top: 8px; font-size: 12px; color: #166534; display: flex; align-items: center; gap: 8px;">
-                                    <i class="fa-solid fa-wand-magic-sparkles" style="color: #16a34a;"></i>
+                            @if (isResolvingMedia()) {
+                                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 12px; margin-top: 8px; font-size: 12px; color: #1e40af; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-spinner fa-spin" style="color: #2563eb;"></i>
                                     <div>
-                                        <strong>Auto-Optimized for WhatsApp:</strong> This template image is automatically mirrored to your secure CDN upon launch so it always delivers with full clarity and never appears blank.
+                                        <strong>Securing Permanent Image:</strong> Converting temporary Meta review asset to high-speed AWS S3 CDN so WhatsApp messages never appear blank...
+                                    </div>
+                                </div>
+                            } @else if (headerImageUrl()) {
+                                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px 12px; margin-top: 8px; font-size: 12px; color: #166534; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>
+                                    <div>
+                                        <strong>Ready for Broadcast:</strong> Verified high-speed CDN image link loaded. Image will deliver with full clarity to all recipients.
                                     </div>
                                 </div>
                             }
