@@ -15,4 +15,15 @@
             <app-chat-profile></app-chat-profile>
         </div>
     }
+
+    <!-- FAB: Pull contacts from other agency projects -->
+    <button id="pull-contacts-fab" class="pull-contacts-fab" (click)="showPullContacts.set(true)"
+            title="Pull contacts from other projects" aria-label="Pull contacts from other projects">
+        <i class="fa-solid fa-user-plus"></i>
+        <span class="fab-label">Pull contacts</span>
+    </button>
 </div>
+
+@if (showPullContacts()) {
+    <app-pull-contacts-modal (close)="showPullContacts.set(false)"></app-pull-contacts-modal>
+}

@@ -1,3 +1,4 @@
+import { AdvisoryBadge } from "../../../../shared/components/advisory-badge/advisory-badge";
 import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
@@ -13,7 +14,7 @@ import { firstValueFrom } from 'rxjs';
 @Component({
   selector: 'app-contacts-table',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, PhoneInputComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PhoneInputComponent, AdvisoryBadge],
   templateUrl: './contacts-table.html',
   styleUrl: './contacts-table.scss',
 })

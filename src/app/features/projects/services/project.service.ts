@@ -31,6 +31,12 @@ export interface Project {
   testAccessToken?: string;
   mode?: 'DEVELOPMENT' | 'PRODUCTION';
   whatsappNumbers?: WhatsappNumber[];
+  connectionStatus?: 'CONNECTED' | 'EXPIRED' | 'BROKEN' | 'UNKNOWN';
+  tokenExpiresAt?: string | null;
+  lastHealthCheckAt?: string | null;
+  lastHealthError?: string | null;
+  failedSendCount?: number;
+  isSandbox?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -90,6 +96,18 @@ export class ProjectService {
 
   metaAuth(accessToken: string) {
     return this.api.post<any>('projects/meta-auth', { accessToken });
+  }
+
+  impactPreview(projectIds: number[]) {
+    return this.api.post<any>('projects/impact-preview', { projectIds });
+  }
+
+  syncProjects(payload: any) {
+    return this.api.post<any>('projects/meta-sync', payload);
+  }
+
+  undoSync(auditId: number) {
+    return this.api.post<any>(`projects/meta-sync/undo/${auditId}`, {});
   }
 
   detachConfig(projectId: number) {

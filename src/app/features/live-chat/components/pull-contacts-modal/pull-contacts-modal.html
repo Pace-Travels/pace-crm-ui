@@ -1,0 +1,104 @@
+<div class="pcm-backdrop" (click)="close.emit()">
+  <div class="pcm-dialog" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="pcm-title">
+    <header class="pcm-header">
+      <div class="pcm-title-wrap">
+        <div class="pcm-icon"><i class="fa-solid fa-people-arrows"></i></div>
+        <div>
+          <h2 id="pcm-title">Pull contacts from other projects</h2>
+          <p>Build this project's contact list instantly from your agency's other workspaces.</p>
+        </div>
+      </div>
+      <button id="pcm-close-btn" class="pcm-icon-btn" (click)="close.emit()" aria-label="Close">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </header>
+
+    <div class="pcm-body">
+      <aside class="pcm-projects">
+        <span class="pcm-label">Source projects</span>
+        <button id="pcm-project-all" class="pcm-project" [class.active]="activeProjectId() === 'ALL'" (click)="activeProjectId.set('ALL')">
+          <span class="pcm-dot all"><i class="fa-solid fa-layer-group"></i></span>
+          <span class="pcm-project-name">All projects</span>
+          <span class="pcm-count">{{ contacts().length }}</span>
+        </button>
+        @for (p of projects(); track p.id) {
+          <button [id]="'pcm-project-' + p.id" class="pcm-project" [class.active]="activeProjectId() === p.id" (click)="activeProjectId.set(p.id)">
+            <span class="pcm-dot">{{ initials(p.name) }}</span>
+            <span class="pcm-project-name">{{ p.name }}</span>
+            <span class="pcm-count">{{ projectCounts().get(p.id) || 0 }}</span>
+          </button>
+        } @empty {
+          @if (!isLoading()) { <p class="pcm-muted">No other projects found.</p> }
+        }
+      </aside>
+
+      <section class="pcm-main">
+        <div class="pcm-toolbar">
+          <div class="pcm-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input id="pcm-search-input" type="text" placeholder="Search name, phone or email…"
+                   [ngModel]="search()" (ngModelChange)="search.set($event)" />
+          </div>
+          <label class="pcm-toggle">
+            <input id="pcm-hide-existing" type="checkbox" [ngModel]="hideExisting()" (ngModelChange)="hideExisting.set($event)" />
+            <span>Hide already added</span>
+          </label>
+        </div>
+
+        <div class="pcm-list-head">
+          <label class="pcm-check">
+            <input id="pcm-select-all" type="checkbox" [checked]="allVisibleSelected()" (change)="toggleAll()" [disabled]="!selectable().length" />
+            <span>Select all ({{ selectable().length }})</span>
+          </label>
+          <span class="pcm-selected-pill">{{ selected().size }} selected</span>
+        </div>
+
+        <div class="pcm-list">
+          @if (isLoading()) {
+            @for (i of [1,2,3,4,5,6]; track i) { <div class="pcm-skeleton"></div> }
+          } @else {
+            @for (c of visible(); track c.id) {
+              <div class="pcm-row" [class.selected]="selected().has(c.id)" [class.disabled]="c.alreadyInProject" (click)="toggle(c)">
+                <input type="checkbox" [checked]="selected().has(c.id)" [disabled]="c.alreadyInProject" (click)="$event.stopPropagation(); toggle(c)" />
+                <div class="pcm-avatar">{{ initials(c.name) }}</div>
+                <div class="pcm-info">
+                  <span class="pcm-name">{{ c.name || 'Unknown' }}</span>
+                  <span class="pcm-sub">{{ c.phone }}@if (c.email) { · {{ c.email }} }</span>
+                </div>
+                <span class="pcm-src">{{ projectName().get(c.projectId) }}</span>
+                @if (c.alreadyInProject) { <span class="pcm-badge">Added</span> }
+              </div>
+            } @empty {
+              <div class="pcm-empty">
+                <i class="fa-regular fa-address-book"></i>
+                <p>No contacts match your filters.</p>
+              </div>
+            }
+          }
+        </div>
+      </section>
+    </div>
+
+    @if (error()) { <div class="pcm-alert error"><i class="fa-solid fa-circle-exclamation"></i> {{ error() }}</div> }
+    @if (result(); as r) {
+      <div class="pcm-alert success"><i class="fa-solid fa-circle-check"></i>
+        {{ r.created }} contact(s) added to this project@if (r.skipped) {, {{ r.skipped }} skipped (already present)}.
+      </div>
+    }
+
+    <footer class="pcm-footer">
+      <div class="pcm-group">
+        <i class="fa-solid fa-users-rectangle"></i>
+        <input id="pcm-group-name" type="text" placeholder="Optional: save as a new contact list (group) name"
+               [ngModel]="groupName()" (ngModelChange)="groupName.set($event)" />
+      </div>
+      <div class="pcm-actions">
+        <button id="pcm-cancel-btn" class="pcm-btn ghost" (click)="close.emit()">Done</button>
+        <button id="pcm-pull-btn" class="pcm-btn primary" [disabled]="!selected().size || isImporting()" (click)="pull()">
+          @if (isImporting()) { <i class="fa-solid fa-spinner fa-spin"></i> Pulling… }
+          @else { <i class="fa-solid fa-download"></i> Pull {{ selected().size || '' }} contact{{ selected().size === 1 ? '' : 's' }} }
+        </button>
+      </div>
+    </footer>
+  </div>
+</div>

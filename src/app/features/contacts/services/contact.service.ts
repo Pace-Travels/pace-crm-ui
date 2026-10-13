@@ -30,6 +30,10 @@ export interface Contact {
   metaRate?: number;
   readinessStatus?: string;
   readinessReason?: string;
+  deliveryStatus?: string;
+  deliveryHealth?: number;
+  marketingCooldownUntil?: string | null;
+  advisory?: any;
   isActive?: boolean;
   isOptedIn?: boolean;
   createdAt?: string | Date;

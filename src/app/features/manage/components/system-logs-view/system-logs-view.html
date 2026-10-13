@@ -99,11 +99,14 @@
 
           <td style="white-space: nowrap; font-weight: 700; color: #0369a1;">
             <span style="display: inline-flex; align-items: center; gap: 4px; background: #e0f2fe; border: 1px solid #bae6fd; padding: 3px 8px; border-radius: 6px; font-size: 11.5px;">
-              <i class="fa-solid fa-paper-plane" style="font-size: 10px; color: #0284c7;"></i> {{ log.senderPhone || '+91 80958 44097' }}
+              <i class="fa-solid fa-paper-plane" style="font-size: 10px; color: #0284c7;"></i> {{ log.senderPhone || 'N/A' }}
             </span>
           </td>
 
           <td style="white-space: nowrap; font-weight: 700; color: #7c3aed;">
+            @if (log.recipientName) {
+              <div style="font-size: 12.5px; font-weight: 700; color: #1e293b; margin-bottom: 4px;">{{ log.recipientName }}</div>
+            }
             <span style="display: inline-flex; align-items: center; gap: 4px; background: #f3e8ff; border: 1px solid #e9d5ff; padding: 3px 8px; border-radius: 6px; font-size: 11.5px;">
               <i class="fa-solid fa-mobile-screen-button" style="font-size: 10px; color: #9333ea;"></i> {{ log.recipientPhone || 'N/A' }}
             </span>
@@ -175,8 +178,8 @@
           <div><strong>Log ID:</strong> {{ selectedLogDetail()?.id }}</div>
           <div><strong>Timestamp:</strong> {{ selectedLogDetail()?.createdAt | date:'medium' }}</div>
           <div><strong>Service:</strong> {{ selectedLogDetail()?.service }}</div>
-          <div><strong>Sender Number:</strong> {{ selectedLogDetail()?.senderPhone || '+91 80958 44097' }}</div>
-          <div><strong>Receiving Number:</strong> {{ selectedLogDetail()?.recipientPhone || 'N/A' }}</div>
+          <div><strong>Sender Number:</strong> {{ selectedLogDetail()?.senderPhone || 'N/A' }}</div>
+          <div><strong>Receiving Number:</strong> {{ selectedLogDetail()?.recipientName ? selectedLogDetail()?.recipientName + ' · ' : '' }}{{ selectedLogDetail()?.recipientPhone || 'N/A' }}</div>
         </div>
 
         <label class="json-label">Raw Request & Response Meta Payload (JSON):</label>
@@ -205,10 +208,10 @@
 
         <!-- Incident Metadata Grid -->
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 8px; font-size: 12.5px; margin-bottom: 16px;">
-          <div><strong style="color: #64748b;">Sender WABA Number:</strong> <span style="font-weight: 700; color: #0284c7;">{{ selectedMetaReport()?.senderPhone || '+91 80958 44097' }}</span></div>
-          <div><strong style="color: #64748b;">Receiving Customer:</strong> <span style="font-weight: 700; color: #9333ea;">{{ selectedMetaReport()?.recipientPhone || 'N/A' }}</span></div>
+          <div><strong style="color: #64748b;">Sender WABA Number:</strong> <span style="font-weight: 700; color: #0284c7;">{{ selectedMetaReport()?.senderPhone || 'N/A' }}</span></div>
+          <div><strong style="color: #64748b;">Receiving Customer:</strong> <span style="font-weight: 700; color: #9333ea;">{{ selectedMetaReport()?.recipientName ? selectedMetaReport()?.recipientName + ' · ' : '' }}{{ selectedMetaReport()?.recipientPhone || 'N/A' }}</span></div>
           <div><strong style="color: #64748b;">Sent / Attempted Time:</strong> <span style="font-weight: 600; color: #334155;">{{ selectedMetaReport()?.createdAt | date:'medium' }}</span></div>
-          <div><strong style="color: #64748b;">Meta Error Code:</strong> <span style="font-weight: 800; color: #dc2626;">#{{ selectedMetaReport()?.errorCode || '190 / OAuth Expired' }}</span></div>
+          <div><strong style="color: #64748b;">Meta Error Code:</strong> <span style="font-weight: 800; color: #dc2626;">#{{ selectedMetaReport()?.errorCode || 'N/A' }}</span></div>
         </div>
 
         <!-- Pre-Formatted Ticket Text Area -->
