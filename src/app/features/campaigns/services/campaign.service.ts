@@ -8,6 +8,9 @@ export interface Campaign {
   createdAt: string;
   status: string;
   audience: string;
+  description?: string;
+  templateId?: number;
+  parameters?: any;
   totalRecipients?: number;
   sentCount?: number;
   pendingCount?: number;
@@ -47,6 +50,9 @@ export class CampaignService {
               createdAt: formattedDate,
               status: item.status || 'RUNNING',
               audience: audienceLabel,
+              description: item.description,
+              templateId: item.templateId,
+              parameters: item.parameters,
               totalRecipients: item.totalRecipients || 0,
               sentCount: item.sentCount !== undefined ? item.sentCount : (item.deliveredCount || 0),
               pendingCount: item.pendingCount || 0,
@@ -88,5 +94,17 @@ export class CampaignService {
 
   toggleAutoRetry(campaignId: number, enabled?: boolean) {
     return this.api.patch<any>(`campaigns/${campaignId}/auto-retry`, { enabled });
+  }
+
+  addRecipientToCampaign(campaignId: number, data: { phone: string; name?: string; sendNow?: boolean }) {
+    return this.api.post<any>(`campaigns/${campaignId}/add-recipient`, data);
+  }
+
+  updateCampaignRecipient(recipientId: number, data: { phone: string; name?: string }) {
+    return this.api.put<any>(`campaigns/recipient/${recipientId}`, data);
+  }
+
+  resendNewlyAdded(campaignId: number) {
+    return this.api.post<any>(`campaigns/${campaignId}/resend-newly-added`, {});
   }
 }

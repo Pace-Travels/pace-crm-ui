@@ -26,14 +26,43 @@ export class CampaignTable implements OnInit {
   // Responses & CRM Sync Data Table Modal state
   showResponsesModal = signal<boolean>(false);
   selectedCampaign = signal<Campaign | null>(null);
+  campaignTemplate = signal<any>(null);
+  showPreviewCard = signal<boolean>(true);
   recipientResponses = signal<any[]>([]);
   isLoadingResponses = signal<boolean>(false);
-  campaignStats = signal<{ total: number; sent: number; pending: number; delivered: number; read: number; failed: number }>({
-    total: 0, sent: 0, pending: 0, delivered: 0, read: 0, failed: 0
+  campaignStats = signal<{ total: number; sent: number; pending: number; delivered: number; read: number; failed: number; newlyAdded?: number }>({
+    total: 0, sent: 0, pending: 0, delivered: 0, read: 0, failed: 0, newlyAdded: 0
   });
 
+  // DataTables Controls State
+  tableSearchQuery = signal<string>('');
+  statusFilter = signal<string>('ALL');
+  pageSize = signal<number>(10);
+  currentPage = signal<number>(1);
+  sortColumn = signal<string>('id');
+  sortDirection = signal<'asc' | 'desc'>('asc');
+
+  // Copy Phone Number state
+  copiedPhoneMap = signal<{ [key: number]: boolean }>({});
+
+  // Resend state
   isResendingMap = signal<{ [key: number]: boolean }>({});
   isResendingAll = signal<boolean>(false);
+  isResendingNewlyAdded = signal<boolean>(false);
+
+  // Add Recipient Modal State
+  showAddRecipientModal = signal<boolean>(false);
+  newRecipientPhone = signal<string>('');
+  newRecipientName = signal<string>('');
+  sendImmediately = signal<boolean>(true);
+  isAddingRecipient = signal<boolean>(false);
+
+  // Edit Recipient Modal State
+  showEditRecipientModal = signal<boolean>(false);
+  editingRecipient = signal<any>(null);
+  editRecipientPhone = signal<string>('');
+  editRecipientName = signal<string>('');
+  isUpdatingRecipient = signal<boolean>(false);
 
   ngOnInit() {
     this.campaignService.fetchCampaigns();
@@ -78,14 +107,299 @@ export class CampaignTable implements OnInit {
     return list;
   }
 
+  // Computed: Filtered recipients (Search & Status)
+  filteredRecipients = computed(() => {
+    let list = this.recipientResponses();
+    const query = this.tableSearchQuery().trim().toLowerCase();
+    const filter = this.statusFilter();
+
+    // Status filter
+    if (filter === 'READ') {
+      list = list.filter(r => r.status === 'READ');
+    } else if (filter === 'DELIVERED') {
+      list = list.filter(r => r.status === 'DELIVERED');
+    } else if (filter === 'SENT') {
+      list = list.filter(r => r.status === 'SENT');
+    } else if (filter === 'FAILED') {
+      list = list.filter(r => r.status === 'FAILED');
+    } else if (filter === 'PENDING') {
+      list = list.filter(r => !r.status || ['PENDING', 'QUEUED', 'SCHEDULED', 'PROCESSING'].includes(r.status));
+    } else if (filter === 'NEW') {
+      list = list.filter(r => r.isNewlyAdded);
+    }
+
+    // Search query filter
+    if (query) {
+      list = list.filter(r => {
+        const name = (r.Contact?.name || '').toLowerCase();
+        const phone = (r.Contact?.phone || r.phone || '').toLowerCase();
+        const status = (r.status || '').toLowerCase();
+        const response = (r.responseReceived || '').toLowerCase();
+        const owners = (r.Contact ? this.contactService.getContactOwners(r.Contact).join(' ') : '').toLowerCase();
+        return name.includes(query) || phone.includes(query) || status.includes(query) || response.includes(query) || owners.includes(query);
+      });
+    }
+
+    return list;
+  });
+
+  // Computed: Sorted recipients
+  sortedRecipients = computed(() => {
+    const list = [...this.filteredRecipients()];
+    const col = this.sortColumn();
+    const dir = this.sortDirection();
+
+    list.sort((a, b) => {
+      let valA: any = '';
+      let valB: any = '';
+
+      if (col === 'id') {
+        valA = a.id || 0;
+        valB = b.id || 0;
+      } else if (col === 'name') {
+        valA = (a.Contact?.name || '').toLowerCase();
+        valB = (b.Contact?.name || '').toLowerCase();
+      } else if (col === 'phone') {
+        valA = (a.Contact?.phone || a.phone || '').toLowerCase();
+        valB = (b.Contact?.phone || b.phone || '').toLowerCase();
+      } else if (col === 'status') {
+        valA = (a.status || '').toLowerCase();
+        valB = (b.status || '').toLowerCase();
+      } else if (col === 'sentAt') {
+        valA = a.sentAt ? new Date(a.sentAt).getTime() : 0;
+        valB = b.sentAt ? new Date(b.sentAt).getTime() : 0;
+      } else if (col === 'deliveredAt') {
+        valA = a.deliveredAt ? new Date(a.deliveredAt).getTime() : 0;
+        valB = b.deliveredAt ? new Date(b.deliveredAt).getTime() : 0;
+      } else if (col === 'readAt') {
+        valA = a.readAt ? new Date(a.readAt).getTime() : 0;
+        valB = b.readAt ? new Date(b.readAt).getTime() : 0;
+      } else if (col === 'response') {
+        valA = (a.responseReceived || '').toLowerCase();
+        valB = (b.responseReceived || '').toLowerCase();
+      }
+
+      if (valA < valB) return dir === 'asc' ? -1 : 1;
+      if (valA > valB) return dir === 'asc' ? 1 : -1;
+      return 0;
+    });
+
+    return list;
+  });
+
+  // Computed: Paginated list
+  paginatedRecipients = computed(() => {
+    const sorted = this.sortedRecipients();
+    const page = this.currentPage();
+    const size = this.pageSize();
+    const start = (page - 1) * size;
+    return sorted.slice(start, start + size);
+  });
+
+  // Computed: Total pages
+  totalPages = computed(() => {
+    const total = this.sortedRecipients().length;
+    return Math.ceil(total / this.pageSize()) || 1;
+  });
+
+  // Computed: Pagination information label
+  paginationInfo = computed(() => {
+    const totalFiltered = this.sortedRecipients().length;
+    const totalOverall = this.recipientResponses().length;
+    if (totalFiltered === 0) return 'Showing 0 to 0 of 0 entries';
+
+    const page = this.currentPage();
+    const size = this.pageSize();
+    const start = (page - 1) * size + 1;
+    const end = Math.min(page * size, totalFiltered);
+
+    if (totalFiltered < totalOverall) {
+      return `Showing ${start} to ${end} of ${totalFiltered} entries (filtered from ${totalOverall} total)`;
+    }
+    return `Showing ${start} to ${end} of ${totalFiltered} entries`;
+  });
+
+  // Computed: Count of newly added
+  newlyAddedCount = computed(() => {
+    return this.recipientResponses().filter(r => r.isNewlyAdded).length;
+  });
+
+  // Pagination navigation
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) {
+      this.currentPage.set(this.currentPage() + 1);
+    }
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) {
+      this.currentPage.set(this.currentPage() - 1);
+    }
+  }
+
+  setPageSize(size: number) {
+    this.pageSize.set(Number(size));
+    this.currentPage.set(1);
+  }
+
+  setSort(col: string) {
+    if (this.sortColumn() === col) {
+      this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
+    } else {
+      this.sortColumn.set(col);
+      this.sortDirection.set('asc');
+    }
+  }
+
+  getPageNumbers(): number[] {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: number[] = [];
+    const maxVisible = 5;
+
+    let start = Math.max(1, current - 2);
+    let end = Math.min(total, start + maxVisible - 1);
+
+    if (end - start < maxVisible - 1) {
+      start = Math.max(1, end - maxVisible + 1);
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  // Copy Phone Number to clipboard with instant feedback
+  copyPhoneNumber(phone: string, id: number) {
+    if (!phone) return;
+    const cleanDigits = phone.trim();
+    navigator.clipboard.writeText(cleanDigits).then(() => {
+      this.copiedPhoneMap.set({ ...this.copiedPhoneMap(), [id]: true });
+      setTimeout(() => {
+        const current = { ...this.copiedPhoneMap() };
+        delete current[id];
+        this.copiedPhoneMap.set(current);
+      }, 2000);
+    }).catch(() => {
+      // Fallback
+      const ta = document.createElement('textarea');
+      ta.value = cleanDigits;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      this.copiedPhoneMap.set({ ...this.copiedPhoneMap(), [id]: true });
+      setTimeout(() => {
+        const current = { ...this.copiedPhoneMap() };
+        delete current[id];
+        this.copiedPhoneMap.set(current);
+      }, 2000);
+    });
+  }
+
+  togglePreviewCard() {
+    this.showPreviewCard.set(!this.showPreviewCard());
+  }
+
+  // WhatsApp Message Preview Helpers
+  getHeaderImageUrl(tpl: any): string | null {
+    if (!tpl) return null;
+    if (tpl.headerMediaUrl) return tpl.headerMediaUrl;
+    if (tpl.headerUrl) return tpl.headerUrl;
+    if (Array.isArray(tpl.components)) {
+      const headerComp = tpl.components.find((c: any) => (c.type === 'HEADER' || c.type === 'header'));
+      if (headerComp && (headerComp.format === 'IMAGE' || headerComp.headerType === 'IMAGE')) {
+        if (headerComp.example?.header_handle?.[0]) return headerComp.example.header_handle[0];
+        if (headerComp.headerUrl || headerComp.url) return headerComp.headerUrl || headerComp.url;
+      }
+    }
+    if (tpl.headerType === 'IMAGE' || tpl.headerFormat === 'IMAGE') {
+      return 'https://pace-messenger-assets.s3.ap-south-1.amazonaws.com/templates/banners/asia_tours.png';
+    }
+    return null;
+  }
+
+  getHeaderVideoUrl(tpl: any): string | null {
+    if (!tpl) return null;
+    if (tpl.headerType === 'VIDEO' || tpl.headerFormat === 'VIDEO') {
+      if (tpl.headerMediaUrl) return tpl.headerMediaUrl;
+      if (Array.isArray(tpl.components)) {
+        const headerComp = tpl.components.find((c: any) => (c.type === 'HEADER' || c.type === 'header'));
+        if (headerComp && (headerComp.format === 'VIDEO' || headerComp.headerType === 'VIDEO')) {
+          if (headerComp.example?.header_handle?.[0]) return headerComp.example.header_handle[0];
+          if (headerComp.headerUrl || headerComp.url) return headerComp.headerUrl || headerComp.url;
+        }
+      }
+    }
+    return null;
+  }
+
+  getHeaderDocUrl(tpl: any): string | null {
+    if (!tpl) return null;
+    if (tpl.headerType === 'DOCUMENT' || tpl.headerFormat === 'DOCUMENT') {
+      return tpl.headerMediaUrl || tpl.headerUrl || 'Document.pdf';
+    }
+    return null;
+  }
+
+  getParsedPreviewBody(templateBody: string, parameters?: any): string {
+    if (!templateBody) return '';
+    let parsed = templateBody;
+    // Replace {{1}}, {{2}} with parameters or nice pills
+    parsed = parsed.replace(/\{\{(\d+)\}\}/g, (match, p1) => {
+      const idx = parseInt(p1, 10);
+      if (parameters && parameters[`var${idx}`]) {
+        return `<span style="background: #e0f2fe; color: #0284c7; padding: 1px 6px; border-radius: 4px; font-weight: 700;">${parameters[`var${idx}`]}</span>`;
+      }
+      return `<span style="background: #e0f2fe; color: #0369a1; padding: 1px 6px; border-radius: 4px; font-weight: 700;">[Variable ${p1}]</span>`;
+    });
+    // Format bold *text*
+    parsed = parsed.replace(/\*([^\*]+)\*/g, '<strong>$1</strong>');
+    // Format italic _text_
+    parsed = parsed.replace(/_([^_]+)_/g, '<em>$1</em>');
+    return parsed;
+  }
+
+  getTemplateButtons(tpl: any): any[] {
+    if (!tpl) return [];
+    if (tpl.buttons) {
+      if (typeof tpl.buttons === 'string') {
+        try { return JSON.parse(tpl.buttons); } catch {}
+      } else if (Array.isArray(tpl.buttons)) {
+        return tpl.buttons;
+      }
+    }
+    if (Array.isArray(tpl.components)) {
+      const btnComp = tpl.components.find((c: any) => (c.type === 'BUTTONS' || c.type === 'buttons'));
+      if (btnComp && Array.isArray(btnComp.buttons)) return btnComp.buttons;
+    }
+    return [];
+  }
+
   openResponsesModal(campaign: Campaign) {
     this.selectedCampaign.set(campaign);
     this.showResponsesModal.set(true);
     this.isLoadingResponses.set(true);
+    this.currentPage.set(1);
+    this.tableSearchQuery.set('');
+    this.statusFilter.set('ALL');
 
     this.campaignService.getCampaignResponses(campaign.id).subscribe({
       next: (res: any) => {
         this.recipientResponses.set(res.data || []);
+        if (res.campaign?.Template) {
+          this.campaignTemplate.set(res.campaign.Template);
+        } else {
+          this.campaignTemplate.set(null);
+        }
+
         if (res.stats) {
           this.campaignStats.set(res.stats);
         } else {
@@ -96,7 +410,8 @@ export class CampaignTable implements OnInit {
             pending: list.filter((r: any) => r.status === 'QUEUED' || r.status === 'PENDING' || r.status === 'SCHEDULED' || r.status === 'PROCESSING').length,
             delivered: list.filter((r: any) => r.status === 'DELIVERED' || r.status === 'READ').length,
             read: list.filter((r: any) => r.status === 'READ').length,
-            failed: list.filter((r: any) => r.status === 'FAILED' || r.status === 'BOUNCED' || r.status === 'ERROR').length
+            failed: list.filter((r: any) => r.status === 'FAILED' || r.status === 'BOUNCED' || r.status === 'ERROR').length,
+            newlyAdded: list.filter((r: any) => r.isNewlyAdded).length
           });
         }
         this.isLoadingResponses.set(false);
@@ -111,7 +426,142 @@ export class CampaignTable implements OnInit {
   closeResponsesModal() {
     this.showResponsesModal.set(false);
     this.selectedCampaign.set(null);
+    this.campaignTemplate.set(null);
     this.recipientResponses.set([]);
+    this.showAddRecipientModal.set(false);
+    this.showEditRecipientModal.set(false);
+  }
+
+  // Add Recipient Actions
+  openAddRecipientModal() {
+    this.newRecipientPhone.set('');
+    this.newRecipientName.set('');
+    this.sendImmediately.set(true);
+    this.showAddRecipientModal.set(true);
+  }
+
+  closeAddRecipientModal() {
+    this.showAddRecipientModal.set(false);
+  }
+
+  submitAddRecipient() {
+    const campaign = this.selectedCampaign();
+    if (!campaign) return;
+
+    const phone = this.newRecipientPhone().trim();
+    if (!phone) {
+      Swal.fire('Invalid Phone', 'Please enter a valid recipient phone number.', 'warning');
+      return;
+    }
+
+    this.isAddingRecipient.set(true);
+    this.campaignService.addRecipientToCampaign(campaign.id, {
+      phone,
+      name: this.newRecipientName().trim() || undefined,
+      sendNow: this.sendImmediately()
+    }).subscribe({
+      next: (res: any) => {
+        this.isAddingRecipient.set(false);
+        this.closeAddRecipientModal();
+
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: res.message || 'Recipient added successfully',
+          timer: 3000,
+          showConfirmButton: false
+        });
+
+        // Refresh responses and stats
+        this.openResponsesModal(campaign);
+      },
+      error: (err: any) => {
+        this.isAddingRecipient.set(false);
+        Swal.fire('Add Failed', err.error?.message || err.message || 'Could not add recipient to campaign', 'error');
+      }
+    });
+  }
+
+  // Edit Recipient Actions
+  openEditRecipientModal(recipient: any) {
+    this.editingRecipient.set(recipient);
+    this.editRecipientPhone.set(recipient.Contact?.phone || recipient.phone || '');
+    this.editRecipientName.set(recipient.Contact?.name || '');
+    this.showEditRecipientModal.set(true);
+  }
+
+  closeEditRecipientModal() {
+    this.showEditRecipientModal.set(false);
+    this.editingRecipient.set(null);
+  }
+
+  submitUpdateRecipient() {
+    const recipient = this.editingRecipient();
+    if (!recipient) return;
+
+    const phone = this.editRecipientPhone().trim();
+    if (!phone) {
+      Swal.fire('Invalid Phone', 'Please enter a valid recipient phone number.', 'warning');
+      return;
+    }
+
+    this.isUpdatingRecipient.set(true);
+    this.campaignService.updateCampaignRecipient(recipient.id, {
+      phone,
+      name: this.editRecipientName().trim() || undefined
+    }).subscribe({
+      next: (res: any) => {
+        this.isUpdatingRecipient.set(false);
+        this.closeEditRecipientModal();
+
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Recipient updated successfully',
+          timer: 2500,
+          showConfirmButton: false
+        });
+
+        // Update locally
+        if (res.recipient) {
+          const list = this.recipientResponses().map(r => r.id === recipient.id ? res.recipient : r);
+          this.recipientResponses.set(list);
+        } else if (this.selectedCampaign()) {
+          this.openResponsesModal(this.selectedCampaign()!);
+        }
+      },
+      error: (err: any) => {
+        this.isUpdatingRecipient.set(false);
+        Swal.fire('Update Failed', err.error?.message || err.message || 'Could not update recipient', 'error');
+      }
+    });
+  }
+
+  // Resend to all newly added recipients
+  resendNewlyAdded() {
+    const campaign = this.selectedCampaign();
+    if (!campaign) return;
+
+    const newlyCount = this.newlyAddedCount();
+    if (newlyCount === 0) {
+      Swal.fire('No Newly Added', 'There are no newly added recipients to resend for this campaign.', 'info');
+      return;
+    }
+
+    this.isResendingNewlyAdded.set(true);
+    this.campaignService.resendNewlyAdded(campaign.id).subscribe({
+      next: (res: any) => {
+        this.isResendingNewlyAdded.set(false);
+        Swal.fire('Resend Complete', res.message || `Dispatched to ${res.count || 0} newly added recipients`, 'success');
+        this.openResponsesModal(campaign);
+      },
+      error: (err: any) => {
+        this.isResendingNewlyAdded.set(false);
+        Swal.fire('Resend Failed', err.error?.message || err.message || 'Failed to dispatch to newly added recipients', 'error');
+      }
+    });
   }
 
   openLiveChatForRecipient(item: any) {
@@ -157,10 +607,8 @@ export class CampaignTable implements OnInit {
       return;
     }
 
-    let syncedCount = 0;
     unsynced.forEach(recipient => {
       this.syncResponseToCrm(recipient);
-      syncedCount++;
     });
   }
 
@@ -174,6 +622,7 @@ export class CampaignTable implements OnInit {
         this.isResendingMap.set(resetMap);
 
         recipient.status = 'SENT';
+        recipient.sentAt = new Date();
         
         Swal.fire({
           toast: true,

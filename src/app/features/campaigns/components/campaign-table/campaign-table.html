@@ -93,168 +93,449 @@
     </table>
 </div>
 
-<!-- Responses, Delivery Analytics & Read Receipts Data Table Modal -->
-<div *ngIf="showResponsesModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 1050; font-family: 'Inter', sans-serif; padding: 16px;">
-    <div style="background: white; width: 95vw; max-width: 1560px; border-radius: 16px; padding: 28px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3); max-height: 94vh; display: flex; flex-direction: column; position: relative;">
+<!-- ================================================================= -->
+<!-- RESPONSES, DELIVERY ANALYTICS & READ RECEIPTS DATA TABLE MODAL     -->
+<!-- ================================================================= -->
+<div *ngIf="showResponsesModal()" class="analytics-modal-backdrop">
+    <div class="analytics-modal-card">
         
         <!-- Modal Header -->
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #e2e8f0; padding-bottom: 20px; margin-bottom: 20px;">
+        <div class="modal-header-section">
             <div>
-                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px;">
-                    <span style="width: 36px; height: 36px; border-radius: 10px; background: rgba(124, 58, 237, 0.1); color: #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                <h3 class="modal-title">
+                    <span class="title-icon-badge">
                         <i class="fa-solid fa-chart-pie"></i>
                     </span>
                     Campaign Analytics & Delivery Receipts
                 </h3>
-                <span style="font-size: 13px; color: #64748b; margin-top: 4px; display: block; margin-left: 46px;">
+                <span class="modal-subtitle">
                     Campaign: <strong>{{ selectedCampaign()?.campaignName }}</strong> — Real-time WhatsApp delivery logs, read receipts, and user responses.
                 </span>
             </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
+            <div class="modal-header-actions">
+                <!-- Add Recipient Button -->
+                <button (click)="openAddRecipientModal()" class="btn-hdr-action btn-add-recipient" title="Add or update phone number to this campaign">
+                    <i class="fa-solid fa-user-plus"></i>
+                    <span>+ Add Number</span>
+                </button>
+
+                <!-- Resend Newly Added Button -->
+                <button (click)="resendNewlyAdded()" 
+                        [disabled]="isResendingNewlyAdded() || newlyAddedCount() === 0" 
+                        class="btn-hdr-action btn-resend-new" 
+                        [style.opacity]="newlyAddedCount() === 0 ? 0.6 : 1"
+                        [title]="newlyAddedCount() > 0 ? 'Resend campaign to ' + newlyAddedCount() + ' newly added contacts' : 'No newly added contacts'">
+                    <i class="fa-solid" [class.fa-paper-plane]="!isResendingNewlyAdded()" [class.fa-spinner]="isResendingNewlyAdded()" [class.fa-spin]="isResendingNewlyAdded()"></i>
+                    <span>Resend Newly Added ({{ newlyAddedCount() }})</span>
+                </button>
+
+                <!-- Auto-Retry Cron Toggle -->
                 <button (click)="toggleCampaignAutoRetry()" 
-                        [style.background]="selectedCampaign()?.autoRetryEnabled ? 'rgba(5, 150, 105, 0.1)' : '#f8fafc'"
-                        [style.color]="selectedCampaign()?.autoRetryEnabled ? '#059669' : '#64748b'"
-                        [style.border]="selectedCampaign()?.autoRetryEnabled ? '1px solid #10b981' : '1px solid #cbd5e1'"
-                        style="padding: 8px 13px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;"
+                        class="btn-hdr-action btn-autoretry"
+                        [class.active]="selectedCampaign()?.autoRetryEnabled"
                         [title]="selectedCampaign()?.autoRetryEnabled ? 'Auto-Retry Cron is Active for this campaign' : 'Auto-Retry Cron is Disabled (Safe)'">
-                    <i class="fa-solid" [class.fa-toggle-on]="selectedCampaign()?.autoRetryEnabled" [class.fa-toggle-off]="!selectedCampaign()?.autoRetryEnabled" [style.color]="selectedCampaign()?.autoRetryEnabled ? '#059669' : '#94a3b8'" style="font-size: 14px;"></i>
-                    <span>Auto-Retry Cron: {{ selectedCampaign()?.autoRetryEnabled ? 'ENABLED' : 'DISABLED' }}</span>
+                    <i class="fa-solid" [class.fa-toggle-on]="selectedCampaign()?.autoRetryEnabled" [class.fa-toggle-off]="!selectedCampaign()?.autoRetryEnabled"></i>
+                    <span>Auto-Retry: {{ selectedCampaign()?.autoRetryEnabled ? 'ENABLED' : 'DISABLED' }}</span>
                 </button>
-                <button (click)="resendAllFailedOrPending()" [disabled]="isResendingAll()" style="background: #ea580c; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);" [style.opacity]="isResendingAll() ? 0.6 : 1">
+
+                <!-- Resend Failed / Pending -->
+                <button (click)="resendAllFailedOrPending()" [disabled]="isResendingAll()" class="btn-hdr-action btn-resend-failed" [style.opacity]="isResendingAll() ? 0.6 : 1">
                     <i class="fa-solid" [class.fa-rotate-right]="!isResendingAll()" [class.fa-spinner]="isResendingAll()" [class.fa-spin]="isResendingAll()"></i>
-                    {{ isResendingAll() ? 'Resending...' : 'Resend Failed / Pending' }}
+                    <span>{{ isResendingAll() ? 'Resending...' : 'Resend Failed / Pending' }}</span>
                 </button>
-                <button (click)="syncAllResponsesToCrm()" style="background: #7c3aed; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);">
-                    <i class="fa-solid fa-arrows-rotate"></i> Sync All to CRM
+
+                <!-- Sync All to CRM -->
+                <button (click)="syncAllResponsesToCrm()" class="btn-hdr-action btn-sync-crm">
+                    <i class="fa-solid fa-arrows-rotate"></i>
+                    <span>Sync All to CRM</span>
                 </button>
-                <button (click)="closeResponsesModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; color: #64748b; display: flex; align-items: center; justify-content: center;">✕</button>
+
+                <!-- Close X -->
+                <button (click)="closeResponsesModal()" class="btn-close-circle" title="Close Modal">✕</button>
             </div>
         </div>
 
-        <!-- Real-Time Campaign Delivery Summary Metric Cards -->
-        <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 20px;">
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 14px; border-radius: 10px; text-align: center;">
-                <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em;">Total Targeted</span>
-                <span style="display: block; font-size: 22px; font-weight: 800; color: #0f172a; margin-top: 4px;">{{ campaignStats().total }}</span>
+        <!-- Real-Time Campaign Delivery Summary Metric Cards (7-Col Grid) -->
+        <div class="metrics-grid">
+            <div class="metric-card card-total">
+                <span class="m-label">Total Targeted</span>
+                <span class="m-value">{{ campaignStats().total }}</span>
             </div>
-            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 10px; text-align: center;">
-                <span style="font-size: 11px; font-weight: 800; color: #15803d; text-transform: uppercase; letter-spacing: 0.04em;"><i class="fa-solid fa-circle-check" style="margin-right: 4px;"></i> Sent / Delivered</span>
-                <span style="display: block; font-size: 22px; font-weight: 800; color: #15803d; margin-top: 4px;">{{ campaignStats().sent }}</span>
+            <div class="metric-card card-sent">
+                <span class="m-label"><i class="fa-solid fa-circle-check"></i> Sent / Delivered</span>
+                <span class="m-value">{{ campaignStats().sent }}</span>
             </div>
-            <div style="background: #fef3c7; border: 1px solid #fde68a; padding: 14px; border-radius: 10px; text-align: center;">
-                <span style="font-size: 11px; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.04em;"><i class="fa-solid fa-clock" style="margin-right: 4px;"></i> Pending</span>
-                <span style="display: block; font-size: 22px; font-weight: 800; color: #b45309; margin-top: 4px;">{{ campaignStats().pending }}</span>
+            <div class="metric-card card-pending">
+                <span class="m-label"><i class="fa-solid fa-clock"></i> Pending</span>
+                <span class="m-value">{{ campaignStats().pending }}</span>
             </div>
-            <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 14px; border-radius: 10px; text-align: center;">
-                <span style="font-size: 11px; font-weight: 800; color: #047857; text-transform: uppercase; letter-spacing: 0.04em;"><i class="fa-solid fa-check-double" style="margin-right: 4px;"></i> Read Receipts</span>
-                <span style="display: block; font-size: 22px; font-weight: 800; color: #047857; margin-top: 4px;">{{ campaignStats().read }}</span>
+            <div class="metric-card card-read">
+                <span class="m-label"><i class="fa-solid fa-check-double"></i> Read Receipts</span>
+                <span class="m-value">{{ campaignStats().read }}</span>
             </div>
-            <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 14px; border-radius: 10px; text-align: center;">
-                <span style="font-size: 11px; font-weight: 800; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.04em;"><i class="fa-solid fa-triangle-exclamation" style="margin-right: 4px;"></i> Failed / Bounced</span>
-                <span style="display: block; font-size: 22px; font-weight: 800; color: #dc2626; margin-top: 4px;">{{ campaignStats().failed }}</span>
+            <div class="metric-card card-failed">
+                <span class="m-label"><i class="fa-solid fa-triangle-exclamation"></i> Failed / Bounced</span>
+                <span class="m-value">{{ campaignStats().failed }}</span>
             </div>
-            <div style="background: #f5f3ff; border: 1px solid #ddd6fe; padding: 14px; border-radius: 10px; text-align: center;" title="Left out by deliverability advisories (cooldown, frequency cap, invalid, opted-out)">
-                <span style="font-size: 11px; font-weight: 800; color: #6d28d9; text-transform: uppercase; letter-spacing: 0.04em;"><i class="fa-solid fa-shield-halved" style="margin-right: 4px;"></i> Skipped</span>
-                <span style="display: block; font-size: 22px; font-weight: 800; color: #6d28d9; margin-top: 4px;">{{ $any(campaignStats()).skipped || 0 }}</span>
-                @if ($any(campaignStats()).overridden) {
-                    <span style="display: block; font-size: 10.5px; color: #7c3aed; font-weight: 600;">{{ $any(campaignStats()).overridden }} overridden</span>
-                }
+            <div class="metric-card card-skipped" title="Left out by deliverability advisories (cooldown, frequency cap, invalid, opted-out)">
+                <span class="m-label"><i class="fa-solid fa-shield-halved"></i> Skipped</span>
+                <span class="m-value">{{ $any(campaignStats()).skipped || 0 }}</span>
+            </div>
+            <div class="metric-card card-newly-added" title="Contacts manually added to this campaign">
+                <span class="m-label"><i class="fa-solid fa-sparkles"></i> Newly Added</span>
+                <span class="m-value">{{ newlyAddedCount() }}</span>
             </div>
         </div>
 
-        <!-- Data Table Container -->
-        <div style="flex: 1; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 10px;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 13.5px; min-width: 1100px;">
+        <!-- ============================================================= -->
+        <!-- CAMPAIGN MESSAGE & MULTIMEDIA PREVIEW CARD (ABOVE TABLE)       -->
+        <!-- ============================================================= -->
+        <div class="campaign-preview-section">
+            <div class="preview-section-header" (click)="togglePreviewCard()">
+                <div class="preview-header-left">
+                    <span class="preview-tag">
+                        <i class="fa-brands fa-whatsapp" style="font-size: 15px; color: #25d366;"></i>
+                        Dispatched WhatsApp Content & Multimedia Preview
+                    </span>
+                    <span *ngIf="campaignTemplate()" class="tpl-badge">
+                        Template: <strong>{{ campaignTemplate()?.templateName }}</strong> ({{ campaignTemplate()?.language || 'en_US' }}) • {{ campaignTemplate()?.category || 'MARKETING' }}
+                    </span>
+                    <span *ngIf="!campaignTemplate()" class="tpl-badge">
+                        Type: <strong>{{ selectedCampaign()?.type || 'BROADCAST' }}</strong>
+                    </span>
+                </div>
+                <button class="btn-toggle-preview" type="button">
+                    <span>{{ showPreviewCard() ? 'Hide Message Preview' : 'Show Message Preview' }}</span>
+                    <i class="fa-solid" [class.fa-chevron-up]="showPreviewCard()" [class.fa-chevron-down]="!showPreviewCard()"></i>
+                </button>
+            </div>
 
-                <thead style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; font-weight: 800; color: #475569; position: sticky; top: 0; z-index: 10; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em;">
+            <!-- WhatsApp Chat Message Preview Bubble -->
+            <div *ngIf="showPreviewCard()" class="preview-body-container">
+                <div class="wa-chat-bubble">
+                    <!-- Image Header -->
+                    <div *ngIf="getHeaderImageUrl(campaignTemplate() || selectedCampaign())" class="wa-media-header">
+                        <img [src]="getHeaderImageUrl(campaignTemplate() || selectedCampaign())!" alt="Campaign Banner Image" class="wa-media-img" />
+                    </div>
+
+                    <!-- Video Header -->
+                    <div *ngIf="getHeaderVideoUrl(campaignTemplate() || selectedCampaign())" class="wa-media-header">
+                        <video [src]="getHeaderVideoUrl(campaignTemplate() || selectedCampaign())!" controls class="wa-media-video"></video>
+                    </div>
+
+                    <!-- Document Header -->
+                    <div *ngIf="getHeaderDocUrl(campaignTemplate() || selectedCampaign())" class="wa-doc-header">
+                        <i class="fa-solid fa-file-pdf wa-doc-icon"></i>
+                        <div class="wa-doc-meta">
+                            <span class="wa-doc-title">Campaign_Document.pdf</span>
+                            <span class="wa-doc-sub">PDF Document • 1.2 MB</span>
+                        </div>
+                        <i class="fa-solid fa-download wa-doc-dl"></i>
+                    </div>
+
+                    <!-- Text Header -->
+                    <div *ngIf="campaignTemplate()?.headerText && !getHeaderImageUrl(campaignTemplate()) && !getHeaderVideoUrl(campaignTemplate())" class="wa-text-header">
+                        {{ campaignTemplate()?.headerText }}
+                    </div>
+
+                    <!-- Message Body with Parameters & WhatsApp Formatting -->
+                    <div class="wa-text-body" [innerHTML]="getParsedPreviewBody(campaignTemplate()?.templateBody || selectedCampaign()?.description || 'Exclusive Travel Broadcast Promotion', selectedCampaign()?.parameters)">
+                    </div>
+
+                    <!-- Footer Text -->
+                    <div *ngIf="campaignTemplate()?.footerText" class="wa-text-footer">
+                        {{ campaignTemplate()?.footerText }}
+                    </div>
+
+                    <!-- Timestamp Badge -->
+                    <div class="wa-bubble-time">
+                        {{ selectedCampaign()?.createdAt || 'Dispatched' }} <i class="fa-solid fa-check-double" style="color: #53bdeb; margin-left: 3px;"></i>
+                    </div>
+
+                    <!-- Interactive Buttons -->
+                    <div *ngIf="getTemplateButtons(campaignTemplate()).length > 0" class="wa-buttons-container">
+                        <div *ngFor="let btn of getTemplateButtons(campaignTemplate())" class="wa-btn-pill">
+                            <i class="fa-solid fa-arrow-up-right-from-square" *ngIf="btn.type === 'URL'"></i>
+                            <i class="fa-solid fa-phone" *ngIf="btn.type === 'PHONE_NUMBER'"></i>
+                            <i class="fa-solid fa-reply" *ngIf="btn.type === 'QUICK_REPLY'"></i>
+                            <span>{{ btn.text || btn.buttonText || 'Action' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- DATATABLES CONTROLS TOOLBAR (SEARCH, STATUS TABS, PAGE SIZE)   -->
+        <!-- ============================================================= -->
+        <div class="dt-toolbar">
+            <!-- Left: Page Size Selector & Quick Status Filter Tabs -->
+            <div class="dt-toolbar-left">
+                <div class="dt-page-size-selector">
+                    <label>Show</label>
+                    <select [ngModel]="pageSize()" (ngModelChange)="setPageSize($event)">
+                        <option [value]="10">10</option>
+                        <option [value]="25">25</option>
+                        <option [value]="50">50</option>
+                        <option [value]="100">100</option>
+                    </select>
+                    <label>entries</label>
+                </div>
+
+                <div class="dt-status-pills">
+                    <button class="pill-btn" [class.active]="statusFilter() === 'ALL'" (click)="statusFilter.set('ALL'); currentPage.set(1)">
+                        All ({{ recipientResponses().length }})
+                    </button>
+                    <button class="pill-btn pill-read" [class.active]="statusFilter() === 'READ'" (click)="statusFilter.set('READ'); currentPage.set(1)">
+                        <i class="fa-solid fa-check-double"></i> Read ({{ campaignStats().read }})
+                    </button>
+                    <button class="pill-btn pill-deliv" [class.active]="statusFilter() === 'DELIVERED'" (click)="statusFilter.set('DELIVERED'); currentPage.set(1)">
+                        <i class="fa-solid fa-check"></i> Delivered ({{ campaignStats().delivered }})
+                    </button>
+                    <button class="pill-btn pill-failed" [class.active]="statusFilter() === 'FAILED'" (click)="statusFilter.set('FAILED'); currentPage.set(1)">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Failed ({{ campaignStats().failed }})
+                    </button>
+                    <button class="pill-btn pill-pending" [class.active]="statusFilter() === 'PENDING'" (click)="statusFilter.set('PENDING'); currentPage.set(1)">
+                        <i class="fa-solid fa-clock"></i> Pending ({{ campaignStats().pending }})
+                    </button>
+                    <button class="pill-btn pill-new" [class.active]="statusFilter() === 'NEW'" (click)="statusFilter.set('NEW'); currentPage.set(1)">
+                        <i class="fa-solid fa-sparkles"></i> Newly Added ({{ newlyAddedCount() }})
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Real-time Live Search Input -->
+            <div class="dt-toolbar-right">
+                <div class="dt-search-box">
+                    <i class="fa-solid fa-magnifying-glass dt-search-icon"></i>
+                    <input type="text" 
+                           [ngModel]="tableSearchQuery()" 
+                           (ngModelChange)="tableSearchQuery.set($event); currentPage.set(1)" 
+                           placeholder="Search recipient, phone, status..." />
+                    <button *ngIf="tableSearchQuery()" (click)="tableSearchQuery.set(''); currentPage.set(1)" class="dt-clear-search">✕</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
+        <!-- DATA TABLE CONTAINER                                          -->
+        <!-- ============================================================= -->
+        <div class="table-scroll-wrapper">
+            <table class="dt-table">
+                <thead>
                     <tr>
-                        <th style="padding: 12px 16px;">RECIPIENT</th>
-                        <th style="padding: 12px 16px;">PHONE NUMBER</th>
-                        <th style="padding: 12px 16px;">CONTACT OWNER(S)</th>
-                        <th style="padding: 12px 16px;">DELIVERY & READ STATUS</th>
-                        <th style="padding: 12px 16px;">RESPONSE RECEIVED</th>
-                        <th style="padding: 12px 16px;">CRM SYNC</th>
-                        <th style="padding: 12px 16px; text-align: right;">ACTION</th>
+                        <th style="width: 50px; text-align: center;">#</th>
+                        <th (click)="setSort('name')" class="sortable-th">
+                            RECIPIENT
+                            <span class="sort-icon">
+                                <i *ngIf="sortColumn() === 'name'" class="fa-solid" [class.fa-sort-up]="sortDirection() === 'asc'" [class.fa-sort-down]="sortDirection() === 'desc'"></i>
+                                <i *ngIf="sortColumn() !== 'name'" class="fa-solid fa-sort"></i>
+                            </span>
+                        </th>
+                        <th (click)="setSort('phone')" class="sortable-th">
+                            PHONE NUMBER
+                            <span class="sort-icon">
+                                <i *ngIf="sortColumn() === 'phone'" class="fa-solid" [class.fa-sort-up]="sortDirection() === 'asc'" [class.fa-sort-down]="sortDirection() === 'desc'"></i>
+                                <i *ngIf="sortColumn() !== 'phone'" class="fa-solid fa-sort"></i>
+                            </span>
+                        </th>
+                        <th>CONTACT OWNER(S)</th>
+                        <th (click)="setSort('status')" class="sortable-th">
+                            DELIVERY STATUS
+                            <span class="sort-icon">
+                                <i *ngIf="sortColumn() === 'status'" class="fa-solid" [class.fa-sort-up]="sortDirection() === 'asc'" [class.fa-sort-down]="sortDirection() === 'desc'"></i>
+                                <i *ngIf="sortColumn() !== 'status'" class="fa-solid fa-sort"></i>
+                            </span>
+                        </th>
+                        <th (click)="setSort('sentAt')" class="sortable-th">
+                            ACTIVITY TIMESTAMPS
+                            <span class="sort-icon">
+                                <i *ngIf="sortColumn() === 'sentAt'" class="fa-solid" [class.fa-sort-up]="sortDirection() === 'asc'" [class.fa-sort-down]="sortDirection() === 'desc'"></i>
+                                <i *ngIf="sortColumn() !== 'sentAt'" class="fa-solid fa-sort"></i>
+                            </span>
+                        </th>
+                        <th (click)="setSort('response')" class="sortable-th">
+                            RESPONSE RECEIVED
+                            <span class="sort-icon">
+                                <i *ngIf="sortColumn() === 'response'" class="fa-solid" [class.fa-sort-up]="sortDirection() === 'asc'" [class.fa-sort-down]="sortDirection() === 'desc'"></i>
+                                <i *ngIf="sortColumn() !== 'response'" class="fa-solid fa-sort"></i>
+                            </span>
+                        </th>
+                        <th>CRM SYNC</th>
+                        <th style="text-align: right; padding-right: 20px;">ACTION</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr *ngIf="isLoadingResponses()">
-                        <td colspan="7" style="padding: 40px; text-align: center; color: #64748b;">Loading recipient delivery logs & read receipts...</td>
+                        <td colspan="9" class="td-loading">
+                            <i class="fa-solid fa-spinner fa-spin" style="font-size: 20px; color: #7c3aed; margin-bottom: 8px;"></i>
+                            <div>Loading recipient delivery logs & read receipts...</div>
+                        </td>
                     </tr>
-                    <tr *ngIf="!isLoadingResponses() && recipientResponses().length === 0">
-                        <td colspan="7" style="padding: 40px; text-align: center; color: #64748b;">No recipient response records found for this campaign yet.</td>
+                    <tr *ngIf="!isLoadingResponses() && sortedRecipients().length === 0">
+                        <td colspan="9" class="td-empty">
+                            <p style="font-weight: 700; color: #1e293b; margin-bottom: 4px;">No recipient records found</p>
+                            <p style="color: #64748b; font-size: 13px; margin: 0;">Try adjusting your search query or status filter.</p>
+                        </td>
                     </tr>
                     <ng-container *ngIf="!isLoadingResponses()">
-                        <tr *ngFor="let item of recipientResponses(); let idx = index" [style.background]="idx % 2 === 0 ? 'white' : '#fafafa'" style="border-bottom: 1px solid #f1f5f9; color: #1e293b;">
-                            <td style="padding: 14px 16px; font-weight: 700; color: #0f172a;">
-                                {{ item.Contact?.name || 'UNKNOWN' }}
+                        <tr *ngFor="let item of paginatedRecipients(); let idx = index" 
+                            [class.row-newly-added]="item.isNewlyAdded"
+                            [class.row-even]="idx % 2 === 0" 
+                            [class.row-odd]="idx % 2 !== 0">
+                            
+                            <!-- 1. Serial Number (Sl No) -->
+                            <td class="td-sl-no">
+                                {{ (currentPage() - 1) * pageSize() + idx + 1 }}
                             </td>
-                            <td style="padding: 14px 16px; font-family: monospace; font-size: 13px;">
-                                {{ item.Contact?.phone || '-' }}
-                            </td>
-                            <td style="padding: 14px 16px;">
-                                <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-                                    <span *ngFor="let owner of contactService.getContactOwners(item.Contact || {})" style="display: inline-flex; align-items: center; gap: 4px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">
-                                        <i class="fa-solid fa-user-gear" style="font-size: 10px;"></i> {{ owner }}
+
+                            <!-- 2. Recipient Name + Newly Added Tag -->
+                            <td class="td-recipient">
+                                <div class="recipient-name-box">
+                                    <span class="name-text">{{ item.Contact?.name || 'UNKNOWN' }}</span>
+                                    <span *ngIf="item.isNewlyAdded" class="badge-new-contact" title="Manually added to campaign">
+                                        <i class="fa-solid fa-sparkles"></i> NEWLY ADDED
                                     </span>
                                 </div>
                             </td>
-                            <td style="padding: 14px 16px;">
-                                <!-- Read Receipt Badges -->
-                                <div style="display: flex; flex-direction: column; gap: 2px;">
-                                    <span *ngIf="item.status === 'READ'" style="display: inline-flex; align-items: center; gap: 6px; color: #16a34a; font-weight: 800; font-size: 12.5px;">
-                                        <i class="fa-solid fa-check-double" style="color: #25d366; font-size: 14px;"></i> READ
-                                        <span *ngIf="item.updatedAt" style="font-size: 11px; font-weight: 400; color: #64748b;">({{ item.updatedAt | date:'shortTime' }})</span>
-                                    </span>
-                                    <span *ngIf="item.status === 'DELIVERED'" style="display: inline-flex; align-items: center; gap: 6px; color: #0369a1; font-weight: 700; font-size: 12.5px;">
-                                        <i class="fa-solid fa-check-double" style="color: #94a3b8; font-size: 14px;"></i> DELIVERED
-                                    </span>
-                                    <span *ngIf="item.status === 'SENT'" style="display: inline-flex; align-items: center; gap: 6px; color: #1e40af; font-weight: 600; font-size: 12.5px;">
-                                        <i class="fa-solid fa-check" style="color: #94a3b8;"></i> SENT
-                                    </span>
-                                    <span *ngIf="item.status === 'FAILED'" style="display: inline-flex; align-items: center; gap: 6px; color: #dc2626; font-weight: 700; font-size: 12.5px;" [title]="item.errorMessage || 'Message delivery failed via Meta Cloud API'">
-                                        <i class="fa-solid fa-circle-xmark"></i> FAILED
-                                    </span>
-                                    <div *ngIf="item.status === 'FAILED' && item.errorMessage" style="font-size: 11px; color: #b91c1c; margin-top: 3px; max-width: 260px; line-height: 1.3; background: #fef2f2; border: 1px solid #fecaca; padding: 3px 6px; border-radius: 4px; word-break: break-word;">
-                                        {{ item.errorMessage }}
-                                    </div>
-                                    <span *ngIf="!item.status || item.status === 'PENDING'" style="display: inline-flex; align-items: center; gap: 6px; color: #d97706; font-weight: 600; font-size: 12.5px;">
-                                        <i class="fa-solid fa-clock"></i> PENDING
-                                    </span>
-                                    <span *ngIf="item.status === 'SKIPPED'" [title]="item.skipReason || ''" style="display: inline-flex; flex-direction: column; gap: 2px; color: #6d28d9; font-weight: 700; font-size: 12.5px; max-width: 220px; white-space: normal;">
-                                        <span><i class="fa-solid fa-shield-halved"></i> SKIPPED</span>
-                                        <span style="font-size: 10.5px; font-weight: 500; color: #7c3aed; line-height: 1.3;">{{ item.skipReason }}</span>
-                                    </span>
-                                    <span *ngIf="item.overriddenBy !== null && item.overriddenBy !== undefined" title="Sent despite a deliverability advisory (override recorded)" style="font-size: 10px; font-weight: 700; color: #b45309; background: #fef3c7; padding: 1px 6px; border-radius: 6px;">OVERRIDE</span>
-                                </div>
-                            </td>
-                            <td style="padding: 14px 16px; font-weight: 600;" [style.color]="item.responseReceived ? '#7c3aed' : '#94a3b8'">
-                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                                    <span>{{ item.responseReceived || 'No Response Yet' }}</span>
-                                    <button *ngIf="item.responseReceived" (click)="openLiveChatForRecipient(item)" title="Open in Live Chat" style="background: rgba(124, 58, 237, 0.1); color: #7c3aed; border: none; border-radius: 4px; padding: 2px 6px; font-size: 10.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 3px;">
-                                        <i class="fa-solid fa-up-right-from-square" style="font-size: 9px;"></i> Live Chat
+
+                            <!-- 3. Phone Number with Copy Button -->
+                            <td class="td-phone">
+                                <div class="phone-cell-content">
+                                    <span class="phone-number-text">{{ item.Contact?.phone || item.phone || '-' }}</span>
+                                    <button (click)="copyPhoneNumber(item.Contact?.phone || item.phone, item.id)" 
+                                            class="btn-copy-phone"
+                                            [class.copied]="copiedPhoneMap()[item.id]"
+                                            [title]="copiedPhoneMap()[item.id] ? 'Copied!' : 'Copy Phone Number'">
+                                        <i class="fa-solid" [class.fa-check]="copiedPhoneMap()[item.id]" [class.fa-copy]="!copiedPhoneMap()[item.id]"></i>
+                                        <span *ngIf="copiedPhoneMap()[item.id]" class="copied-tooltip">Copied!</span>
                                     </button>
                                 </div>
-                                <div *ngIf="item.respondedAt" style="font-size: 11px; color: #64748b; font-weight: 400; margin-top: 2px;">
-                                    At {{ item.respondedAt | date:'short' }}
+                            </td>
+
+                            <!-- 4. Contact Owners -->
+                            <td class="td-owners">
+                                <div class="owners-container">
+                                    <span *ngFor="let owner of contactService.getContactOwners(item.Contact || {})" class="owner-pill">
+                                        <i class="fa-solid fa-user-gear"></i> {{ owner }}
+                                    </span>
+                                    <span *ngIf="contactService.getContactOwners(item.Contact || {}).length === 0" style="color: #94a3b8; font-size: 12px;">-</span>
                                 </div>
                             </td>
-                            <td style="padding: 14px 16px;">
-                                <span [style.background]="item.crmSyncStatus === 'SYNCED' ? '#dcfce7' : '#fef3c7'" [style.color]="item.crmSyncStatus === 'SYNCED' ? '#16a34a' : '#b45309'" style="padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;">
+
+                            <!-- 5. Delivery & Read Status Badges -->
+                            <td class="td-status">
+                                <div class="status-stack">
+                                    <span *ngIf="item.status === 'READ'" class="status-badge badge-read">
+                                        <i class="fa-solid fa-check-double" style="color: #25d366;"></i> READ
+                                    </span>
+                                    <span *ngIf="item.status === 'DELIVERED'" class="status-badge badge-delivered">
+                                        <i class="fa-solid fa-check-double" style="color: #0284c7;"></i> DELIVERED
+                                    </span>
+                                    <span *ngIf="item.status === 'SENT'" class="status-badge badge-sent">
+                                        <i class="fa-solid fa-check" style="color: #2563eb;"></i> SENT
+                                    </span>
+                                    <span *ngIf="item.status === 'FAILED'" class="status-badge badge-failed" [title]="item.errorMessage || 'Message delivery failed via Meta Cloud API'">
+                                        <i class="fa-solid fa-circle-xmark"></i> FAILED
+                                    </span>
+                                    <div *ngIf="item.status === 'FAILED' && item.errorMessage" class="error-detail-box" [title]="item.errorMessage">
+                                        {{ item.errorMessage }}
+                                    </div>
+                                    <span *ngIf="!item.status || item.status === 'PENDING' || item.status === 'QUEUED'" class="status-badge badge-pending">
+                                        <i class="fa-solid fa-clock"></i> PENDING
+                                    </span>
+                                    <span *ngIf="item.status === 'SKIPPED'" class="status-badge badge-skipped" [title]="item.skipReason || ''">
+                                        <span><i class="fa-solid fa-shield-halved"></i> SKIPPED</span>
+                                        <span *ngIf="item.skipReason" class="skip-detail">{{ item.skipReason }}</span>
+                                    </span>
+                                    <span *ngIf="item.overriddenBy !== null && item.overriddenBy !== undefined" class="override-pill" title="Sent despite deliverability advisory">OVERRIDE</span>
+                                </div>
+                            </td>
+
+                            <!-- 6. 4-Stage Activity Timestamps (Sent, Delivered, Read, Replied) -->
+                            <td class="td-timestamps">
+                                <div class="timestamps-timeline">
+                                    <!-- Sent Time -->
+                                    <div class="ts-row" title="Time dispatched from server to WhatsApp">
+                                        <span class="ts-icon ts-sent"><i class="fa-solid fa-paper-plane"></i></span>
+                                        <span class="ts-label">Sent:</span>
+                                        <span class="ts-val">{{ item.sentAt ? (item.sentAt | date:'MMM d, h:mm a') : '-' }}</span>
+                                    </div>
+
+                                    <!-- Delivered Time -->
+                                    <div class="ts-row" title="Time confirmed delivered to recipient phone">
+                                        <span class="ts-icon ts-deliv"><i class="fa-solid fa-circle-check"></i></span>
+                                        <span class="ts-label">Deliv:</span>
+                                        <span class="ts-val" [class.ts-active]="item.deliveredAt">{{ item.deliveredAt ? (item.deliveredAt | date:'MMM d, h:mm a') : (item.status === 'FAILED' ? 'N/A' : 'Pending') }}</span>
+                                    </div>
+
+                                    <!-- Read Time -->
+                                    <div class="ts-row" title="Time recipient opened and read message">
+                                        <span class="ts-icon ts-read"><i class="fa-solid fa-eye"></i></span>
+                                        <span class="ts-label">Read:</span>
+                                        <span class="ts-val" [class.ts-active-green]="item.readAt">{{ item.readAt ? (item.readAt | date:'MMM d, h:mm a') : 'Unread' }}</span>
+                                    </div>
+
+                                    <!-- Response Time -->
+                                    <div *ngIf="item.respondedAt" class="ts-row" title="Time contact sent inbound response">
+                                        <span class="ts-icon ts-reply"><i class="fa-solid fa-reply"></i></span>
+                                        <span class="ts-label">Replied:</span>
+                                        <span class="ts-val ts-active-purple">{{ item.respondedAt | date:'MMM d, h:mm a' }}</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- 7. Inbound Response Content & Live Chat Jump -->
+                            <td class="td-response">
+                                <div class="response-cell-content">
+                                    <span class="response-text" [class.has-response]="item.responseReceived">
+                                        {{ item.responseReceived || 'No Response Yet' }}
+                                    </span>
+                                    <div *ngIf="item.responseReceived" class="response-actions">
+                                        <button (click)="openLiveChatForRecipient(item)" class="btn-live-chat-jump" title="Open Conversation in Live Chat">
+                                            <i class="fa-solid fa-up-right-from-square"></i> Live Chat
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <!-- 8. CRM Sync -->
+                            <td class="td-crm-sync">
+                                <span class="sync-badge" [class.synced]="item.crmSyncStatus === 'SYNCED'">
                                     {{ item.crmSyncStatus || 'PENDING' }}
                                 </span>
                             </td>
-                            <td style="padding: 14px 16px; text-align: right;">
-                                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 6px;">
-                                    <button (click)="resendCampaignToRecipient(item)" [disabled]="isResendingMap()[item.id]" title="Resend campaign template message to this contact" style="background: #f97316; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(249, 115, 22, 0.2); transition: all 0.2s ease;" [style.opacity]="isResendingMap()[item.id] ? 0.6 : 1">
+
+                            <!-- 9. Row Action Buttons -->
+                            <td class="td-actions">
+                                <div class="row-actions-group">
+                                    <!-- Edit Recipient Details -->
+                                    <button (click)="openEditRecipientModal(item)" class="btn-tbl-action btn-edit" title="Edit recipient phone number or name">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+
+                                    <!-- Resend Single Message -->
+                                    <button (click)="resendCampaignToRecipient(item)" 
+                                            [disabled]="isResendingMap()[item.id]" 
+                                            class="btn-tbl-action btn-resend" 
+                                            [style.opacity]="isResendingMap()[item.id] ? 0.6 : 1"
+                                            title="Resend campaign message to this contact">
                                         <i class="fa-solid" [class.fa-paper-plane]="!isResendingMap()[item.id]" [class.fa-spinner]="isResendingMap()[item.id]" [class.fa-spin]="isResendingMap()[item.id]"></i>
-                                        {{ isResendingMap()[item.id] ? 'Sending...' : 'Resend' }}
+                                        <span>{{ isResendingMap()[item.id] ? 'Sending...' : 'Resend' }}</span>
                                     </button>
-                                    <button (click)="openLiveChatForRecipient(item)" title="Open Live Chat for this contact" style="background: #444ce7; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 4px rgba(68, 76, 231, 0.2); transition: all 0.2s ease;">
-                                        <i class="fa-solid fa-comments"></i> Chat
+
+                                    <!-- Open Live Chat -->
+                                    <button (click)="openLiveChatForRecipient(item)" class="btn-tbl-action btn-chat" title="Open Live Chat for this contact">
+                                        <i class="fa-solid fa-comments"></i>
                                     </button>
-                                    <button (click)="syncResponseToCrm(item)" [disabled]="item.crmSyncStatus === 'SYNCED'" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; transition: all 0.2s ease;" [style.opacity]="item.crmSyncStatus === 'SYNCED' ? 0.6 : 1">
-                                        {{ item.crmSyncStatus === 'SYNCED' ? 'Synced' : 'Sync to CRM' }}
+
+                                    <!-- Sync to CRM -->
+                                    <button (click)="syncResponseToCrm(item)" 
+                                            [disabled]="item.crmSyncStatus === 'SYNCED'" 
+                                            class="btn-tbl-action btn-sync"
+                                            [style.opacity]="item.crmSyncStatus === 'SYNCED' ? 0.6 : 1"
+                                            title="Sync response data to CRM profile">
+                                        {{ item.crmSyncStatus === 'SYNCED' ? 'Synced' : 'Sync' }}
                                     </button>
                                 </div>
                             </td>
@@ -264,10 +545,132 @@
             </table>
         </div>
 
-        <!-- Footer -->
-        <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
-            <button (click)="closeResponsesModal()" style="background: #0f172a; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 700; font-size: 13.5px; cursor: pointer;">
+        <!-- ============================================================= -->
+        <!-- DATATABLES PAGINATION FOOTER                                  -->
+        <!-- ============================================================= -->
+        <div class="dt-footer">
+            <div class="dt-info">
+                {{ paginationInfo() }}
+            </div>
+            <div class="dt-pagination">
+                <button (click)="goToPage(1)" [disabled]="currentPage() === 1" class="page-nav-btn" title="First Page">
+                    «
+                </button>
+                <button (click)="prevPage()" [disabled]="currentPage() === 1" class="page-nav-btn" title="Previous Page">
+                    ‹
+                </button>
+                <button *ngFor="let p of getPageNumbers()" 
+                        (click)="goToPage(p)" 
+                        class="page-num-btn" 
+                        [class.active]="currentPage() === p">
+                    {{ p }}
+                </button>
+                <button (click)="nextPage()" [disabled]="currentPage() === totalPages()" class="page-nav-btn" title="Next Page">
+                    ›
+                </button>
+                <button (click)="goToPage(totalPages())" [disabled]="currentPage() === totalPages()" class="page-nav-btn" title="Last Page">
+                    »
+                </button>
+            </div>
+        </div>
+
+        <!-- Modal Bottom Close Bar -->
+        <div class="modal-footer-section">
+            <button (click)="closeResponsesModal()" class="btn-modal-close">
                 Close
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- ADD RECIPIENT TO CAMPAIGN MODAL                                   -->
+<!-- ================================================================= -->
+<div *ngIf="showAddRecipientModal()" class="sub-modal-backdrop">
+    <div class="sub-modal-card">
+        <div class="sub-modal-header">
+            <h4><i class="fa-solid fa-user-plus" style="color: #0284c7; margin-right: 6px;"></i> Add Recipient to Campaign</h4>
+            <button (click)="closeAddRecipientModal()" class="sub-modal-close-btn">✕</button>
+        </div>
+        <div class="sub-modal-body">
+            <p style="font-size: 13px; color: #64748b; margin-top: 0; margin-bottom: 16px;">
+                Enter a recipient number to include them in <strong>{{ selectedCampaign()?.campaignName }}</strong>.
+            </p>
+
+            <div class="form-group">
+                <label>Phone Number (with Country Code) <span style="color: #ef4444;">*</span></label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-phone"></i>
+                    <input type="text" [ngModel]="newRecipientPhone()" (ngModelChange)="newRecipientPhone.set($event)" placeholder="e.g. +91 99452 27363 or 919945227363" />
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 14px;">
+                <label>Recipient / Contact Name (Optional)</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" [ngModel]="newRecipientName()" (ngModelChange)="newRecipientName.set($event)" placeholder="e.g. Rahul Sharma" />
+                </div>
+            </div>
+
+            <div class="form-checkbox-group" style="margin-top: 16px;">
+                <label class="checkbox-container">
+                    <input type="checkbox" [ngModel]="sendImmediately()" (ngModelChange)="sendImmediately.set($event)" />
+                    <span class="checkmark"></span>
+                    <span class="checkbox-text">
+                        <strong>Send campaign template message immediately</strong>
+                        <small style="display: block; color: #64748b; font-size: 11.5px; margin-top: 2px;">
+                            Dispatches the WhatsApp template directly to this number upon addition.
+                        </small>
+                    </span>
+                </label>
+            </div>
+        </div>
+        <div class="sub-modal-footer">
+            <button (click)="closeAddRecipientModal()" class="btn-sub-cancel">Cancel</button>
+            <button (click)="submitAddRecipient()" [disabled]="isAddingRecipient()" class="btn-sub-submit">
+                <i class="fa-solid" [class.fa-plus]="!isAddingRecipient()" [class.fa-spinner]="isAddingRecipient()" [class.fa-spin]="isAddingRecipient()"></i>
+                <span>{{ isAddingRecipient() ? 'Adding...' : (sendImmediately() ? 'Add & Send Now' : 'Add Recipient') }}</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- EDIT RECIPIENT DETAILS MODAL                                      -->
+<!-- ================================================================= -->
+<div *ngIf="showEditRecipientModal()" class="sub-modal-backdrop">
+    <div class="sub-modal-card">
+        <div class="sub-modal-header">
+            <h4><i class="fa-solid fa-pen-to-square" style="color: #7c3aed; margin-right: 6px;"></i> Edit Recipient Information</h4>
+            <button (click)="closeEditRecipientModal()" class="sub-modal-close-btn">✕</button>
+        </div>
+        <div class="sub-modal-body">
+            <p style="font-size: 13px; color: #64748b; margin-top: 0; margin-bottom: 16px;">
+                Update the phone number or contact name for this campaign recipient.
+            </p>
+
+            <div class="form-group">
+                <label>Phone Number <span style="color: #ef4444;">*</span></label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-phone"></i>
+                    <input type="text" [ngModel]="editRecipientPhone()" (ngModelChange)="editRecipientPhone.set($event)" placeholder="e.g. +91 99452 27363" />
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 14px;">
+                <label>Contact Name</label>
+                <div class="input-with-icon">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" [ngModel]="editRecipientName()" (ngModelChange)="editRecipientName.set($event)" placeholder="Contact Name" />
+                </div>
+            </div>
+        </div>
+        <div class="sub-modal-footer">
+            <button (click)="closeEditRecipientModal()" class="btn-sub-cancel">Cancel</button>
+            <button (click)="submitUpdateRecipient()" [disabled]="isUpdatingRecipient()" class="btn-sub-submit" style="background: #7c3aed;">
+                <i class="fa-solid" [class.fa-check]="!isUpdatingRecipient()" [class.fa-spinner]="isUpdatingRecipient()" [class.fa-spin]="isUpdatingRecipient()"></i>
+                <span>{{ isUpdatingRecipient() ? 'Updating...' : 'Save Changes' }}</span>
             </button>
         </div>
     </div>
