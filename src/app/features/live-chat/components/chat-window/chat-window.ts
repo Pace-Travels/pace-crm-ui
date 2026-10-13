@@ -11,11 +11,12 @@ import { PayModal, PaymentRequestPayload } from '../pay-modal/pay-modal';
 import { EmojiStickerPicker } from '../emoji-sticker-picker/emoji-sticker-picker';
 import { SendTemplateModal, TemplateDispatchPayload } from '../template-modal/template-modal';
 import { AssetGalleryPicker } from '../../../campaigns/components/asset-gallery-picker/asset-gallery-picker';
+import { MediaViewerModal, MediaViewerItem } from '../media-viewer-modal/media-viewer-modal';
 
 @Component({
   selector: 'app-chat-window',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MediaModal, TagModal, PayModal, EmojiStickerPicker, SendTemplateModal, AssetGalleryPicker],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MediaModal, TagModal, PayModal, EmojiStickerPicker, SendTemplateModal, AssetGalleryPicker, MediaViewerModal],
   templateUrl: './chat-window.html',
   styleUrl: './chat-window.scss',
 })
@@ -50,6 +51,103 @@ export class ChatWindow implements AfterViewChecked {
   forwardSearchQuery = signal<string>('');
   selectedForwardConvIds = signal<number[]>([]);
   pinnedMessageIds = signal<Set<number>>(new Set());
+
+  // WhatsApp Full-Screen Media Viewer Lightbox Signals
+  isMediaViewerOpen = signal(false);
+  selectedViewerMedia = signal<MediaViewerItem | null>(null);
+
+  openMediaViewer(msg: any) {
+    if (!msg) return;
+    this.closeContextMenu();
+    const item: MediaViewerItem = {
+      id: msg.id,
+      url: msg.url || msg.mediaUrl || msg.content,
+      mediaUrl: msg.mediaUrl || msg.url || msg.content,
+      content: msg.content,
+      textContent: msg.textContent || msg.caption,
+      caption: msg.caption || msg.textContent,
+      messageType: msg.messageType || (this.isImageMedia(msg) ? 'IMAGE' : 'VIDEO'),
+      fileName: msg.fileName,
+      direction: msg.direction,
+      senderType: msg.senderType,
+      createdAt: msg.createdAt,
+      isStarred: msg.isStarred,
+      reactionEmoji: msg.reactionEmoji,
+      reactionSender: msg.reactionSender,
+      whatsappMessageId: msg.whatsappMessageId
+    };
+    this.selectedViewerMedia.set(item);
+    this.isMediaViewerOpen.set(true);
+  }
+
+  closeMediaViewer() {
+    this.isMediaViewerOpen.set(false);
+    this.selectedViewerMedia.set(null);
+  }
+
+  getConversationMediaItems(): MediaViewerItem[] {
+    const list: MediaViewerItem[] = [];
+    const seen = new Set<string>();
+
+    const addIfValid = (item: any) => {
+      if (!item) return;
+      const url = item.url || item.mediaUrl || item.content;
+      if (!url || typeof url !== 'string') return;
+      const trimmed = url.trim();
+      if (trimmed.startsWith('[') || trimmed.includes('Attachment:')) return;
+      const key = `${item.id || ''}_${trimmed}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+
+      list.push({
+        id: item.id,
+        url: trimmed,
+        mediaUrl: item.mediaUrl || trimmed,
+        content: item.content,
+        textContent: item.textContent || item.caption,
+        caption: item.caption || item.textContent,
+        messageType: item.messageType || (this.isImageMedia(item) ? 'IMAGE' : 'VIDEO'),
+        fileName: item.fileName,
+        direction: item.direction,
+        senderType: item.senderType,
+        createdAt: item.createdAt,
+        isStarred: item.isStarred,
+        reactionEmoji: item.reactionEmoji,
+        reactionSender: item.reactionSender,
+        whatsappMessageId: item.whatsappMessageId
+      });
+    };
+
+    // 1. Add from current active conversation messages
+    const currentMsgs = this.chatService.messagesSubject.value || [];
+    for (const msg of currentMsgs) {
+      if (this.isImageMedia(msg) || msg.messageType === 'VIDEO') {
+        addIfValid(msg);
+      }
+    }
+
+    // 2. Add from mediaGallery()
+    const gallery = this.mediaGallery();
+    if (gallery && gallery.images) {
+      for (const img of gallery.images) {
+        addIfValid(img);
+      }
+    }
+    if (gallery && gallery.videos) {
+      for (const vid of gallery.videos) {
+        addIfValid(vid);
+      }
+    }
+
+    // Sort chronologically if createdAt is present
+    list.sort((a, b) => {
+      const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return timeA - timeB;
+    });
+
+    return list;
+  }
 
   toggleEmojiPicker() {
     this.isEmojiPickerOpen.set(!this.isEmojiPickerOpen());

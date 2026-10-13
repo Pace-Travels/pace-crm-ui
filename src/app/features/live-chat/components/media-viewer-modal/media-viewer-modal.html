@@ -1,0 +1,162 @@
+@if (isOpen) {
+<div class="media-viewer-backdrop" (click)="showMoreMenu.set(false); showReactionPicker.set(false)">
+    <!-- Top WhatsApp Header Toolbar -->
+    <header class="viewer-header" (click)="$event.stopPropagation()">
+        <!-- Left: Contact Avatar & Info -->
+        <div class="header-left">
+            <div class="contact-avatar">
+                @if (contact?.profilePicUrl) {
+                    <img [src]="getMediaUrl(contact.profilePicUrl)" alt="Avatar" />
+                } @else {
+                    <i class="fa-solid fa-user"></i>
+                }
+            </div>
+            <div class="contact-meta">
+                <span class="contact-name">{{ getSenderDisplayName() }}</span>
+                <span class="message-timestamp">{{ getFormattedTimestamp() }}</span>
+            </div>
+        </div>
+
+        <!-- Right: Action Icons (Matching WhatsApp Web Lightbox) -->
+        <div class="header-actions">
+            <!-- Zoom Controls -->
+            <button type="button" class="action-btn" (click)="zoomOut()" [disabled]="zoomLevel() <= 0.5" title="Zoom out (-)">
+                <i class="fa-solid fa-magnifying-glass-minus"></i>
+            </button>
+            <button type="button" class="action-btn" (click)="zoomIn()" [disabled]="zoomLevel() >= 4.0" title="Zoom in (+)">
+                <i class="fa-solid fa-magnifying-glass-plus"></i>
+            </button>
+            <button type="button" class="action-btn" (click)="resetTransform()" title="Reset zoom (0)">
+                <i class="fa-solid fa-compress"></i>
+            </button>
+            <button type="button" class="action-btn" (click)="rotateRight()" title="Rotate (R)">
+                <i class="fa-solid fa-arrow-rotate-right"></i>
+            </button>
+
+            <div class="divider"></div>
+
+            <!-- Star / Bookmark -->
+            <button type="button" class="action-btn" (click)="toggleStar()" [title]="currentMedia()?.isStarred ? 'Unstar' : 'Star'">
+                <i [class]="currentMedia()?.isStarred ? 'fa-solid fa-star starred' : 'fa-regular fa-star'"></i>
+            </button>
+
+            <!-- Reaction Emoji Trigger -->
+            <div class="reaction-wrapper">
+                <button type="button" class="action-btn" (click)="toggleReactionPicker($event)" title="React">
+                    <i class="fa-regular fa-face-smile"></i>
+                </button>
+                @if (showReactionPicker()) {
+                <div class="floating-reaction-picker" (click)="$event.stopPropagation()">
+                    @for (emoji of quickEmojis; track emoji) {
+                        <button type="button" class="emoji-pill-btn" (click)="selectReaction(emoji, $event)">
+                            {{ emoji }}
+                        </button>
+                    }
+                </div>
+                }
+            </div>
+
+            <!-- Quote Reply -->
+            <button type="button" class="action-btn" (click)="onReply()" title="Reply in chat">
+                <i class="fa-solid fa-reply"></i>
+            </button>
+
+            <!-- Forward -->
+            <button type="button" class="action-btn" (click)="onForward()" title="Forward">
+                <i class="fa-solid fa-share"></i>
+            </button>
+
+            <!-- Download -->
+            <button type="button" class="action-btn" (click)="onDownload()" title="Download">
+                <i class="fa-solid fa-download"></i>
+            </button>
+
+            <!-- 3-Dots More Options Menu -->
+            <div class="more-menu-wrapper">
+                <button type="button" class="action-btn" (click)="toggleMoreMenu($event)" title="More options">
+                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                </button>
+                @if (showMoreMenu()) {
+                <div class="more-dropdown-menu" (click)="$event.stopPropagation()">
+                    <button type="button" class="menu-item" (click)="searchOnWeb()">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <span>Search on web</span>
+                    </button>
+                    <button type="button" class="menu-item" (click)="copyLink()">
+                        <i class="fa-solid fa-link"></i>
+                        <span>Copy link</span>
+                    </button>
+                    <button type="button" class="menu-item" (click)="onViewInChat()">
+                        <i class="fa-solid fa-message"></i>
+                        <span>View in chat</span>
+                    </button>
+                </div>
+                }
+            </div>
+
+            <!-- Close Modal -->
+            <button type="button" class="action-btn close-btn" (click)="onClose()" title="Close (Esc)">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Viewport Center Area -->
+    <main class="viewer-body" 
+          (mousedown)="onMouseDown($event)" 
+          (mousemove)="onMouseMove($event)" 
+          (mouseup)="onMouseUp()" 
+          (wheel)="onWheel($event)"
+          (click)="showMoreMenu.set(false); showReactionPicker.set(false)">
+        
+        <!-- Left Previous Chevron Button -->
+        <button type="button" class="nav-btn prev" (click)="prevMedia(); $event.stopPropagation()" 
+                [disabled]="!hasPrev()" [class.hidden]="!hasPrev()" title="Previous (Left Arrow)">
+            <i class="fa-solid fa-chevron-left"></i>
+        </button>
+
+        <!-- Centered Media Canvas -->
+        <div class="media-container" (dblclick)="toggleZoom(); $event.stopPropagation()">
+            @if (isVideo(currentMedia())) {
+                <video class="viewport-media" controls autoplay [src]="getMediaUrl(currentMedia())"
+                       [style.transform]="'translate(' + panOffset().x + 'px, ' + panOffset().y + 'px) scale(' + zoomLevel() + ') rotate(' + rotationDeg() + 'deg)'">
+                </video>
+            } @else {
+                <img #mediaImage class="viewport-media" [src]="getMediaUrl(currentMedia())" alt="Media content"
+                     draggable="false"
+                     [style.transform]="'translate(' + panOffset().x + 'px, ' + panOffset().y + 'px) scale(' + zoomLevel() + ') rotate(' + rotationDeg() + 'deg)'"
+                     [style.cursor]="zoomLevel() > 1 ? (isDragging() ? 'grabbing' : 'grab') : 'zoom-in'" />
+            }
+        </div>
+
+        <!-- Right Next Chevron Button -->
+        <button type="button" class="nav-btn next" (click)="nextMedia(); $event.stopPropagation()" 
+                [disabled]="!hasNext()" [class.hidden]="!hasNext()" title="Next (Right Arrow)">
+            <i class="fa-solid fa-chevron-right"></i>
+        </button>
+
+        <!-- Caption Strip (if message contains caption or text) -->
+        @if (getCaptionText()) {
+        <div class="caption-container" (click)="$event.stopPropagation()">
+            <div class="caption-text" [innerHTML]="formatCaption(getCaptionText())"></div>
+        </div>
+        }
+    </main>
+
+    <!-- Bottom Thumbnail Carousel Ribbon -->
+    <footer class="viewer-carousel-ribbon" (click)="$event.stopPropagation()">
+        <div class="carousel-strip" #carouselStrip>
+            @for (item of mediaList; track item.id || $index; let i = $index) {
+            <div class="carousel-thumb" [class.active]="i === currentIndex()" (click)="selectMedia(i)">
+                @if (isVideo(item)) {
+                    <video [src]="getMediaUrl(item)" preload="metadata" muted></video>
+                    <div class="video-badge"><i class="fa-solid fa-play"></i></div>
+                } @else {
+                    <img [src]="getMediaUrl(item)" alt="Thumbnail" loading="lazy" />
+                }
+            </div>
+            }
+        </div>
+    </footer>
+</div>
+}
