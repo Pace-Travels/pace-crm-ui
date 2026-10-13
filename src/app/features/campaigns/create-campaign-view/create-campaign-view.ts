@@ -530,7 +530,7 @@ export class CreateCampaignView implements OnInit {
       finalParameters['header_image'] = this.headerImageUrl().trim();
     }
 
-    const payload = {
+    const payload: any = {
       name: this.campaignName,
       description: `${this.campaignMode()} Campaign (${this.selectedBlueprintKey()}): ${this.selectedTemplate().templateName}`,
       templateId: this.selectedTemplate().id,
@@ -549,9 +549,117 @@ export class CreateCampaignView implements OnInit {
       createdBy: 1
     };
 
+    // Deliverability pre-flight before launch
+    this.api.post<any>('/campaigns/preflight', {
+      targetType: payload.targetType,
+      targetGroupId: payload.targetGroupId,
+      templateId: payload.templateId,
+    }).subscribe({
+      next: async (res: any) => {
+        const pre = res?.data?.willSend ? res.data : res;
+        const blocked = [...(pre.hard || []), ...(pre.soft || [])];
+        if (!blocked.length) return this.submitCampaign(payload);
+        const overrideIds = await this.reviewDeliverability(pre);
+        if (overrideIds === null) return; // cancelled
+        payload.overrideContactIds = overrideIds;
+        this.submitCampaign(payload);
+      },
+      // If pre-flight is unavailable, fall back to server-side enforcement (blocked contacts are skipped)
+      error: () => this.submitCampaign(payload),
+    });
+  }
+
+  private escapeHtml(s: any) {
+    return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as any)[c]);
+  }
+
+  /**
+   * Step 1: show blocked contacts (unchecked by default).
+   * Step 2: if any are checked, require a secondary confirmation (type OVERRIDE for hard blocks).
+   * Resolves to overrideContactIds ([] = launch without them) or null (cancel).
+   */
+  private async reviewDeliverability(pre: any): Promise<number[] | null> {
+    const hard = pre.hard || [];
+    const soft = pre.soft || [];
+    const canHard = !!pre.canOverrideHard;
+    const row = (b: any, level: 'HARD' | 'SOFT') => {
+      const r = b.advisory?.primary || {};
+      const disabled = level === 'HARD' && !canHard;
+      const color = level === 'HARD' ? '#b91c1c' : '#c2410c';
+      const bg = level === 'HARD' ? '#fef2f2' : '#fff7ed';
+      return `
+        <label style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid #f1f5f9;border-radius:8px;margin-bottom:6px;text-align:left;cursor:${disabled ? 'not-allowed' : 'pointer'};opacity:${disabled ? .6 : 1}">
+          <input type="checkbox" class="dlv-ovr" data-level="${level}" value="${b.contactId}" ${disabled ? 'disabled' : ''} style="margin-top:3px;accent-color:#7c3aed">
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;font-size:13px;color:#0f172a">${this.escapeHtml(b.name || 'Unknown')} <span style="font-family:monospace;font-weight:500;color:#64748b;font-size:12px">${this.escapeHtml(b.phone)}</span></div>
+            <div style="display:inline-block;margin-top:3px;font-size:11px;font-weight:700;color:${color};background:${bg};padding:1px 8px;border-radius:999px">${this.escapeHtml(r.label || level)}${r.sourceProject ? ' · via ' + this.escapeHtml(r.sourceProject) : ''}</div>
+            <div style="font-size:11.5px;color:#475569;margin-top:3px;line-height:1.4">${this.escapeHtml(r.detail || '')}</div>
+          </div>
+        </label>`;
+    };
+
+    const step1 = await Swal.fire({
+      title: 'Deliverability check',
+      width: 640,
+      html: `
+        <div style="text-align:left;font-size:13px;color:#334155;margin-bottom:10px">
+          <b>${pre.total}</b> targeted → <b style="color:#15803d">${pre.willSend.length} will send</b>,
+          <b style="color:#c2410c">${soft.length} soft-blocked</b>, <b style="color:#b91c1c">${hard.length} hard-blocked</b>.
+          Blocked numbers are <b>left out by default</b> to protect your number's quality and avoid over-sending across the agency.
+        </div>
+        <div style="max-height:340px;overflow:auto;padding-right:4px">
+          ${hard.length ? `<div style="text-align:left;font-size:11px;font-weight:800;color:#b91c1c;margin:6px 0">HARD BLOCKS${canHard ? '' : ' (admin only)'}</div>` + hard.map((b: any) => row(b, 'HARD')).join('') : ''}
+          ${soft.length ? `<div style="text-align:left;font-size:11px;font-weight:800;color:#c2410c;margin:10px 0 6px">SOFT BLOCKS</div>` + soft.map((b: any) => row(b, 'SOFT')).join('') : ''}
+        </div>`,
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: `Launch without blocked (${pre.willSend.length})`,
+      denyButtonText: 'Include selected…',
+      cancelButtonText: 'Cancel',
+      confirmButtonColor: '#7c3aed',
+      denyButtonColor: '#ea580c',
+      preDeny: () => {
+        const ids = Array.from(document.querySelectorAll<HTMLInputElement>('.dlv-ovr:checked')).map(i => ({ id: Number(i.value), level: i.dataset['level'] }));
+        if (!ids.length) { Swal.showValidationMessage('Select at least one contact to include, or launch without them.'); return false; }
+        return ids;
+      },
+    });
+
+    if (step1.isConfirmed) return [];
+    if (!step1.isDenied) return null;
+
+    const picked = step1.value as { id: number; level: string }[];
+    const hardPicked = picked.filter(p => p.level === 'HARD').length;
+    const step2 = await Swal.fire({
+      icon: 'warning',
+      title: 'Confirm override',
+      html: `<div style="font-size:13px;color:#334155;text-align:left">
+        You are about to send to <b>${picked.length}</b> contact(s) flagged by deliverability advisories
+        ${hardPicked ? `, including <b style="color:#b91c1c">${hardPicked} hard-blocked</b> number(s)` : ''}.
+        Repeated sends to fatigued or invalid numbers can lower your WhatsApp quality rating and messaging limit.
+        This override will be recorded against your user.
+        ${hardPicked ? '<br><br>Type <b>OVERRIDE</b> to confirm.' : ''}</div>`,
+      input: hardPicked ? 'text' : undefined,
+      inputPlaceholder: 'OVERRIDE',
+      showCancelButton: true,
+      confirmButtonText: 'Yes, include them',
+      confirmButtonColor: '#dc2626',
+      preConfirm: (val: string) => {
+        if (hardPicked && String(val || '').trim().toUpperCase() !== 'OVERRIDE') {
+          Swal.showValidationMessage('Type OVERRIDE to confirm');
+          return false;
+        }
+        return true;
+      },
+    });
+    return step2.isConfirmed ? picked.map(p => p.id) : null;
+  }
+
+  private submitCampaign(payload: any) {
     this.api.post('/campaigns/add', payload).subscribe({
       next: () => {
-        Swal.fire('Campaign Launched', 'Your WhatsApp broadcast campaign is now running!', 'success').then(() => {
+        const n = (payload.overrideContactIds || []).length;
+        Swal.fire('Campaign Launched', `Your WhatsApp broadcast campaign is now running!${n ? ` (${n} override${n > 1 ? 's' : ''} recorded)` : ''}`, 'success').then(() => {
           this.router.navigate(['/campaigns']);
         });
       },

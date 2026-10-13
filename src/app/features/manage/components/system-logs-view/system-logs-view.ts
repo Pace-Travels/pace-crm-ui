@@ -118,7 +118,7 @@ Internal Log Reference: #${log.id}
 Event Timestamp: ${dateStr}
 
 -- PHONE NUMBER ROUTING DETAILS --
-Sender WABA Number: ${log.senderPhone || '+91 80958 44097'}
+Sender WABA Number: ${log.senderPhone || 'N/A'}
 Receiving Customer Number: ${log.recipientPhone || 'N/A'}
 
 -- ERROR CLASSIFICATION --
