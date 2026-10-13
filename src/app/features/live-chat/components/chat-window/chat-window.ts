@@ -117,6 +117,16 @@ export class ChatWindow implements AfterViewChecked {
     return `${base}${trimmed.startsWith('/') ? '' : '/'}${trimmed}`;
   }
 
+  isImageMedia(msg: any): boolean {
+    if (!msg) return false;
+    if (msg.messageType === 'IMAGE') return true;
+    const url = (msg.mediaUrl || msg.content || '').toLowerCase();
+    if (url.includes('.png') || url.includes('.jpg') || url.includes('.jpeg') || url.includes('.webp') || url.includes('.gif') || url.includes('scontent') || url.includes('fbcdn') || url.includes('templates/headers') || url.includes('messengerassets.')) {
+      return true;
+    }
+    return false;
+  }
+
   getInteractiveLabel(text: string | undefined): string {
     if (!text) return 'Interactive Button Selection';
     if (text === '[Interactive Selection]') return '🔘 Quick Reply Selected';
@@ -492,6 +502,9 @@ export class ChatWindow implements AfterViewChecked {
         this.isTemplateModalOpen.set(false);
         const newMsg = res.data || res;
         if (newMsg && newMsg.id) {
+          if (!newMsg.mediaUrl && payload.customParameters?.['header_image']) {
+            newMsg.mediaUrl = payload.customParameters['header_image'];
+          }
           const current = this.chatService.messagesSubject.value;
           this.chatService.messagesSubject.next([...current, newMsg]);
         }

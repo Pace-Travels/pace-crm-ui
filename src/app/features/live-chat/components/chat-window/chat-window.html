@@ -225,7 +225,7 @@
                                 }
 
                                 <!-- Rich media renderer -->
-                                @if (msg.messageType === 'IMAGE') {
+                                @if (isImageMedia(msg)) {
                                     <img [src]="getMediaUrl(msg.mediaUrl || msg.content)" style="max-width: 100%; border-radius: 8px; margin-bottom: 8px; display: block; max-height: 240px; object-fit: contain;" />
                                 } @else if (msg.messageType === 'STICKER' || msg.messageType === 'GIF') {
                                     <img [src]="getMediaUrl(msg.mediaUrl || msg.content)" style="width: 130px; height: 130px; object-fit: contain; display: block; margin-bottom: 6px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));" />
