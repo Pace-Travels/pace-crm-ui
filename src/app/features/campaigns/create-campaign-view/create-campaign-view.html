@@ -27,7 +27,7 @@
 
     <!-- Progress Bar / Stepper -->
     <div class="stepper-container">
-        <div class="stepper-step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1" (click)="currentStep > 1 && (currentStep = 1)">
+        <div class="stepper-step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1" (click)="goToStep(1)">
             <div class="step-badge">
                 @if (currentStep > 1) {
                     <i class="fa-solid fa-check"></i>
@@ -37,13 +37,13 @@
             </div>
             <div class="step-details">
                 <div class="step-title">1. Campaign Setup</div>
-                <div class="step-subtitle">Name & Audience Selection</div>
+                <div class="step-subtitle">Name & Select Contacts</div>
             </div>
         </div>
 
         <div class="stepper-line" [class.active]="currentStep >= 2"></div>
 
-        <div class="stepper-step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2" (click)="currentStep > 2 && (currentStep = 2)">
+        <div class="stepper-step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2" (click)="goToStep(2)">
             <div class="step-badge">
                 @if (currentStep > 2) {
                     <i class="fa-solid fa-check"></i>
@@ -59,7 +59,7 @@
 
         <div class="stepper-line" [class.active]="currentStep >= 3"></div>
 
-        <div class="stepper-step" [class.active]="currentStep === 3" [class.completed]="currentStep > 3">
+        <div class="stepper-step" [class.active]="currentStep === 3" [class.completed]="currentStep > 3" (click)="goToStep(3)">
             <div class="step-badge">
                 <span>3</span>
             </div>
@@ -74,7 +74,9 @@
     @if (currentStep === 1) {
         <div class="step-content">
             <div class="step-actions top-right">
-                <button class="btn btn-dark" [disabled]="!campaignName" (click)="nextStep()">Next</button>
+                <button class="btn btn-dark" [disabled]="!campaignName.trim() || selectedContactIds().length === 0" (click)="nextStep()">
+                    Next: Set Template ({{ selectedContactIds().length }} Selected) <i class="fa-solid fa-arrow-right"></i>
+                </button>
             </div>
             
             <div class="form-group mb-24">
@@ -85,7 +87,7 @@
 
             <div class="form-group mb-24">
                 <label>Target Audience Filter <span class="text-red">*</span></label>
-                <p class="help-text">Select audience segments or filter directly in the data table.</p>
+                <p class="help-text">Filter contacts in the table below and select the specific contacts to message.</p>
                 <div class="audience-options" style="display: flex; gap: 16px; margin-top: 8px;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="radio" name="audience" value="ALL" [ngModel]="audienceType()" (ngModelChange)="setAudienceType($event)"> All Contacts
@@ -112,6 +114,37 @@
                         </select>
                     </div>
                 }
+
+                <!-- Prominent Selection Status Banner -->
+                <div class="selection-status-callout" style="display: flex; align-items: center; justify-content: space-between; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 8px; padding: 12px 16px; margin-top: 14px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #7c3aed; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">
+                            {{ selectedContactIds().length }}
+                        </div>
+                        <div>
+                            <div style="font-weight: 700; color: #4c1d95; font-size: 13.5px;">
+                                @if (selectedContactIds().length === 0) {
+                                    <span>No contacts selected yet</span>
+                                } @else {
+                                    <span>{{ selectedContactIds().length }} Contact{{ selectedContactIds().length === 1 ? '' : 's' }} selected for message template</span>
+                                }
+                            </div>
+                            <div style="font-size: 12px; color: #6d28d9; margin-top: 2px;">
+                                Only the contacts you select with checkboxes below will proceed to the next step to receive this template message.
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        @if (selectedContactIds().length > 0) {
+                            <button type="button" class="btn btn-outline btn-sm" (click)="toggleShowOnlySelected()" style="font-size: 11.5px; background: white; border-color: #c4b5fd; color: #6d28d9;">
+                                <i class="fa-solid fa-filter"></i> {{ showOnlySelected() ? 'Show All' : 'View Selected Only (' + selectedContactIds().length + ')' }}
+                            </button>
+                            <button type="button" class="btn btn-outline btn-sm" (click)="deselectAll()" style="font-size: 11.5px; background: white; border-color: #cbd5e1; color: #64748b;">
+                                <i class="fa-solid fa-xmark"></i> Clear
+                            </button>
+                        }
+                    </div>
+                </div>
             </div>
 
             <!-- Audience Standard Data Table -->
@@ -135,9 +168,17 @@
                     </div>
 
                     <div class="toolbar-right">
+                        <button type="button" class="btn btn-outline btn-sm" (click)="selectAllFiltered()" title="Select all contacts currently filtered">
+                            <i class="fa-solid fa-square-check"></i> Select All ({{ filteredAudienceContacts().length }})
+                        </button>
+                        @if (selectedContactIds().length > 0) {
+                            <button type="button" class="btn btn-outline btn-sm" (click)="deselectAll()">
+                                <i class="fa-solid fa-square-minus"></i> Deselect All
+                            </button>
+                        }
                         <!-- Group Action Button -->
                         <button class="btn btn-outline btn-sm" (click)="createGroupFromSelected()" [disabled]="selectedContactIds().length === 0">
-                            <i class="fa-solid fa-layer-group"></i> Create Group from Selected ({{ selectedContactIds().length }})
+                            <i class="fa-solid fa-layer-group"></i> Create Group ({{ selectedContactIds().length }})
                         </button>
 
                         <div class="page-size-selector">
@@ -227,6 +268,21 @@
                         </button>
                     </div>
                 </div>
+
+                <!-- Step 1 Bottom Action Bar -->
+                <div class="table-bottom-action-bar" style="display: flex; justify-content: space-between; align-items: center; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 12px 18px; margin-top: 16px;">
+                    <div style="font-size: 13.5px; color: #581c87; font-weight: 600;">
+                        <i class="fa-solid fa-circle-check" style="color: #7c3aed; margin-right: 6px;"></i>
+                        @if (selectedContactIds().length === 0) {
+                            <span>Select contacts using the checkboxes above to proceed.</span>
+                        } @else {
+                            <span><strong>{{ selectedContactIds().length }}</strong> contact{{ selectedContactIds().length === 1 ? '' : 's' }} selected to proceed to message template.</span>
+                        }
+                    </div>
+                    <button class="btn btn-dark" [disabled]="!campaignName.trim() || selectedContactIds().length === 0" (click)="nextStep()">
+                        Next: Set Template ({{ selectedContactIds().length }} Selected) <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
     }
@@ -235,8 +291,28 @@
     @if (currentStep === 2) {
         <div class="step-content">
             <div class="step-actions split">
-                <button class="btn btn-outline" (click)="prevStep()">Prev</button>
-                <button class="btn btn-dark" [disabled]="!selectedTemplate()" (click)="nextStep()">Next</button>
+                <button class="btn btn-outline" (click)="prevStep()"><i class="fa-solid fa-arrow-left"></i> Back to Select Contacts</button>
+                <button class="btn btn-dark" [disabled]="!selectedTemplate()" (click)="nextStep()">
+                    Next: Review & Launch ({{ selectedContactIds().length }} Contacts) <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+
+            <!-- Audience Selected Banner -->
+            <div class="audience-confirmation-banner" style="display: flex; align-items: center; justify-content: space-between; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fa-solid fa-user-check" style="color: #16a34a; font-size: 18px;"></i>
+                    <div>
+                        <div style="font-weight: 700; color: #15803d; font-size: 13.5px;">
+                            Sending template to {{ selectedContactIds().length }} Selected Contact{{ selectedContactIds().length === 1 ? '' : 's' }}
+                        </div>
+                        <div style="font-size: 12px; color: #166534; margin-top: 1px;">
+                            Only these selected contacts will receive the WhatsApp template message configured below.
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-outline btn-sm" (click)="goToStep(1)" style="font-size: 11.5px; border-color: #86efac; color: #15803d; background: white;">
+                    <i class="fa-solid fa-users"></i> Change Selection
+                </button>
             </div>
             
             <!-- Message Mode Switcher -->
@@ -307,6 +383,14 @@
                                     <i class="fa-solid fa-images"></i> Gallery
                                 </button>
                             </div>
+                            @if (headerImageUrl().includes('scontent.whatsapp.net') || headerImageUrl().includes('fbcdn.net')) {
+                                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px 12px; margin-top: 8px; font-size: 12px; color: #166534; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fa-solid fa-wand-magic-sparkles" style="color: #16a34a;"></i>
+                                    <div>
+                                        <strong>Auto-Optimized for WhatsApp:</strong> This template image is automatically mirrored to your secure CDN upon launch so it always delivers with full clarity and never appears blank.
+                                    </div>
+                                </div>
+                            }
                         </div>
 
                         <div class="config-section mb-24">
@@ -449,8 +533,8 @@
     @if (currentStep === 3) {
         <div class="step-content">
             <div class="step-actions split">
-                <button class="btn btn-outline" (click)="prevStep()">Prev</button>
-                <button class="btn btn-dark" (click)="launchCampaign()"><i class="fa-solid fa-paper-plane"></i> Launch Campaign</button>
+                <button class="btn btn-outline" (click)="prevStep()"><i class="fa-solid fa-arrow-left"></i> Back to Message</button>
+                <button class="btn btn-dark" (click)="launchCampaign()"><i class="fa-solid fa-paper-plane"></i> Launch Campaign (Send to {{ selectedContactIds().length }} Contacts)</button>
             </div>
             
             <div class="test-preview-section">
@@ -466,13 +550,50 @@
                         <div class="s-label">Campaign Mode</div>
                         <div class="s-val"><span class="tag-badge">{{ campaignMode() }}</span></div>
                     </div>
-                    <div class="summary-card">
-                        <div class="s-label">Target Audience</div>
-                        <div class="s-val">{{ filteredAudienceContacts().length }} Contacts</div>
+                    <div class="summary-card" style="border: 2px solid #ddd6fe; background: #faf5ff;">
+                        <div class="s-label" style="color: #6d28d9; font-weight: 700;">Target Audience</div>
+                        <div class="s-val" style="color: #5b21b6; font-weight: 800;">{{ selectedContactIds().length }} Selected Contact{{ selectedContactIds().length === 1 ? '' : 's' }}</div>
                     </div>
                     <div class="summary-card">
                         <div class="s-label">Template</div>
                         <div class="s-val">{{ selectedTemplate()?.templateName || '-' }}</div>
+                    </div>
+                </div>
+
+                <!-- Confirmed Recipients Preview List -->
+                <div class="selected-recipients-review mt-24 mb-24" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-users" style="color: #7c3aed;"></i> Confirmed Recipients ({{ selectedContactIds().length }})
+                        </h4>
+                        <button type="button" class="btn btn-outline btn-sm" (click)="goToStep(1)" style="font-size: 11.5px;">
+                            <i class="fa-solid fa-pen-to-square"></i> Change Selection
+                        </button>
+                    </div>
+                    <p style="font-size: 12px; color: #64748b; margin-top: 0; margin-bottom: 12px;">
+                        The template message <strong>"{{ selectedTemplate()?.templateName }}"</strong> will be sent exclusively to these {{ selectedContactIds().length }} contact(s):
+                    </p>
+                    <div style="max-height: 220px; overflow-y: auto; border: 1px solid #f1f5f9; border-radius: 6px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
+                            <thead>
+                                <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; text-align: left;">
+                                    <th style="padding: 8px 12px;">Name</th>
+                                    <th style="padding: 8px 12px;">Mobile</th>
+                                    <th style="padding: 8px 12px;">Type</th>
+                                    <th style="padding: 8px 12px;">Location</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for (contact of selectedContactsList(); track contact.id) {
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="padding: 8px 12px; font-weight: 600; color: #1e293b;">{{ contact.name || 'UNKNOWN' }}</td>
+                                        <td style="padding: 8px 12px; color: #475569;">{{ contact.phone }}</td>
+                                        <td style="padding: 8px 12px;"><span class="tag-badge" [class.badge-b2b]="contact.type === 'B2B'">{{ contact.type || 'B2C' }}</span></td>
+                                        <td style="padding: 8px 12px; color: #64748b;">{{ contact.location || '-' }}</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -482,6 +603,12 @@
                         <input type="text" class="form-control" style="max-width: 300px;" [(ngModel)]="testPhoneNumber" placeholder="e.g. 919876543210">
                         <button class="btn btn-dark" (click)="sendTestMessage()"><i class="fa-solid fa-vial"></i> Send Test</button>
                     </div>
+                </div>
+
+                <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
+                    <button class="btn btn-dark" style="padding: 10px 24px; font-size: 14px;" (click)="launchCampaign()">
+                        <i class="fa-solid fa-paper-plane"></i> Launch Broadcast to {{ selectedContactIds().length }} Contacts
+                    </button>
                 </div>
             </div>
         </div>

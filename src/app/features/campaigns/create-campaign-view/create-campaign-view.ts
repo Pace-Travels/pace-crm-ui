@@ -333,7 +333,12 @@ export class CreateCampaignView implements OnInit {
     img.style.display = 'none';
   }
 
-  // --- Data Table Filtering, Sorting & Pagination Computations ---
+  showOnlySelected = signal<boolean>(false);
+
+  selectedContactsList = computed(() => {
+    const ids = new Set(this.selectedContactIds());
+    return this.contactService.contacts().filter(c => c.id !== undefined && ids.has(c.id));
+  });
 
   availableAgentOwners = computed(() => {
     const set = new Set<string>();
@@ -349,6 +354,13 @@ export class CreateCampaignView implements OnInit {
     const type = this.audienceType();
     const query = this.searchQuery().trim().toLowerCase();
     const agent = this.selectedAgentOwner().trim().toLowerCase();
+    const onlySelected = this.showOnlySelected();
+    const selectedIds = new Set(this.selectedContactIds());
+
+    // 0. Selected Only Filter (if toggled)
+    if (onlySelected) {
+      list = list.filter(c => c.id !== undefined && selectedIds.has(c.id));
+    }
 
     // 1. Audience Type Filter
     if (type === 'B2B') {
@@ -433,6 +445,22 @@ export class CreateCampaignView implements OnInit {
     }
   }
 
+  selectAllFiltered() {
+    const ids = this.filteredAudienceContacts().map(c => c.id!).filter(Boolean);
+    const set = new Set([...this.selectedContactIds(), ...ids]);
+    this.selectedContactIds.set(Array.from(set));
+  }
+
+  deselectAll() {
+    this.selectedContactIds.set([]);
+    this.showOnlySelected.set(false);
+  }
+
+  toggleShowOnlySelected() {
+    this.showOnlySelected.set(!this.showOnlySelected());
+    this.currentPage.set(1);
+  }
+
   setSortColumn(col: string) {
     if (this.sortColumn() === col) {
       this.sortDirection.set(this.sortDirection() === 'asc' ? 'desc' : 'asc');
@@ -508,8 +536,41 @@ export class CreateCampaignView implements OnInit {
     this.router.navigate(['/campaigns']);
   }
 
+  goToStep(step: number) {
+    if (step > 1) {
+      if (!this.campaignName || !this.campaignName.trim()) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Campaign Name Required',
+          text: 'Please enter a campaign name first.',
+          confirmButtonColor: '#7c3aed'
+        });
+        return;
+      }
+      if (this.selectedContactIds().length === 0) {
+        Swal.fire({
+          icon: 'info',
+          title: 'Select Contacts First',
+          text: 'Only selected contacts will be taken to the next step. Please check at least one contact in the table.',
+          confirmButtonColor: '#7c3aed'
+        });
+        return;
+      }
+    }
+    if (step === 3 && !this.selectedTemplate()) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Template Required',
+        text: 'Please select an approved WhatsApp message template in Step 2 first.',
+        confirmButtonColor: '#7c3aed'
+      });
+      return;
+    }
+    this.currentStep = step;
+  }
+
   nextStep() {
-    if (this.currentStep < 3) this.currentStep++;
+    this.goToStep(this.currentStep + 1);
   }
 
   prevStep() {
@@ -517,8 +578,12 @@ export class CreateCampaignView implements OnInit {
   }
 
   launchCampaign() {
-    if (!this.campaignName) {
+    if (!this.campaignName || !this.campaignName.trim()) {
       Swal.fire('Error', 'Campaign Name is required', 'error');
+      return;
+    }
+    if (this.selectedContactIds().length === 0) {
+      Swal.fire('Error', 'No contacts selected. Please return to Step 1 and select the contacts to receive this message.', 'error');
       return;
     }
     if (!this.selectedTemplate()) {
@@ -532,7 +597,7 @@ export class CreateCampaignView implements OnInit {
     }
 
     const payload: any = {
-      name: this.campaignName,
+      name: this.campaignName.trim(),
       description: `${this.campaignMode()} Campaign (${this.selectedBlueprintKey()}): ${this.selectedTemplate().templateName}`,
       templateId: this.selectedTemplate().id,
       parameters: finalParameters,
@@ -544,6 +609,8 @@ export class CreateCampaignView implements OnInit {
         quickReplies: this.quickReplyOptions(),
         selectedContactIds: this.selectedContactIds()
       },
+      contactIds: this.selectedContactIds(),
+      selectedContactIds: this.selectedContactIds(),
       targetType: this.audienceType(),
       targetGroupId: this.audienceType() === 'GROUP' ? this.selectedGroupId() : null,
       status: 'RUNNING',
@@ -551,8 +618,10 @@ export class CreateCampaignView implements OnInit {
       createdBy: 1
     };
 
-    // Deliverability pre-flight before launch
+    // Deliverability pre-flight before launch targeting ONLY the selected contacts
     this.api.post<any>('/campaigns/preflight', {
+      contactIds: this.selectedContactIds(),
+      selectedContactIds: this.selectedContactIds(),
       targetType: payload.targetType,
       targetGroupId: payload.targetGroupId,
       templateId: payload.templateId,
@@ -661,7 +730,13 @@ export class CreateCampaignView implements OnInit {
     this.api.post('/campaigns/add', payload).subscribe({
       next: () => {
         const n = (payload.overrideContactIds || []).length;
-        Swal.fire('Campaign Launched', `Your WhatsApp broadcast campaign is now running!${n ? ` (${n} override${n > 1 ? 's' : ''} recorded)` : ''}`, 'success').then(() => {
+        const count = this.selectedContactIds().length;
+        Swal.fire({
+          icon: 'success',
+          title: 'Campaign Launched!',
+          text: `Your WhatsApp template message is being sent to ${count} selected contact${count > 1 ? 's' : ''}!${n ? ` (${n} override${n > 1 ? 's' : ''} recorded)` : ''}`,
+          confirmButtonColor: '#7c3aed'
+        }).then(() => {
           this.router.navigate(['/campaigns']);
         });
       },
