@@ -663,6 +663,111 @@ export class CampaignTable implements OnInit {
     });
   }
 
+  pauseCampaign(c: Campaign) {
+    Swal.fire({
+      title: 'Pause Campaign?',
+      text: `Do you want to pause "${c.campaignName}"? Pending messages will be held immediately.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#f59e0b',
+      confirmButtonText: 'Yes, Pause'
+    }).then((res) => {
+      if (res.isConfirmed) {
+        this.campaignService.pauseCampaign(c.id).subscribe({
+          next: (response: any) => {
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: response.message || 'Campaign paused',
+              timer: 3000,
+              showConfirmButton: false
+            });
+            c.status = 'PAUSED';
+            if (this.selectedCampaign()?.id === c.id) {
+              const sel = this.selectedCampaign();
+              if (sel) {
+                sel.status = 'PAUSED';
+                this.selectedCampaign.set({ ...sel });
+              }
+            }
+            this.campaignService.fetchCampaigns();
+          },
+          error: (err) => Swal.fire('Error', err.error?.message || 'Failed to pause campaign', 'error')
+        });
+      }
+    });
+  }
+
+  resumeCampaign(c: Campaign) {
+    const isPaused = c.status === 'PAUSED';
+    const actionLabel = isPaused ? 'Resume' : 'Start';
+    Swal.fire({
+      title: `${actionLabel} Campaign?`,
+      text: isPaused 
+        ? `Resume sending pending messages for "${c.campaignName}"?` 
+        : `Start dispatching messages for "${c.campaignName}" now?`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#10b981',
+      confirmButtonText: `Yes, ${actionLabel}`
+    }).then((res) => {
+      if (res.isConfirmed) {
+        this.campaignService.resumeCampaign(c.id).subscribe({
+          next: (response: any) => {
+            Swal.fire({
+              toast: true,
+              position: 'top-end',
+              icon: 'success',
+              title: response.message || `Campaign ${actionLabel.toLowerCase()}d`,
+              timer: 3000,
+              showConfirmButton: false
+            });
+            c.status = 'RUNNING';
+            if (this.selectedCampaign()?.id === c.id) {
+              const sel = this.selectedCampaign();
+              if (sel) {
+                sel.status = 'RUNNING';
+                this.selectedCampaign.set({ ...sel });
+              }
+            }
+            this.campaignService.fetchCampaigns();
+          },
+          error: (err) => Swal.fire('Error', err.error?.message || `Failed to ${actionLabel.toLowerCase()} campaign`, 'error')
+        });
+      }
+    });
+  }
+
+  stopCampaign(c: Campaign) {
+    Swal.fire({
+      title: 'Stop Campaign Permanently?',
+      text: `Are you sure you want to stop "${c.campaignName}"? All remaining pending and queued messages will be aborted immediately and will NOT be sent.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#e11d48',
+      confirmButtonText: 'Yes, Stop Campaign'
+    }).then((res) => {
+      if (res.isConfirmed) {
+        this.campaignService.stopCampaign(c.id).subscribe({
+          next: (response: any) => {
+            Swal.fire('Stopped', response.message || 'Campaign stopped permanently.', 'success');
+            c.status = 'CANCELLED';
+            if (this.selectedCampaign()?.id === c.id) {
+              const sel = this.selectedCampaign();
+              if (sel) {
+                sel.status = 'CANCELLED';
+                this.selectedCampaign.set({ ...sel });
+              }
+            }
+            this.campaignService.fetchCampaigns();
+          },
+          error: (err) => Swal.fire('Error', err.error?.message || 'Failed to stop campaign', 'error')
+        });
+      }
+    });
+  }
+
   deleteCampaign(c: Campaign) {
     Swal.fire({
       title: 'Delete Campaign?',

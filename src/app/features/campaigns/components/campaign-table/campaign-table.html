@@ -54,10 +54,16 @@
                             <span *ngIf="campaign.status === 'RUNNING'" style="background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
                                 <i class="fa-solid fa-spinner fa-spin" style="font-size: 10px;"></i> RUNNING
                             </span>
+                            <span *ngIf="campaign.status === 'PAUSED'" style="background: #fef3c7; color: #d97706; border: 1px solid #fde68a; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fa-solid fa-pause" style="font-size: 10px;"></i> PAUSED
+                            </span>
                             <span *ngIf="campaign.status === 'COMPLETED' || campaign.status === 'Completed'" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
                                 <i class="fa-solid fa-check" style="font-size: 10px;"></i> COMPLETED
                             </span>
-                            <span *ngIf="campaign.status !== 'RUNNING' && campaign.status !== 'COMPLETED' && campaign.status !== 'Completed'" style="background: #fef3c7; color: #b45309; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;">
+                            <span *ngIf="campaign.status === 'CANCELLED' || campaign.status === 'Cancelled'" style="background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fa-solid fa-ban" style="font-size: 10px;"></i> STOPPED
+                            </span>
+                            <span *ngIf="campaign.status !== 'RUNNING' && campaign.status !== 'PAUSED' && campaign.status !== 'COMPLETED' && campaign.status !== 'Completed' && campaign.status !== 'CANCELLED' && campaign.status !== 'Cancelled'" style="background: #f1f5f9; color: #475569; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;">
                                 {{ campaign.status }}
                             </span>
                         </td>
@@ -77,10 +83,37 @@
                         <td style="font-size: 13px; color: #334155;">{{ campaign.audience }}</td>
                         <td style="text-align: right; padding-right: 24px;" (click)="$event.stopPropagation()">
                             <div class="action-btn-group">
+                                <!-- Pause Button (when RUNNING) -->
+                                <button *ngIf="campaign.status === 'RUNNING'" 
+                                        (click)="pauseCampaign(campaign)" 
+                                        class="btn-action-pause" 
+                                        title="Pause Campaign">
+                                    <i class="fa-solid fa-pause"></i>
+                                </button>
+
+                                <!-- Resume / Play Button (when PAUSED, SCHEDULED, or DRAFT) -->
+                                <button *ngIf="campaign.status === 'PAUSED' || campaign.status === 'SCHEDULED' || campaign.status === 'DRAFT'" 
+                                        (click)="resumeCampaign(campaign)" 
+                                        class="btn-action-play" 
+                                        [title]="campaign.status === 'PAUSED' ? 'Resume Campaign' : 'Start Campaign Now'">
+                                    <i class="fa-solid fa-play"></i>
+                                </button>
+
+                                <!-- Stop Button (when RUNNING, PAUSED, SCHEDULED, or DRAFT) -->
+                                <button *ngIf="campaign.status === 'RUNNING' || campaign.status === 'PAUSED' || campaign.status === 'SCHEDULED' || campaign.status === 'DRAFT'" 
+                                        (click)="stopCampaign(campaign)" 
+                                        class="btn-action-stop" 
+                                        title="Stop Campaign Permanently">
+                                    <i class="fa-solid fa-stop"></i>
+                                </button>
+
+                                <!-- Analytics & Receipts -->
                                 <button (click)="openResponsesModal(campaign)" class="btn-action-analytics" title="View Campaign Analytics, Delivery Audit & Read Receipts">
                                     <i class="fa-solid fa-chart-pie"></i>
                                     <span>Analytics & Receipts</span>
                                 </button>
+
+                                <!-- Delete Campaign -->
                                 <button (click)="deleteCampaign(campaign)" class="btn-action-delete" title="Delete Campaign">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
@@ -117,6 +150,33 @@
                 <button (click)="openAddRecipientModal()" class="btn-hdr-action btn-add-recipient" title="Add or update phone number to this campaign">
                     <i class="fa-solid fa-user-plus"></i>
                     <span>+ Add Number</span>
+                </button>
+
+                <!-- Pause in Modal -->
+                <button *ngIf="selectedCampaign()?.status === 'RUNNING'" 
+                        (click)="pauseCampaign(selectedCampaign()!)" 
+                        class="btn-hdr-action btn-modal-pause" 
+                        title="Pause this Campaign">
+                    <i class="fa-solid fa-pause"></i>
+                    <span>Pause</span>
+                </button>
+
+                <!-- Resume in Modal -->
+                <button *ngIf="selectedCampaign()?.status === 'PAUSED' || selectedCampaign()?.status === 'SCHEDULED' || selectedCampaign()?.status === 'DRAFT'" 
+                        (click)="resumeCampaign(selectedCampaign()!)" 
+                        class="btn-hdr-action btn-modal-play" 
+                        [title]="selectedCampaign()?.status === 'PAUSED' ? 'Resume this Campaign' : 'Start this Campaign Now'">
+                    <i class="fa-solid fa-play"></i>
+                    <span>{{ selectedCampaign()?.status === 'PAUSED' ? 'Resume' : 'Start' }}</span>
+                </button>
+
+                <!-- Stop in Modal -->
+                <button *ngIf="selectedCampaign()?.status === 'RUNNING' || selectedCampaign()?.status === 'PAUSED' || selectedCampaign()?.status === 'SCHEDULED' || selectedCampaign()?.status === 'DRAFT'" 
+                        (click)="stopCampaign(selectedCampaign()!)" 
+                        class="btn-hdr-action btn-modal-stop" 
+                        title="Permanently Stop this Campaign">
+                    <i class="fa-solid fa-stop"></i>
+                    <span>Stop</span>
                 </button>
 
                 <!-- Resend Newly Added Button -->

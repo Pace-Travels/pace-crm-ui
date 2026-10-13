@@ -174,9 +174,8 @@
             </div>
             } @else {
             <div class="message-wrapper" [attr.id]="'msg-' + msg.id" [attr.data-wamid]="msg.whatsappMessageId"
-                style="display: flex; flex-direction: column; width: 100%; position: relative;"
                 [style.align-items]="msg.direction === 'INBOUND' ? 'flex-start' : 'flex-end'">
-                <div class="message-bubble-row" style="display: flex; align-items: center; gap: 8px; max-width: 75%;"
+                <div class="message-bubble-row"
                     [style.flex-direction]="msg.direction === 'OUTBOUND' ? 'row-reverse' : 'row'">
                     @if (msg.direction === 'OUTBOUND' && msg.status === 'FAILED') {
                     <button type="button" class="outer-resend-btn" [disabled]="isResendingMessage(msg.id)"
@@ -191,8 +190,7 @@
                     </button>
                     }
                     <div class="message-bubble" [class.inbound]="msg.direction === 'INBOUND'"
-                        [class.outbound]="msg.direction === 'OUTBOUND'"
-                        style="flex: 1; padding: 10px 14px; border-radius: 12px; font-size: 13.5px; line-height: 1.4; box-shadow: 0 1px 2px rgba(0,0,0,0.05); margin-bottom: 4px; position: relative;">
+                        [class.outbound]="msg.direction === 'OUTBOUND'">
 
                         <!-- Badges & Forward Tag -->
                         @if (msg.isPinned) {
@@ -342,7 +340,7 @@
 
                         <!-- Read receipts & timestamp -->
                         <div
-                            style="font-size: 9px; color: #64748b; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-bottom: 0;">
+                            style="font-size: 9.5px; color: #64748b; text-align: right; margin-top: 4px; display: flex; align-items: center; justify-content: flex-end; gap: 4px; margin-bottom: 0; white-space: nowrap; flex-shrink: 0;">
                             <span>{{ msg.createdAt | date:'shortTime' }}</span>
                             @if (msg.direction === 'OUTBOUND') {
                             @if (msg.status === 'READ') {

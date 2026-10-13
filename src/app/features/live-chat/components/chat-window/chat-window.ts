@@ -163,11 +163,11 @@ export class ChatWindow implements AfterViewChecked {
     formatted = formatted.replace(/~([^~]+)~/g, '<del>$1</del>');
 
     // WhatsApp Monospace / Code: `text` -> <code>text</code>
-    formatted = formatted.replace(/`([^`]+)`/g, '<code style="background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 12px;">$1</code>');
+    formatted = formatted.replace(/`([^`]+)`/g, '<code style="background: rgba(0,0,0,0.06); padding: 1px 5px; border-radius: 4px; font-family: monospace; font-size: 12px; word-break: break-word; overflow-wrap: anywhere;">$1</code>');
 
     // Auto-link URLs
     const urlRegex = /(https?:\/\/[^\s<]+)/g;
-    formatted = formatted.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener" style="color: #444ce7; font-weight: 600; text-decoration: underline;">$1</a>');
+    formatted = formatted.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener" style="color: #444ce7; font-weight: 600; text-decoration: underline; word-break: break-all; overflow-wrap: anywhere;">$1</a>');
 
     // Preserve newlines
     formatted = formatted.replace(/\n/g, '<br>');

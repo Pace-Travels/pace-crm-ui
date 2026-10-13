@@ -70,23 +70,47 @@
     justify-content: flex-start;
     gap: 8px;
 
+    .message-wrapper {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        position: relative;
+        margin-bottom: 2px;
+    }
+
+    .message-bubble-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 8px;
+        max-width: min(75%, 680px);
+        min-width: 0;
+        width: fit-content;
+    }
+
     .message-bubble {
-        max-width: 65%;
-        padding: 8px 12px;
-        border-radius: 8px;
-        font-size: 14px;
-        box-shadow: 0 1px 1px rgba(0,0,0,0.1);
+        width: fit-content;
+        min-width: 90px;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding: 8px 14px 6px 14px;
+        border-radius: 10px;
+        font-size: 13.5px;
+        line-height: 1.45;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+        position: relative;
+        word-break: normal;
+        overflow-wrap: anywhere;
 
         &.inbound {
-            align-self: flex-start;
             background: white;
-            border-top-left-radius: 0;
+            color: #111827;
+            border-top-left-radius: 2px;
         }
 
         &.outbound {
-            align-self: flex-end;
             background: #d9fdd3;
-            border-top-right-radius: 0;
+            color: #111827;
+            border-top-right-radius: 2px;
         }
     }
 }
@@ -123,7 +147,11 @@
 // Preserve WhatsApp newlines & linebreaks
 .wa-text {
     white-space: pre-wrap !important;
-    word-break: break-word;
+    word-break: normal !important;
+    overflow-wrap: anywhere !important;
+    max-width: 100%;
+    font-size: 13.5px;
+    color: inherit;
 }
 
 // Quoted / Reply-To Message Card inside Bubble

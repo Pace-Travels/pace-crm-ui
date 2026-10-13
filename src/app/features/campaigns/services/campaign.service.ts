@@ -72,6 +72,18 @@ export class CampaignService {
     });
   }
 
+  pauseCampaign(id: number) {
+    return this.api.put<any>(`campaigns/${id}/pause`, {});
+  }
+
+  resumeCampaign(id: number) {
+    return this.api.put<any>(`campaigns/${id}/resume`, {});
+  }
+
+  stopCampaign(id: number) {
+    return this.api.put<any>(`campaigns/${id}/stop`, {});
+  }
+
   deleteCampaign(id: number) {
     return this.api.delete<any>(`campaigns/delete/${id}`);
   }
