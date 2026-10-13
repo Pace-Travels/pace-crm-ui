@@ -346,6 +346,18 @@
                                 border-radius: 10px;
                                 flex-shrink: 0;
                             }
+
+                            .menu-badge-dot {
+                                position: absolute;
+                                top: -2px;
+                                right: -2px;
+                                width: 8px;
+                                height: 8px;
+                                background-color: #ef4444;
+                                border-radius: 50%;
+                                border: 1.5px solid #101426;
+                                animation: pulse-dot 2s infinite;
+                            }
                         }
 
                         &:hover {

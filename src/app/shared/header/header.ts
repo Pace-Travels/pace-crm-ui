@@ -9,6 +9,7 @@ import { ProjectService } from '../../features/projects/services/project.service
 import { ApiService } from '../services/api.service';
 import { SearchService } from '../services/search.service';
 import { ThemeService } from '../services/theme.service';
+import { LiveChatService } from '../../features/live-chat/services/live-chat.service';
 
 import { AuthService } from '../services/auth.service';
 
@@ -33,6 +34,7 @@ export class Header implements OnInit {
   router = inject(Router);
   searchService = inject(SearchService);
   themeService = inject(ThemeService);
+  chatService = inject(LiveChatService);
 
   userName = '';
   userEmail = '';
@@ -49,6 +51,20 @@ export class Header implements OnInit {
     this.loadUserData();
     this.envModeService.fetchCurrentSettings();
     this.fetchNotifications();
+    this.chatService.fetchConversations(false);
+
+    // Real-time live incoming messages & campaign response streaming
+    this.chatService.inboundNotification$.subscribe((notif: any) => {
+      if (!notif) return;
+      const current = this.notificationsList();
+      const exists = current.some(n => 
+        (n.conversationId && notif.conversationId && Number(n.conversationId) === Number(notif.conversationId) && n.desc === notif.desc) ||
+        (n.id && notif.id && n.id === notif.id)
+      );
+      if (!exists) {
+        this.notificationsList.set([notif, ...current]);
+      }
+    });
   }
 
   loadUserData() {
@@ -72,7 +88,9 @@ export class Header implements OnInit {
   }
 
   unreadCount = computed(() => {
-    return this.notificationsList().filter(n => n.status === 'UNREAD').length;
+    const notifsUnread = this.notificationsList().filter(n => n.status === 'UNREAD').length;
+    const chatUnread = this.chatService.totalUnreadCount();
+    return Math.max(notifsUnread, chatUnread);
   });
 
   displayActivePhoneNumber = computed(() => {
@@ -97,10 +115,31 @@ export class Header implements OnInit {
         if (res.success && Array.isArray(res.data)) {
           const mapped = res.data.map((item: any) => {
             let iconClass = 'fa-solid fa-bell text-blue';
-            if (item.type === 'WABA') iconClass = 'fa-brands fa-whatsapp text-green';
-            else if (item.type === 'RADAR') iconClass = 'fa-solid fa-satellite-dish text-yellow';
-            else if (item.type === 'TEMPLATES') iconClass = 'fa-solid fa-circle-check text-blue';
-            else if (item.type === 'INTEGRATIONS') iconClass = 'fa-solid fa-plug text-purple';
+            let title = 'System Alert';
+
+            if (item.type === 'INBOUND_MESSAGE' || item.type === 'CHAT') {
+              iconClass = 'fa-brands fa-whatsapp text-green';
+              const name = item.contactName || (item.recipient && item.recipient !== 'Customer' ? item.recipient : 'Customer');
+              title = `💬 ${name}`;
+            } else if (item.type === 'CAMPAIGN_REPLY') {
+              iconClass = 'fa-solid fa-bullhorn text-blue';
+              const name = item.contactName || item.recipient || 'Customer';
+              title = `📢 ${name} responded`;
+            } else if (item.type === 'WABA') {
+              iconClass = 'fa-brands fa-whatsapp text-green';
+              title = 'WhatsApp Line Alert';
+            } else if (item.type === 'RADAR') {
+              iconClass = 'fa-solid fa-satellite-dish text-yellow';
+              title = 'Radar Alert';
+            } else if (item.type === 'TEMPLATES') {
+              iconClass = 'fa-solid fa-circle-check text-blue';
+              title = 'Templates Alert';
+            } else if (item.type === 'INTEGRATIONS') {
+              iconClass = 'fa-solid fa-plug text-purple';
+              title = 'Integrations Alert';
+            } else if (item.type) {
+              title = `${item.type} Alert`;
+            }
 
             const formattedTime = item.createdAt 
               ? new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -110,10 +149,13 @@ export class Header implements OnInit {
               id: item.id,
               type: item.type,
               status: item.status || 'UNREAD',
-              title: item.type ? `${item.type} Alert` : 'System Alert',
+              title: title,
               desc: item.content,
               time: formattedTime,
-              icon: iconClass
+              icon: iconClass,
+              conversationId: item.conversationId,
+              phone: item.phone || item.recipient,
+              contactName: item.contactName
             };
           });
           this.notificationsList.set(mapped);
@@ -123,11 +165,38 @@ export class Header implements OnInit {
     });
   }
 
+  onNotificationClick(n: any) {
+    n.status = 'READ';
+    if (n.id && typeof n.id === 'number') {
+      this.api.put<any>(`notifications/update/${n.id}`, { status: 'READ' }).subscribe({ error: () => {} });
+    }
+
+    if (n.conversationId || n.phone || n.type === 'INBOUND_MESSAGE' || n.type === 'CHAT' || n.type === 'CAMPAIGN_REPLY') {
+      this.showNotifications.set(false);
+      const convId = n.conversationId;
+      const phone = n.phone || n.recipient;
+
+      if (convId) {
+        this.chatService.selectConversationById(convId);
+      } else if (phone) {
+        this.chatService.selectConversationByPhone(phone);
+      }
+
+      this.router.navigate(['/chat'], {
+        queryParams: {
+          ...(convId ? { conversationId: convId } : {}),
+          ...(phone ? { phone } : {})
+        }
+      });
+    }
+  }
+
   markAllAsRead() {
     this.api.put<any>('notifications/read-all', {}).subscribe({
       next: () => {
         const updated = this.notificationsList().map(n => ({ ...n, status: 'READ' }));
         this.notificationsList.set(updated);
+        this.chatService.fetchConversations(false);
       }
     });
   }

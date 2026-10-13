@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit, signal, Output, EventEmitter, inject } from '@angular/core';
+import { Component, HostListener, OnInit, signal, Output, EventEmitter, inject, computed } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ProjectService } from '../../features/projects/services/project.service';
 import { AuthService } from '../services/auth.service';
 import { SearchService } from '../services/search.service';
+import { LiveChatService } from '../../features/live-chat/services/live-chat.service';
 import Swal from 'sweetalert2';
 
 import { WorkspaceModalComponent } from '../components/workspace-modal/workspace-modal';
@@ -39,6 +40,11 @@ export class Sidebar implements OnInit {
   isMobile = window.innerWidth < 992;
 
   searchService = inject(SearchService);
+  chatService = inject(LiveChatService);
+
+  unreadChatCount = computed(() => {
+    return this.chatService.totalUnreadCount();
+  });
 
   constructor(
     public projectService: ProjectService,
@@ -133,6 +139,7 @@ export class Sidebar implements OnInit {
 
   ngOnInit(): void {
     this.projectService.fetchProjects();
+    this.chatService.fetchConversations(false);
 
     const state = localStorage.getItem('sidebar-collapsed');
 

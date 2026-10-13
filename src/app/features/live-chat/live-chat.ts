@@ -21,9 +21,13 @@ export class LiveChat implements OnInit {
   constructor(public chatService: LiveChatService) {}
 
   ngOnInit() {
-    this.chatService.fetchConversations();
+    this.chatService.fetchConversations(true);
     this.route.queryParams.subscribe(params => {
-      if (params['phone']) {
+      if (params['conversationId']) {
+        setTimeout(() => {
+          this.chatService.selectConversationById(params['conversationId']);
+        }, 300);
+      } else if (params['phone']) {
         setTimeout(() => {
           this.chatService.selectConversationByPhone(params['phone']);
         }, 300);

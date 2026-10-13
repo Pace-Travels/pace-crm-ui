@@ -1,7 +1,7 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { ApiService } from '../../../shared/services/api.service';
 import { environment } from '../../../../environments/environment';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import { io, Socket } from 'socket.io-client';
 
 export interface Conversation {
@@ -47,6 +47,15 @@ export class LiveChatService {
   requestingConversations = signal<Conversation[]>([]);
   intervenedConversations = signal<Conversation[]>([]);
   
+  // Total unread count computed across all conversation queues
+  totalUnreadCount = computed(() => {
+    const sum = (list: Conversation[]) => list.reduce((acc, c) => acc + (Number(c.unreadCount) || 0), 0);
+    return sum(this.activeConversations()) + sum(this.requestingConversations()) + sum(this.intervenedConversations());
+  });
+
+  // Global real-time stream of incoming messages & campaign responses
+  public inboundNotification$ = new Subject<any>();
+
   // Currently selected conversation
   selectedConversation = signal<Conversation | null>(null);
 
@@ -106,6 +115,19 @@ export class LiveChatService {
 
       if (isContactSender) {
         this.triggerIncomingMessageNotification(data);
+        const convId = Number(data.conversationId || data.Conversation?.id);
+        const senderName = data.contactName || data.senderName || data.Conversation?.Contact?.name || this.getContactNameForConversation(convId, data.phone);
+        this.inboundNotification$.next({
+          type: 'INBOUND_MESSAGE',
+          title: `💬 ${senderName}`,
+          desc: data.textContent || data.content || '[Incoming Message]',
+          conversationId: convId,
+          phone: data.phone || data.recipientPhone || data.Conversation?.Contact?.phone,
+          contactName: senderName,
+          status: 'UNREAD',
+          time: 'Just now',
+          icon: 'fa-brands fa-whatsapp text-green'
+        });
       }
     });
 
@@ -145,6 +167,18 @@ export class LiveChatService {
         : (data.phone || 'Contact');
       const responseText = data.responseReceived || '[Campaign Response]';
 
+      this.inboundNotification$.next({
+        type: 'CAMPAIGN_REPLY',
+        title: `📢 ${contactName} responded`,
+        desc: responseText,
+        conversationId: data.conversationId,
+        phone: data.phone,
+        contactName: contactName,
+        status: 'UNREAD',
+        time: 'Just now',
+        icon: 'fa-solid fa-bullhorn text-blue'
+      });
+
       const SwalObj = (window as any).Swal;
       if (SwalObj && SwalObj.fire) {
         SwalObj.fire({
@@ -164,6 +198,22 @@ export class LiveChatService {
           icon: '/assets/icon.png'
         });
       }
+    });
+
+    // Inbound notification event from server
+    this.socket.on('inbound_notification', (data: any) => {
+      const contactName = data.contactName || 'Customer';
+      this.inboundNotification$.next({
+        type: data.type || 'INBOUND_MESSAGE',
+        title: data.title || (data.type === 'CAMPAIGN_REPLY' ? `📢 ${contactName} responded` : `💬 ${contactName}`),
+        desc: data.message || data.content || '[Incoming Message]',
+        conversationId: data.conversationId,
+        phone: data.phone,
+        contactName: contactName,
+        status: 'UNREAD',
+        time: 'Just now',
+        icon: data.type === 'CAMPAIGN_REPLY' ? 'fa-solid fa-bullhorn text-blue' : 'fa-brands fa-whatsapp text-green'
+      });
     });
   }
 
@@ -379,7 +429,7 @@ export class LiveChatService {
     }
   }
 
-  fetchConversations() {
+  fetchConversations(autoSelectFirst: boolean = false) {
     this.api.get<any>('conversations/list').subscribe({
       next: (res: any) => {
         if (res && res.success && Array.isArray(res.data)) {
@@ -404,10 +454,12 @@ export class LiveChatService {
           this.requestingConversations.set(requesting);
           this.intervenedConversations.set(intervened);
 
-          if (!this.selectedConversation() && active.length > 0) {
-            this.selectConversation(active[0]);
-          } else if (!this.selectedConversation() && list.length > 0) {
-            this.selectConversation(list[0]);
+          if (autoSelectFirst) {
+            if (!this.selectedConversation() && active.length > 0) {
+              this.selectConversation(active[0]);
+            } else if (!this.selectedConversation() && list.length > 0) {
+              this.selectConversation(list[0]);
+            }
           }
         }
       },
@@ -447,16 +499,44 @@ export class LiveChatService {
 
   selectConversationByPhone(phone: string) {
     const clean = (phone || '').replace(/\D/g, '');
-    const list = this.activeConversations();
-    let match = list.find((c: any) => {
+    if (!clean) return;
+    const all = [
+      ...this.activeConversations(),
+      ...this.requestingConversations(),
+      ...this.intervenedConversations()
+    ];
+    let match = all.find((c: any) => {
       const p = (c.Contact?.phone || '').replace(/\D/g, '');
-      return p && clean && (p.includes(clean) || clean.includes(p));
+      return p && (p.includes(clean) || clean.includes(p));
     });
-    if (!match && list.length > 0) {
-      match = list[0];
-    }
     if (match) {
       this.selectConversation(match);
+    }
+  }
+
+  selectConversationById(conversationId: number | string) {
+    const targetId = Number(conversationId);
+    if (!targetId) return;
+
+    const all = [
+      ...this.activeConversations(),
+      ...this.requestingConversations(),
+      ...this.intervenedConversations()
+    ];
+    const match = all.find(c => Number(c.id) === targetId);
+    if (match) {
+      this.selectConversation(match);
+    } else {
+      this.api.get<any>(`conversations/list/${targetId}`).subscribe({
+        next: (res: any) => {
+          const conv = res?.data || res;
+          if (conv && conv.id) {
+            const contact = conv.Contact || { name: conv.phone || 'Customer', phone: conv.phone || '' };
+            this.selectConversation({ ...conv, Contact: contact });
+          }
+        },
+        error: () => {}
+      });
     }
   }
 

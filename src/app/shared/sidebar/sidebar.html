@@ -60,13 +60,24 @@
                             <li>
                                 <a [routerLink]="item.route" routerLinkActive="active" [title]="collapsed() ? item.title : ''">
                                     <div class="menu-item-content">
-                                        <i [class]="item.icon"></i>
+                                        <div class="menu-icon-wrap" style="position: relative; display: inline-flex; align-items: center; justify-content: center;">
+                                            <i [class]="item.icon"></i>
+                                            @if (collapsed() && item.route === '/chat' && unreadChatCount() > 0) {
+                                                <span class="menu-badge-dot"></span>
+                                            }
+                                        </div>
                                         <span>{{ item.title }}</span>
 
-                                        @if (!collapsed() && item.badge) {
-                                            <span class="menu-badge" [style.background-color]="item.badgeColor || '#EF4444'">
-                                                {{ item.badge }}
-                                            </span>
+                                        @if (!collapsed()) {
+                                            @if (item.route === '/chat' && unreadChatCount() > 0) {
+                                                <span class="menu-badge" style="background-color: #EF4444;">
+                                                    {{ unreadChatCount() > 99 ? '99+' : unreadChatCount() }}
+                                                </span>
+                                            } @else if (item.badge) {
+                                                <span class="menu-badge" [style.background-color]="item.badgeColor || '#EF4444'">
+                                                    {{ item.badge }}
+                                                </span>
+                                            }
                                         }
                                     </div>
                                 </a>
