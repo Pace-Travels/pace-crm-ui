@@ -12,6 +12,7 @@ export interface Campaign {
   sentCount?: number;
   pendingCount?: number;
   failedCount?: number;
+  autoRetryEnabled?: boolean;
 }
 
 @Injectable({
@@ -49,7 +50,8 @@ export class CampaignService {
               totalRecipients: item.totalRecipients || 0,
               sentCount: item.sentCount !== undefined ? item.sentCount : (item.deliveredCount || 0),
               pendingCount: item.pendingCount || 0,
-              failedCount: item.failedCount || 0
+              failedCount: item.failedCount || 0,
+              autoRetryEnabled: !!item.autoRetryEnabled
             };
           });
           this.campaigns.set(mapped);
@@ -82,5 +84,9 @@ export class CampaignService {
 
   resendFailedRecipients(campaignId: number) {
     return this.api.post<any>(`campaigns/resend-failed/${campaignId}`, {});
+  }
+
+  toggleAutoRetry(campaignId: number, enabled?: boolean) {
+    return this.api.patch<any>(`campaigns/${campaignId}/auto-retry`, { enabled });
   }
 }

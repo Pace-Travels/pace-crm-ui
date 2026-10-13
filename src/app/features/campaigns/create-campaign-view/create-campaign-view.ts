@@ -38,6 +38,7 @@ export class CreateCampaignView implements OnInit {
 
   campaignName = '';
   showQuickFilters = false;
+  autoRetryEnabled = signal<boolean>(false);
 
   // Asset Gallery Signal
   isAssetGalleryOpen = signal(false);
@@ -546,6 +547,7 @@ export class CreateCampaignView implements OnInit {
       targetType: this.audienceType(),
       targetGroupId: this.audienceType() === 'GROUP' ? this.selectedGroupId() : null,
       status: 'RUNNING',
+      autoRetryEnabled: this.autoRetryEnabled(),
       createdBy: 1
     };
 

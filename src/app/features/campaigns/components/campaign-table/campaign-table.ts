@@ -234,4 +234,35 @@ export class CampaignTable implements OnInit {
       }
     });
   }
+
+  toggleCampaignAutoRetry() {
+    const campaign = this.selectedCampaign();
+    if (!campaign) return;
+
+    const newTargetState = !campaign.autoRetryEnabled;
+    this.campaignService.toggleAutoRetry(campaign.id, newTargetState).subscribe({
+      next: (res: any) => {
+        campaign.autoRetryEnabled = res.autoRetryEnabled;
+        this.selectedCampaign.set({ ...campaign });
+
+        // Update campaign in the main list
+        const updatedList = this.campaignService.campaigns().map(c => 
+          c.id === campaign.id ? { ...c, autoRetryEnabled: res.autoRetryEnabled } : c
+        );
+        this.campaignService.campaigns.set(updatedList);
+
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: res.autoRetryEnabled ? 'success' : 'info',
+          title: res.message || `Auto-retry cron ${res.autoRetryEnabled ? 'ENABLED' : 'DISABLED'}`,
+          timer: 3000,
+          showConfirmButton: false
+        });
+      },
+      error: (err: any) => {
+        Swal.fire('Error', 'Failed to toggle auto-retry: ' + (err.error?.message || err.message), 'error');
+      }
+    });
+  }
 }

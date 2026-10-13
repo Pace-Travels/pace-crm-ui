@@ -38,7 +38,12 @@
             } @else {
                 @for(campaign of filteredCampaigns; track campaign.id) {
                     <tr (click)="openResponsesModal(campaign)" style="cursor: pointer;">
-                        <td style="font-weight: 700; color: #0f172a;">{{ campaign.campaignName }}</td>
+                        <td style="font-weight: 700; color: #0f172a;">
+                            {{ campaign.campaignName }}
+                            <span *ngIf="campaign.autoRetryEnabled" title="Background auto-retry cron is active for this campaign" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; padding: 1px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-left: 6px; display: inline-flex; align-items: center; gap: 3px;">
+                                <i class="fa-solid fa-arrows-spin"></i> Auto-Retry
+                            </span>
+                        </td>
                         <td>
                             <span class="type-badge" [class.broadcast]="campaign.type === 'BROADCAST' || campaign.type === 'ALL'" [class.api]="campaign.type === 'API' || campaign.type === 'B2B'">
                                 {{ campaign.type }}
@@ -46,7 +51,13 @@
                         </td>
                         <td style="font-size: 13px; color: #475569; white-space: nowrap;">{{ campaign.createdAt }}</td>
                         <td>
-                            <span [style.background]="campaign.status === 'RUNNING' || campaign.status === 'Completed' || campaign.status === 'COMPLETED' ? '#dcfce7' : '#fef3c7'" [style.color]="campaign.status === 'RUNNING' || campaign.status === 'Completed' || campaign.status === 'COMPLETED' ? '#15803d' : '#b45309'" style="padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;">
+                            <span *ngIf="campaign.status === 'RUNNING'" style="background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fa-solid fa-spinner fa-spin" style="font-size: 10px;"></i> RUNNING
+                            </span>
+                            <span *ngIf="campaign.status === 'COMPLETED' || campaign.status === 'Completed'" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 800; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fa-solid fa-check" style="font-size: 10px;"></i> COMPLETED
+                            </span>
+                            <span *ngIf="campaign.status !== 'RUNNING' && campaign.status !== 'COMPLETED' && campaign.status !== 'Completed'" style="background: #fef3c7; color: #b45309; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;">
                                 {{ campaign.status }}
                             </span>
                         </td>
@@ -100,6 +111,15 @@
                 </span>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
+                <button (click)="toggleCampaignAutoRetry()" 
+                        [style.background]="selectedCampaign()?.autoRetryEnabled ? 'rgba(5, 150, 105, 0.1)' : '#f8fafc'"
+                        [style.color]="selectedCampaign()?.autoRetryEnabled ? '#059669' : '#64748b'"
+                        [style.border]="selectedCampaign()?.autoRetryEnabled ? '1px solid #10b981' : '1px solid #cbd5e1'"
+                        style="padding: 8px 13px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;"
+                        [title]="selectedCampaign()?.autoRetryEnabled ? 'Auto-Retry Cron is Active for this campaign' : 'Auto-Retry Cron is Disabled (Safe)'">
+                    <i class="fa-solid" [class.fa-toggle-on]="selectedCampaign()?.autoRetryEnabled" [class.fa-toggle-off]="!selectedCampaign()?.autoRetryEnabled" [style.color]="selectedCampaign()?.autoRetryEnabled ? '#059669' : '#94a3b8'" style="font-size: 14px;"></i>
+                    <span>Auto-Retry Cron: {{ selectedCampaign()?.autoRetryEnabled ? 'ENABLED' : 'DISABLED' }}</span>
+                </button>
                 <button (click)="resendAllFailedOrPending()" [disabled]="isResendingAll()" style="background: #ea580c; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25);" [style.opacity]="isResendingAll() ? 0.6 : 1">
                     <i class="fa-solid" [class.fa-rotate-right]="!isResendingAll()" [class.fa-spinner]="isResendingAll()" [class.fa-spin]="isResendingAll()"></i>
                     {{ isResendingAll() ? 'Resending...' : 'Resend Failed / Pending' }}
@@ -185,9 +205,12 @@
                                     <span *ngIf="item.status === 'SENT'" style="display: inline-flex; align-items: center; gap: 6px; color: #1e40af; font-weight: 600; font-size: 12.5px;">
                                         <i class="fa-solid fa-check" style="color: #94a3b8;"></i> SENT
                                     </span>
-                                    <span *ngIf="item.status === 'FAILED'" style="display: inline-flex; align-items: center; gap: 6px; color: #dc2626; font-weight: 700; font-size: 12.5px;">
+                                    <span *ngIf="item.status === 'FAILED'" style="display: inline-flex; align-items: center; gap: 6px; color: #dc2626; font-weight: 700; font-size: 12.5px;" [title]="item.errorMessage || 'Message delivery failed via Meta Cloud API'">
                                         <i class="fa-solid fa-circle-xmark"></i> FAILED
                                     </span>
+                                    <div *ngIf="item.status === 'FAILED' && item.errorMessage" style="font-size: 11px; color: #b91c1c; margin-top: 3px; max-width: 260px; line-height: 1.3; background: #fef2f2; border: 1px solid #fecaca; padding: 3px 6px; border-radius: 4px; word-break: break-word;">
+                                        {{ item.errorMessage }}
+                                    </div>
                                     <span *ngIf="!item.status || item.status === 'PENDING'" style="display: inline-flex; align-items: center; gap: 6px; color: #d97706; font-weight: 600; font-size: 12.5px;">
                                         <i class="fa-solid fa-clock"></i> PENDING
                                     </span>
