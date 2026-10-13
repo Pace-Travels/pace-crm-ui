@@ -60,7 +60,7 @@ export class PullContactsModal implements OnInit {
       if (!q) return true;
       return (c.name || '').toLowerCase().includes(q)
         || (c.phone || '').includes(q)
-        || (c.agencyName || '').toLowerCase().includes(q);
+        || (c.email || '').toLowerCase().includes(q);
     });
   });
 

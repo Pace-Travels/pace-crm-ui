@@ -36,7 +36,7 @@
         <div class="pcm-toolbar">
           <div class="pcm-search">
             <i class="fa-solid fa-magnifying-glass"></i>
-            <input id="pcm-search-input" type="text" placeholder="Search name, phone or agency…"
+            <input id="pcm-search-input" type="text" placeholder="Search name, phone or email…"
                    [ngModel]="search()" (ngModelChange)="search.set($event)" />
           </div>
           <label class="pcm-toggle">
@@ -63,7 +63,7 @@
                 <div class="pcm-avatar">{{ initials(c.name) }}</div>
                 <div class="pcm-info">
                   <span class="pcm-name">{{ c.name || 'Unknown' }}</span>
-                  <span class="pcm-sub">{{ c.phone }}@if (c.agencyName) { · {{ c.agencyName }} }</span>
+                  <span class="pcm-sub">{{ c.phone }}@if (c.email) { · {{ c.email }} }</span>
                 </div>
                 <span class="pcm-src">{{ projectName().get(c.projectId) }}</span>
                 @if (c.alreadyInProject) { <span class="pcm-badge">Added</span> }
