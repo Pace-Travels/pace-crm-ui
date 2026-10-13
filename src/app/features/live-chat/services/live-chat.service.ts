@@ -137,6 +137,34 @@ export class LiveChatService {
     this.socket.on('conversation_typing', (data: any) => {
       this.handleTypingEvent(data);
     });
+
+    // Real-time Campaign Response Notification
+    this.socket.on('campaign_response_received', (data: any) => {
+      const contactName = (data.contactName && data.contactName !== 'Customer') 
+        ? data.contactName 
+        : (data.phone || 'Contact');
+      const responseText = data.responseReceived || '[Campaign Response]';
+
+      const SwalObj = (window as any).Swal;
+      if (SwalObj && SwalObj.fire) {
+        SwalObj.fire({
+          title: `📢 ${contactName} responded`,
+          text: responseText,
+          icon: 'success',
+          position: 'top-end',
+          toast: true,
+          timer: 6000,
+          showConfirmButton: false
+        });
+      }
+
+      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+        new Notification(`📢 ${contactName} responded`, {
+          body: responseText,
+          icon: '/assets/icon.png'
+        });
+      }
+    });
   }
 
   handleTypingEvent(data: any) {
@@ -269,21 +297,56 @@ export class LiveChatService {
     });
   }
 
+  getContactNameForConversation(conversationId?: number, fallbackPhone?: string): string {
+    if (!conversationId) return fallbackPhone || 'Customer';
+    const allConvs = [
+      ...this.activeConversations(),
+      ...this.requestingConversations(),
+      ...this.intervenedConversations()
+    ];
+    const found = allConvs.find(c => c.id === conversationId || Number(c.id) === Number(conversationId));
+    if (found?.Contact?.name && found.Contact.name !== 'Customer') {
+      return found.Contact.name;
+    }
+    if (found?.Contact?.firstName) {
+      return `${found.Contact.firstName} ${found.Contact.lastName || ''}`.trim();
+    }
+    if (this.selectedConversation()?.id === conversationId && this.selectedConversation()?.Contact?.name) {
+      return this.selectedConversation()!.Contact!.name!;
+    }
+    return found?.Contact?.phone || fallbackPhone || 'Customer';
+  }
+
   triggerIncomingMessageNotification(data: any) {
-    const senderName = data.Conversation?.Contact?.name || data.recipientName || 'Customer';
-    const phone = data.Conversation?.Contact?.phone || data.recipientPhone || '';
+    const convId = Number(data.conversationId || data.Conversation?.id);
+    let senderName = data.senderName 
+      || data.contactName 
+      || data.recipientName 
+      || data.Conversation?.Contact?.name;
+
+    if (!senderName || senderName === 'Customer') {
+      senderName = this.getContactNameForConversation(convId, data.phone || data.recipientPhone);
+    }
+
+    const phone = data.Conversation?.Contact?.phone || data.recipientPhone || data.phone || '';
     const textContent = data.textContent || data.content || '[Incoming Message]';
 
     // 1. Browser Native Notification
     if (typeof window !== 'undefined' && 'Notification' in window) {
       if (Notification.permission === 'granted') {
-        const notification = new Notification(`💬 New Message from ${senderName}`, {
+        const notification = new Notification(`💬 ${senderName}`, {
           body: textContent,
           icon: '/assets/icon.png'
         });
         notification.onclick = () => {
           window.focus();
-          this.selectConversationByPhone(phone);
+          if (phone) {
+            this.selectConversationByPhone(phone);
+          } else if (convId) {
+            const all = [...this.activeConversations(), ...this.requestingConversations(), ...this.intervenedConversations()];
+            const target = all.find(c => c.id === convId);
+            if (target) this.selectConversation(target);
+          }
         };
       } else if (Notification.permission !== 'denied') {
         Notification.requestPermission();
@@ -304,7 +367,13 @@ export class LiveChatService {
         toast: true
       }).then((result: any) => {
         if (result.isConfirmed) {
-          this.selectConversationByPhone(phone);
+          if (phone) {
+            this.selectConversationByPhone(phone);
+          } else if (convId) {
+            const all = [...this.activeConversations(), ...this.requestingConversations(), ...this.intervenedConversations()];
+            const target = all.find(c => c.id === convId);
+            if (target) this.selectConversation(target);
+          }
         }
       });
     }
