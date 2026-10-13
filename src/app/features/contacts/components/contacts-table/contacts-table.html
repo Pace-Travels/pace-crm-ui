@@ -44,11 +44,59 @@
                         <span style="font-size: 12px; font-weight: 700; background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px;">{{ previewContacts().length }} Total Rows</span>
                     </div>
                     
-                    <div *ngIf="verificationSummary()" style="display: flex; gap: 16px; margin-top: 8px; font-size: 12.5px; font-weight: 600;">
-                        <span style="color: #15803d;"><i class="fa-solid fa-circle-check"></i> {{ verificationSummary().validCount }} Valid WhatsApp</span>
-                        <span style="color: #b45309;"><i class="fa-solid fa-triangle-exclamation"></i> {{ verificationSummary().warningCount }} Warnings</span>
-                        <span style="color: #dc2626;"><i class="fa-solid fa-circle-xmark"></i> {{ verificationSummary().errorCount }} Invalid Numbers</span>
-                        <span style="color: #6b21a8;"><i class="fa-solid fa-copy"></i> {{ verificationSummary().duplicateCount }} Duplicates</span>
+                    <div *ngIf="verificationSummary()" style="display: flex; gap: 8px; margin-top: 10px; font-size: 12px; font-weight: 600; flex-wrap: wrap; align-items: center;">
+                        <span style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-right: 2px;">Filter:</span>
+                        
+                        <!-- All Rows Pill -->
+                        <button type="button" (click)="setPreviewStatusFilter('ALL')"
+                            [style.background]="previewStatusFilter() === 'ALL' ? '#0f172a' : '#f1f5f9'"
+                            [style.color]="previewStatusFilter() === 'ALL' ? 'white' : '#475569'"
+                            [style.borderColor]="previewStatusFilter() === 'ALL' ? '#0f172a' : '#cbd5e1'"
+                            style="border: 1px solid; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s ease;">
+                            <i class="fa-solid fa-layer-group"></i> All ({{ previewContacts().length }})
+                        </button>
+
+                        <!-- Valid WhatsApp Pill -->
+                        <button type="button" (click)="setPreviewStatusFilter('VALID')"
+                            [style.background]="previewStatusFilter() === 'VALID' ? '#15803d' : '#f0fdf4'"
+                            [style.color]="previewStatusFilter() === 'VALID' ? 'white' : '#15803d'"
+                            [style.borderColor]="previewStatusFilter() === 'VALID' ? '#15803d' : '#bbf7d0'"
+                            style="border: 1px solid; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s ease;">
+                            <i class="fa-solid fa-circle-check"></i> {{ verificationSummary().validCount }} Valid WhatsApp
+                        </button>
+
+                        <!-- Warnings Pill -->
+                        <button type="button" (click)="setPreviewStatusFilter('WARNING')"
+                            [style.background]="previewStatusFilter() === 'WARNING' ? '#b45309' : '#fffbeb'"
+                            [style.color]="previewStatusFilter() === 'WARNING' ? 'white' : '#b45309'"
+                            [style.borderColor]="previewStatusFilter() === 'WARNING' ? '#b45309' : '#fde68a'"
+                            style="border: 1px solid; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s ease;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> {{ verificationSummary().warningCount }} Warnings
+                        </button>
+
+                        <!-- Invalid Numbers Pill -->
+                        <button type="button" (click)="setPreviewStatusFilter('ERROR')"
+                            [style.background]="previewStatusFilter() === 'ERROR' ? '#dc2626' : '#fef2f2'"
+                            [style.color]="previewStatusFilter() === 'ERROR' ? 'white' : '#dc2626'"
+                            [style.borderColor]="previewStatusFilter() === 'ERROR' ? '#dc2626' : '#fecaca'"
+                            style="border: 1px solid; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s ease;">
+                            <i class="fa-solid fa-circle-xmark"></i> {{ verificationSummary().errorCount }} Invalid Numbers
+                        </button>
+
+                        <!-- Duplicates Pill -->
+                        <button type="button" (click)="setPreviewStatusFilter('DUPLICATE')"
+                            [style.background]="previewStatusFilter() === 'DUPLICATE' ? '#6b21a8' : '#faf5ff'"
+                            [style.color]="previewStatusFilter() === 'DUPLICATE' ? 'white' : '#6b21a8'"
+                            [style.borderColor]="previewStatusFilter() === 'DUPLICATE' ? '#6b21a8' : '#e9d5ff'"
+                            style="border: 1px solid; padding: 4px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.15s ease;">
+                            <i class="fa-solid fa-copy"></i> {{ verificationSummary().duplicateCount }} Duplicates
+                        </button>
+
+                        <!-- Clear Filter text if not 'ALL' -->
+                        <span *ngIf="previewStatusFilter() !== 'ALL'" (click)="setPreviewStatusFilter('ALL')" 
+                              style="font-size: 11.5px; font-weight: 700; color: #7c3aed; cursor: pointer; margin-left: 6px; text-decoration: underline;" title="Click to show all rows">
+                            ✕ Show All
+                        </span>
                     </div>
                 </div>
 
@@ -230,7 +278,7 @@
                 <tr *ngIf="!contactService.isLoading() && paginatedContacts().length === 0">
                     <td colspan="12" style="padding: 48px; text-align: center; color: #64748b;">
                         <p style="font-weight: 700; color: #0f172a; margin: 0 0 4px 0; font-size: 15px;">No contacts found</p>
-                        <p style="font-size: 13px; margin: 0;">{{ isPreviewMode() ? 'Uploaded sheet contains no contacts.' : 'Click "+ Add Contact" or "Import Sheet" to add contacts into your database.' }}</p>
+                        <p style="font-size: 13px; margin: 0;">{{ isPreviewMode() ? (previewStatusFilter() !== 'ALL' ? 'No contacts match the ' + previewStatusFilter() + ' status filter.' : 'Uploaded sheet contains no contacts.') : 'Click "+ Add Contact" or "Import Sheet" to add contacts into your database.' }}</p>
                     </td>
                 </tr>
 

@@ -81,6 +81,16 @@ export class ContactsTable implements OnInit {
   isPreviewMode = signal(false);
   previewContacts = signal<any[]>([]);
   verificationSummary = signal<any>(null);
+  previewStatusFilter = signal<'ALL' | 'VALID' | 'WARNING' | 'ERROR' | 'DUPLICATE'>('ALL');
+
+  setPreviewStatusFilter(status: 'ALL' | 'VALID' | 'WARNING' | 'ERROR' | 'DUPLICATE') {
+    if (this.previewStatusFilter() === status && status !== 'ALL') {
+      this.previewStatusFilter.set('ALL');
+    } else {
+      this.previewStatusFilter.set(status);
+    }
+    this.currentPage.set(1);
+  }
 
   // Dropdown states
   showRunAdDropdown = signal(false);
@@ -139,6 +149,15 @@ export class ContactsTable implements OnInit {
   // Filtered & Sorted Contacts computation
   processedContacts = computed(() => {
     let list = this.isPreviewMode() ? this.previewContacts() : this.contactService.filteredContacts();
+
+    // 0. Verification Status Filter in Preview Audit Mode
+    if (this.isPreviewMode()) {
+      const statusFilter = this.previewStatusFilter();
+      if (statusFilter !== 'ALL') {
+        list = list.filter(c => c.verificationStatus === statusFilter);
+      }
+    }
+
     const query = this.searchQuery().trim().toLowerCase();
     const loc = this.filterLocation().trim().toLowerCase();
     const src = this.filterSource().trim().toLowerCase();
@@ -599,6 +618,7 @@ export class ContactsTable implements OnInit {
     this.isPreviewMode.set(false);
     this.previewContacts.set([]);
     this.selectedPreviewSerials.set([]);
+    this.previewStatusFilter.set('ALL');
   }
 
   approveImport() {
@@ -618,6 +638,7 @@ export class ContactsTable implements OnInit {
         this.isPreviewMode.set(false);
         this.previewContacts.set([]);
         this.selectedPreviewSerials.set([]);
+        this.previewStatusFilter.set('ALL');
         this.contactService.fetchContacts(); 
       },
       error: (err) => Swal.fire('Import Failed', err.error?.error || err.message || 'Failed to import sheet', 'error')
@@ -628,6 +649,7 @@ export class ContactsTable implements OnInit {
     this.isPreviewMode.set(false);
     this.previewContacts.set([]);
     this.selectedPreviewSerials.set([]);
+    this.previewStatusFilter.set('ALL');
   }
 
   togglePreviewSelect(serialNumber: number | undefined) {
