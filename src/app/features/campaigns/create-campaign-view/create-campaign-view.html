@@ -7,10 +7,9 @@
         <div class="header-right" style="display: flex; align-items: center; gap: 16px;">
             <div class="metric" title="Live Meta Quality Rating">
                 <span>Quality Rating <i class="fa-solid fa-circle-info"></i></span>
-                <span class="badge" 
-                      [style.background]="wabaStats().qualityRating === 'High' ? '#dcfce7' : '#fef3c7'" 
-                      [style.color]="wabaStats().qualityRating === 'High' ? '#15803d' : '#b45309'"
-                      style="padding: 2px 8px; border-radius: 10px; font-weight: 700;">
+                <span class="badge" [style.background]="wabaStats().qualityRating === 'High' ? '#dcfce7' : '#fef3c7'"
+                    [style.color]="wabaStats().qualityRating === 'High' ? '#15803d' : '#b45309'"
+                    style="padding: 2px 8px; border-radius: 10px; font-weight: 700;">
                     {{ wabaStats().qualityRating }}
                 </span>
             </div>
@@ -20,19 +19,21 @@
             </div>
             <div class="metric" title="Calculated 24h Outbound Remaining Quota">
                 <span>Remaining Quota <i class="fa-solid fa-circle-info"></i></span>
-                <span class="value" style="font-weight: 800; color: #7c3aed;">{{ wabaStats().remainingQuota | number }}</span>
+                <span class="value" style="font-weight: 800; color: #7c3aed;">{{ wabaStats().remainingQuota | number
+                    }}</span>
             </div>
         </div>
     </div>
 
     <!-- Progress Bar / Stepper -->
     <div class="stepper-container">
-        <div class="stepper-step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1" (click)="goToStep(1)">
+        <div class="stepper-step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1"
+            (click)="goToStep(1)">
             <div class="step-badge">
                 @if (currentStep > 1) {
-                    <i class="fa-solid fa-check"></i>
+                <i class="fa-solid fa-check"></i>
                 } @else {
-                    <span>1</span>
+                <span>1</span>
                 }
             </div>
             <div class="step-details">
@@ -43,12 +44,13 @@
 
         <div class="stepper-line" [class.active]="currentStep >= 2"></div>
 
-        <div class="stepper-step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2" (click)="goToStep(2)">
+        <div class="stepper-step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2"
+            (click)="goToStep(2)">
             <div class="step-badge">
                 @if (currentStep > 2) {
-                    <i class="fa-solid fa-check"></i>
+                <i class="fa-solid fa-check"></i>
                 } @else {
-                    <span>2</span>
+                <span>2</span>
                 }
             </div>
             <div class="step-details">
@@ -59,7 +61,8 @@
 
         <div class="stepper-line" [class.active]="currentStep >= 3"></div>
 
-        <div class="stepper-step" [class.active]="currentStep === 3" [class.completed]="currentStep > 3" (click)="goToStep(3)">
+        <div class="stepper-step" [class.active]="currentStep === 3" [class.completed]="currentStep > 3"
+            (click)="goToStep(3)">
             <div class="step-badge">
                 <span>3</span>
             </div>
@@ -72,589 +75,693 @@
 
     <!-- Step 1: Campaign Details & Audience Data Table -->
     @if (currentStep === 1) {
-        <div class="step-content">
-            <div class="step-actions top-right">
-                <button class="btn btn-dark" [disabled]="!campaignName.trim() || selectedContactIds().length === 0" (click)="nextStep()">
-                    Next: Set Template ({{ selectedContactIds().length }} Selected) <i class="fa-solid fa-arrow-right"></i>
-                </button>
-            </div>
-            
-            <div class="form-group mb-24">
-                <label>Campaign Name <span class="text-red">*</span></label>
-                <p class="help-text">Pick something that describes your audience & goals.</p>
-                <input type="text" class="form-control" [(ngModel)]="campaignName" placeholder="Enter campaign name e.g. Q3 B2B Marketing Blitz">
-            </div>
+    <div class="step-content">
+        <div class="step-actions top-right">
+            <button class="btn btn-dark" [disabled]="!campaignName.trim() || selectedContactIds().length === 0"
+                (click)="nextStep()">
+                Next: Set Template ({{ selectedContactIds().length }} Selected) <i class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
 
-            <div class="form-group mb-24">
-                <label>Target Audience Filter <span class="text-red">*</span></label>
-                <p class="help-text">Filter contacts in the table below and select the specific contacts to message.</p>
-                <div class="audience-options" style="display: flex; gap: 16px; margin-top: 8px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="audience" value="ALL" [ngModel]="audienceType()" (ngModelChange)="setAudienceType($event)"> All Contacts
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="audience" value="B2C" [ngModel]="audienceType()" (ngModelChange)="setAudienceType($event)"> B2C Contacts (Pace Travels)
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="audience" value="B2B" [ngModel]="audienceType()" (ngModelChange)="setAudienceType($event)"> B2B Contacts (Pace Tourism)
-                    </label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                        <input type="radio" name="audience" value="GROUP" [ngModel]="audienceType()" (ngModelChange)="setAudienceType($event)"> Contact Group
-                    </label>
-                </div>
+        <div class="form-group mb-24">
+            <label>Campaign Name <span class="text-red">*</span></label>
+            <p class="help-text">Pick something that describes your audience & goals.</p>
+            <input type="text" class="form-control" [(ngModel)]="campaignName"
+                placeholder="Enter campaign name e.g. Q3 B2B Marketing Blitz">
+        </div>
 
-                @if (audienceType() === 'GROUP') {
-                    <div style="margin-top: 16px; max-width: 340px;">
-                        <label>Select Group</label>
-                        <select class="form-control" [ngModel]="selectedGroupId()" (ngModelChange)="onGroupSelect($event)">
-                            <option [value]="null">-- Select Group --</option>
-                            @for (group of contactService.groups(); track group.id) {
-                                <option [value]="group.id">{{ group.name }} ({{ group.contactType }})</option>
-                            }
-                        </select>
-                    </div>
-                }
-
-                <!-- Prominent Selection Status Banner -->
-                <div class="selection-status-callout" style="display: flex; align-items: center; justify-content: space-between; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 8px; padding: 12px 16px; margin-top: 14px;">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #7c3aed; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">
-                            {{ selectedContactIds().length }}
-                        </div>
-                        <div>
-                            <div style="font-weight: 700; color: #4c1d95; font-size: 13.5px;">
-                                @if (selectedContactIds().length === 0) {
-                                    <span>No contacts selected yet</span>
-                                } @else {
-                                    <span>{{ selectedContactIds().length }} Contact{{ selectedContactIds().length === 1 ? '' : 's' }} selected for message template</span>
-                                }
-                            </div>
-                            <div style="font-size: 12px; color: #6d28d9; margin-top: 2px;">
-                                Only the contacts you select with checkboxes below will proceed to the next step to receive this template message.
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        @if (selectedContactIds().length > 0) {
-                            <button type="button" class="btn btn-outline btn-sm" (click)="toggleShowOnlySelected()" style="font-size: 11.5px; background: white; border-color: #c4b5fd; color: #6d28d9;">
-                                <i class="fa-solid fa-filter"></i> {{ showOnlySelected() ? 'Show All' : 'View Selected Only (' + selectedContactIds().length + ')' }}
-                            </button>
-                            <button type="button" class="btn btn-outline btn-sm" (click)="deselectAll()" style="font-size: 11.5px; background: white; border-color: #cbd5e1; color: #64748b;">
-                                <i class="fa-solid fa-xmark"></i> Clear
-                            </button>
-                        }
-                    </div>
-                </div>
+        <div class="form-group mb-24">
+            <label>Target Audience Filter <span class="text-red">*</span></label>
+            <p class="help-text">Filter contacts in the table below and select the specific contacts to message.</p>
+            <div class="audience-options" style="display: flex; gap: 16px; margin-top: 8px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="radio" name="audience" value="ALL" [ngModel]="audienceType()"
+                        (ngModelChange)="setAudienceType($event)"> All Contacts
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="radio" name="audience" value="B2C" [ngModel]="audienceType()"
+                        (ngModelChange)="setAudienceType($event)"> B2C Contacts (Pace Travels)
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="radio" name="audience" value="B2B" [ngModel]="audienceType()"
+                        (ngModelChange)="setAudienceType($event)"> B2B Contacts (Pace Tourism)
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="radio" name="audience" value="GROUP" [ngModel]="audienceType()"
+                        (ngModelChange)="setAudienceType($event)"> Contact Group
+                </label>
             </div>
 
-            <!-- Audience Standard Data Table -->
-            <div class="audience-grid-card">
-                <div class="datatable-toolbar">
-                    <div class="toolbar-left">
-                        <div class="search-box">
-                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                            <input type="text" class="search-input" placeholder="Search contacts by name, phone, agency..." [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)">
-                        </div>
+            @if (audienceType() === 'GROUP') {
+            <div style="margin-top: 16px; max-width: 340px;">
+                <label>Select Group</label>
+                <select class="form-control" [ngModel]="selectedGroupId()" (ngModelChange)="onGroupSelect($event)">
+                    <option [value]="null">-- Select Group --</option>
+                    @for (group of contactService.groups(); track group.id) {
+                    <option [value]="group.id">{{ group.name }} ({{ group.contactType }})</option>
+                    }
+                </select>
+            </div>
+            }
 
-                        <!-- Agent Owner Filter -->
-                        <div class="filter-dropdown">
-                            <select class="select-control" [ngModel]="selectedAgentOwner()" (ngModelChange)="selectedAgentOwner.set($event)">
-                                <option value="">Filter by Contact Owner (All Agents)</option>
-                                @for (agent of availableAgentOwners(); track agent) {
-                                    <option [value]="agent">Agent: {{ agent }}</option>
-                                }
-                            </select>
-                        </div>
+            <!-- Prominent Selection Status Banner -->
+            <div class="selection-status-callout"
+                style="display: flex; align-items: center; justify-content: space-between; background: #f5f3ff; border: 1px solid #ddd6fe; border-radius: 8px; padding: 12px 16px; margin-top: 14px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div
+                        style="width: 32px; height: 32px; border-radius: 50%; background: #7c3aed; color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px;">
+                        {{ selectedContactIds().length }}
                     </div>
-
-                    <div class="toolbar-right">
-                        <button type="button" class="btn btn-outline btn-sm" (click)="selectAllFiltered()" title="Select all contacts currently filtered">
-                            <i class="fa-solid fa-square-check"></i> Select All ({{ filteredAudienceContacts().length }})
-                        </button>
-                        @if (selectedContactIds().length > 0) {
-                            <button type="button" class="btn btn-outline btn-sm" (click)="deselectAll()">
-                                <i class="fa-solid fa-square-minus"></i> Deselect All
-                            </button>
-                        }
-                        <!-- Group Action Button -->
-                        <button class="btn btn-outline btn-sm" (click)="createGroupFromSelected()" [disabled]="selectedContactIds().length === 0">
-                            <i class="fa-solid fa-layer-group"></i> Create Group ({{ selectedContactIds().length }})
-                        </button>
-
-                        <div class="page-size-selector">
-                            <span>Per Page:</span>
-                            <select [value]="pageSize()" (change)="onPageSizeChange($event)">
-                                <option value="10">10</option>
-                                <option value="25">25</option>
-                                <option value="50">50</option>
-                                <option value="100">100</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th class="checkbox-col">
-                                    <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()">
-                                </th>
-                                <th (click)="setSortColumn('name')" class="sortable">
-                                    Name 
-                                    @if (sortColumn() === 'name') { <i class="fa-solid" [class.fa-arrow-up]="sortDirection() === 'asc'" [class.fa-arrow-down]="sortDirection() === 'desc'"></i> }
-                                </th>
-                                <th (click)="setSortColumn('phone')" class="sortable">Mobile Number</th>
-                                <th>Contact Owner(s)</th>
-                                <th>Type</th>
-                                <th>Source</th>
-                                <th>Location</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (contactService.isLoading()) {
-                                <tr><td colspan="8" class="text-center py-16">Loading contacts...</td></tr>
-                            } @else if (filteredAudienceContacts().length === 0) {
-                                <tr><td colspan="8" class="text-center empty-state py-16">No contacts match the current filters.</td></tr>
+                    <div>
+                        <div style="font-weight: 700; color: #4c1d95; font-size: 13.5px;">
+                            @if (selectedContactIds().length === 0) {
+                            <span>No contacts selected yet</span>
                             } @else {
-                                @for(contact of paginatedAudienceContacts(); track contact.id) {
-                                    <tr [class.row-selected]="isContactSelected(contact.id)">
-                                        <td class="checkbox-col">
-                                            <input type="checkbox" [checked]="isContactSelected(contact.id)" (change)="toggleSelectContact(contact.id!)">
-                                        </td>
-                                        <td class="font-bold cursor-pointer" (click)="openProfilePanel(contact)">
-                                            {{ contact.name || 'UNKNOWN' }}
-                                        </td>
-                                        <td>{{ contact.phone }}</td>
-                                        <td>
-                                            <!-- Multi-agent owner chips -->
-                                            <div class="owner-chips-container">
-                                                @for (owner of contactService.getContactOwners(contact); track owner) {
-                                                    <span class="owner-chip"><i class="fa-solid fa-user-gear"></i> {{ owner }}</span>
-                                                }
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="tag-badge" [class.badge-b2b]="contact.type === 'B2B'">{{ contact.type || 'B2C' }}</span>
-                                        </td>
-                                        <td>{{ contact.source || 'IMPORT' }}</td>
-                                        <td>{{ contact.location || '-' }}</td>
-                                        <td>
-                                            <button class="btn-icon" (click)="openProfilePanel(contact)" title="View Profile"><i class="fa-regular fa-eye"></i></button>
-                                        </td>
-                                    </tr>
-                                }
+                            <span>{{ selectedContactIds().length }} Contact{{ selectedContactIds().length === 1 ? '' :
+                                's' }} selected for message template</span>
                             }
-                        </tbody>
-                    </table>
-                </div>
-
-                <!-- Data Table Pagination Footer -->
-                <div class="datatable-pagination">
-                    <div class="pagination-info">
-                        Showing {{ (currentPage() - 1) * pageSize() + 1 }} to {{ getMathMin(currentPage() * pageSize(), filteredAudienceContacts().length) }} of {{ filteredAudienceContacts().length }} contacts
-                        @if (selectedContactIds().length > 0) {
-                            <span class="selection-badge">({{ selectedContactIds().length }} selected)</span>
-                        }
-                    </div>
-                    <div class="pagination-controls">
-                        <button class="btn-page" [disabled]="currentPage() === 1" (click)="setPage(currentPage() - 1)">
-                            <i class="fa-solid fa-chevron-left"></i> Prev
-                        </button>
-                        <span class="page-indicator">Page {{ currentPage() }} of {{ totalPages() }}</span>
-                        <button class="btn-page" [disabled]="currentPage() >= totalPages()" (click)="setPage(currentPage() + 1)">
-                            Next <i class="fa-solid fa-chevron-right"></i>
-                        </button>
+                        </div>
+                        <div style="font-size: 12px; color: #6d28d9; margin-top: 2px;">
+                            Only the contacts you select with checkboxes below will proceed to the next step to receive
+                            this template message.
+                        </div>
                     </div>
                 </div>
-
-                <!-- Step 1 Bottom Action Bar -->
-                <div class="table-bottom-action-bar" style="display: flex; justify-content: space-between; align-items: center; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 12px 18px; margin-top: 16px;">
-                    <div style="font-size: 13.5px; color: #581c87; font-weight: 600;">
-                        <i class="fa-solid fa-circle-check" style="color: #7c3aed; margin-right: 6px;"></i>
-                        @if (selectedContactIds().length === 0) {
-                            <span>Select contacts using the checkboxes above to proceed.</span>
-                        } @else {
-                            <span><strong>{{ selectedContactIds().length }}</strong> contact{{ selectedContactIds().length === 1 ? '' : 's' }} selected to proceed to message template.</span>
-                        }
-                    </div>
-                    <button class="btn btn-dark" [disabled]="!campaignName.trim() || selectedContactIds().length === 0" (click)="nextStep()">
-                        Next: Set Template ({{ selectedContactIds().length }} Selected) <i class="fa-solid fa-arrow-right"></i>
+                <div style="display: flex; gap: 8px;">
+                    @if (selectedContactIds().length > 0) {
+                    <button type="button" class="btn btn-outline btn-sm" (click)="toggleShowOnlySelected()"
+                        style="font-size: 11.5px; background: white; border-color: #c4b5fd; color: #6d28d9;">
+                        <i class="fa-solid fa-filter"></i> {{ showOnlySelected() ? 'Show All' : 'View Selected Only (' +
+                        selectedContactIds().length + ')' }}
                     </button>
+                    <button type="button" class="btn btn-outline btn-sm" (click)="deselectAll()"
+                        style="font-size: 11.5px; background: white; border-color: #cbd5e1; color: #64748b;">
+                        <i class="fa-solid fa-xmark"></i> Clear
+                    </button>
+                    }
                 </div>
             </div>
         </div>
+
+        <!-- Audience Standard Data Table -->
+        <div class="audience-grid-card">
+            <div class="datatable-toolbar">
+                <div class="toolbar-left">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                        <input type="text" class="search-input" placeholder="Search contacts by name, phone, agency..."
+                            [ngModel]="searchQuery()" (ngModelChange)="searchQuery.set($event)">
+                    </div>
+
+                    <!-- Agent Owner Filter -->
+                    <div class="filter-dropdown">
+                        <select class="select-control" [ngModel]="selectedAgentOwner()"
+                            (ngModelChange)="selectedAgentOwner.set($event)">
+                            <option value="">Filter by Contact Owner (All Agents)</option>
+                            @for (agent of availableAgentOwners(); track agent) {
+                            <option [value]="agent">Agent: {{ agent }}</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="toolbar-right">
+                    <button type="button" class="btn btn-outline btn-sm" (click)="selectAllFiltered()"
+                        title="Select all contacts currently filtered">
+                        <i class="fa-solid fa-square-check"></i> Select All ({{ filteredAudienceContacts().length }})
+                    </button>
+                    @if (selectedContactIds().length > 0) {
+                    <button type="button" class="btn btn-outline btn-sm" (click)="deselectAll()">
+                        <i class="fa-solid fa-square-minus"></i> Deselect All
+                    </button>
+                    }
+                    <!-- Group Action Button -->
+                    <button class="btn btn-outline btn-sm" (click)="createGroupFromSelected()"
+                        [disabled]="selectedContactIds().length === 0">
+                        <i class="fa-solid fa-layer-group"></i> Create Group ({{ selectedContactIds().length }})
+                    </button>
+
+                    <div class="page-size-selector">
+                        <span>Per Page:</span>
+                        <select [value]="pageSize()" (change)="onPageSizeChange($event)">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-col">
+                                <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()">
+                            </th>
+                            <th (click)="setSortColumn('name')" class="sortable">
+                                Name
+                                @if (sortColumn() === 'name') { <i class="fa-solid"
+                                    [class.fa-arrow-up]="sortDirection() === 'asc'"
+                                    [class.fa-arrow-down]="sortDirection() === 'desc'"></i> }
+                            </th>
+                            <th (click)="setSortColumn('phone')" class="sortable">Mobile Number</th>
+                            <th>Contact Owner(s)</th>
+                            <th>Type</th>
+                            <th>Source</th>
+                            <th>Location</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (contactService.isLoading()) {
+                        <tr>
+                            <td colspan="8" class="text-center py-16">Loading contacts...</td>
+                        </tr>
+                        } @else if (filteredAudienceContacts().length === 0) {
+                        <tr>
+                            <td colspan="8" class="text-center empty-state py-16">No contacts match the current filters.
+                            </td>
+                        </tr>
+                        } @else {
+                        @for(contact of paginatedAudienceContacts(); track contact.id) {
+                        <tr [class.row-selected]="isContactSelected(contact.id)">
+                            <td class="checkbox-col">
+                                <input type="checkbox" [checked]="isContactSelected(contact.id)"
+                                    (change)="toggleSelectContact(contact.id!)">
+                            </td>
+                            <td class="font-bold cursor-pointer" (click)="openProfilePanel(contact)">
+                                {{ contact.name || 'UNKNOWN' }}
+                            </td>
+                            <td>{{ contact.phone }}</td>
+                            <td>
+                                <!-- Multi-agent owner chips -->
+                                <div class="owner-chips-container">
+                                    @for (owner of contactService.getContactOwners(contact); track owner) {
+                                    <span class="owner-chip"><i class="fa-solid fa-user-gear"></i> {{ owner }}</span>
+                                    }
+                                </div>
+                            </td>
+                            <td>
+                                <span class="tag-badge" [class.badge-b2b]="contact.type === 'B2B'">{{ contact.type ||
+                                    'B2C' }}</span>
+                            </td>
+                            <td>{{ contact.source || 'IMPORT' }}</td>
+                            <td>{{ contact.location || '-' }}</td>
+                            <td>
+                                <button class="btn-icon" (click)="openProfilePanel(contact)" title="View Profile"><i
+                                        class="fa-regular fa-eye"></i></button>
+                            </td>
+                        </tr>
+                        }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Data Table Pagination Footer -->
+            <div class="datatable-pagination">
+                <div class="pagination-info">
+                    Showing {{ (currentPage() - 1) * pageSize() + 1 }} to {{ getMathMin(currentPage() * pageSize(),
+                    filteredAudienceContacts().length) }} of {{ filteredAudienceContacts().length }} contacts
+                    @if (selectedContactIds().length > 0) {
+                    <span class="selection-badge">({{ selectedContactIds().length }} selected)</span>
+                    }
+                </div>
+                <div class="pagination-controls">
+                    <button class="btn-page" [disabled]="currentPage() === 1" (click)="setPage(currentPage() - 1)">
+                        <i class="fa-solid fa-chevron-left"></i> Prev
+                    </button>
+                    <span class="page-indicator">Page {{ currentPage() }} of {{ totalPages() }}</span>
+                    <button class="btn-page" [disabled]="currentPage() >= totalPages()"
+                        (click)="setPage(currentPage() + 1)">
+                        Next <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 1 Bottom Action Bar -->
+            <div class="table-bottom-action-bar"
+                style="display: flex; justify-content: space-between; align-items: center; background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 12px 18px; margin-top: 16px;">
+                <div style="font-size: 13.5px; color: #581c87; font-weight: 600;">
+                    <i class="fa-solid fa-circle-check" style="color: #7c3aed; margin-right: 6px;"></i>
+                    @if (selectedContactIds().length === 0) {
+                    <span>Select contacts using the checkboxes above to proceed.</span>
+                    } @else {
+                    <span><strong>{{ selectedContactIds().length }}</strong> contact{{ selectedContactIds().length === 1
+                        ? '' : 's' }} selected to proceed to message template.</span>
+                    }
+                </div>
+                <button class="btn btn-dark" [disabled]="!campaignName.trim() || selectedContactIds().length === 0"
+                    (click)="nextStep()">
+                    Next: Set Template ({{ selectedContactIds().length }} Selected) <i
+                        class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
     }
 
     <!-- Step 2: Create Message & Conversational Setup -->
     @if (currentStep === 2) {
-        <div class="step-content">
-            <div class="step-actions split">
-                <button class="btn btn-outline" (click)="prevStep()"><i class="fa-solid fa-arrow-left"></i> Back to Select Contacts</button>
-                <button class="btn btn-dark" [disabled]="!selectedTemplate()" (click)="nextStep()">
-                    Next: Review & Launch ({{ selectedContactIds().length }} Contacts) <i class="fa-solid fa-arrow-right"></i>
-                </button>
-            </div>
+    <div class="step-content">
+        <div class="step-actions split">
+            <button class="btn btn-outline" (click)="prevStep()"><i class="fa-solid fa-arrow-left"></i> Back to Select
+                Contacts</button>
+            <button class="btn btn-dark" [disabled]="!selectedTemplate()" (click)="nextStep()">
+                Next: Review & Launch ({{ selectedContactIds().length }} Contacts) <i
+                    class="fa-solid fa-arrow-right"></i>
+            </button>
+        </div>
 
-            <!-- Audience Selected Banner -->
-            <div class="audience-confirmation-banner" style="display: flex; align-items: center; justify-content: space-between; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <i class="fa-solid fa-user-check" style="color: #16a34a; font-size: 18px;"></i>
-                    <div>
-                        <div style="font-weight: 700; color: #15803d; font-size: 13.5px;">
-                            Sending template to {{ selectedContactIds().length }} Selected Contact{{ selectedContactIds().length === 1 ? '' : 's' }}
-                        </div>
-                        <div style="font-size: 12px; color: #166534; margin-top: 1px;">
-                            Only these selected contacts will receive the WhatsApp template message configured below.
-                        </div>
+        <!-- Audience Selected Banner -->
+        <div class="audience-confirmation-banner"
+            style="display: flex; align-items: center; justify-content: space-between; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fa-solid fa-user-check" style="color: #16a34a; font-size: 18px;"></i>
+                <div>
+                    <div style="font-weight: 700; color: #15803d; font-size: 13.5px;">
+                        Sending template to {{ selectedContactIds().length }} Selected Contact{{
+                        selectedContactIds().length === 1 ? '' : 's' }}
+                    </div>
+                    <div style="font-size: 12px; color: #166534; margin-top: 1px;">
+                        Only these selected contacts will receive the WhatsApp template message configured below.
                     </div>
                 </div>
-                <button type="button" class="btn btn-outline btn-sm" (click)="goToStep(1)" style="font-size: 11.5px; border-color: #86efac; color: #15803d; background: white;">
-                    <i class="fa-solid fa-users"></i> Change Selection
-                </button>
             </div>
-            
-            <!-- Message Mode Switcher -->
-            <div class="mode-tabs-container mb-24">
-                <button class="mode-tab" [class.active]="campaignMode() === 'STANDARD'" (click)="campaignMode.set('STANDARD')">
-                    <i class="fa-solid fa-paper-plane"></i> Standard Broadcast Template
-                </button>
-                <button class="mode-tab" [class.active]="campaignMode() === 'CONVERSATIONAL'" (click)="campaignMode.set('CONVERSATIONAL')">
-                    <i class="fa-solid fa-comments"></i> Conversational Interactive Campaign
-                </button>
-            </div>
+            <button type="button" class="btn btn-outline btn-sm" (click)="goToStep(1)"
+                style="font-size: 11.5px; border-color: #86efac; color: #15803d; background: white;">
+                <i class="fa-solid fa-users"></i> Change Selection
+            </button>
+        </div>
 
-            <!-- Platform Base Campaign Blueprints Grid (For Conversational Mode) -->
-            @if (campaignMode() === 'CONVERSATIONAL') {
-                <div class="blueprints-section mb-24">
-                    <h4>Platform Base Campaign Blueprints</h4>
-                    <p class="help-text">Select a pre-defined campaign blueprint with mapped CRM input structures.</p>
-                    
-                    <div class="blueprints-grid">
-                        @for (bp of blueprints; track bp.key) {
-                            <div class="blueprint-card" [class.selected]="selectedBlueprintKey() === bp.key" (click)="selectBlueprint(bp)">
-                                <div class="bp-icon"><i class="fa-solid" [class]="bp.icon"></i></div>
-                                <div class="bp-info">
-                                    <h5 class="bp-title">{{ bp.name }}</h5>
-                                    <p class="bp-desc">{{ bp.description }}</p>
+        <!-- Message Mode Switcher -->
+        <div class="mode-tabs-container mb-24">
+            <button class="mode-tab" [class.active]="campaignMode() === 'STANDARD'"
+                (click)="campaignMode.set('STANDARD')">
+                <i class="fa-solid fa-paper-plane"></i> Standard Broadcast Template
+            </button>
+            <button class="mode-tab" [class.active]="campaignMode() === 'CONVERSATIONAL'"
+                (click)="campaignMode.set('CONVERSATIONAL')">
+                <i class="fa-solid fa-comments"></i> Conversational Interactive Campaign
+            </button>
+        </div>
+
+        <!-- Platform Base Campaign Blueprints Grid (For Conversational Mode) -->
+        @if (campaignMode() === 'CONVERSATIONAL') {
+        <div class="blueprints-section mb-24">
+            <h4>Platform Base Campaign Blueprints</h4>
+            <p class="help-text">Select a pre-defined campaign blueprint with mapped CRM input structures.</p>
+
+            <div class="blueprints-grid">
+                @for (bp of blueprints; track bp.key) {
+                <div class="blueprint-card" [class.selected]="selectedBlueprintKey() === bp.key"
+                    (click)="selectBlueprint(bp)">
+                    <div class="bp-icon"><i class="fa-solid" [class]="bp.icon"></i></div>
+                    <div class="bp-info">
+                        <h5 class="bp-title">{{ bp.name }}</h5>
+                        <p class="bp-desc">{{ bp.description }}</p>
+                    </div>
+                    <div class="bp-check">
+                        <i class="fa-solid" [class.fa-circle-check]="selectedBlueprintKey() === bp.key"
+                            [class.fa-circle]="selectedBlueprintKey() !== bp.key"></i>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+        }
+
+        <div class="create-message-layout">
+            <!-- Left Side: Message & Quick Reply Configuration -->
+            <div class="message-config">
+                <div class="form-group mb-24">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="margin-bottom: 0;">Template Name <span class="text-red">*</span></label>
+                        <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;"
+                            (click)="syncTemplates()"><i class="fa-solid fa-rotate"></i> Sync Templates</button>
+                    </div>
+                    <p class="help-text">Select an approved WhatsApp message template.</p>
+                    <select class="form-control" [ngModel]="selectedTemplate()"
+                        (ngModelChange)="selectTemplate($event)">
+                        @if (templates().length === 0) {
+                        <option [value]="null">No templates found. Click sync templates.</option>
+                        }
+                        @for(tpl of templates(); track tpl.id) {
+                        <option [ngValue]="tpl">{{ tpl.templateName }} ({{ tpl.language }})</option>
+                        }
+                    </select>
+                </div>
+
+                @if (selectedTemplate()) {
+                <!-- New Header Image URL Field with Gallery Picker -->
+                <div class="form-group mb-24">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="margin-bottom: 0;">Header Image URL (Pace Tourism India) <span class="opt-tag">•
+                                Optional</span></label>
+                        <button type="button" class="btn btn-outline btn-sm" (click)="isAssetGalleryOpen.set(true)"
+                            style="padding: 4px 10px; font-size: 11.5px; font-weight: 700; color: #4338ca; border-color: #cbd5e1; background: #f8fafc; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-photo-film" style="color: #6366f1;"></i> Choose from Gallery
+                        </button>
+                    </div>
+                    <p class="help-text">Select an image from Team, AI Generated, or Brand asset gallery, or enter
+                        public URL.</p>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" class="form-control" style="flex: 1;"
+                            [placeholder]="isResolvingMedia() ? 'Securing permanent S3 CDN image...' : 'e.g. https://messengerassets.quotedesks.com/wabaptposter.png'"
+                            [ngModel]="headerImageUrl()" (ngModelChange)="headerImageUrl.set($event)"
+                            [disabled]="isResolvingMedia()">
+                        <button type="button" class="btn btn-outline" (click)="isAssetGalleryOpen.set(true)"
+                            title="Open Asset Gallery"
+                            style="padding: 8px 14px; background: #eef2ff; border: 1px solid #6366f1; color: #4338ca; font-weight: 700; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-images"></i> Gallery
+                        </button>
+                    </div>
+                    @if (isResolvingMedia()) {
+                    <div
+                        style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 12px; margin-top: 8px; font-size: 12px; color: #1e40af; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-spinner fa-spin" style="color: #2563eb;"></i>
+                        <div>
+                            <strong>Securing Permanent Image:</strong> Converting temporary Meta review asset to
+                            high-speed AWS S3 CDN so WhatsApp messages never appear blank...
+                        </div>
+                    </div>
+                    } @else if (headerImageUrl()) {
+                    <div
+                        style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px 12px; margin-top: 8px; font-size: 12px; color: #166534; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>
+                        <div>
+                            <strong>Ready for Broadcast:</strong> Verified high-speed CDN image link loaded. Image will
+                            deliver with full clarity to all recipients.
+                        </div>
+                    </div>
+                    }
+                </div>
+
+                <div class="config-section mb-24">
+                    <h4>Template Variables ({{ getTemplateParamKeys().length }})</h4>
+                    @if (getTemplateParamKeys().length === 0) {
+                    <p class="help-text">This template has no variable parameters.</p>
+                    } @else {
+                    @for(key of getTemplateParamKeys(); track key) {
+                    <div class="parameter-row" style="margin-bottom: 12px;">
+                        <div class="param-label">{{ '{{' + key + '}}' }}</div>
+                        <div class="param-inputs">
+                            <input type="text" class="form-control" placeholder="Value fallback"
+                                [value]="templateParams()[key]" (input)="onParamChange(key, $event)">
+                        </div>
+                    </div>
+                    }
+                    }
+                </div>
+                }
+
+                <!-- Conversational Interactive Quick Reply Builder -->
+                @if (campaignMode() === 'CONVERSATIONAL') {
+                <div class="config-section interactive-builder-card">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                        <h4>Interactive Quick Reply Buttons & CRM Auto-Mapping</h4>
+                        <button class="btn btn-outline btn-sm" (click)="addQuickReplyOption()"><i
+                                class="fa-solid fa-plus"></i> Add Option</button>
+                    </div>
+                    <p class="help-text">Define user response buttons and how the CRM contact record updates when
+                        clicked.</p>
+
+                    <div class="quick-replies-list">
+                        @for (option of quickReplyOptions(); track $index) {
+                        <div class="quick-reply-card">
+                            <div class="qr-header">
+                                <span>Button {{ $index + 1 }}</span>
+                                <button class="btn-icon text-red" (click)="removeQuickReplyOption($index)"><i
+                                        class="fa-solid fa-trash"></i></button>
+                            </div>
+                            <div class="qr-grid">
+                                <div>
+                                    <label class="label-sm">Button Text (User Sees)</label>
+                                    <input type="text" class="form-control" [value]="option.text"
+                                        (input)="updateQuickReplyOption($index, 'text', $any($event.target).value)"
+                                        placeholder="e.g. Confirm Yes">
                                 </div>
-                                <div class="bp-check">
-                                    <i class="fa-solid" [class.fa-circle-check]="selectedBlueprintKey() === bp.key" [class.fa-circle]="selectedBlueprintKey() !== bp.key"></i>
+                                <div>
+                                    <label class="label-sm">Auto Bot Response</label>
+                                    <input type="text" class="form-control" [value]="option.autoReplyText"
+                                        (input)="updateQuickReplyOption($index, 'autoReplyText', $any($event.target).value)"
+                                        placeholder="e.g. Thanks! Slot confirmed.">
+                                </div>
+                                <div>
+                                    <label class="label-sm">CRM Field to Update</label>
+                                    <select class="form-control" [value]="option.crmField || 'leadStage'"
+                                        (change)="updateQuickReplyOption($index, 'crmField', $any($event.target).value)">
+                                        <option value="leadStage">Lead Stage</option>
+                                        <option value="readinessStatus">Readiness Status</option>
+                                        <option value="type">Contact Type (B2B/B2C)</option>
+                                        <option value="tags">Add Tag</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="label-sm">Value to Save</label>
+                                    <input type="text" class="form-control" [value]="option.crmValue || ''"
+                                        (input)="updateQuickReplyOption($index, 'crmValue', $any($event.target).value)"
+                                        placeholder="e.g. Qualified">
                                 </div>
                             </div>
+                        </div>
                         }
                     </div>
                 </div>
-            }
+                }
+            </div>
 
-            <div class="create-message-layout">
-                <!-- Left Side: Message & Quick Reply Configuration -->
-                <div class="message-config">
-                    <div class="form-group mb-24">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <label style="margin-bottom: 0;">Template Name <span class="text-red">*</span></label>
-                            <button class="btn btn-outline" style="padding: 4px 10px; font-size: 11px;" (click)="syncTemplates()"><i class="fa-solid fa-rotate"></i> Sync Templates</button>
+            <!-- Right Side: Live Mockup -->
+            <div class="message-preview">
+                <div class="whatsapp-mockup">
+                    <div class="wa-header">
+                        <div class="wa-contact">
+                            <div class="wa-avatar"><i class="fa-solid fa-user"></i></div>
+                            <span>Quote Desks Messenger</span>
                         </div>
-                        <p class="help-text">Select an approved WhatsApp message template.</p>
-                        <select class="form-control" [ngModel]="selectedTemplate()" (ngModelChange)="selectTemplate($event)">
-                            @if (templates().length === 0) {
-                                <option [value]="null">No templates found. Click sync templates.</option>
-                            }
-                            @for(tpl of templates(); track tpl.id) {
-                                <option [ngValue]="tpl">{{ tpl.templateName }} ({{ tpl.language }})</option>
-                            }
-                        </select>
                     </div>
+                    <div class="wa-body">
+                        <!-- Broadcast Message Bubble -->
+                        <div class="wa-message-bubble"
+                            style="background: #ffffff; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); font-family: 'Segoe UI', system-ui, sans-serif;">
+                            <!-- Header Image / Media -->
+                            @if (getHeaderMediaUrl() || selectedTemplate()?.headerType === 'IMAGE') {
+                            <img [src]="getHeaderMediaUrl()"
+                                style="width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; display: block;"
+                                (error)="handleImgError($event)" />
+                            } @else if (selectedTemplate()?.headerType === 'TEXT' && selectedTemplate()?.headerText) {
+                            <div class="wa-header-title"
+                                style="font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px;">{{
+                                selectedTemplate()?.headerText }}</div>
+                            }
 
-                    @if (selectedTemplate()) {
-                        <!-- New Header Image URL Field with Gallery Picker -->
-                        <div class="form-group mb-24">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                                <label style="margin-bottom: 0;">Header Image URL (Pace Tourism India) <span class="opt-tag">• Optional</span></label>
-                                <button type="button" class="btn btn-outline btn-sm" (click)="isAssetGalleryOpen.set(true)" style="padding: 4px 10px; font-size: 11.5px; font-weight: 700; color: #4338ca; border-color: #cbd5e1; background: #f8fafc; display: flex; align-items: center; gap: 6px;">
-                                    <i class="fa-solid fa-photo-film" style="color: #6366f1;"></i> Choose from Gallery
-                                </button>
+                            <!-- Body Text with Preserved Line Breaks, Spacing, and Emojis -->
+                            <div class="wa-text"
+                                style="white-space: pre-wrap !important; word-break: break-word; font-size: 13.5px; line-height: 1.45; color: #1e293b;">
+                                {{ getPreviewText() }}</div>
+
+                            <!-- Footer Text -->
+                            @if (selectedTemplate()?.footerText) {
+                            <div class="wa-footer-text" style="font-size: 10.5px; color: #64748b; margin-top: 6px;">{{
+                                selectedTemplate()?.footerText }}</div>
+                            }
+
+                            <div class="wa-footer"
+                                style="font-size: 9.5px; color: #94a3b8; text-align: right; margin-top: 4px;">10:45 AM
                             </div>
-                            <p class="help-text">Select an image from Team, AI Generated, or Brand asset gallery, or enter public URL.</p>
-                            <div style="display: flex; gap: 8px;">
-                                <input type="text" class="form-control" style="flex: 1;" [placeholder]="isResolvingMedia() ? 'Securing permanent S3 CDN image...' : 'e.g. https://messengerassets.quotedesks.com/wabaptposter.png'" [ngModel]="headerImageUrl()" (ngModelChange)="headerImageUrl.set($event)" [disabled]="isResolvingMedia()">
-                                <button type="button" class="btn btn-outline" (click)="isAssetGalleryOpen.set(true)" title="Open Asset Gallery" style="padding: 8px 14px; background: #eef2ff; border: 1px solid #6366f1; color: #4338ca; font-weight: 700; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                                    <i class="fa-solid fa-images"></i> Gallery
-                                </button>
+
+                            <!-- Template Buttons Preview -->
+                            @if (getTemplateButtons(selectedTemplate()).length > 0) {
+                            <div class="wa-buttons-list"
+                                style="margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 6px; display: flex; flex-direction: column; gap: 4px;">
+                                @for (btn of getTemplateButtons(selectedTemplate()); track $index) {
+                                <div class="wa-btn-item"
+                                    style="display: flex; align-items: center; justify-content: center; gap: 6px; color: #0284c7; font-weight: 600; font-size: 12.5px; padding: 6px; background: #f8fafc; border-radius: 6px;">
+                                    <i class="fa-solid fa-reply" *ngIf="btn.type === 'QUICK_REPLY'"></i>
+                                    <i class="fa-solid fa-arrow-up-right-from-square"
+                                        *ngIf="btn.type === 'URL' || btn.type === 'VISIT_WEBSITE'"></i>
+                                    <i class="fa-solid fa-phone"
+                                        *ngIf="btn.type === 'PHONE_NUMBER' || btn.type === 'CALL_PHONE'"></i>
+                                    <span>{{ btn.text || btn.buttonText || 'Action' }}</span>
+                                </div>
+                                }
                             </div>
-                            @if (isResolvingMedia()) {
-                                <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 6px 12px; margin-top: 8px; font-size: 12px; color: #1e40af; display: flex; align-items: center; gap: 8px;">
-                                    <i class="fa-solid fa-spinner fa-spin" style="color: #2563eb;"></i>
-                                    <div>
-                                        <strong>Securing Permanent Image:</strong> Converting temporary Meta review asset to high-speed AWS S3 CDN so WhatsApp messages never appear blank...
-                                    </div>
-                                </div>
-                            } @else if (headerImageUrl()) {
-                                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 6px; padding: 6px 12px; margin-top: 8px; font-size: 12px; color: #166534; display: flex; align-items: center; gap: 8px;">
-                                    <i class="fa-solid fa-circle-check" style="color: #16a34a;"></i>
-                                    <div>
-                                        <strong>Ready for Broadcast:</strong> Verified high-speed CDN image link loaded. Image will deliver with full clarity to all recipients.
-                                    </div>
-                                </div>
                             }
                         </div>
 
-                        <div class="config-section mb-24">
-                            <h4>Template Variables ({{ getTemplateParamKeys().length }})</h4>
-                            @if (getTemplateParamKeys().length === 0) {
-                                <p class="help-text">This template has no variable parameters.</p>
-                            } @else {
-                                @for(key of getTemplateParamKeys(); track key) {
-                                    <div class="parameter-row" style="margin-bottom: 12px;">
-                                        <div class="param-label">{{ '{{' + key + '}}' }}</div>
-                                        <div class="param-inputs">
-                                            <input type="text" class="form-control" placeholder="Value fallback" [value]="templateParams()[key]" (input)="onParamChange(key, $event)">
-                                        </div>
-                                    </div>
-                                }
+                        <!-- Interactive Buttons Preview -->
+                        @if (campaignMode() === 'CONVERSATIONAL') {
+                        <div class="wa-quick-replies-preview">
+                            @for (opt of quickReplyOptions(); track opt.text) {
+                            <div class="wa-reply-btn">
+                                <i class="fa-solid fa-reply"></i> {{ opt.text }}
+                            </div>
                             }
                         </div>
-                    }
 
-                    <!-- Conversational Interactive Quick Reply Builder -->
-                    @if (campaignMode() === 'CONVERSATIONAL') {
-                        <div class="config-section interactive-builder-card">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                                <h4>Interactive Quick Reply Buttons & CRM Auto-Mapping</h4>
-                                <button class="btn btn-outline btn-sm" (click)="addQuickReplyOption()"><i class="fa-solid fa-plus"></i> Add Option</button>
-                            </div>
-                            <p class="help-text">Define user response buttons and how the CRM contact record updates when clicked.</p>
-
-                            <div class="quick-replies-list">
-                                @for (option of quickReplyOptions(); track $index) {
-                                    <div class="quick-reply-card">
-                                        <div class="qr-header">
-                                            <span>Button {{ $index + 1 }}</span>
-                                            <button class="btn-icon text-red" (click)="removeQuickReplyOption($index)"><i class="fa-solid fa-trash"></i></button>
-                                        </div>
-                                        <div class="qr-grid">
-                                            <div>
-                                                <label class="label-sm">Button Text (User Sees)</label>
-                                                <input type="text" class="form-control" [value]="option.text" (input)="updateQuickReplyOption($index, 'text', $any($event.target).value)" placeholder="e.g. Confirm Yes">
-                                            </div>
-                                            <div>
-                                                <label class="label-sm">Auto Bot Response</label>
-                                                <input type="text" class="form-control" [value]="option.autoReplyText" (input)="updateQuickReplyOption($index, 'autoReplyText', $any($event.target).value)" placeholder="e.g. Thanks! Slot confirmed.">
-                                            </div>
-                                            <div>
-                                                <label class="label-sm">CRM Field to Update</label>
-                                                <select class="form-control" [value]="option.crmField || 'leadStage'" (change)="updateQuickReplyOption($index, 'crmField', $any($event.target).value)">
-                                                    <option value="leadStage">Lead Stage</option>
-                                                    <option value="readinessStatus">Readiness Status</option>
-                                                    <option value="type">Contact Type (B2B/B2C)</option>
-                                                    <option value="tags">Add Tag</option>
-                                                </select>
-                                            </div>
-                                            <div>
-                                                <label class="label-sm">Value to Save</label>
-                                                <input type="text" class="form-control" [value]="option.crmValue || ''" (input)="updateQuickReplyOption($index, 'crmValue', $any($event.target).value)" placeholder="e.g. Qualified">
-                                            </div>
-                                        </div>
-                                    </div>
-                                }
-                            </div>
+                        @if (quickReplyOptions().length > 0) {
+                        <!-- Simulated Incoming Reply & Bot Response -->
+                        <div class="wa-message-bubble wa-incoming mt-12">
+                            <div class="wa-text font-bold">{{ quickReplyOptions()[0].text }}</div>
+                            <div class="wa-footer">Simulated User Reply</div>
                         </div>
-                    }
-                </div>
-
-                <!-- Right Side: Live Mockup -->
-                <div class="message-preview">
-                    <div class="whatsapp-mockup">
-                        <div class="wa-header">
-                            <div class="wa-contact">
-                                <div class="wa-avatar"><i class="fa-solid fa-user"></i></div>
-                                <span>Pace Messenger</span>
-                            </div>
+                        <div class="wa-message-bubble mt-8">
+                            <div class="wa-text">{{ quickReplyOptions()[0].autoReplyText }}</div>
+                            <div class="wa-footer">Auto Bot Response • Syncs CRM field: {{
+                                quickReplyOptions()[0].crmField }} = "{{ quickReplyOptions()[0].crmValue }}"</div>
                         </div>
-                        <div class="wa-body">
-                            <!-- Broadcast Message Bubble -->
-                            <div class="wa-message-bubble" style="background: #ffffff; border-radius: 10px; padding: 10px 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); font-family: 'Segoe UI', system-ui, sans-serif;">
-                                <!-- Header Image / Media -->
-                                @if (getHeaderMediaUrl() || selectedTemplate()?.headerType === 'IMAGE') {
-                                    <img [src]="getHeaderMediaUrl()" style="width: 100%; max-height: 220px; object-fit: cover; border-radius: 8px; margin-bottom: 8px; display: block;" (error)="handleImgError($event)" />
-                                } @else if (selectedTemplate()?.headerType === 'TEXT' && selectedTemplate()?.headerText) {
-                                    <div class="wa-header-title" style="font-weight: 700; font-size: 14px; color: #0f172a; margin-bottom: 6px;">{{ selectedTemplate()?.headerText }}</div>
-                                }
-
-                                <!-- Body Text with Preserved Line Breaks, Spacing, and Emojis -->
-                                <div class="wa-text" style="white-space: pre-wrap !important; word-break: break-word; font-size: 13.5px; line-height: 1.45; color: #1e293b;">{{ getPreviewText() }}</div>
-
-                                <!-- Footer Text -->
-                                @if (selectedTemplate()?.footerText) {
-                                    <div class="wa-footer-text" style="font-size: 10.5px; color: #64748b; margin-top: 6px;">{{ selectedTemplate()?.footerText }}</div>
-                                }
-
-                                <div class="wa-footer" style="font-size: 9.5px; color: #94a3b8; text-align: right; margin-top: 4px;">10:45 AM</div>
-
-                                <!-- Template Buttons Preview -->
-                                @if (getTemplateButtons(selectedTemplate()).length > 0) {
-                                    <div class="wa-buttons-list" style="margin-top: 10px; border-top: 1px solid #e2e8f0; padding-top: 6px; display: flex; flex-direction: column; gap: 4px;">
-                                        @for (btn of getTemplateButtons(selectedTemplate()); track $index) {
-                                            <div class="wa-btn-item" style="display: flex; align-items: center; justify-content: center; gap: 6px; color: #0284c7; font-weight: 600; font-size: 12.5px; padding: 6px; background: #f8fafc; border-radius: 6px;">
-                                                <i class="fa-solid fa-reply" *ngIf="btn.type === 'QUICK_REPLY'"></i>
-                                                <i class="fa-solid fa-arrow-up-right-from-square" *ngIf="btn.type === 'URL' || btn.type === 'VISIT_WEBSITE'"></i>
-                                                <i class="fa-solid fa-phone" *ngIf="btn.type === 'PHONE_NUMBER' || btn.type === 'CALL_PHONE'"></i>
-                                                <span>{{ btn.text || btn.buttonText || 'Action' }}</span>
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                            </div>
-
-                            <!-- Interactive Buttons Preview -->
-                            @if (campaignMode() === 'CONVERSATIONAL') {
-                                <div class="wa-quick-replies-preview">
-                                    @for (opt of quickReplyOptions(); track opt.text) {
-                                        <div class="wa-reply-btn">
-                                            <i class="fa-solid fa-reply"></i> {{ opt.text }}
-                                        </div>
-                                    }
-                                </div>
-
-                                @if (quickReplyOptions().length > 0) {
-                                    <!-- Simulated Incoming Reply & Bot Response -->
-                                    <div class="wa-message-bubble wa-incoming mt-12">
-                                        <div class="wa-text font-bold">{{ quickReplyOptions()[0].text }}</div>
-                                        <div class="wa-footer">Simulated User Reply</div>
-                                    </div>
-                                    <div class="wa-message-bubble mt-8">
-                                        <div class="wa-text">{{ quickReplyOptions()[0].autoReplyText }}</div>
-                                        <div class="wa-footer">Auto Bot Response • Syncs CRM field: {{ quickReplyOptions()[0].crmField }} = "{{ quickReplyOptions()[0].crmValue }}"</div>
-                                    </div>
-                                }
-                            }
-                        </div>
+                        }
+                        }
                     </div>
                 </div>
             </div>
         </div>
+    </div>
     }
 
     <!-- Step 3: Test & Preview -->
     @if (currentStep === 3) {
-        <div class="step-content">
-            <div class="step-actions split">
-                <button class="btn btn-outline" (click)="prevStep()"><i class="fa-solid fa-arrow-left"></i> Back to Message</button>
-                <button class="btn btn-dark" (click)="launchCampaign()"><i class="fa-solid fa-paper-plane"></i> Launch Campaign (Send to {{ selectedContactIds().length }} Contacts)</button>
+    <div class="step-content">
+        <div class="step-actions split">
+            <button class="btn btn-outline" (click)="prevStep()"><i class="fa-solid fa-arrow-left"></i> Back to
+                Message</button>
+            <button class="btn btn-dark" (click)="launchCampaign()"><i class="fa-solid fa-paper-plane"></i> Launch
+                Campaign (Send to {{ selectedContactIds().length }} Contacts)</button>
+        </div>
+
+        <div class="test-preview-section">
+            <h3>Ready to Launch?</h3>
+            <p>Review your campaign setup and test the message flow before broadcasting.</p>
+
+            <div class="summary-cards-grid mt-24 mb-24">
+                <div class="summary-card">
+                    <div class="s-label">Campaign Name</div>
+                    <div class="s-val">{{ campaignName }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="s-label">Campaign Mode</div>
+                    <div class="s-val"><span class="tag-badge">{{ campaignMode() }}</span></div>
+                </div>
+                <div class="summary-card" style="border: 2px solid #ddd6fe; background: #faf5ff;">
+                    <div class="s-label" style="color: #6d28d9; font-weight: 700;">Target Audience</div>
+                    <div class="s-val" style="color: #5b21b6; font-weight: 800;">{{ selectedContactIds().length }}
+                        Selected Contact{{ selectedContactIds().length === 1 ? '' : 's' }}</div>
+                </div>
+                <div class="summary-card">
+                    <div class="s-label">Template</div>
+                    <div class="s-val">{{ selectedTemplate()?.templateName || '-' }}</div>
+                </div>
             </div>
-            
-            <div class="test-preview-section">
-                <h3>Ready to Launch?</h3>
-                <p>Review your campaign setup and test the message flow before broadcasting.</p>
-                
-                <div class="summary-cards-grid mt-24 mb-24">
-                    <div class="summary-card">
-                        <div class="s-label">Campaign Name</div>
-                        <div class="s-val">{{ campaignName }}</div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="s-label">Campaign Mode</div>
-                        <div class="s-val"><span class="tag-badge">{{ campaignMode() }}</span></div>
-                    </div>
-                    <div class="summary-card" style="border: 2px solid #ddd6fe; background: #faf5ff;">
-                        <div class="s-label" style="color: #6d28d9; font-weight: 700;">Target Audience</div>
-                        <div class="s-val" style="color: #5b21b6; font-weight: 800;">{{ selectedContactIds().length }} Selected Contact{{ selectedContactIds().length === 1 ? '' : 's' }}</div>
-                    </div>
-                    <div class="summary-card">
-                        <div class="s-label">Template</div>
-                        <div class="s-val">{{ selectedTemplate()?.templateName || '-' }}</div>
-                    </div>
-                </div>
 
-                <!-- Confirmed Recipients Preview List -->
-                <div class="selected-recipients-review mt-24 mb-24" style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                        <h4 style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-                            <i class="fa-solid fa-users" style="color: #7c3aed;"></i> Confirmed Recipients ({{ selectedContactIds().length }})
-                        </h4>
-                        <button type="button" class="btn btn-outline btn-sm" (click)="goToStep(1)" style="font-size: 11.5px;">
-                            <i class="fa-solid fa-pen-to-square"></i> Change Selection
-                        </button>
-                    </div>
-                    <p style="font-size: 12px; color: #64748b; margin-top: 0; margin-bottom: 12px;">
-                        The template message <strong>"{{ selectedTemplate()?.templateName }}"</strong> will be sent exclusively to these {{ selectedContactIds().length }} contact(s):
-                    </p>
-                    <div style="max-height: 220px; overflow-y: auto; border: 1px solid #f1f5f9; border-radius: 6px;">
-                        <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
-                            <thead>
-                                <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; text-align: left;">
-                                    <th style="padding: 8px 12px;">Name</th>
-                                    <th style="padding: 8px 12px;">Mobile</th>
-                                    <th style="padding: 8px 12px;">Type</th>
-                                    <th style="padding: 8px 12px;">Location</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @for (contact of selectedContactsList(); track contact.id) {
-                                    <tr style="border-bottom: 1px solid #f1f5f9;">
-                                        <td style="padding: 8px 12px; font-weight: 600; color: #1e293b;">{{ contact.name || 'UNKNOWN' }}</td>
-                                        <td style="padding: 8px 12px; color: #475569;">{{ contact.phone }}</td>
-                                        <td style="padding: 8px 12px;"><span class="tag-badge" [class.badge-b2b]="contact.type === 'B2B'">{{ contact.type || 'B2C' }}</span></td>
-                                        <td style="padding: 8px 12px; color: #64748b;">{{ contact.location || '-' }}</td>
-                                    </tr>
-                                }
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="form-group mt-24">
-                    <label>Send Test Message (Phone with Country Code)</label>
-                    <div class="test-input-group" style="display: flex; gap: 12px; margin-top: 8px;">
-                        <input type="text" class="form-control" style="max-width: 300px;" [(ngModel)]="testPhoneNumber" placeholder="e.g. 919876543210">
-                        <button class="btn btn-dark" (click)="sendTestMessage()"><i class="fa-solid fa-vial"></i> Send Test</button>
-                    </div>
-                </div>
-
-                <div style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
-                    <button class="btn btn-dark" style="padding: 10px 24px; font-size: 14px;" (click)="launchCampaign()">
-                        <i class="fa-solid fa-paper-plane"></i> Launch Broadcast to {{ selectedContactIds().length }} Contacts
+            <!-- Confirmed Recipients Preview List -->
+            <div class="selected-recipients-review mt-24 mb-24"
+                style="background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h4
+                        style="margin: 0; font-size: 14px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-users" style="color: #7c3aed;"></i> Confirmed Recipients ({{
+                        selectedContactIds().length }})
+                    </h4>
+                    <button type="button" class="btn btn-outline btn-sm" (click)="goToStep(1)"
+                        style="font-size: 11.5px;">
+                        <i class="fa-solid fa-pen-to-square"></i> Change Selection
                     </button>
                 </div>
+                <p style="font-size: 12px; color: #64748b; margin-top: 0; margin-bottom: 12px;">
+                    The template message <strong>"{{ selectedTemplate()?.templateName }}"</strong> will be sent
+                    exclusively to these {{ selectedContactIds().length }} contact(s):
+                </p>
+                <div style="max-height: 220px; overflow-y: auto; border: 1px solid #f1f5f9; border-radius: 6px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12.5px;">
+                        <thead>
+                            <tr
+                                style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; color: #64748b; text-align: left;">
+                                <th style="padding: 8px 12px;">Name</th>
+                                <th style="padding: 8px 12px;">Mobile</th>
+                                <th style="padding: 8px 12px;">Type</th>
+                                <th style="padding: 8px 12px;">Location</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (contact of selectedContactsList(); track contact.id) {
+                            <tr style="border-bottom: 1px solid #f1f5f9;">
+                                <td style="padding: 8px 12px; font-weight: 600; color: #1e293b;">{{ contact.name ||
+                                    'UNKNOWN' }}</td>
+                                <td style="padding: 8px 12px; color: #475569;">{{ contact.phone }}</td>
+                                <td style="padding: 8px 12px;"><span class="tag-badge"
+                                        [class.badge-b2b]="contact.type === 'B2B'">{{ contact.type || 'B2C' }}</span>
+                                </td>
+                                <td style="padding: 8px 12px; color: #64748b;">{{ contact.location || '-' }}</td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-group mt-24">
+                <label>Send Test Message (Phone with Country Code)</label>
+                <div class="test-input-group" style="display: flex; gap: 12px; margin-top: 8px;">
+                    <input type="text" class="form-control" style="max-width: 300px;" [(ngModel)]="testPhoneNumber"
+                        placeholder="e.g. 919876543210">
+                    <button class="btn btn-dark" (click)="sendTestMessage()"><i class="fa-solid fa-vial"></i> Send
+                        Test</button>
+                </div>
+            </div>
+
+            <div
+                style="margin-top: 32px; padding-top: 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end;">
+                <button class="btn btn-dark" style="padding: 10px 24px; font-size: 14px;" (click)="launchCampaign()">
+                    <i class="fa-solid fa-paper-plane"></i> Launch Broadcast to {{ selectedContactIds().length }}
+                    Contacts
+                </button>
             </div>
         </div>
+    </div>
     }
 </div>
 
 <!-- Contact Profile Sidebar Overlay -->
-<app-contact-profile-panel 
-    [isOpen]="isProfilePanelOpen" 
-    [contact]="selectedProfileContact"
+<app-contact-profile-panel [isOpen]="isProfilePanelOpen" [contact]="selectedProfileContact"
     (closePanel)="closeProfilePanel()">
 </app-contact-profile-panel>
 
 <!-- Create Group Modal Dialog -->
 @if (showCreateGroupModal()) {
-    <div class="modal-backdrop">
-        <div class="modal-dialog">
-            <div class="modal-header">
-                <h3>Create New Contact Group</h3>
-                <button class="btn-icon" (click)="showCreateGroupModal.set(false)"><i class="fa-solid fa-xmark"></i></button>
+<div class="modal-backdrop">
+    <div class="modal-dialog">
+        <div class="modal-header">
+            <h3>Create New Contact Group</h3>
+            <button class="btn-icon" (click)="showCreateGroupModal.set(false)"><i
+                    class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group mb-16">
+                <label>Group Name <span class="text-red">*</span></label>
+                <input type="text" class="form-control" [ngModel]="newGroupName()"
+                    (ngModelChange)="newGroupName.set($event)">
             </div>
-            <div class="modal-body">
-                <div class="form-group mb-16">
-                    <label>Group Name <span class="text-red">*</span></label>
-                    <input type="text" class="form-control" [ngModel]="newGroupName()" (ngModelChange)="newGroupName.set($event)">
-                </div>
-                <div class="form-group mb-16">
-                    <label>Description</label>
-                    <textarea class="form-control" [ngModel]="newGroupDescription()" (ngModelChange)="newGroupDescription.set($event)" rows="3"></textarea>
-                </div>
-                <p class="help-text">Will include {{ selectedContactIds().length }} selected contacts from the data table.</p>
+            <div class="form-group mb-16">
+                <label>Description</label>
+                <textarea class="form-control" [ngModel]="newGroupDescription()"
+                    (ngModelChange)="newGroupDescription.set($event)" rows="3"></textarea>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" (click)="showCreateGroupModal.set(false)">Cancel</button>
-                <button class="btn btn-dark" (click)="confirmCreateGroup()"><i class="fa-solid fa-check"></i> Create Group</button>
-            </div>
+            <p class="help-text">Will include {{ selectedContactIds().length }} selected contacts from the data table.
+            </p>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-outline" (click)="showCreateGroupModal.set(false)">Cancel</button>
+            <button class="btn btn-dark" (click)="confirmCreateGroup()"><i class="fa-solid fa-check"></i> Create
+                Group</button>
         </div>
     </div>
+</div>
 }
 
-<app-asset-gallery-picker [isOpen]="isAssetGalleryOpen()" (close)="isAssetGalleryOpen.set(false)" (selectAsset)="headerImageUrl.set($event)"></app-asset-gallery-picker>
-
+<app-asset-gallery-picker [isOpen]="isAssetGalleryOpen()" (close)="isAssetGalleryOpen.set(false)"
+    (selectAsset)="headerImageUrl.set($event)"></app-asset-gallery-picker>

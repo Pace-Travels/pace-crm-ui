@@ -1,6 +1,6 @@
-# Pace Messenger UI
+# Quote Desks Messenger UI
 
-Pace Messenger UI is the robust, high-performance Angular frontend for the Pace Messenger platform. It provides a beautiful, modern interface for managing WhatsApp marketing campaigns, live chat interactions, automation flows, and contacts.
+Quote Desks Messenger UI is the robust, high-performance Angular frontend for the Quote Desks Messenger platform. It provides a beautiful, modern interface for managing WhatsApp marketing campaigns, live chat interactions, automation flows, and contacts.
 
 ## 🚀 System Readiness
 

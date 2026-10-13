@@ -34,10 +34,10 @@ export class AiTemplateGeneratorView implements OnInit {
   promptText = signal<string>('');
   selectedStyle = signal<'NORMAL' | 'POETIC' | 'EXCITING' | 'FUNNY'>('NORMAL');
   selectedObjective = signal<'CLICK_RATE' | 'REPLY_RATE'>('CLICK_RATE');
-  
+
   isGenerating = signal<boolean>(false);
   showPromptHistoryDrawer = signal<boolean>(false);
-  
+
   // Previous prompts history trajectory
   promptHistory = signal<PromptHistoryItem[]>([
     {
@@ -64,9 +64,9 @@ export class AiTemplateGeneratorView implements OnInit {
   constructor(
     private api: ApiService,
     private router: Router
-  ) {}
+  ) { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   setStyle(style: 'NORMAL' | 'POETIC' | 'EXCITING' | 'FUNNY'): void {
     this.selectedStyle.set(style);
@@ -142,7 +142,7 @@ export class AiTemplateGeneratorView implements OnInit {
   generateMockVariations(): void {
     const prompt = this.promptText();
     const style = this.selectedStyle();
-    
+
     let prefix = 'Hello {{1}}, ';
     if (style === 'POETIC') prefix = 'Dearest {{1}}, a special delivery awaits... ';
     if (style === 'EXCITING') prefix = 'Hey {{1}}! 🎉 Exclusive news for you: ';
@@ -163,7 +163,7 @@ export class AiTemplateGeneratorView implements OnInit {
         title: 'Action-Oriented Variant 2',
         headerText: 'Special Announcement',
         bodyText: `Hi {{1}}, we crafted this just for you: ${prompt}. Click below to explore!`,
-        footerText: 'Pace Messenger Offers',
+        footerText: 'Quote Desks Messenger Offers',
         style: style,
         score: 94
       },
