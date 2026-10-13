@@ -1,0 +1,328 @@
+<div class="qc-overlay" (click)="cancel()">
+  <div class="qc-modal" (click)="$event.stopPropagation()" role="dialog" aria-labelledby="qc-title">
+
+    <!-- Header -->
+    <header class="qc-header">
+      <div class="qc-header-main">
+        <div class="qc-logo"><i class="fa-brands fa-meta"></i></div>
+        <div>
+          <h2 id="qc-title">Meta WhatsApp Sync</h2>
+          <p class="qc-sub">
+            <ng-container *ngIf="data?.authorizedUser">Logged in as <strong>{{ data.authorizedUser.name }}</strong> · </ng-container>
+            {{ data?.accounts?.length || 0 }} on Meta · {{ data?.localRows?.length || 0 }} in QuoteDesk
+          </p>
+        </div>
+      </div>
+      <ol class="qc-steps">
+        <li [class.active]="step() === 1" [class.done]="step() > 1"><span>1</span> Review</li>
+        <li [class.active]="step() === 2" [class.done]="step() > 2" [class.muted]="!toDelete().length && step() < 3"><span>2</span> Removal impact</li>
+        <li [class.active]="step() === 3"><span>3</span> Done</li>
+      </ol>
+      <button class="qc-close" (click)="cancel()" aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+    </header>
+
+    <div class="qc-body">
+      <div *ngIf="data?.warnings?.length && step() === 1" class="qc-banner qc-banner-info">
+        <i class="fa-solid fa-circle-info"></i>
+        <div>Some details weren't available from Meta (usually a missing permission). They're shown as "Not available".
+          <details><summary>Details</summary><ul><li *ngFor="let w of data.warnings">{{ w }}</li></ul></details>
+        </div>
+      </div>
+
+      <!-- ===================== STEP 1 ===================== -->
+      <ng-container *ngIf="step() === 1">
+        <!-- Section A -->
+        <section class="qc-section">
+          <div class="qc-section-head">
+            <h3><i class="fa-brands fa-whatsapp"></i> Found on Meta</h3>
+            <span class="qc-hint">Ticked numbers will be added or refreshed in QuoteDesk</span>
+          </div>
+
+          <div *ngIf="!metaRows().length" class="qc-empty">No WhatsApp numbers found for this Facebook login.</div>
+
+          <div class="qc-row" *ngFor="let r of metaRows()" [class.selected]="r.selected" [class.open]="expanded() === r.key">
+            <div class="qc-row-main" (click)="toggleExpand(r.key)">
+              <label class="qc-check" (click)="$event.stopPropagation()">
+                <input type="checkbox" [checked]="r.selected" (change)="toggleMeta(r)" [id]="'qc-meta-' + r.acc.phoneNumberId">
+                <span></span>
+              </label>
+              <div class="qc-ident">
+                <strong>{{ r.acc.phoneNumber }}</strong>
+                <span>{{ r.acc.name }} · {{ r.acc.wabaName }}</span>
+              </div>
+              <span class="qc-quality" [attr.data-q]="r.acc.qualityRating">{{ r.acc.qualityRating }}</span>
+              <span class="qc-chip" *ngIf="r.acc.payment; else noPay" [class.ok]="r.acc.payment.attached" [class.warn]="!r.acc.payment.attached">
+                <i class="fa-solid fa-credit-card"></i>
+                {{ r.acc.payment.attached ? 'Payment attached' : 'No payment' }}
+              </span>
+              <ng-template #noPay><span class="qc-chip muted"><i class="fa-solid fa-credit-card"></i> Not available</span></ng-template>
+              <div class="qc-avatars" *ngIf="r.acc.assignedUsers?.length">
+                <span *ngFor="let u of r.acc.assignedUsers.slice(0, 3)" [title]="u.name + ' — ' + u.tasks.join(', ')">{{ initials(u.name) }}</span>
+                <span *ngIf="r.acc.assignedUsers.length > 3" class="more">+{{ r.acc.assignedUsers.length - 3 }}</span>
+              </div>
+              <span class="qc-kind" [attr.data-kind]="r.kind">{{ r.kind === 'new' ? '🆕 New' : '🔄 Update' }}</span>
+              <i class="fa-solid fa-chevron-down qc-caret"></i>
+            </div>
+
+            <div class="qc-drawer" *ngIf="expanded() === r.key">
+              <ng-container *ngTemplateOutlet="drawer; context: { acc: r.acc, local: r.local }"></ng-container>
+            </div>
+          </div>
+        </section>
+
+        <!-- Section B -->
+        <section class="qc-section">
+          <div class="qc-section-head">
+            <h3><i class="fa-solid fa-ghost"></i> Only in QuoteDesk</h3>
+            <span class="qc-hint">Not found on Meta, or duplicates. Only <b>safe</b> rows are pre-ticked for removal.</span>
+          </div>
+
+          <div *ngIf="!localRows().length" class="qc-empty qc-empty-ok"><i class="fa-solid fa-circle-check"></i> Everything in QuoteDesk matches Meta. Nothing to clean up.</div>
+
+          <div class="qc-row" *ngFor="let r of localRows()" [class.selected]="r.selected" [class.open]="expanded() === r.key"
+               [attr.data-sev]="r.local.isSandbox ? 'locked' : severity(r.local.projectId)">
+            <div class="qc-row-main" (click)="toggleExpand(r.key)">
+              <label class="qc-check danger" (click)="$event.stopPropagation()" [class.disabled]="r.local.isSandbox">
+                <input type="checkbox" [checked]="r.selected" [disabled]="r.local.isSandbox" (change)="toggleLocal(r)" [id]="'qc-local-' + r.local.projectId">
+                <span></span>
+              </label>
+              <div class="qc-ident">
+                <strong>{{ r.local.phoneNumber || r.local.phoneNumberId }}</strong>
+                <span>{{ r.local.projectName }} · added {{ r.local.createdAt | date:'d MMM y' }}</span>
+              </div>
+
+              <span class="qc-health" [attr.data-status]="r.local.connectionStatus">{{ r.local.connectionStatus || 'UNKNOWN' }}</span>
+
+              <div class="qc-stats" *ngIf="!impactLoading(); else shimmer">
+                <ng-container *ngIf="imp(r.local.projectId) as i">
+                  <span title="Conversations"><i class="fa-regular fa-comments"></i> {{ i.quotedesk.conversations.total | number }}</span>
+                  <span title="Messages"><i class="fa-regular fa-envelope"></i> {{ i.quotedesk.messages.total | number }}</span>
+                  <span title="Last message"><i class="fa-regular fa-clock"></i> {{ relative(i.quotedesk.messages.lastAt) }}</span>
+                </ng-container>
+              </div>
+              <ng-template #shimmer><div class="qc-shimmer"></div></ng-template>
+
+              <span *ngIf="r.local.isSandbox" class="qc-sev locked">🔒 Sandbox</span>
+              <span *ngIf="!r.local.isSandbox" class="qc-sev" [attr.data-sev]="severity(r.local.projectId)">
+                {{ severity(r.local.projectId) === 'danger' ? '🔴 Danger' : severity(r.local.projectId) === 'caution' ? '🟡 Caution' : '🟢 Safe' }}
+                <small *ngIf="r.kind === 'duplicate'">· duplicate</small>
+              </span>
+              <i class="fa-solid fa-chevron-down qc-caret"></i>
+            </div>
+
+            <div class="qc-drawer" *ngIf="expanded() === r.key">
+              <div *ngIf="r.kind === 'duplicate'" class="qc-banner qc-banner-info small">
+                Duplicate of <b>{{ projectName(r.duplicateOf) }}</b>, which stays connected.
+              </div>
+              <div *ngIf="r.local.lastHealthError" class="qc-banner qc-banner-error small">⚠️ {{ r.local.lastHealthError }}</div>
+              <ng-container *ngTemplateOutlet="drawer; context: { acc: metaFor(r.local), local: r.local }"></ng-container>
+            </div>
+          </div>
+        </section>
+      </ng-container>
+
+      <!-- ===================== STEP 2 ===================== -->
+      <ng-container *ngIf="step() === 2">
+        <div class="qc-summary">
+          <div class="qc-summary-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+          <div>
+            <h3>You're removing {{ deleteSummary().accounts }} account{{ deleteSummary().accounts === 1 ? '' : 's' }}</h3>
+            <p>
+              <b>{{ deleteSummary().conversations | number }}</b> conversations ·
+              <b>{{ deleteSummary().messages | number }}</b> messages ·
+              <b>{{ deleteSummary().open }}</b> open chats will close ·
+              <b>{{ deleteSummary().campaigns }}</b> campaign{{ deleteSummary().campaigns === 1 ? '' : 's' }} will pause
+            </p>
+          </div>
+          <button class="qc-btn ghost" (click)="exportCsv()" id="qc-export-csv"><i class="fa-solid fa-file-csv"></i> Export CSV</button>
+        </div>
+
+        <div class="qc-del" *ngFor="let r of toDelete()" [attr.data-sev]="severity(r.local.projectId)">
+          <div class="qc-del-head">
+            <div class="qc-ident">
+              <strong>{{ r.local.phoneNumber }}</strong>
+              <span>{{ r.local.projectName }}</span>
+            </div>
+            <span class="qc-sev" [attr.data-sev]="severity(r.local.projectId)">
+              {{ severity(r.local.projectId) === 'danger' ? '🔴 Danger' : severity(r.local.projectId) === 'caution' ? '🟡 Caution' : '🟢 Safe' }}
+            </span>
+          </div>
+
+          <div class="qc-actions">
+            <label class="qc-radio" [class.on]="r.action === 'ARCHIVE'">
+              <input type="radio" [name]="'act-' + r.key" [checked]="r.action === 'ARCHIVE'" (change)="patchLocal(r, { action: 'ARCHIVE' })">
+              <div><b>Archive</b> <em>Recommended</em><small>History kept read-only, replies blocked, campaigns paused. Undo for 30s.</small></div>
+            </label>
+            <label class="qc-radio" [class.on]="r.action === 'REASSIGN'" [class.disabled]="!reassignTargets(r).length">
+              <input type="radio" [name]="'act-' + r.key" [checked]="r.action === 'REASSIGN'" [disabled]="!reassignTargets(r).length" (change)="patchLocal(r, { action: 'REASSIGN' })">
+              <div><b>Move chats to another number</b>
+                <small *ngIf="reassignTargets(r).length">Same WABA only. Customers will see a different sender.</small>
+                <small *ngIf="!reassignTargets(r).length">No other active number in this WABA.</small>
+                <select *ngIf="r.action === 'REASSIGN'" [ngModel]="r.reassignTo" (ngModelChange)="patchLocal(r, { reassignTo: $event })" [id]="'qc-reassign-' + r.local.projectId">
+                  <option [ngValue]="null" disabled>Select number…</option>
+                  <option *ngFor="let t of reassignTargets(r)" [ngValue]="t.projectId">{{ t.phoneNumber }} · {{ t.projectName }}</option>
+                </select>
+              </div>
+            </label>
+            <label class="qc-radio danger" [class.on]="r.action === 'PURGE'">
+              <input type="radio" [name]="'act-' + r.key" [checked]="r.action === 'PURGE'" (change)="patchLocal(r, { action: 'PURGE' })">
+              <div><b>Delete history too</b> <em class="red">Admins only</em><small>Conversations and messages are hidden permanently from QuoteDesk.</small></div>
+            </label>
+          </div>
+
+          <label class="qc-toggle">
+            <input type="checkbox" [checked]="r.unsubscribe" (change)="patchLocal(r, { unsubscribe: !r.unsubscribe })">
+            <span></span> Also disconnect QuoteDesk from this WABA in Meta
+            <small>(the number, templates and billing stay in WhatsApp Manager)</small>
+          </label>
+
+          <div class="qc-confirm" *ngIf="severity(r.local.projectId) === 'danger'">
+            <i class="fa-solid fa-lock"></i>
+            Type the last 4 digits <b>{{ r.local.phoneNumber?.slice(0, -4) }}••••</b> to confirm
+            <input [ngModel]="r.confirmDigits" (ngModelChange)="patchLocal(r, { confirmDigits: $event })" maxlength="4" inputmode="numeric"
+                   [class.ok]="r.confirmDigits === last4(r.local.phoneNumber)" [id]="'qc-confirm-' + r.local.projectId">
+          </div>
+        </div>
+
+        <!-- Impact matrix -->
+        <div class="qc-matrix">
+          <h4>What "remove" does where</h4>
+          <table>
+            <thead><tr><th></th><th>Archive (default)</th><th>+ Disconnect in Meta</th></tr></thead>
+            <tbody>
+              <tr><td><i class="fa-solid fa-comments"></i> QuoteDesk Messenger</td><td>History read-only ("Disconnected number"), replies blocked, campaigns paused</td><td>Also: no new inbound messages reach QuoteDesk</td></tr>
+              <tr><td><i class="fa-brands fa-facebook"></i> Facebook Business</td><td>No change</td><td>Our app is removed from the WABA's subscribed apps only</td></tr>
+              <tr><td><i class="fa-brands fa-whatsapp"></i> WhatsApp Manager</td><td>No change: number, templates, quality, card all stay</td><td>Number still exists and still bills for other apps</td></tr>
+              <tr><td><i class="fa-solid fa-user"></i> Customers</td><td>Their messages are ignored by QuoteDesk</td><td>Their messages aren't delivered to QuoteDesk</td></tr>
+            </tbody>
+          </table>
+          <p class="qc-note"><i class="fa-solid fa-shield-halved"></i> QuoteDesk never deletes numbers, WABAs, templates or payment methods inside Meta.</p>
+        </div>
+      </ng-container>
+
+      <!-- ===================== STEP 3 ===================== -->
+      <ng-container *ngIf="step() === 3 && result() as res">
+        <div class="qc-done">
+          <div class="qc-done-icon"><i class="fa-solid fa-check"></i></div>
+          <h3>Sync complete</h3>
+          <div class="qc-done-grid">
+            <div><b>{{ res.results.inserted.length }}</b><span>Added</span></div>
+            <div><b>{{ res.results.updated.length }}</b><span>Refreshed</span></div>
+            <div><b>{{ res.results.archived.length }}</b><span>Archived</span></div>
+            <div><b>{{ res.results.reassigned.length }}</b><span>Moved</span></div>
+            <div><b>{{ res.results.purged.length }}</b><span>Purged</span></div>
+          </div>
+
+          <div class="qc-undo" *ngIf="res.undo?.length && undoLeft() > 0">
+            <div *ngFor="let u of res.undo">
+              <span>Archived <b>{{ projectName(u.projectId) }}</b></span>
+              <button class="qc-btn ghost sm" *ngIf="!undone().has(u.auditId)" (click)="undo(u)">Undo ({{ undoLeft() }}s)</button>
+              <span *ngIf="undone().has(u.auditId)" class="qc-chip ok">Restored</span>
+            </div>
+          </div>
+
+          <div *ngIf="res.results.metaUnsubscribed?.length" class="qc-list">
+            <h4>Meta disconnect</h4>
+            <div *ngFor="let m of res.results.metaUnsubscribed">{{ projectName(m.projectId) }}: {{ m.success ? '✅ disconnected' : '⚠️ ' + m.error }}</div>
+          </div>
+          <div *ngIf="res.results.errors?.length" class="qc-list error">
+            <h4>Skipped</h4>
+            <div *ngFor="let e of res.results.errors">{{ e.projectId ? projectName(e.projectId) : e.id }}: {{ e.error }}</div>
+          </div>
+        </div>
+      </ng-container>
+
+      <div *ngIf="syncError()" class="qc-banner qc-banner-error"><i class="fa-solid fa-circle-xmark"></i> {{ syncError() }}</div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="qc-footer">
+      <ng-container *ngIf="step() !== 3">
+        <button class="qc-btn ghost" (click)="step() === 2 ? back() : cancel()">{{ step() === 2 ? '← Back' : 'Cancel' }}</button>
+        <div class="qc-footer-summary">
+          <span class="ins">+{{ toInsert().length }} add</span>
+          <span class="upd">↻{{ toUpdate().length }} refresh</span>
+          <span class="del">−{{ toDelete().length }} remove</span>
+        </div>
+        <button class="qc-btn primary" [disabled]="!canApply()" (click)="next()" id="qc-apply">
+          <i *ngIf="isSyncing()" class="fa-solid fa-spinner fa-spin"></i>
+          {{ step() === 1 && toDelete().length ? 'Review removal →' : 'Apply sync' }}
+        </button>
+      </ng-container>
+      <button *ngIf="step() === 3" class="qc-btn primary" (click)="closed.emit(true)">Done</button>
+    </footer>
+  </div>
+</div>
+
+<!-- ===== Impact drawer (shared) ===== -->
+<ng-template #drawer let-acc="acc" let-local="local">
+  <div class="qc-tabs">
+    <button [class.on]="tab() === 'quotedesk'" (click)="tab.set('quotedesk')"><i class="fa-solid fa-comments"></i> QuoteDesk Messenger</button>
+    <button [class.on]="tab() === 'facebook'" (click)="tab.set('facebook')"><i class="fa-brands fa-facebook"></i> Facebook Business</button>
+    <button [class.on]="tab() === 'whatsapp'" (click)="tab.set('whatsapp')"><i class="fa-brands fa-whatsapp"></i> WhatsApp Manager</button>
+  </div>
+
+  <!-- QuoteDesk -->
+  <div class="qc-tab" *ngIf="tab() === 'quotedesk'">
+    <ng-container *ngIf="local && imp(local.projectId) as i; else noLocal">
+      <div class="qc-kpis">
+        <div><b>{{ i.quotedesk.conversations.total | number }}</b><span>Conversations</span><small>{{ i.quotedesk.conversations.last30d }} in last 30d</small></div>
+        <div [class.hot]="i.quotedesk.conversations.open"><b>{{ i.quotedesk.conversations.open }}</b><span>Open chats</span></div>
+        <div><b>{{ i.quotedesk.messages.total | number }}</b><span>Messages</span><small>↓{{ i.quotedesk.messages.inbound | number }} · ↑{{ i.quotedesk.messages.outbound | number }}</small></div>
+        <div><b>{{ relative(i.quotedesk.messages.lastAt) }}</b><span>Last message</span></div>
+        <div [class.hot]="i.quotedesk.activeCampaigns + i.quotedesk.scheduledCampaigns"><b>{{ i.quotedesk.activeCampaigns + i.quotedesk.scheduledCampaigns }}</b><span>Live / scheduled campaigns</span></div>
+        <div><b>{{ i.quotedesk.templates }}</b><span>Templates</span></div>
+        <div><b>{{ i.quotedesk.assignedAgents }}</b><span>Agents</span></div>
+        <div [class.hot]="i.quotedesk.contactsOnlyReachableHere"><b>{{ i.quotedesk.contactsOnlyReachableHere }}</b><span>Contacts only reachable here</span></div>
+      </div>
+    </ng-container>
+    <ng-template #noLocal><p class="qc-muted">Not in QuoteDesk yet. Ticking it will create a new brand project.</p></ng-template>
+  </div>
+
+  <!-- Facebook -->
+  <div class="qc-tab" *ngIf="tab() === 'facebook'">
+    <ng-container *ngIf="acc; else noMeta">
+      <dl class="qc-dl">
+        <dt>WABA</dt><dd>{{ acc.wabaName }} <code>{{ acc.wabaId }}</code></dd>
+        <dt>Business verification</dt><dd>{{ acc.businessVerificationStatus || '—' }}</dd>
+        <dt>Apps subscribed to WABA</dt><dd>{{ acc.subscribedAppsCount ?? 'Not available' }}<span *ngIf="acc.subscribedAppsCount > 1" class="qc-chip warn">Shared with other apps</span></dd>
+      </dl>
+      <h5>People with access</h5>
+      <div *ngIf="acc.assignedUsers === null" class="qc-muted">Not available (needs business_management permission).</div>
+      <div *ngIf="acc.assignedUsers?.length === 0" class="qc-muted">No users assigned.</div>
+      <div class="qc-people">
+        <div *ngFor="let u of acc.assignedUsers">
+          <span class="qc-avatar">{{ initials(u.name) }}</span>
+          <div><b>{{ u.name }}</b><div class="qc-tasks"><span *ngFor="let t of u.tasks">{{ taskLabel(t) }}</span></div></div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+
+  <!-- WhatsApp Manager -->
+  <div class="qc-tab" *ngIf="tab() === 'whatsapp'">
+    <ng-container *ngIf="acc; else noMeta">
+      <dl class="qc-dl">
+        <dt>Number status</dt><dd>{{ acc.numberStatus || '—' }} · {{ acc.verificationStatus || '—' }}</dd>
+        <dt>Display name</dt><dd>{{ acc.name }} <small>({{ acc.nameStatus || '—' }})</small></dd>
+        <dt>Quality</dt><dd><span class="qc-quality" [attr.data-q]="acc.qualityRating">{{ acc.qualityRating }}</span></dd>
+        <dt>Throughput</dt><dd>{{ acc.throughput || '—' }}</dd>
+        <dt>Account review</dt><dd>{{ acc.accountReviewStatus || '—' }}</dd>
+        <dt>Payment method</dt>
+        <dd>
+          <ng-container *ngIf="acc.payment; else na">
+            <span class="qc-chip" [class.ok]="acc.payment.attached" [class.warn]="!acc.payment.attached">
+              <i class="fa-solid fa-credit-card"></i> {{ acc.payment.attached ? 'Attached' : 'None' }}
+            </span>
+            <small *ngIf="acc.payment.currency"> · {{ acc.payment.currency }}</small>
+            <small *ngIf="acc.payment.fundingId"> · funding <code>{{ acc.payment.fundingId }}</code></small>
+          </ng-container>
+          <ng-template #na>Not available</ng-template>
+        </dd>
+      </dl>
+      <p class="qc-note"><i class="fa-solid fa-circle-info"></i> Removing from QuoteDesk does not change anything in WhatsApp Manager.</p>
+    </ng-container>
+  </div>
+
+  <ng-template #noMeta><p class="qc-muted">This number wasn't returned by Meta for this login. It may have been deleted, moved to another business, or your access was removed.</p></ng-template>
+</ng-template>

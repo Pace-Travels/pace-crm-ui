@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ProjectService } from '../services/project.service';
+import { MetaSyncModal } from '../meta-sync-modal/meta-sync-modal';
 import Swal from 'sweetalert2';
 import { Router } from '@angular/router';
 
@@ -12,7 +13,7 @@ declare var FB: any;
 @Component({
   selector: 'app-projects-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MetaSyncModal],
   templateUrl: './projects-view.html',
   styleUrl: './projects-view.scss',
 })
@@ -517,10 +518,13 @@ export class ProjectsView implements OnInit {
     }
   }
 
+  // Smart Sync modal state
+  syncData = signal<any | null>(null);
+
   fetchMetaAccounts(accessToken: string) {
     Swal.fire({
-      title: 'Syncing Meta WABA Accounts...',
-      text: 'Querying Facebook Graph API for your WhatsApp Business Projects.',
+      title: 'Checking your Meta accounts...',
+      text: 'Validating token and pulling WABAs, numbers, payment and access details.',
       allowOutsideClick: false,
       didOpen: () => {
         Swal.showLoading();
@@ -530,20 +534,26 @@ export class ProjectsView implements OnInit {
     this.projectService.metaAuth(accessToken).subscribe({
       next: (res: any) => {
         Swal.close();
-        if (res.success && res.accounts && res.accounts.length > 0) {
-          this.metaAccounts.set(res.accounts);
-          this.showMetaModal.set(true);
-          this.projectService.fetchProjects();
-          Swal.fire('Meta Projects Pulled!', `Found ${res.accounts.length} WhatsApp Business Account(s). Select which project to activate below.`, 'success');
-        } else {
-          Swal.fire('No Accounts Found', 'No WhatsApp Business Accounts found attached to this Facebook account.', 'info');
+        if (res.success) {
+          this.metaAccounts.set(res.accounts || []);
+          this.syncData.set(res);
         }
       },
       error: (err) => {
         Swal.close();
-        Swal.fire('Meta Auth Error', err.error?.error || 'Failed to pull Meta projects.', 'error');
+        Swal.fire('Meta Auth Error', err.error?.error || err.error?.message || 'Failed to pull Meta projects.', 'error');
       }
     });
+  }
+
+  onSyncClosed(applied: boolean) {
+    this.syncData.set(null);
+    if (applied) this.projectService.fetchProjects();
+  }
+
+  tokenDaysLeft(project: any): number | null {
+    if (!project?.tokenExpiresAt) return null;
+    return Math.max(0, Math.floor((new Date(project.tokenExpiresAt).getTime() - Date.now()) / 864e5));
   }
 
   selectMetaAccountToConnect(acc: any) {

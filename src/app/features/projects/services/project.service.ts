@@ -30,7 +30,16 @@ export interface Project {
   testPhoneNumberId?: string;
   testAccessToken?: string;
   mode?: 'DEVELOPMENT' | 'PRODUCTION';
+<<<<<<< HEAD
   whatsappNumbers?: WhatsappNumber[];
+=======
+  connectionStatus?: 'CONNECTED' | 'EXPIRED' | 'BROKEN' | 'UNKNOWN';
+  tokenExpiresAt?: string | null;
+  lastHealthCheckAt?: string | null;
+  lastHealthError?: string | null;
+  failedSendCount?: number;
+  isSandbox?: boolean;
+>>>>>>> fdfdc5d (feat: add meta sync modal feature for projects view and management)
 }
 
 @Injectable({ providedIn: 'root' })
@@ -90,6 +99,18 @@ export class ProjectService {
 
   metaAuth(accessToken: string) {
     return this.api.post<any>('projects/meta-auth', { accessToken });
+  }
+
+  impactPreview(projectIds: number[]) {
+    return this.api.post<any>('projects/impact-preview', { projectIds });
+  }
+
+  syncProjects(payload: any) {
+    return this.api.post<any>('projects/meta-sync', payload);
+  }
+
+  undoSync(auditId: number) {
+    return this.api.post<any>(`projects/meta-sync/undo/${auditId}`, {});
   }
 
   detachConfig(projectId: number) {
