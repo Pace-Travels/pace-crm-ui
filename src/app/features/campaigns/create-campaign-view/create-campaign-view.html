@@ -219,9 +219,9 @@
                                 <tr><td colspan="8" class="text-center empty-state py-16">No contacts match the current filters.</td></tr>
                             } @else {
                                 @for(contact of paginatedAudienceContacts(); track contact.id) {
-                                    <tr [class.row-selected]="contact.id && selectedContactIds().includes(contact.id)">
+                                    <tr [class.row-selected]="isContactSelected(contact.id)">
                                         <td class="checkbox-col">
-                                            <input type="checkbox" [checked]="contact.id && selectedContactIds().includes(contact.id)" (change)="toggleSelectContact(contact.id!)">
+                                            <input type="checkbox" [checked]="isContactSelected(contact.id)" (change)="toggleSelectContact(contact.id!)">
                                         </td>
                                         <td class="font-bold cursor-pointer" (click)="openProfilePanel(contact)">
                                             {{ contact.name || 'UNKNOWN' }}

@@ -443,9 +443,17 @@ export class CreateCampaignView implements OnInit {
     return Math.ceil(this.filteredAudienceContacts().length / this.pageSize()) || 1;
   });
 
+  selectedContactIdsSet = computed(() => new Set(this.selectedContactIds()));
+
+  isContactSelected(id: number | undefined): boolean {
+    if (!id) return false;
+    return this.selectedContactIdsSet().has(id);
+  }
+
   isAllSelected = computed(() => {
     const list = this.paginatedAudienceContacts();
-    return list.length > 0 && list.every(c => c.id !== undefined && this.selectedContactIds().includes(c.id));
+    const set = this.selectedContactIdsSet();
+    return list.length > 0 && list.every(c => c.id !== undefined && set.has(c.id));
   });
 
   toggleSelectAll() {
