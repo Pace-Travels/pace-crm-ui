@@ -30,16 +30,13 @@ export interface Project {
   testPhoneNumberId?: string;
   testAccessToken?: string;
   mode?: 'DEVELOPMENT' | 'PRODUCTION';
-<<<<<<< HEAD
   whatsappNumbers?: WhatsappNumber[];
-=======
   connectionStatus?: 'CONNECTED' | 'EXPIRED' | 'BROKEN' | 'UNKNOWN';
   tokenExpiresAt?: string | null;
   lastHealthCheckAt?: string | null;
   lastHealthError?: string | null;
   failedSendCount?: number;
   isSandbox?: boolean;
->>>>>>> fdfdc5d (feat: add meta sync modal feature for projects view and management)
 }
 
 @Injectable({ providedIn: 'root' })

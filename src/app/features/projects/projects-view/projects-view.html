@@ -231,7 +231,6 @@
                         </div>
                 </div>
 
-<<<<<<< HEAD
                 <div style="display: flex; align-items: center; gap: 12px;">
                     <span *ngIf="projectService.currentProject()?.id === project.id"
                         style="font-size: 11px; font-weight: 800; text-transform: uppercase; background: #7c3aed; color: white; padding: 5px 12px; border-radius: 20px;">
@@ -241,38 +240,6 @@
                         style="background: #f8fafc; border: 1px solid #cbd5e1; color: #475569; width: 36px; height: 36px; border-radius: 8px; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
                         <i class="fa-solid" [class.fa-chevron-down]="!isExpanded(project.id)" [class.fa-chevron-up]="isExpanded(project.id)"></i>
                     </button>
-=======
-                <!-- Card Details Grid -->
-                <div
-                    style="background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px;">
-                        <span style="color: #64748b;">WABA Phone Number:</span>
-                        <strong style="color: #166534; font-family: monospace; font-size: 13px;">{{ project.phoneNumber
-                            || 'Not Configured' }} <i class="fa-brands fa-whatsapp"
-                                style="color: #25d366;"></i></strong>
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px;">
-                        <span style="color: #64748b;">Phone Number ID:</span>
-                        <code
-                            style="background: #e2e8f0; padding: 2px 8px; border-radius: 4px; font-size: 11.5px; color: #1e293b;">{{ project.phoneNumberId || '—' }}</code>
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 12.5px;">
-                        <span style="color: #64748b;">Connection Health:</span>
-                        <span class="qc-health" [attr.data-status]="project.connectionStatus || 'UNKNOWN'">
-                            <span class="qc-health-dot"></span>
-                            {{ project.connectionStatus === 'CONNECTED' ? 'Connected' :
-                               project.connectionStatus === 'EXPIRED' ? 'Token Expired' :
-                               project.connectionStatus === 'BROKEN' ? 'Broken' : 'Unknown' }}
-                            <ng-container *ngIf="project.isSandbox">· 🔒 Sandbox</ng-container>
-                        </span>
-                    </div>
-                    <div *ngIf="tokenDaysLeft(project) !== null && tokenDaysLeft(project)! < 7 && project.connectionStatus === 'CONNECTED'"
-                        class="qc-health-warn">⏳ Token expires in {{ tokenDaysLeft(project) }} day(s). Re-run Quick Connect.</div>
-                    <div *ngIf="project.connectionStatus && project.connectionStatus !== 'CONNECTED' && project.lastHealthError"
-                        class="qc-health-error">⚠️ {{ project.lastHealthError }}</div>
->>>>>>> fdfdc5d (feat: add meta sync modal feature for projects view and management)
                 </div>
             </div>
 

@@ -4,6 +4,47 @@
     width: 100%;
     overflow: hidden;
     background-color: var(--app-bg);
+    position: relative;
+
+    .pull-contacts-fab {
+        position: absolute;
+        left: 350px;
+        bottom: 24px;
+        transform: translateX(calc(-100% - 20px));
+        z-index: 50;
+        height: 52px;
+        min-width: 52px;
+        padding: 0 17px;
+        border: none;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        gap: 0;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        background: linear-gradient(135deg, #7c3aed, #a855f7);
+        box-shadow: 0 12px 28px -10px rgba(124, 58, 237, .75);
+        transition: gap .2s ease, box-shadow .2s ease, transform .2s ease;
+
+        i { font-size: 17px; }
+
+        .fab-label {
+            max-width: 0;
+            overflow: hidden;
+            white-space: nowrap;
+            transition: max-width .25s ease;
+        }
+
+        &:hover {
+            gap: 8px;
+            box-shadow: 0 16px 34px -10px rgba(124, 58, 237, .9);
+            transform: translateX(calc(-100% - 20px)) translateY(-2px);
+
+            .fab-label { max-width: 140px; }
+        }
+    }
 
     .panel-left {
         width: 350px;
