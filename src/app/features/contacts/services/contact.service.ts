@@ -17,6 +17,10 @@ export interface Contact {
   website?: string;
   remarks?: string;
   remarks1?: string;
+  ownerUserId?: number;
+  assignedUserId?: number;
+  ownerUser?: { id: number; name: string; email: string };
+  assignedUser?: { id: number; name: string; email: string };
   callStatus?: string;
   mailStatus?: string;
   whatsappStatus?: string;
@@ -93,16 +97,13 @@ export class ContactService {
       .filter((t: string) => t && t !== 'Default Agent' && t !== 'Unassigned Account Owner');
 
     if (owners.length === 0) {
-      if (contact.userName) return [contact.userName];
-      const userStr = localStorage.getItem('user');
-      if (userStr) {
-        try {
-          const u = JSON.parse(userStr);
-          const name = u ? (u.name || u.displayName || u.username || u.email) : null;
-          if (name) return [name];
-        } catch (e) {}
+      if (contact.ownerUser && contact.ownerUser.name) {
+        return [contact.ownerUser.name];
       }
-      return ['Shadab Khatib'];
+      if (contact.userName) {
+        return [contact.userName];
+      }
+      return ['Unassigned'];
     }
     return Array.from(new Set(owners));
   }

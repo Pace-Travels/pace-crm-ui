@@ -16,6 +16,16 @@ export class ApiService {
     const token = localStorage.getItem('token') || '';
     const projectId = localStorage.getItem('activeProjectId') || '';
     const envMode = localStorage.getItem('whatsapp_environment_mode') || 'DEVELOPMENT';
+    const userStr = localStorage.getItem('user');
+    let userId = '';
+    let userRole = '';
+    if (userStr) {
+      try {
+        const u = JSON.parse(userStr);
+        if (u && u.id) userId = u.id.toString();
+        if (u && (u.role || u.userRole)) userRole = (u.role || u.userRole).toString();
+      } catch (e) {}
+    }
     const headersConfig: any = {
       'Authorization': `Bearer ${token}`,
       'X-Environment-Mode': envMode,
@@ -23,6 +33,12 @@ export class ApiService {
     };
     if (projectId) {
       headersConfig['X-Project-Id'] = projectId;
+    }
+    if (userId) {
+      headersConfig['X-User-Id'] = userId;
+    }
+    if (userRole) {
+      headersConfig['X-User-Role'] = userRole;
     }
     if (!isMultipart) {
       headersConfig['Content-Type'] = 'application/json';

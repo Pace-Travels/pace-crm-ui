@@ -319,8 +319,12 @@
 
                         <td style="padding: 14px 16px;">
                             <div style="display: flex; flex-wrap: wrap; gap: 4px;">
-                                <span *ngFor="let owner of contactService.getContactOwners(contact)" style="display: inline-flex; align-items: center; gap: 4px; background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">
-                                    <i class="fa-solid fa-user-gear" style="font-size: 10px;"></i> {{ owner }}
+                                <span *ngFor="let owner of contactService.getContactOwners(contact)" 
+                                    [style.background]="owner === 'Unassigned' ? '#f1f5f9' : '#e0f2fe'"
+                                    [style.color]="owner === 'Unassigned' ? '#64748b' : '#0369a1'"
+                                    [style.borderColor]="owner === 'Unassigned' ? '#cbd5e1' : '#bae6fd'"
+                                    style="display: inline-flex; align-items: center; gap: 4px; border: 1px solid; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600;">
+                                    <i [class]="owner === 'Unassigned' ? 'fa-solid fa-user-slash' : 'fa-solid fa-user-gear'" style="font-size: 10px;"></i> {{ owner }}
                                 </span>
                             </div>
                         </td>
