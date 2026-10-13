@@ -36,17 +36,17 @@
                 {{ getAvatarInitial(conv.Contact?.firstName || conv.Contact?.name) }}
             </div>
             
-            <div class="chat-info" style="flex: 1; overflow: hidden; display: flex; flex-direction: column; justify-content: center;">
+            <div class="chat-info" style="flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center;">
                 <div class="chat-name-row" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
                     <span class="contact-name" [style.font-weight]="(conv.unreadCount && conv.unreadCount > 0) ? '800' : '600'" 
                           [style.color]="(conv.unreadCount && conv.unreadCount > 0) ? '#0f172a' : '#334155'"
-                          style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; font-size: 13.5px;">
+                          style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; font-size: 13.5px;">
                         <i *ngIf="conv.isPinned" class="fa-solid fa-thumbtack pin-icon" title="Pinned Chat" style="color: #7c3aed; margin-right: 4px; font-size: 11px;"></i>
                         <i *ngIf="conv.isMuted" class="fa-solid fa-bell-slash mute-icon" title="Muted" style="color: #94a3b8; margin-right: 4px; font-size: 11px;"></i>
                         {{ conv.Contact?.name || ((conv.Contact?.firstName || 'Contact') + ' ' + (conv.Contact?.lastName || '')) }}
                     </span>
 
-                    <div class="meta-right" style="display: flex; align-items: center; gap: 6px;">
+                    <div class="meta-right" style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; margin-left: 8px;">
                         <span *ngIf="conv.lastActivityAt" 
                               [class.unread-time]="conv.unreadCount && conv.unreadCount > 0"
                               style="font-size: 10.5px; font-weight: 500;"
@@ -61,22 +61,31 @@
                     </div>
                 </div>
                 
-                <div class="chat-phone-preview" style="display: flex; justify-content: space-between; align-items: center;">
-                    <span class="chat-preview" 
-                          [style.font-weight]="(conv.unreadCount && conv.unreadCount > 0) ? '700' : '400'"
-                          [style.color]="(conv.unreadCount && conv.unreadCount > 0) ? '#0f172a' : '#64748b'"
-                          style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12px; max-width: 170px;">
-                        {{ formatPreview(conv.Messages?.[0]) }}
-                    </span>
+                <div class="chat-preview-row" style="display: flex; justify-content: space-between; align-items: center; margin-top: 2px;">
+                    <div class="chat-preview-content" style="display: flex; align-items: center; gap: 5px; flex: 1; min-width: 0;">
+                        <!-- WhatsApp Red Exclamation Failed Icon -->
+                        <i *ngIf="getMessagePreviewInfo(conv.Messages?.[0]).isFailed" 
+                           class="fa-solid fa-circle-exclamation failed-preview-icon" 
+                           title="Message failed to deliver" 
+                           style="color: #ef4444; font-size: 13px; flex-shrink: 0;"></i>
 
-                    <div class="badges-row" style="display: flex; align-items: center; gap: 6px;">
+                        <!-- WhatsApp Media Type Icon (Camera, Video, Mic, Document) -->
+                        <i *ngIf="getMessagePreviewInfo(conv.Messages?.[0]).icon" 
+                           [class]="getMessagePreviewInfo(conv.Messages?.[0]).icon" 
+                           style="color: #64748b; font-size: 12px; flex-shrink: 0;"></i>
+
+                        <span class="chat-preview" 
+                              [style.font-weight]="(conv.unreadCount && conv.unreadCount > 0) ? '700' : '400'"
+                              [style.color]="getMessagePreviewInfo(conv.Messages?.[0]).isFailed ? '#ef4444' : ((conv.unreadCount && conv.unreadCount > 0) ? '#0f172a' : '#64748b')"
+                              style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; font-size: 12px;">
+                            {{ getMessagePreviewInfo(conv.Messages?.[0]).text }}
+                        </span>
+                    </div>
+
+                    <div class="badges-row" style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; margin-left: 8px;">
                         <!-- Unread Circle Badge -->
                         <span *ngIf="conv.unreadCount && conv.unreadCount > 0" class="unread-badge">
                             {{ conv.unreadCount }}
-                        </span>
-
-                        <span *ngIf="conv.Contact?.phone" class="phone-badge" style="font-size: 10px; color: #0284c7; background: #f0f9ff; padding: 1px 6px; border-radius: 8px; font-weight: 600;">
-                            {{ conv.Contact?.phone }}
                         </span>
                     </div>
                 </div>

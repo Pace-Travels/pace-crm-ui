@@ -209,6 +209,35 @@
     }
 }
 
+// WhatsApp-Style Failed Message & Retry Button
+.outer-resend-btn {
+    &:hover:not(:disabled) {
+        background: #fef2f2 !important;
+        transform: scale(1.12);
+        border-color: #dc2626 !important;
+    }
+    &:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
+}
+
+.resend-bubble-btn {
+    &:hover:not(:disabled) {
+        background: #fecaca !important;
+        color: #b91c1c !important;
+    }
+    &:disabled {
+        opacity: 0.65;
+        cursor: not-allowed;
+    }
+}
+
+.message-bubble.failed-bubble {
+    border: 1px solid #fecaca !important;
+    background: #fffafa !important;
+}
+
 // Active Replying-To Composer Banner
 .active-reply-banner {
     position: absolute;

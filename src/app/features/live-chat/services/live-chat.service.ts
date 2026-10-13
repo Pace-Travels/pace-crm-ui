@@ -91,10 +91,12 @@ export class LiveChatService {
         }
       }
 
-      // Live update contact list & auto-resort
-      this.handleIncomingMessageContactListUpdate(data, !isCurrentActive);
+      // Live update contact list & auto-resort immediately
+      const isContactSender = data.direction === 'INBOUND' || data.senderType === 'CONTACT' || data.senderType === 'CUSTOMER';
+      const shouldIncrementUnread = !isCurrentActive && isContactSender;
+      this.recordMessageActivity(data, shouldIncrementUnread);
 
-      if (data.direction === 'INBOUND' || data.senderType === 'CONTACT' || data.senderType === 'CUSTOMER') {
+      if (isContactSender) {
         this.triggerIncomingMessageNotification(data);
       }
     });
@@ -120,41 +122,85 @@ export class LiveChatService {
     });
   }
 
-  private handleIncomingMessageContactListUpdate(data: any, shouldIncrementUnread: boolean) {
+  /**
+   * Immediately records new message activity on the corresponding conversation,
+   * updates its lastActivityAt timestamp, and resorts the conversation list
+   * ensuring pinned conversations stay firmly on top while active conversations jump to top of list.
+   */
+  public recordMessageActivity(data: any, shouldIncrementUnread: boolean = false) {
+    if (!data || !data.conversationId) return;
+
+    const activityTime = data.createdAt || new Date().toISOString();
+
     const updateList = (list: Conversation[]) => {
+      let found = false;
       const updated = list.map(conv => {
         if (conv.id === data.conversationId || Number(conv.id) === Number(data.conversationId)) {
+          found = true;
           return {
             ...conv,
-            lastActivityAt: data.createdAt || new Date().toISOString(),
-            unreadCount: shouldIncrementUnread ? (conv.unreadCount || 0) + 1 : conv.unreadCount || 0,
+            lastActivityAt: activityTime,
+            unreadCount: shouldIncrementUnread ? (conv.unreadCount || 0) + 1 : (conv.unreadCount || 0),
             Messages: [data]
           };
         }
         return conv;
       });
+
+      // If this conversation wasn't found in current list, but is currently selected, add it
+      if (!found) {
+        const active = this.selectedConversation();
+        if (active && (active.id === data.conversationId || Number(active.id) === Number(data.conversationId))) {
+          updated.push({
+            ...active,
+            lastActivityAt: activityTime,
+            unreadCount: 0,
+            Messages: [data]
+          });
+        }
+      }
+
       return this.sortConversations(updated);
     };
 
     this.activeConversations.update(list => updateList(list));
     this.requestingConversations.update(list => updateList(list));
     this.intervenedConversations.update(list => updateList(list));
+
+    const currentSelected = this.selectedConversation();
+    if (currentSelected && (currentSelected.id === data.conversationId || Number(currentSelected.id) === Number(data.conversationId))) {
+      this.selectedConversation.set({
+        ...currentSelected,
+        lastActivityAt: activityTime,
+        Messages: [data]
+      });
+    }
   }
 
   public sortConversations(list: Conversation[]): Conversation[] {
     return [...list].sort((a, b) => {
-      // 1. Pinned conversations anchored first
-      if (a.isPinned && !b.isPinned) return -1;
-      if (!a.isPinned && b.isPinned) return 1;
-      if (a.isPinned && b.isPinned) {
+      // 1. Pinned conversations anchored first (identical to WhatsApp)
+      const aPinned = !!a.isPinned;
+      const bPinned = !!b.isPinned;
+
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+
+      // Both are pinned: sort by pinnedAt DESC (most recently pinned stays on top)
+      if (aPinned && bPinned) {
         const timeA = a.pinnedAt ? new Date(a.pinnedAt).getTime() : 0;
         const timeB = b.pinnedAt ? new Date(b.pinnedAt).getTime() : 0;
-        return timeB - timeA;
+        if (timeB !== timeA) return timeB - timeA;
       }
 
-      // 2. Unpinned conversations sorted by lastActivityAt DESC
-      const dateA = a.lastActivityAt ? new Date(a.lastActivityAt).getTime() : 0;
-      const dateB = b.lastActivityAt ? new Date(b.lastActivityAt).getTime() : 0;
+      // 2. Unpinned conversations (or fallback for pinned ties) sorted by latest activity DESC
+      const getTimestamp = (c: Conversation) => {
+        const candidate = c.lastActivityAt || c['updatedAt'] || (c.Messages && c.Messages[0]?.createdAt);
+        return candidate ? new Date(candidate).getTime() : 0;
+      };
+
+      const dateA = getTimestamp(a);
+      const dateB = getTimestamp(b);
       return dateB - dateA;
     });
   }
@@ -225,7 +271,9 @@ export class LiveChatService {
           this.requestingConversations.set(requesting);
           this.intervenedConversations.set(intervened);
 
-          if (!this.selectedConversation() && list.length > 0) {
+          if (!this.selectedConversation() && active.length > 0) {
+            this.selectConversation(active[0]);
+          } else if (!this.selectedConversation() && list.length > 0) {
             this.selectConversation(list[0]);
           }
         }
@@ -285,15 +333,20 @@ export class LiveChatService {
 
   togglePin(conv: Conversation, forceState?: boolean) {
     const targetState = forceState !== undefined ? forceState : !conv.isPinned;
+    const nowIso = new Date().toISOString();
     this.api.put<any>(`conversations/${conv.id}/pin`, { isPinned: targetState }).subscribe({
-      next: () => {
+      next: (res: any) => {
+        const pinnedAt = targetState ? (res?.pinnedAt || nowIso) : null;
         const updateItem = (list: Conversation[]) => {
-          const updated = list.map(c => c.id === conv.id ? { ...c, isPinned: targetState, pinnedAt: targetState ? new Date().toISOString() : null } : c);
+          const updated = list.map(c => c.id === conv.id ? { ...c, isPinned: targetState, pinnedAt } : c);
           return this.sortConversations(updated);
         };
         this.activeConversations.update(list => updateItem(list));
         this.requestingConversations.update(list => updateItem(list));
         this.intervenedConversations.update(list => updateItem(list));
+        if (this.selectedConversation()?.id === conv.id) {
+          this.selectedConversation.update(c => c ? { ...c, isPinned: targetState, pinnedAt } : null);
+        }
       }
     });
   }

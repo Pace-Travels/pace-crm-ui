@@ -120,8 +120,13 @@ export class ChatWindow implements AfterViewChecked {
   isImageMedia(msg: any): boolean {
     if (!msg) return false;
     if (msg.messageType === 'IMAGE') return true;
-    const url = (msg.mediaUrl || msg.content || '').toLowerCase();
-    if (url.includes('.png') || url.includes('.jpg') || url.includes('.jpeg') || url.includes('.webp') || url.includes('.gif') || url.includes('scontent') || url.includes('fbcdn') || url.includes('templates/headers') || url.includes('messengerassets.')) {
+    const url = (msg.mediaUrl || (msg.content && msg.content.startsWith('http') ? msg.content : '')).toLowerCase();
+    if (!url) return false;
+    if (url.includes('.png') || url.includes('.jpg') || url.includes('.jpeg') || url.includes('.webp') || url.includes('.gif') || url.includes('scontent') || url.includes('fbcdn') || url.includes('templates/headers') || url.includes('messengerassets.') || url.includes('cloudinary') || url.includes('aws') || url.includes('s3.')) {
+      return true;
+    }
+    // If mediaUrl exists and isn't PDF, video, or audio, render as image
+    if (msg.mediaUrl && !url.endsWith('.pdf') && !url.endsWith('.doc') && !url.endsWith('.mp4') && !url.endsWith('.mp3') && !url.endsWith('.ogg')) {
       return true;
     }
     return false;
@@ -248,6 +253,7 @@ export class ChatWindow implements AfterViewChecked {
           } else {
             this.chatService.messagesSubject.next([...current, newMsg]);
           }
+          this.chatService.recordMessageActivity(newMsg, false);
         }
         this.shouldAutoScroll = true;
         setTimeout(() => this.scrollToBottom(true), 50);
@@ -259,6 +265,56 @@ export class ChatWindow implements AfterViewChecked {
       },
       error: (err: any) => {
         this.showAlert('Delivery Failed', err.error?.error || err.message || 'Failed to send message', 'error');
+      }
+    });
+  }
+
+  resendingMessageIds = signal<Set<number>>(new Set());
+
+  isResendingMessage(msgId: number): boolean {
+    return this.resendingMessageIds().has(msgId);
+  }
+
+  resendFailedMessage(msg: any) {
+    if (!msg || !msg.id || this.isResendingMessage(msg.id)) return;
+
+    this.resendingMessageIds.update(set => {
+      const updated = new Set(set);
+      updated.add(msg.id);
+      return updated;
+    });
+
+    this.api.post<any>(`messages/resend/${msg.id}`, {}).subscribe({
+      next: (res: any) => {
+        this.resendingMessageIds.update(set => {
+          const updated = new Set(set);
+          updated.delete(msg.id);
+          return updated;
+        });
+
+        const updatedMsg = res.data || res;
+        if (updatedMsg && updatedMsg.id) {
+          const current = this.chatService.messagesSubject.value;
+          const idx = current.findIndex((m: any) => m.id === updatedMsg.id);
+          if (idx > -1) {
+            const copy = [...current];
+            copy[idx] = { ...copy[idx], ...updatedMsg, status: 'SENT', errorMessage: null };
+            this.chatService.messagesSubject.next(copy);
+          }
+          this.chatService.recordMessageActivity(updatedMsg, false);
+        }
+
+        this.showAlert('Sent', 'Message has been resent successfully.', 'success');
+      },
+      error: (err: any) => {
+        this.resendingMessageIds.update(set => {
+          const updated = new Set(set);
+          updated.delete(msg.id);
+          return updated;
+        });
+
+        const errMsg = err.error?.error || err.error?.message || err.message || 'Failed to resend message';
+        this.showAlert('Resend Failed', errMsg, 'error');
       }
     });
   }
@@ -310,6 +366,7 @@ export class ChatWindow implements AfterViewChecked {
           } else {
             this.chatService.messagesSubject.next([...current, newMsg]);
           }
+          this.chatService.recordMessageActivity(newMsg, false);
         }
         this.showAlert('Sent!', 'Quick reply interactive buttons delivered.', 'success');
       },
@@ -349,6 +406,7 @@ export class ChatWindow implements AfterViewChecked {
         if (newMsg && newMsg.id) {
           const current = this.chatService.messagesSubject.value;
           this.chatService.messagesSubject.next([...current, newMsg]);
+          this.chatService.recordMessageActivity(newMsg, false);
         }
         this.showAlert('Media Shared', `${media.messageType} attachment sent successfully.`, 'success');
       },
@@ -465,6 +523,7 @@ export class ChatWindow implements AfterViewChecked {
             if (newMsg && newMsg.id) {
               const current = this.chatService.messagesSubject.value;
               this.chatService.messagesSubject.next([...current, newMsg]);
+              this.chatService.recordMessageActivity(newMsg, false);
             }
             this.showAlert('Payment Link Sent', `Requested ₹${req.amount} successfully via ${req.gateway}.`, 'success');
           },
@@ -507,6 +566,7 @@ export class ChatWindow implements AfterViewChecked {
           }
           const current = this.chatService.messagesSubject.value;
           this.chatService.messagesSubject.next([...current, newMsg]);
+          this.chatService.recordMessageActivity(newMsg, false);
         }
         this.showAlert('Template Dispatched', `Meta Message Template "${payload.templateName}" sent successfully!`, 'success');
       },
@@ -548,6 +608,7 @@ export class ChatWindow implements AfterViewChecked {
         if (newMsg && newMsg.id) {
           const current = this.chatService.messagesSubject.value;
           this.chatService.messagesSubject.next([...current, newMsg]);
+          this.chatService.recordMessageActivity(newMsg, false);
         }
         this.showAlert('Media Sent', `Media asset (${mediaType}) sent successfully from Gallery.`, 'success');
       },
@@ -828,6 +889,16 @@ export class ChatWindow implements AfterViewChecked {
       next: (res: any) => {
         this.showAlert('Forwarded Successfully', `Message forwarded to ${targetConvIds.length} contact conversation(s).`, 'success');
         this.closeForwardModal();
+        targetConvIds.forEach((tId: any) => {
+          this.chatService.recordMessageActivity({
+            conversationId: tId,
+            content: msg.content || msg.textContent,
+            textContent: msg.textContent || msg.content,
+            messageType: msg.messageType,
+            mediaUrl: msg.mediaUrl,
+            createdAt: new Date().toISOString()
+          }, false);
+        });
       },
       error: (err: any) => {
         this.showAlert('Forwarding Failed', err.error?.error || err.message || 'Could not forward message', 'error');
@@ -1026,6 +1097,7 @@ export class ChatWindow implements AfterViewChecked {
               if (newMsg && newMsg.id) {
                 const current = this.chatService.messagesSubject.value;
                 this.chatService.messagesSubject.next([...current, newMsg]);
+                this.chatService.recordMessageActivity(newMsg, false);
               }
               this.showAlert('Voice Note Sent', 'Voice note recording delivered.', 'success');
             }

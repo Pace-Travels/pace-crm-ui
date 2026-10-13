@@ -101,12 +101,70 @@ export class ChatList {
     return name ? name.charAt(0).toUpperCase() : 'C';
   }
 
-  formatPreview(msg: any): string {
-    if (!msg) return 'Click to open conversation history';
-    const text = msg.textContent || msg.text || msg.content || '';
-    if (!text) return 'Click to open conversation history';
-    if (text === '[Interactive Selection]') return '🔘 Quick Reply Selection';
-    if (text.includes('[Interactive Selection]')) return text.replace('[Interactive Selection]', '🔘 Quick Reply Selection');
-    return text;
+  getMessagePreviewInfo(msg: any): { icon: string; text: string; isFailed: boolean } {
+    if (!msg) {
+      return { icon: '', text: 'Click to open conversation history', isFailed: false };
+    }
+
+    const isFailed = msg.status === 'FAILED' && msg.direction === 'OUTBOUND';
+    const type = (msg.messageType || '').toUpperCase();
+    const mediaUrl = (msg.mediaUrl || msg.content || '').toLowerCase();
+    const rawText = (msg.textContent || msg.text || msg.content || '').trim();
+
+    // 1. Check Image / Photo (including template messages with media header)
+    const hasImage = type === 'IMAGE' || 
+      (mediaUrl && (mediaUrl.includes('.png') || mediaUrl.includes('.jpg') || mediaUrl.includes('.jpeg') || mediaUrl.includes('.webp') || mediaUrl.includes('.gif') || mediaUrl.includes('scontent') || mediaUrl.includes('fbcdn') || mediaUrl.includes('templates/headers') || mediaUrl.includes('messengerassets.'))) ||
+      (type === 'TEMPLATE' && !!msg.mediaUrl);
+
+    if (hasImage) {
+      let caption = rawText;
+      if (!caption || caption.startsWith('[Media Attachment') || caption.startsWith('http://') || caption.startsWith('https://')) {
+        caption = 'Photo';
+      }
+      return { icon: 'fa-solid fa-camera', text: caption, isFailed };
+    }
+
+    // 2. Video
+    if (type === 'VIDEO' || mediaUrl.includes('.mp4') || mediaUrl.includes('.mov') || mediaUrl.includes('.3gp')) {
+      let caption = rawText;
+      if (!caption || caption.startsWith('[Media Attachment') || caption.startsWith('http://') || caption.startsWith('https://')) {
+        caption = 'Video';
+      }
+      return { icon: 'fa-solid fa-video', text: caption, isFailed };
+    }
+
+    // 3. Audio / Voice Note
+    if (type === 'AUDIO' || mediaUrl.includes('.mp3') || mediaUrl.includes('.ogg') || mediaUrl.includes('.wav') || rawText.includes('[Voice Note')) {
+      return { icon: 'fa-solid fa-microphone', text: 'Voice message', isFailed };
+    }
+
+    // 4. Document / PDF
+    if (type === 'DOCUMENT' || type === 'PDF' || mediaUrl.includes('.pdf') || mediaUrl.includes('.doc') || mediaUrl.includes('.docx')) {
+      let caption = msg.fileName || rawText;
+      if (!caption || caption.startsWith('[Media Attachment') || caption.startsWith('http://') || caption.startsWith('https://')) {
+        caption = 'Document';
+      }
+      return { icon: 'fa-solid fa-file-lines', text: caption, isFailed };
+    }
+
+    // 5. Sticker / GIF
+    if (type === 'STICKER' || type === 'GIF') {
+      return { icon: 'fa-solid fa-note-sticky', text: 'Sticker', isFailed };
+    }
+
+    // 6. Interactive Button Selection
+    if (type === 'INTERACTIVE' || rawText.includes('[Interactive Selection]')) {
+      const clean = rawText.replace('[Interactive Selection:', '').replace('[Interactive Selection]', '').replace(/\]$/, '').trim();
+      return { icon: 'fa-solid fa-list-check', text: clean || 'Option selected', isFailed };
+    }
+
+    // 7. Payment Link
+    if (rawText.toLowerCase().includes('payment request') || rawText.includes('/pay/')) {
+      return { icon: 'fa-solid fa-credit-card', text: rawText, isFailed };
+    }
+
+    // 8. Default Clean Text Preview
+    const cleanText = rawText.replace(/^\[Media Attachment:[^\]]+\]/, 'Attachment').trim() || 'Click to open conversation history';
+    return { icon: '', text: cleanText, isFailed };
   }
 }
