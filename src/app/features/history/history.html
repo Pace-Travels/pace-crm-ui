@@ -170,7 +170,10 @@
                             </td>
 
                             <td style="padding: 13px 16px; font-weight: 700; color: #0f172a;">
-                                {{ log.recipientName }}
+                                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                                    <span>{{ log.recipientName }}</span>
+                                    <app-advisory-badge *ngIf="log.advisory?.level" [advisory]="log.advisory" [compact]="true"></app-advisory-badge>
+                                </div>
                             </td>
 
                             <td style="padding: 13px 16px; font-family: monospace; color: #334155; font-size: 12.5px;">
@@ -181,8 +184,30 @@
                                 {{ log.messageType }}
                             </td>
 
-                            <td (click)="openMessageDetail(log)" style="padding: 13px 16px; max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #334155; cursor: pointer;" title="Click to view full message content">
-                                <span style="border-bottom: 1px dotted #94a3b8;">{{ log.content || '[Empty message content]' }}</span>
+                            <td (click)="openMessageDetail(log)" style="padding: 12px 16px; max-width: 440px; cursor: pointer; user-select: none;" title="Click to view full 360° details & message preview">
+                                <div style="display: flex; align-items: center; gap: 7px; flex-wrap: nowrap; overflow: hidden;">
+                                    <!-- Campaign Chip View -->
+                                    <span *ngIf="log.campaignName" class="campaign-chip" [title]="'Broadcast Campaign: ' + log.campaignName">
+                                        <i class="fa-solid fa-bullhorn"></i>
+                                        <span class="campaign-chip-text">{{ log.campaignName }}</span>
+                                    </span>
+
+                                    <!-- Media Attachment Icons -->
+                                    <span *ngIf="hasPhoto(log)" class="media-preview-tag photo-tag" title="Photo Attachment">
+                                        <i class="fa-solid fa-camera"></i> Photo
+                                    </span>
+                                    <span *ngIf="hasVideo(log)" class="media-preview-tag video-tag" title="Video Attachment">
+                                        <i class="fa-solid fa-video"></i> Video
+                                    </span>
+                                    <span *ngIf="hasDocument(log)" class="media-preview-tag doc-tag" title="Document Attachment">
+                                        <i class="fa-solid fa-file-pdf"></i> Doc
+                                    </span>
+
+                                    <!-- Message Text Preview -->
+                                    <span class="message-preview-text" [title]="getCleanMessageText(log)">
+                                        {{ getCleanMessageText(log) }}
+                                    </span>
+                                </div>
                             </td>
 
                             <td style="padding: 13px 16px;">
@@ -529,83 +554,298 @@
         </div>
     </div>
 
-    <!-- Full Message Detail Modal Dialog -->
-    <div *ngIf="selectedMessage()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 20px;">
-        <div style="background: white; border-radius: 16px; width: 100%; max-width: 620px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04); overflow: hidden; border: 1px solid #e2e8f0; animation: modalPop 0.2s ease-out;">
+    <!-- 360-Degree Full Message Detail & Deliverability Audit Modal Dialog -->
+    <div *ngIf="selectedMessage()" class="modal-360-overlay" (click)="closeMessageDetail()">
+        <div class="modal-360-dialog" (click)="$event.stopPropagation()">
             
             <!-- Modal Header -->
-            <div style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 18px 24px; display: flex; justify-content: space-between; align-items: center;">
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <span [style.background]="selectedMessage()?.direction === 'OUTBOUND' ? '#eff6ff' : '#f0fdf4'" [style.color]="selectedMessage()?.direction === 'OUTBOUND' ? '#2563eb' : '#16a34a'" style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 6px;">
+            <div class="modal-360-header">
+                <div class="header-left">
+                    <span [style.background]="selectedMessage()?.direction === 'OUTBOUND' ? '#eff6ff' : '#f0fdf4'" [style.color]="selectedMessage()?.direction === 'OUTBOUND' ? '#2563eb' : '#16a34a'" style="font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.5px;">
                         {{ selectedMessage()?.direction }}
                     </span>
-                    <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a;">
-                        Message Log Details
+                    <span *ngIf="selectedMessage()?.campaignName" class="campaign-chip">
+                        <i class="fa-solid fa-bullhorn"></i>
+                        {{ selectedMessage()?.campaignName }}
+                    </span>
+                    <h3 class="modal-title">
+                        Message 360° Inspection & Delivery Audit
                     </h3>
                 </div>
-                <button (click)="closeMessageDetail()" style="background: none; border: none; font-size: 18px; color: #64748b; cursor: pointer; padding: 4px 8px;">
+                <button (click)="closeMessageDetail()" class="close-btn" title="Close (Esc)">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
             <!-- Modal Content Body -->
-            <div style="padding: 24px; max-height: 75vh; overflow-y: auto;">
+            <div class="modal-360-body">
                 
-                <!-- Recipient & Sender Banner -->
-                <div style="background: #f1f5f9; border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
-                    <div>
-                        <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Recipient</div>
-                        <div style="font-weight: 800; color: #0f172a; margin-top: 2px;">{{ selectedMessage()?.recipientName }}</div>
-                        <div style="font-family: monospace; color: #475569;">{{ selectedMessage()?.recipientPhone || 'No Phone' }}</div>
+                <!-- 4-Stat Metric Summary Banner -->
+                <div class="stats-strip">
+                    <!-- Stat 1: Deliverability Health -->
+                    <div class="stat-card">
+                        <div class="stat-label">Deliverability Health</div>
+                        <div class="stat-value" [style.color]="(selectedMessage()?.deliveryHealth ?? 100) < 60 ? '#dc2626' : ((selectedMessage()?.deliveryHealth ?? 100) < 85 ? '#d97706' : '#16a34a')">
+                            {{ selectedMessage()?.deliveryHealth ?? 100 }}/100
+                        </div>
+                        <div class="stat-sub">
+                            <span *ngIf="(selectedMessage()?.deliveryHealth ?? 100) >= 85" style="color: #16a34a;"><i class="fa-solid fa-circle-check"></i> Optimal</span>
+                            <span *ngIf="(selectedMessage()?.deliveryHealth ?? 100) >= 60 && (selectedMessage()?.deliveryHealth ?? 100) < 85" style="color: #d97706;"><i class="fa-solid fa-triangle-exclamation"></i> Warning</span>
+                            <span *ngIf="(selectedMessage()?.deliveryHealth ?? 100) < 60" style="color: #dc2626;"><i class="fa-solid fa-ban"></i> Restricted</span>
+                        </div>
                     </div>
-                    <div>
-                        <div style="font-size: 11px; color: #64748b; font-weight: 700; text-transform: uppercase;">Status & Time</div>
-                        <div style="margin-top: 2px;">
-                            <span [style.background]="getStatusBadgeClass(selectedMessage()?.status || '').bg" [style.color]="getStatusBadgeClass(selectedMessage()?.status || '').color" style="font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 10px;">
+
+                    <!-- Stat 2: Delivery Status -->
+                    <div class="stat-card">
+                        <div class="stat-label">Delivery Receipt</div>
+                        <div class="stat-value">
+                            <span [style.color]="getStatusBadgeClass(selectedMessage()?.status || '').color">
                                 {{ getStatusBadgeClass(selectedMessage()?.status || '').label }}
                             </span>
                         </div>
-                        <div style="font-size: 12px; color: #64748b; margin-top: 4px;">{{ selectedMessage()?.timestamp }}</div>
+                        <div class="stat-sub">
+                            <i class="fa-regular fa-clock"></i> {{ selectedMessage()?.timestamp }}
+                        </div>
+                    </div>
+
+                    <!-- Stat 3: Recipient -->
+                    <div class="stat-card">
+                        <div class="stat-label">Recipient Contact</div>
+                        <div class="stat-value" [title]="selectedMessage()?.recipientName">
+                            {{ selectedMessage()?.recipientName }}
+                        </div>
+                        <div class="stat-sub" style="font-family: monospace;">
+                            {{ selectedMessage()?.recipientPhone || 'No Phone' }}
+                        </div>
+                    </div>
+
+                    <!-- Stat 4: Channel & Format -->
+                    <div class="stat-card">
+                        <div class="stat-label">Type & Channel</div>
+                        <div class="stat-value">
+                            {{ selectedMessage()?.messageType }}
+                        </div>
+                        <div class="stat-sub">
+                            WhatsApp Meta WABA
+                        </div>
                     </div>
                 </div>
 
-                <!-- Full Message Content Section -->
-                <div style="margin-bottom: 20px;">
+                <!-- Deliverability & Cooldown Banner: 360° Angle Status -->
+                <!-- Scenario A: Active Cooldown Alert -->
+                <div *ngIf="isCooldownActive(selectedMessage())" class="cooldown-alert-banner">
+                    <div class="banner-head">
+                        <div class="banner-title">
+                            <i class="fa-solid fa-shield-halved"></i>
+                            Marketing Cooldown Active
+                        </div>
+                        <span class="countdown-pill">
+                            <i class="fa-solid fa-hourglass-half"></i> {{ getCooldownRemaining(selectedMessage()) }}
+                        </span>
+                    </div>
+
+                    <div class="banner-grid">
+                        <div>
+                            <strong>Restricted Until:</strong> {{ getCooldownDate(selectedMessage()) }}
+                        </div>
+                        <div>
+                            <strong>Strikes Recorded:</strong> {{ selectedMessage()?.advisory?.primary?.strikes || 1 }} fatigue strike(s)
+                        </div>
+                        <div *ngIf="selectedMessage()?.metaErrorCode">
+                            <strong>Meta Error Code:</strong> Meta #{{ selectedMessage()?.metaErrorCode }} ({{ selectedMessage()?.metaErrorLabel || 'Marketing Fatigue' }})
+                        </div>
+                        <div *ngIf="selectedMessage()?.advisory?.primary?.sourceProject">
+                            <strong>Observed In:</strong> {{ selectedMessage()?.advisory?.primary?.sourceProject }}
+                        </div>
+                    </div>
+
+                    <div class="banner-guidance">
+                        <i class="fa-solid fa-circle-info"></i>
+                        {{ selectedMessage()?.metaErrorGuidance || 'Meta limited marketing messages to this recipient to preserve ecosystem engagement. Non-marketing transactional/utility messages or user-initiated chats remain available.' }}
+                    </div>
+                </div>
+
+                <!-- Scenario B: Delivery Failed Alert (without cooldown) -->
+                <div *ngIf="!isCooldownActive(selectedMessage()) && (selectedMessage()?.status === 'FAILED' || selectedMessage()?.errorMessage)" class="failure-alert-banner">
+                    <div class="failure-head">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Dispatch Delivery Failed
+                        <span *ngIf="selectedMessage()?.metaErrorCode" style="font-size: 12px; background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 6px;">
+                            Meta #{{ selectedMessage()?.metaErrorCode }}
+                        </span>
+                    </div>
+                    <div class="failure-detail">
+                        <strong>Reason:</strong> {{ selectedMessage()?.errorMessage || selectedMessage()?.metaErrorLabel || 'Unknown WhatsApp API dispatch error' }}
+                    </div>
+                    <div *ngIf="selectedMessage()?.metaErrorGuidance" style="margin-top: 6px; font-size: 12px; color: #991b1b;">
+                        <strong>Actionable Guidance:</strong> {{ selectedMessage()?.metaErrorGuidance }}
+                    </div>
+                </div>
+
+                <!-- Scenario C: Deliverability Clean & Healthy -->
+                <div *ngIf="!isCooldownActive(selectedMessage()) && selectedMessage()?.status !== 'FAILED' && !selectedMessage()?.errorMessage" class="healthy-deliverability-banner">
+                    <div class="healthy-info">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <div>
+                            <div>Deliverability In Good Standing</div>
+                            <div style="font-size: 11.5px; font-weight: 500; color: #15803d; margin-top: 1px;">
+                                No active marketing fatigue or rate-limit cooldown on this number. Ready for campaign broadcasts.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="healthy-score">
+                        Score {{ selectedMessage()?.deliveryHealth ?? 100 }}/100
+                    </div>
+                </div>
+
+                <!-- WhatsApp Message Bubble Preview (Interactive realistic UI) -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="font-size: 12px; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-brands fa-whatsapp" style="color: #25d366; font-size: 14px;"></i>
+                            WhatsApp Message Rendered Preview
+                        </label>
+                        <button (click)="copyToClipboard(selectedMessage()?.content, 'Message text')" style="background: none; border: none; font-size: 12px; color: #7c3aed; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 4px;">
+                            <i class="fa-regular fa-copy"></i> Copy Text
+                        </button>
+                    </div>
+
+                    <div class="whatsapp-chat-simulator">
+                        <div class="wa-bubble-wrapper" [ngClass]="selectedMessage()?.direction === 'INBOUND' ? 'inbound' : 'outbound'">
+                            <div class="wa-bubble" [ngClass]="selectedMessage()?.direction === 'INBOUND' ? 'inbound' : 'outbound'">
+                                
+                                <!-- Header Media (Photo / Image) -->
+                                <div *ngIf="hasPhoto(selectedMessage()) && selectedMessage()?.headerMediaUrl" class="wa-media-header">
+                                    <img [src]="selectedMessage()?.headerMediaUrl" alt="Message Media Header" loading="lazy">
+                                    <div class="media-zoom-overlay" (click)="openMediaUrl(selectedMessage()?.headerMediaUrl)">
+                                        <i class="fa-solid fa-up-right-from-square"></i> Open Media
+                                    </div>
+                                </div>
+
+                                <!-- Header Media (Document) -->
+                                <div *ngIf="hasDocument(selectedMessage())" class="wa-media-doc-card">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                    <div class="doc-info">
+                                        <div class="doc-name">Attachment Document</div>
+                                        <div class="doc-type">PDF Document</div>
+                                    </div>
+                                    <a *ngIf="selectedMessage()?.headerMediaUrl" (click)="openMediaUrl(selectedMessage()?.headerMediaUrl)" style="color: #7c3aed; font-size: 13px; cursor: pointer;">
+                                        <i class="fa-solid fa-download"></i>
+                                    </a>
+                                </div>
+
+                                <!-- Message Body -->
+                                <div class="wa-body-text">
+                                    {{ getCleanMessageText(selectedMessage()) }}
+                                </div>
+
+                                <!-- Footer Text (if template footer exists) -->
+                                <div *ngIf="selectedMessage()?.footerText" class="wa-footer-text">
+                                    {{ selectedMessage()?.footerText }}
+                                </div>
+
+                                <!-- Time & Delivery Status Checkmarks -->
+                                <div class="wa-meta-time">
+                                    <span>{{ selectedMessage()?.timestamp }}</span>
+                                    <span class="checks" [ngClass]="{
+                                        'read': selectedMessage()?.status === 'READ',
+                                        'delivered': selectedMessage()?.status === 'DELIVERED',
+                                        'failed': selectedMessage()?.status === 'FAILED'
+                                    }">
+                                        <ng-container *ngIf="selectedMessage()?.status === 'READ'">✓✓</ng-container>
+                                        <ng-container *ngIf="selectedMessage()?.status === 'DELIVERED'">✓✓</ng-container>
+                                        <ng-container *ngIf="selectedMessage()?.status === 'SENT'">✓</ng-container>
+                                        <ng-container *ngIf="selectedMessage()?.status === 'FAILED'">✕</ng-container>
+                                    </span>
+                                </div>
+
+                                <!-- Interactive Buttons / Quick Replies -->
+                                <div *ngIf="selectedMessage()?.buttons && selectedMessage()!.buttons!.length > 0" class="wa-interactive-buttons">
+                                    <button *ngFor="let btn of selectedMessage()!.buttons" class="wa-button" type="button">
+                                        <i class="fa-solid fa-reply" style="font-size: 11px;"></i>
+                                        {{ btn.text || btn.title || 'Quick Action' }}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 360° Technical & Audit Metadata Grid -->
+                <div>
                     <label style="display: block; font-size: 12px; font-weight: 800; color: #475569; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-                        Full Un-truncated Message Content
+                        360° Technical Audit & Dispatch Details
                     </label>
-                    <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 10px; padding: 16px; font-size: 14px; color: #1e1b4b; line-height: 1.6; white-space: pre-wrap; font-family: inherit;">
-                        {{ selectedMessage()?.content || '[No Text Content]' }}
-                    </div>
-                </div>
 
-                <!-- Technical Metadata Details -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 12px; color: #475569; border-top: 1px solid #f1f5f9; padding-top: 16px;">
-                    <div>
-                        <strong>Message Type:</strong> {{ selectedMessage()?.messageType }}
-                    </div>
-                    <div>
-                        <strong>Sender Type:</strong> {{ selectedMessage()?.senderType }}
-                    </div>
-                    <div *ngIf="selectedMessage()?.whatsappMessageId" style="grid-column: span 2; word-break: break-all;">
-                        <strong>WhatsApp Msg ID:</strong> <span style="font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">{{ selectedMessage()?.whatsappMessageId }}</span>
-                    </div>
-                    <div *ngIf="selectedMessage()?.errorMessage" style="grid-column: span 2; color: #dc2626;">
-                        <strong>Error Log:</strong> {{ selectedMessage()?.errorMessage }}
+                    <div class="tech-audit-grid">
+                        <div class="meta-item">
+                            <div class="meta-title">Campaign Name</div>
+                            <div class="meta-data">
+                                <span *ngIf="selectedMessage()?.campaignName">{{ selectedMessage()?.campaignName }}</span>
+                                <span *ngIf="!selectedMessage()?.campaignName" style="color: #94a3b8; font-weight: 500;">Direct Messaging (No Campaign)</span>
+                            </div>
+                        </div>
+
+                        <div class="meta-item">
+                            <div class="meta-title">Template Identifier</div>
+                            <div class="meta-data">
+                                <span *ngIf="selectedMessage()?.templateName" style="font-family: monospace; background: #f1f5f9; padding: 2px 6px; border-radius: 4px;">{{ selectedMessage()?.templateName }}</span>
+                                <span *ngIf="!selectedMessage()?.templateName" style="color: #94a3b8; font-weight: 500;">None (Standard Text)</span>
+                            </div>
+                        </div>
+
+                        <div class="meta-item">
+                            <div class="meta-title">Sender Type</div>
+                            <div class="meta-data">{{ selectedMessage()?.senderType }}</div>
+                        </div>
+
+                        <div class="meta-item">
+                            <div class="meta-title">Line / Provider</div>
+                            <div class="meta-data">Meta Cloud API (+91 90190 77383)</div>
+                        </div>
+
+                        <div class="meta-item" style="grid-column: span 2;" *ngIf="selectedMessage()?.whatsappMessageId">
+                            <div class="meta-title">WhatsApp Message ID (WAMID)</div>
+                            <div class="meta-data">
+                                <span class="meta-code" (click)="copyToClipboard(selectedMessage()?.whatsappMessageId, 'WAMID')" style="cursor: pointer;" title="Click to copy WAMID">
+                                    {{ selectedMessage()?.whatsappMessageId }}
+                                    <i class="fa-regular fa-copy" style="font-size: 11px;"></i>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="meta-item" *ngIf="selectedMessage()?.sentAt">
+                            <div class="meta-title">Dispatched At</div>
+                            <div class="meta-data">{{ selectedMessage()?.sentAt }}</div>
+                        </div>
+
+                        <div class="meta-item" *ngIf="selectedMessage()?.deliveredAt">
+                            <div class="meta-title">Delivered At</div>
+                            <div class="meta-data">{{ selectedMessage()?.deliveredAt }}</div>
+                        </div>
+
+                        <div class="meta-item" style="grid-column: span 2;" *ngIf="selectedMessage()?.errorMessage">
+                            <div class="meta-title" style="color: #dc2626;">Error Diagnostics</div>
+                            <div class="meta-data" style="color: #dc2626; font-size: 12px; font-family: monospace; background: #fef2f2; padding: 8px 12px; border-radius: 6px; border: 1px solid #fecaca;">
+                                {{ selectedMessage()?.errorMessage }}
+                            </div>
+                        </div>
                     </div>
                 </div>
 
             </div>
 
             <!-- Modal Footer -->
-            <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center;">
-                <button (click)="closeMessageDetail()" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+            <div class="modal-360-footer">
+                <button (click)="closeMessageDetail()" style="background: white; border: 1px solid #cbd5e1; color: #334155; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
                     Close
                 </button>
                 
-                <button (click)="openLiveChat(selectedMessage()!); closeMessageDetail();" style="background: #7c3aed; color: white; border: none; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
-                    <i class="fa-solid fa-comments"></i> Jump to Live Chat
-                </button>
+                <div class="footer-actions">
+                    <button (click)="openLiveChat(selectedMessage()!); closeMessageDetail();" style="background: #7c3aed; color: white; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);">
+                        <i class="fa-solid fa-comments"></i> Jump to Live Chat
+                    </button>
+                </div>
             </div>
         </div>
     </div>

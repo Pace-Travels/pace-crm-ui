@@ -2,6 +2,7 @@ import { Component, OnInit, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../shared/services/api.service';
+import { AdvisoryBadge } from '../../shared/components/advisory-badge/advisory-badge';
 import Swal from 'sweetalert2';
 
 export interface MessageLog {
@@ -13,12 +14,30 @@ export interface MessageLog {
   direction: 'INBOUND' | 'OUTBOUND';
   recipientName: string;
   recipientPhone: string;
-  messageType: 'TEXT' | 'TEMPLATE' | 'IMAGE' | 'DOCUMENT' | 'INTERACTIVE' | 'LOCATION';
+  contactId?: number;
+  messageType: 'TEXT' | 'TEMPLATE' | 'IMAGE' | 'DOCUMENT' | 'INTERACTIVE' | 'LOCATION' | 'VIDEO';
   content: string;
   status: 'SENT' | 'DELIVERED' | 'READ' | 'FAILED' | 'PENDING';
   channel: string;
   whatsappMessageId?: string;
   errorMessage?: string;
+  campaignName?: string | null;
+  campaignId?: number | null;
+  templateName?: string | null;
+  headerType?: 'IMAGE' | 'DOCUMENT' | 'VIDEO' | 'TEXT' | null;
+  headerMediaUrl?: string | null;
+  footerText?: string | null;
+  buttons?: any[];
+  sentAt?: string | null;
+  deliveredAt?: string | null;
+  readAt?: string | null;
+  metaErrorCode?: number | null;
+  metaErrorLabel?: string | null;
+  metaErrorGuidance?: string | null;
+  metaCategory?: string | null;
+  marketingCooldownUntil?: string | null;
+  deliveryHealth?: number | null;
+  advisory?: any;
 }
 
 export interface CampaignLog {
@@ -39,7 +58,7 @@ import { Router } from '@angular/router';
 @Component({
   selector: 'app-history',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdvisoryBadge],
   templateUrl: './history.html',
   styleUrl: './history.scss'
 })
@@ -300,12 +319,30 @@ export class History implements OnInit {
               direction: m.direction || (m.senderType === 'CONTACT' ? 'INBOUND' : 'OUTBOUND'),
               recipientName: m.recipientName || m.Conversation?.Contact?.name || `Customer ${m.conversationId || idx + 1}`,
               recipientPhone: m.recipientPhone || m.Conversation?.Contact?.phone || '',
+              contactId: m.contactId || m.Conversation?.Contact?.id,
               messageType: m.messageType || 'TEXT',
               content: m.content || m.textContent || '',
               status: m.status || 'DELIVERED',
               channel: 'WhatsApp Meta WABA',
               whatsappMessageId: m.whatsappMessageId,
-              errorMessage: m.errorMessage
+              errorMessage: m.errorMessage,
+              campaignName: m.campaignName || null,
+              campaignId: m.campaignId || null,
+              templateName: m.templateName || null,
+              headerType: m.headerType || null,
+              headerMediaUrl: m.headerMediaUrl || m.mediaUrl || null,
+              footerText: m.footerText || null,
+              buttons: m.buttons || [],
+              sentAt: m.sentAt || null,
+              deliveredAt: m.deliveredAt || null,
+              readAt: m.readAt || null,
+              metaErrorCode: m.metaErrorCode || null,
+              metaErrorLabel: m.metaErrorLabel || null,
+              metaErrorGuidance: m.metaErrorGuidance || null,
+              metaCategory: m.metaCategory || null,
+              marketingCooldownUntil: m.marketingCooldownUntil || null,
+              deliveryHealth: m.deliveryHealth !== undefined ? m.deliveryHealth : 100,
+              advisory: m.advisory || null
             };
           });
           this.messageLogs.set(formatted);
@@ -524,6 +561,88 @@ export class History implements OnInit {
     if (status === 'DELIVERED') return { bg: '#e0f2fe', color: '#0369a1', label: '✓✓ Delivered' };
     if (status === 'SENT') return { bg: '#fef3c7', color: '#b45309', label: '✓ Sent' };
     return { bg: '#fef2f2', color: '#dc2626', label: '✕ Failed' };
+  }
+
+  hasPhoto(log: MessageLog | null | undefined): boolean {
+    if (!log) return false;
+    if (log.headerType === 'IMAGE' || log.messageType === 'IMAGE') return true;
+    const url = log.headerMediaUrl || '';
+    return !!url && (/\.(jpeg|jpg|gif|png|webp)/i.test(url) || url.includes('image') || url.includes('photo') || url.includes('unsplash'));
+  }
+
+  hasVideo(log: MessageLog | null | undefined): boolean {
+    if (!log) return false;
+    if (log.headerType === 'VIDEO' || log.messageType === 'VIDEO') return true;
+    const url = log.headerMediaUrl || '';
+    return !!url && /\.(mp4|mov|avi|webm)/i.test(url);
+  }
+
+  hasDocument(log: MessageLog | null | undefined): boolean {
+    if (!log) return false;
+    if (log.headerType === 'DOCUMENT' || log.messageType === 'DOCUMENT') return true;
+    const url = log.headerMediaUrl || '';
+    return !!url && /\.(pdf|doc|docx|csv|xls|xlsx)/i.test(url);
+  }
+
+  getCleanMessageText(log: MessageLog | null | undefined): string {
+    if (!log) return '';
+    let txt = (log.content || '').trim();
+    if (txt.startsWith('[Broadcast Campaign]')) {
+      const parts = txt.replace(/^\[Broadcast Campaign\]\s*/i, '').trim();
+      return parts || 'Broadcast message dispatch';
+    }
+    return txt || (this.hasPhoto(log) ? 'Photo Attachment' : (this.hasDocument(log) ? 'Document Attachment' : 'No message content'));
+  }
+
+  isCooldownActive(log: MessageLog | null | undefined): boolean {
+    if (!log) return false;
+    if (log.marketingCooldownUntil && new Date(log.marketingCooldownUntil).getTime() > Date.now()) return true;
+    return log.advisory?.primary?.type === 'COOLDOWN';
+  }
+
+  getCooldownDate(log: MessageLog | null | undefined): string {
+    if (!log) return '';
+    const dateStr = log.marketingCooldownUntil || log.advisory?.primary?.until;
+    if (!dateStr) return '';
+    try {
+      return new Date(dateStr).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+    } catch {
+      return dateStr;
+    }
+  }
+
+  getCooldownRemaining(log: MessageLog | null | undefined): string {
+    if (!log) return '';
+    const dateStr = log.marketingCooldownUntil || log.advisory?.primary?.until;
+    if (!dateStr) return '';
+    const diffMs = new Date(dateStr).getTime() - Date.now();
+    if (diffMs <= 0) return 'Expired';
+    const hours = Math.floor(diffMs / (3600 * 1000));
+    const mins = Math.floor((diffMs % (3600 * 1000)) / (60 * 1000));
+    if (hours > 24) {
+      const days = Math.floor(hours / 24);
+      return `${days}d ${hours % 24}h remaining`;
+    }
+    return `${hours}h ${mins}m remaining`;
+  }
+
+  copyToClipboard(text: string | null | undefined, label: string = 'Copied') {
+    if (!text) return;
+    navigator.clipboard.writeText(text).then(() => {
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `${label} copied to clipboard!`,
+        showConfirmButton: false,
+        timer: 1800
+      });
+    });
+  }
+
+  openMediaUrl(url: string | null | undefined) {
+    if (!url) return;
+    window.open(url, '_blank');
   }
 
   openLiveChat(log: MessageLog | any) {
