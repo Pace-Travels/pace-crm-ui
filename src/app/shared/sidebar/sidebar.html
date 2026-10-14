@@ -66,15 +66,15 @@
                                                 <span class="menu-badge-dot"></span>
                                             }
                                         </div>
-                                        <span>{{ item.title }}</span>
+                                        <span class="menu-item-title">{{ item.title }}</span>
 
                                         @if (!collapsed()) {
                                             @if (item.route === '/chat' && unreadChatCount() > 0) {
-                                                <span class="menu-badge" style="background-color: #EF4444;">
+                                                <span class="menu-badge" [class.is-circle]="unreadChatCount() < 10">
                                                     {{ unreadChatCount() > 99 ? '99+' : unreadChatCount() }}
                                                 </span>
                                             } @else if (item.badge) {
-                                                <span class="menu-badge" [style.background-color]="item.badgeColor || '#EF4444'">
+                                                <span class="menu-badge" [class.is-circle]="(''+item.badge).length === 1" [style.background-color]="item.badgeColor || '#EF4444'">
                                                     {{ item.badge }}
                                                 </span>
                                             }
