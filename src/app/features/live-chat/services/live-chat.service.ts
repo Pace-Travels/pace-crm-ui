@@ -55,6 +55,53 @@ export class LiveChatService {
 
   // Global real-time stream of incoming messages & campaign responses
   public inboundNotification$ = new Subject<any>();
+  public conversationRead$ = new Subject<{ conversationId: number | string; phone?: string; unreadCount?: number; all?: boolean }>();
+
+  private recentBrowserNotifications = new Set<string>();
+  private recentInboundNotificationKeys = new Set<string>();
+
+  public showBrowserNotification(key: string, title: string, body: string, onClick?: () => void) {
+    if (this.recentBrowserNotifications.has(key)) {
+      return;
+    }
+    this.recentBrowserNotifications.add(key);
+    setTimeout(() => this.recentBrowserNotifications.delete(key), 8000);
+
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      if (Notification.permission === 'granted') {
+        try {
+          const notification = new Notification(title, {
+            body,
+            icon: '/assets/icon.png'
+          });
+          if (onClick) {
+            notification.onclick = () => {
+              window.focus();
+              onClick();
+            };
+          }
+        } catch (e) {
+          console.warn('Native notification error', e);
+        }
+      } else if (Notification.permission !== 'denied') {
+        Notification.requestPermission();
+      }
+    }
+  }
+
+  public pushInboundNotification(notif: any, customKey?: string) {
+    const cleanPhone = String(notif.phone || notif.recipient || '').replace(/\D/g, '');
+    const cleanSnippet = String(notif.desc || notif.message || notif.content || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+    const key = customKey || `${cleanPhone}_${cleanSnippet}`;
+
+    if (this.recentInboundNotificationKeys.has(key)) {
+      return;
+    }
+    this.recentInboundNotificationKeys.add(key);
+    setTimeout(() => this.recentInboundNotificationKeys.delete(key), 8000);
+
+    this.inboundNotification$.next(notif);
+  }
 
   // Currently selected conversation
   selectedConversation = signal<Conversation | null>(null);
@@ -113,21 +160,27 @@ export class LiveChatService {
       const shouldIncrementUnread = !isCurrentActive && isContactSender;
       this.recordMessageActivity(data, shouldIncrementUnread);
 
-      if (isContactSender) {
+      if (isContactSender && !isCurrentActive) {
         this.triggerIncomingMessageNotification(data);
         const convId = Number(data.conversationId || data.Conversation?.id);
         const senderName = data.contactName || data.senderName || data.Conversation?.Contact?.name || this.getContactNameForConversation(convId, data.phone);
-        this.inboundNotification$.next({
+        const phone = data.phone || data.recipientPhone || data.Conversation?.Contact?.phone;
+        const textContent = data.textContent || data.content || '[Incoming Message]';
+        const cleanPhone = String(phone || '').replace(/\D/g, '');
+        const cleanSnippet = String(textContent).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+        const dedupeKey = `${cleanPhone}_${cleanSnippet}`;
+
+        this.pushInboundNotification({
           type: 'INBOUND_MESSAGE',
           title: `💬 ${senderName}`,
-          desc: data.textContent || data.content || '[Incoming Message]',
+          desc: textContent,
           conversationId: convId,
-          phone: data.phone || data.recipientPhone || data.Conversation?.Contact?.phone,
+          phone: phone,
           contactName: senderName,
           status: 'UNREAD',
           time: 'Just now',
           icon: 'fa-brands fa-whatsapp text-green'
-        });
+        }, dedupeKey);
       }
     });
 
@@ -162,12 +215,19 @@ export class LiveChatService {
 
     // Real-time Campaign Response Notification
     this.socket.on('campaign_response_received', (data: any) => {
+      const active = this.selectedConversation();
+      const isCurrentActive = active && (data.conversationId === active.id || Number(data.conversationId) === Number(active.id));
+      if (isCurrentActive) return;
+
       const contactName = (data.contactName && data.contactName !== 'Customer') 
         ? data.contactName 
         : (data.phone || 'Contact');
       const responseText = data.responseReceived || '[Campaign Response]';
+      const cleanPhone = String(data.phone || '').replace(/\D/g, '');
+      const cleanSnippet = String(responseText).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+      const dedupeKey = `${cleanPhone}_${cleanSnippet}`;
 
-      this.inboundNotification$.next({
+      this.pushInboundNotification({
         type: 'CAMPAIGN_REPLY',
         title: `📢 ${contactName} responded`,
         desc: responseText,
@@ -177,7 +237,7 @@ export class LiveChatService {
         status: 'UNREAD',
         time: 'Just now',
         icon: 'fa-solid fa-bullhorn text-blue'
-      });
+      }, dedupeKey);
 
       const SwalObj = (window as any).Swal;
       if (SwalObj && SwalObj.fire) {
@@ -192,28 +252,61 @@ export class LiveChatService {
         });
       }
 
-      if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
-        new Notification(`📢 ${contactName} responded`, {
-          body: responseText,
-          icon: '/assets/icon.png'
-        });
-      }
+      this.showBrowserNotification(dedupeKey, `📢 ${contactName} responded`, responseText, () => {
+        if (data.phone) {
+          this.selectConversationByPhone(data.phone);
+        } else if (data.conversationId) {
+          this.selectConversationById(data.conversationId);
+        }
+      });
     });
 
     // Inbound notification event from server
     this.socket.on('inbound_notification', (data: any) => {
+      const active = this.selectedConversation();
+      const isCurrentActive = active && (data.conversationId === active.id || Number(data.conversationId) === Number(active.id));
+      if (isCurrentActive) return;
+
       const contactName = data.contactName || 'Customer';
-      this.inboundNotification$.next({
+      const text = data.message || data.content || '[Incoming Message]';
+      const cleanPhone = String(data.phone || '').replace(/\D/g, '');
+      const cleanSnippet = String(text).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+      const dedupeKey = `${cleanPhone}_${cleanSnippet}`;
+
+      this.pushInboundNotification({
         type: data.type || 'INBOUND_MESSAGE',
         title: data.title || (data.type === 'CAMPAIGN_REPLY' ? `📢 ${contactName} responded` : `💬 ${contactName}`),
-        desc: data.message || data.content || '[Incoming Message]',
+        desc: text,
         conversationId: data.conversationId,
         phone: data.phone,
         contactName: contactName,
         status: 'UNREAD',
         time: 'Just now',
         icon: data.type === 'CAMPAIGN_REPLY' ? 'fa-solid fa-bullhorn text-blue' : 'fa-brands fa-whatsapp text-green'
-      });
+      }, dedupeKey);
+    });
+
+    // Conversation read broadcast event from server / other clients
+    this.socket.on('conversation_read', (data: any) => {
+      if (!data) return;
+
+      if (data.all) {
+        const clearUnread = (list: Conversation[]) => list.map(c => ({ ...c, unreadCount: 0 }));
+        this.activeConversations.update(list => clearUnread(list));
+        this.requestingConversations.update(list => clearUnread(list));
+        this.intervenedConversations.update(list => clearUnread(list));
+        this.conversationRead$.next(data);
+      } else if (data.conversationId) {
+        const convId = Number(data.conversationId);
+        const newCount = Number(data.unreadCount || 0);
+        const updateItem = (list: Conversation[]) => list.map(c => 
+          (c.id === convId || Number(c.id) === convId) ? { ...c, unreadCount: newCount } : c
+        );
+        this.activeConversations.update(list => updateItem(list));
+        this.requestingConversations.update(list => updateItem(list));
+        this.intervenedConversations.update(list => updateItem(list));
+        this.conversationRead$.next(data);
+      }
     });
   }
 
@@ -381,27 +474,20 @@ export class LiveChatService {
     const phone = data.Conversation?.Contact?.phone || data.recipientPhone || data.phone || '';
     const textContent = data.textContent || data.content || '[Incoming Message]';
 
-    // 1. Browser Native Notification
-    if (typeof window !== 'undefined' && 'Notification' in window) {
-      if (Notification.permission === 'granted') {
-        const notification = new Notification(`💬 ${senderName}`, {
-          body: textContent,
-          icon: '/assets/icon.png'
-        });
-        notification.onclick = () => {
-          window.focus();
-          if (phone) {
-            this.selectConversationByPhone(phone);
-          } else if (convId) {
-            const all = [...this.activeConversations(), ...this.requestingConversations(), ...this.intervenedConversations()];
-            const target = all.find(c => c.id === convId);
-            if (target) this.selectConversation(target);
-          }
-        };
-      } else if (Notification.permission !== 'denied') {
-        Notification.requestPermission();
+    // 1. Browser Native Notification (deduplicated within 8 seconds)
+    const cleanPhone = String(phone).replace(/\D/g, '');
+    const cleanSnippet = String(textContent).toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+    const dedupeKey = `${cleanPhone}_${cleanSnippet}`;
+
+    this.showBrowserNotification(dedupeKey, `💬 ${senderName}`, textContent, () => {
+      if (phone) {
+        this.selectConversationByPhone(phone);
+      } else if (convId) {
+        const all = [...this.activeConversations(), ...this.requestingConversations(), ...this.intervenedConversations()];
+        const target = all.find(c => c.id === convId);
+        if (target) this.selectConversation(target);
       }
-    }
+    });
 
     // 2. Interactive Toast Popup
     const SwalObj = (window as any).Swal;
@@ -587,13 +673,24 @@ export class LiveChatService {
 
   toggleUnread(conv: Conversation, forceCount?: number) {
     const targetCount = forceCount !== undefined ? forceCount : (conv.unreadCount && conv.unreadCount > 0 ? 0 : 1);
+    
+    // Immediate local update for zero-latency UI response
+    const updateItem = (list: Conversation[]) => list.map(c => c.id === conv.id ? { ...c, unreadCount: targetCount } : c);
+    this.activeConversations.update(list => updateItem(list));
+    this.requestingConversations.update(list => updateItem(list));
+    this.intervenedConversations.update(list => updateItem(list));
+
+    if (targetCount === 0) {
+      this.conversationRead$.next({
+        conversationId: conv.id,
+        phone: conv.Contact?.phone,
+        unreadCount: 0
+      });
+    }
+
     this.api.put<any>(`conversations/${conv.id}/unread`, { unreadCount: targetCount }).subscribe({
-      next: () => {
-        const updateItem = (list: Conversation[]) => list.map(c => c.id === conv.id ? { ...c, unreadCount: targetCount } : c);
-        this.activeConversations.update(list => updateItem(list));
-        this.requestingConversations.update(list => updateItem(list));
-        this.intervenedConversations.update(list => updateItem(list));
-      }
+      next: () => {},
+      error: (err) => console.warn('Toggle unread error', err)
     });
   }
 

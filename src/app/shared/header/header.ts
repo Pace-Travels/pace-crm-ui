@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, EventEmitter, Output, OnInit, inject, signal, computed } from '@angular/core';
+import { Component, EventEmitter, Output, OnInit, inject, signal, computed, effect } from '@angular/core';
+import { Title } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { Menu } from 'primeng/menu';
 import { Router } from '@angular/router';
@@ -35,6 +36,9 @@ export class Header implements OnInit {
   searchService = inject(SearchService);
   themeService = inject(ThemeService);
   chatService = inject(LiveChatService);
+  private titleService = inject(Title);
+
+  private readonly baseTitle = 'Quote Desks Messenger | Omnichannel WhatsApp Automation';
 
   userName = '';
   userEmail = '';
@@ -47,6 +51,18 @@ export class Header implements OnInit {
 
   notificationsList = signal<any[]>([]);
 
+  constructor() {
+    // Dynamically update document title in real time like WhatsApp Web: (2) Quote Desks Messenger...
+    effect(() => {
+      const count = this.unreadCount();
+      if (count > 0) {
+        this.titleService.setTitle(`(${count}) ${this.baseTitle}`);
+      } else {
+        this.titleService.setTitle(this.baseTitle);
+      }
+    });
+  }
+
   ngOnInit() {
     this.loadUserData();
     this.envModeService.fetchCurrentSettings();
@@ -57,13 +73,44 @@ export class Header implements OnInit {
     this.chatService.inboundNotification$.subscribe((notif: any) => {
       if (!notif) return;
       const current = this.notificationsList();
-      const exists = current.some(n => 
-        (n.conversationId && notif.conversationId && Number(n.conversationId) === Number(notif.conversationId) && n.desc === notif.desc) ||
-        (n.id && notif.id && n.id === notif.id)
-      );
+      const notifPhone = String(notif.phone || notif.recipient || '').replace(/\D/g, '');
+      const notifSnippet = String(notif.desc || notif.message || notif.content || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+
+      const exists = current.some(n => {
+        if (n.id && notif.id && n.id === notif.id) return true;
+        const nPhone = String(n.phone || n.recipient || '').replace(/\D/g, '');
+        const nSnippet = String(n.desc || n.message || n.content || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+        const samePhone = notifPhone && nPhone && (notifPhone === nPhone || notifPhone.endsWith(nPhone) || nPhone.endsWith(notifPhone));
+        return samePhone && (notifSnippet === nSnippet || notifSnippet.includes(nSnippet) || nSnippet.includes(notifSnippet));
+      });
+
       if (!exists) {
         this.notificationsList.set([notif, ...current]);
       }
+    });
+
+    // Real-time read status synchronization: update notifications when chats are read in Live Chat
+    this.chatService.conversationRead$.subscribe((data: any) => {
+      if (!data) return;
+
+      if (data.all) {
+        this.notificationsList.update(list => list.map(n => ({ ...n, status: 'READ' })));
+        return;
+      }
+
+      const convId = data.conversationId ? Number(data.conversationId) : null;
+      const cleanPhone = String(data.phone || '').replace(/\D/g, '');
+
+      this.notificationsList.update(list => list.map(n => {
+        const nConvId = n.conversationId ? Number(n.conversationId) : null;
+        const nPhone = String(n.phone || n.recipient || '').replace(/\D/g, '');
+        const isMatch = (convId && nConvId && convId === nConvId) ||
+                        (cleanPhone && nPhone && (cleanPhone === nPhone || cleanPhone.endsWith(nPhone) || nPhone.endsWith(cleanPhone)));
+        if (isMatch) {
+          return { ...n, status: data.isUnread ? 'UNREAD' : 'READ' };
+        }
+        return n;
+      }));
     });
   }
 
@@ -88,9 +135,7 @@ export class Header implements OnInit {
   }
 
   unreadCount = computed(() => {
-    const notifsUnread = this.notificationsList().filter(n => n.status === 'UNREAD').length;
-    const chatUnread = this.chatService.totalUnreadCount();
-    return Math.max(notifsUnread, chatUnread);
+    return this.notificationsList().filter(n => n.status === 'UNREAD').length;
   });
 
   displayActivePhoneNumber = computed(() => {
@@ -145,12 +190,24 @@ export class Header implements OnInit {
               ? new Date(item.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
               : 'Recently';
 
+            // Clean message desc display: strip duplicate "Name responded: " or "Name: " prefix
+            let displayDesc = item.content || item.desc || '';
+            const replyMatch = displayDesc.match(/^.+? responded:\s*"?([^"]+)"?$/i);
+            if (replyMatch && replyMatch[1]) {
+              displayDesc = replyMatch[1];
+            } else {
+              const prefixMatch = displayDesc.match(/^[^:]+:\s*(.+)$/);
+              if (prefixMatch && prefixMatch[1] && prefixMatch[1].length > 3) {
+                displayDesc = prefixMatch[1];
+              }
+            }
+
             return {
               id: item.id,
               type: item.type,
               status: item.status || 'UNREAD',
               title: title,
-              desc: item.content,
+              desc: displayDesc,
               time: formattedTime,
               icon: iconClass,
               conversationId: item.conversationId,
@@ -170,6 +227,9 @@ export class Header implements OnInit {
     if (n.id && typeof n.id === 'number') {
       this.api.put<any>(`notifications/update/${n.id}`, { status: 'READ' }).subscribe({ error: () => {} });
     }
+
+    // Immediately trigger reactive update so unreadCount decrements without delay
+    this.notificationsList.update(list => list.map(item => item === n || item.id === n.id ? { ...item, status: 'READ' } : item));
 
     if (n.conversationId || n.phone || n.type === 'INBOUND_MESSAGE' || n.type === 'CHAT' || n.type === 'CAMPAIGN_REPLY') {
       this.showNotifications.set(false);
