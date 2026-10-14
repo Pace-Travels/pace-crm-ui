@@ -82,6 +82,54 @@
                 box-shadow: 0 8px 24px rgba(68, 76, 231, 0.15);
                 border-color: #6366f1;
             }
+
+            .kpi-sub-breakdown {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                margin: 4px 0 6px 0;
+                flex-wrap: wrap;
+
+                .sub-pill {
+                    font-size: 11px;
+                    font-weight: 600;
+                    padding: 2px 7px;
+                    border-radius: 4px;
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 4px;
+                    line-height: 1.3;
+
+                    &.sent {
+                        background: rgba(99, 102, 241, 0.1);
+                        color: #4f46e5;
+                    }
+                    &.received {
+                        background: rgba(16, 185, 129, 0.12);
+                        color: #047857;
+                    }
+                    &.campaigns {
+                        background: rgba(245, 158, 11, 0.1);
+                        color: #b45309;
+                    }
+                    &.active-chats {
+                        background: rgba(16, 185, 129, 0.1);
+                        color: #059669;
+                        cursor: pointer;
+                        &:hover {
+                            text-decoration: underline;
+                        }
+                    }
+                    &.failed {
+                        background: rgba(239, 68, 68, 0.1);
+                        color: #dc2626;
+                    }
+                    &.dnd {
+                        background: rgba(100, 116, 139, 0.12);
+                        color: #475569;
+                    }
+                }
+            }
         }
     }
 

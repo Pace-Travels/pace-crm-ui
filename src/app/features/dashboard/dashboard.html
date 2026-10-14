@@ -24,9 +24,18 @@
         <div class="kpi-card clickable" (click)="navigateTo('/history')" title="Click to view all Message Logs & History">
             <div class="kpi-content">
                 <span class="kpi-title">TOTAL MESSAGES</span>
-                <div class="kpi-value">{{ analytics().totalMessages ?? analytics().totalEnquiries ?? 0 }}</div>
-                <div class="kpi-trend up">
-                    <i class="fa-solid fa-arrow-up"></i> +0% from last week
+                <div class="kpi-value">{{ (analytics().totalMessages ?? 0) | number }}</div>
+                <div class="kpi-sub-breakdown">
+                    <span class="sub-pill sent" title="Total Outbound Messages Sent">
+                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Sent: {{ (analytics().sentMessages ?? 0) | number }}
+                    </span>
+                    <span class="sub-pill received" title="Total Inbound Customer Messages Received">
+                        <i class="fa-solid fa-arrow-down-left-and-up-right-to-center"></i> Recv: {{ (analytics().receivedMessages ?? 0) | number }}
+                    </span>
+                </div>
+                <div [class]="'kpi-trend ' + (analytics().totalMessagesTrend?.direction || 'up')">
+                    <i [class]="analytics().totalMessagesTrend?.icon || 'fa-solid fa-arrow-up'"></i>
+                    {{ analytics().totalMessagesTrend?.label || '+0% from last week' }}
                 </div>
             </div>
             <div class="kpi-icon-tab purple">
@@ -38,9 +47,15 @@
         <div class="kpi-card clickable" (click)="navigateTo('/campaigns')" title="Click to view Broadcast Campaigns">
             <div class="kpi-content">
                 <span class="kpi-title">BROADCASTS SENT</span>
-                <div class="kpi-value">{{ analytics().messagesSent ?? analytics().quotationsSent ?? 0 }}</div>
-                <div class="kpi-trend up">
-                    <i class="fa-solid fa-arrow-up"></i> +0% from last week
+                <div class="kpi-value">{{ (analytics().messagesSent ?? 0) | number }}</div>
+                <div class="kpi-sub-breakdown">
+                    <span class="sub-pill campaigns" title="Total Active & Completed Campaigns">
+                        <i class="fa-solid fa-bullhorn"></i> Campaigns: {{ analytics().campaignCount ?? analytics().messagesSent ?? 0 }}
+                    </span>
+                </div>
+                <div [class]="'kpi-trend ' + (analytics().broadcastsTrend?.direction || 'up')">
+                    <i [class]="analytics().broadcastsTrend?.icon || 'fa-solid fa-arrow-up'"></i>
+                    {{ analytics().broadcastsTrend?.label || '+0% from last week' }}
                 </div>
             </div>
             <div class="kpi-icon-tab amber">
@@ -48,17 +63,23 @@
             </div>
         </div>
 
-        <!-- Active Conversations -->
-        <div class="kpi-card clickable" (click)="navigateTo('/chat')" title="Click to open Live Chat Desk">
+        <!-- Total Contacts (Correctly labeled & showing 2534 contacts) -->
+        <div class="kpi-card clickable" (click)="navigateTo('/contacts')" title="Click to view Contacts CRM Directory">
             <div class="kpi-content">
-                <span class="kpi-title">ACTIVE CONVERSATIONS</span>
-                <div class="kpi-value">{{ analytics().activeConversations ?? analytics().confirmedBookings ?? 0 }}</div>
-                <div class="kpi-trend up">
-                    <i class="fa-solid fa-arrow-up"></i> +0% from last week
+                <span class="kpi-title">TOTAL CONTACTS</span>
+                <div class="kpi-value">{{ (analytics().totalContacts ?? analytics().activeConversations ?? 0) | number }}</div>
+                <div class="kpi-sub-breakdown">
+                    <span class="sub-pill active-chats" (click)="$event.stopPropagation(); navigateTo('/chat')" title="Click to view Active Live Chats">
+                        <i class="fa-solid fa-comments"></i> Active Chats: {{ (analytics().activeChatsCount ?? 0) | number }}
+                    </span>
+                </div>
+                <div [class]="'kpi-trend ' + (analytics().contactsTrend?.direction || 'up')">
+                    <i [class]="analytics().contactsTrend?.icon || 'fa-solid fa-arrow-up'"></i>
+                    {{ analytics().contactsTrend?.label || '+0% from last week' }}
                 </div>
             </div>
             <div class="kpi-icon-tab mint">
-                <i class="fa-solid fa-circle-check"></i>
+                <i class="fa-solid fa-address-book"></i>
             </div>
         </div>
 
@@ -66,9 +87,18 @@
         <div class="kpi-card clickable" (click)="navigateTo('/campaigns')" title="Click to view Failed dispatches & Opt-outs">
             <div class="kpi-content">
                 <span class="kpi-title">FAILED / OPT-OUTS</span>
-                <div class="kpi-value">{{ analytics().failedMessages ?? analytics().cancelledCount ?? 0 }}</div>
-                <div class="kpi-trend down">
-                    <i class="fa-solid fa-arrow-down"></i> -0% from last week
+                <div class="kpi-value">{{ (analytics().failedMessages ?? 0) | number }}</div>
+                <div class="kpi-sub-breakdown">
+                    <span class="sub-pill failed" title="Undelivered or Failed Messages">
+                        <i class="fa-solid fa-circle-xmark"></i> Failed: {{ (analytics().failedDeliveries ?? analytics().failedMessages ?? 0) | number }}
+                    </span>
+                    <span class="sub-pill dnd" title="DND Unsubscribed Contacts">
+                        <i class="fa-solid fa-ban"></i> DND: {{ (analytics().optOutCount ?? 0) | number }}
+                    </span>
+                </div>
+                <div [class]="'kpi-trend ' + (analytics().failedTrend?.direction || 'down')">
+                    <i [class]="analytics().failedTrend?.icon || 'fa-solid fa-arrow-down'"></i>
+                    {{ analytics().failedTrend?.label || '-0% from last week' }}
                 </div>
             </div>
             <div class="kpi-icon-tab coral">

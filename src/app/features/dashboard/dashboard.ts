@@ -120,15 +120,23 @@ export class Dashboard implements OnInit {
   });
 
   analytics = signal<any>({
-    totalEnquiries: 0,
-    quotationsSent: 0,
-    confirmedBookings: 0,
-    cancelledCount: 0,
-    totalMessagesSent: 0,
-    totalDelivered: 0,
-    totalRead: 0,
-    conversionRate: '0.0',
-    upcomingPackages: []
+    totalMessages: 0,
+    sentMessages: 0,
+    receivedMessages: 0,
+    totalMessagesTrend: { percent: 0, direction: 'neutral', icon: 'fa-solid fa-minus', label: '0% from last week' },
+    messagesSent: 0,
+    campaignCount: 0,
+    broadcastsTrend: { percent: 0, direction: 'neutral', icon: 'fa-solid fa-minus', label: '0% from last week' },
+    totalContacts: 0,
+    activeConversations: 0,
+    activeChatsCount: 0,
+    contactsTrend: { percent: 0, direction: 'neutral', icon: 'fa-solid fa-minus', label: '0% from last week' },
+    failedMessages: 0,
+    failedDeliveries: 0,
+    optOutCount: 0,
+    failedTrend: { percent: 0, direction: 'neutral', icon: 'fa-solid fa-minus', label: '0% from last week' },
+    readRate: '0.0',
+    recentConversations: []
   });
 
   constructor() {
