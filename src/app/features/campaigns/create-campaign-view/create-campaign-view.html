@@ -249,12 +249,22 @@
                         <tr [class.row-selected]="isContactSelected(contact.id)">
                             <td class="checkbox-col">
                                 <input type="checkbox" [checked]="isContactSelected(contact.id)"
+                                    [disabled]="isContactBlocked(contact)"
+                                    [title]="isContactBlocked(contact) ? getContactBlockReason(contact) : 'Select contact'"
+                                    [style.cursor]="isContactBlocked(contact) ? 'not-allowed' : 'pointer'"
                                     (change)="toggleSelectContact(contact.id!)">
                             </td>
                             <td class="font-bold cursor-pointer" (click)="openProfilePanel(contact)">
                                 {{ contact.name || 'UNKNOWN' }}
                             </td>
-                            <td>{{ contact.phone }}</td>
+                            <td>
+                                <div style="font-family: monospace; font-size: 13px; font-weight: 600;">{{ contact.phone }}</div>
+                                @if (contact.advisory?.level) {
+                                    <div style="margin-top: 4px;">
+                                        <app-advisory-badge [advisory]="contact.advisory"></app-advisory-badge>
+                                    </div>
+                                }
+                            </td>
                             <td>
                                 <!-- Multi-agent owner chips -->
                                 <div class="owner-chips-container">

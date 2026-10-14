@@ -6,6 +6,7 @@ import { ContactService, Contact } from '../../contacts/services/contact.service
 import { ApiService } from '../../../shared/services/api.service';
 import { ContactProfilePanel } from '../../../shared/components/contact-profile-panel/contact-profile-panel';
 import { AssetGalleryPicker } from '../components/asset-gallery-picker/asset-gallery-picker';
+import { AdvisoryBadge } from '../../../shared/components/advisory-badge/advisory-badge';
 import Swal from 'sweetalert2';
 
 export interface QuickReplyOption {
@@ -27,7 +28,7 @@ export interface BaseBlueprint {
 @Component({
   selector: 'app-create-campaign-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, ContactProfilePanel, AssetGalleryPicker],
+  imports: [CommonModule, FormsModule, ContactProfilePanel, AssetGalleryPicker, AdvisoryBadge],
   templateUrl: './create-campaign-view.html',
   styleUrl: './create-campaign-view.scss',
 })
@@ -450,8 +451,80 @@ export class CreateCampaignView implements OnInit {
     return this.selectedContactIdsSet().has(id);
   }
 
+  isContactBlocked(contact: any): boolean {
+    if (!contact) return false;
+    const now = new Date();
+
+    // 1. Explicit Cooldown Date
+    if (contact.marketingCooldownUntil && new Date(contact.marketingCooldownUntil) > now) {
+      return true;
+    }
+
+    // 2. Deliverability Advisory checks
+    if (contact.advisory) {
+      if (contact.advisory.level === 'HARD') return true;
+      if (contact.advisory.reasons && Array.isArray(contact.advisory.reasons)) {
+        for (const r of contact.advisory.reasons) {
+          if (r.level === 'HARD') return true;
+          if (r.type === 'COOLDOWN' && r.until && new Date(r.until) > now) return true;
+          if (r.type === 'FREQUENCY_CAP') return true;
+          if (r.type === 'UNREACHABLE' && (r.strikes || 0) >= 2) return true;
+        }
+      }
+    }
+
+    // 3. Fallback delivery status checks
+    if (['INVALID', 'MARKETING_OPT_OUT'].includes(contact.deliveryStatus)) return true;
+    if (contact.deliveryStatus === 'COOLDOWN') {
+      if (!contact.marketingCooldownUntil || new Date(contact.marketingCooldownUntil) > now) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  getContactBlockReason(contact: any): string {
+    if (!contact) return '';
+    const now = new Date();
+
+    if (contact.marketingCooldownUntil && new Date(contact.marketingCooldownUntil) > now) {
+      const formattedDate = new Date(contact.marketingCooldownUntil).toLocaleString('en-IN', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      });
+      return `Disabled: In Marketing Cooldown until ${formattedDate}. Excluded to protect number quality rating and prevent spam penalties.`;
+    }
+
+    if (contact.advisory?.primary) {
+      const p = contact.advisory.primary;
+      if (p.type === 'COOLDOWN' && p.until && new Date(p.until) > now) {
+        const formattedDate = new Date(p.until).toLocaleString('en-IN', {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        });
+        return `Disabled: Marketing Cooldown active until ${formattedDate}. Excluded to protect phone reputation.`;
+      }
+      if (p.detail) {
+        return `Disabled: ${p.label || 'Deliverability block'} - ${p.detail}`;
+      }
+    }
+
+    if (contact.deliveryStatus === 'INVALID') {
+      return 'Disabled: Invalid phone number. Excluded to prevent delivery bounce.';
+    }
+    if (contact.deliveryStatus === 'MARKETING_OPT_OUT') {
+      return 'Disabled: Recipient opted out of marketing. Excluded for WhatsApp policy compliance.';
+    }
+    if (contact.deliveryStatus === 'COOLDOWN') {
+      return 'Disabled: In marketing cooldown. Excluded to protect WhatsApp quality rating.';
+    }
+
+    return 'Disabled: Excluded by deliverability advisory.';
+  }
+
   isAllSelected = computed(() => {
-    const list = this.paginatedAudienceContacts();
+    const list = this.paginatedAudienceContacts().filter(c => !this.isContactBlocked(c));
     const set = this.selectedContactIdsSet();
     return list.length > 0 && list.every(c => c.id !== undefined && set.has(c.id));
   });
@@ -463,12 +536,17 @@ export class CreateCampaignView implements OnInit {
       const pageIds = pageList.map(c => c.id!).filter(Boolean);
       this.selectedContactIds.set(current.filter(id => !pageIds.includes(id)));
     } else {
-      const pageIds = pageList.map(c => c.id!).filter(Boolean);
+      const pageIds = pageList
+        .filter(c => !this.isContactBlocked(c))
+        .map(c => c.id!)
+        .filter(Boolean);
       this.selectedContactIds.set(Array.from(new Set([...current, ...pageIds])));
     }
   }
 
   toggleSelectContact(id: number) {
+    const contact = this.contactService.contacts().find(c => c.id === id);
+    if (contact && this.isContactBlocked(contact)) return;
     const current = this.selectedContactIds();
     if (current.includes(id)) {
       this.selectedContactIds.set(current.filter(i => i !== id));
@@ -478,7 +556,10 @@ export class CreateCampaignView implements OnInit {
   }
 
   selectAllFiltered() {
-    const ids = this.filteredAudienceContacts().map(c => c.id!).filter(Boolean);
+    const ids = this.filteredAudienceContacts()
+      .filter(c => !this.isContactBlocked(c))
+      .map(c => c.id!)
+      .filter(Boolean);
     const set = new Set([...this.selectedContactIds(), ...ids]);
     this.selectedContactIds.set(Array.from(set));
   }

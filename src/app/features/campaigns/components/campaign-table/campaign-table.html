@@ -459,7 +459,7 @@
                                 </div>
                             </td>
 
-                            <!-- 3. Phone Number with Copy Button -->
+                            <!-- 3. Phone Number with Copy Button & Deliverability Advisory -->
                             <td class="td-phone">
                                 <div class="phone-cell-content">
                                     <span class="phone-number-text">{{ item.Contact?.phone || item.phone || '-' }}</span>
@@ -470,6 +470,9 @@
                                         <i class="fa-solid" [class.fa-check]="copiedPhoneMap()[item.id]" [class.fa-copy]="!copiedPhoneMap()[item.id]"></i>
                                         <span *ngIf="copiedPhoneMap()[item.id]" class="copied-tooltip">Copied!</span>
                                     </button>
+                                </div>
+                                <div *ngIf="item.advisory?.level || item.Contact?.advisory?.level" class="advisory-badge-wrap" style="margin-top: 5px;">
+                                    <app-advisory-badge [advisory]="item.advisory || item.Contact?.advisory"></app-advisory-badge>
                                 </div>
                             </td>
 
@@ -576,10 +579,11 @@
 
                                     <!-- Resend Single Message -->
                                     <button (click)="resendCampaignToRecipient(item)" 
-                                            [disabled]="isResendingMap()[item.id]" 
+                                            [disabled]="isResendingMap()[item.id] || isRecipientInCooldown(item)" 
                                             class="btn-tbl-action btn-resend" 
-                                            [style.opacity]="isResendingMap()[item.id] ? 0.6 : 1"
-                                            title="Resend campaign message to this contact">
+                                            [style.opacity]="isRecipientInCooldown(item) ? '0.45' : (isResendingMap()[item.id] ? 0.6 : 1)"
+                                            [style.cursor]="isRecipientInCooldown(item) ? 'not-allowed' : 'pointer'"
+                                            [title]="isRecipientInCooldown(item) ? getRecipientCooldownReason(item) : 'Resend campaign message to this contact'">
                                         <i class="fa-solid" [class.fa-paper-plane]="!isResendingMap()[item.id]" [class.fa-spinner]="isResendingMap()[item.id]" [class.fa-spin]="isResendingMap()[item.id]"></i>
                                         <span>{{ isResendingMap()[item.id] ? 'Sending...' : 'Resend' }}</span>
                                     </button>

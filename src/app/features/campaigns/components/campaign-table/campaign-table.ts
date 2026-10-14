@@ -5,12 +5,13 @@ import { Router } from '@angular/router';
 import { CampaignService, Campaign } from '../../services/campaign.service';
 import { ContactService } from '../../../contacts/services/contact.service';
 import { SocketService } from '../../../../shared/services/socket.service';
+import { AdvisoryBadge } from '../../../../shared/components/advisory-badge/advisory-badge';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-campaign-table',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdvisoryBadge],
   templateUrl: './campaign-table.html',
   styleUrl: './campaign-table.scss',
 })
@@ -612,7 +613,51 @@ export class CampaignTable implements OnInit {
     });
   }
 
+  isRecipientInCooldown(recipient: any): boolean {
+    if (!recipient) return false;
+    const now = new Date();
+
+    const cooldownUntil = recipient.advisory?.primary?.until || recipient.Contact?.marketingCooldownUntil;
+    if (cooldownUntil && new Date(cooldownUntil) > now) {
+      return true;
+    }
+
+    if (recipient.advisory?.level === 'HARD') return true;
+    if (recipient.advisory?.reasons?.some((r: any) => (r.type === 'COOLDOWN' && r.until && new Date(r.until) > now) || r.level === 'HARD')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  getRecipientCooldownReason(recipient: any): string {
+    if (!recipient) return '';
+    const now = new Date();
+    const cooldownUntil = recipient.advisory?.primary?.until || recipient.Contact?.marketingCooldownUntil;
+    if (cooldownUntil && new Date(cooldownUntil) > now) {
+      const formattedDate = new Date(cooldownUntil).toLocaleString('en-IN', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      });
+      return `Disabled: In Marketing Cooldown until ${formattedDate}. Resend disabled to prevent bounce and protect number reputation.`;
+    }
+    if (recipient.advisory?.primary?.detail) {
+      return `Disabled: ${recipient.advisory.primary.label || 'Deliverability block'} - ${recipient.advisory.primary.detail}`;
+    }
+    return 'Disabled: Recipient currently blocked by deliverability advisory.';
+  }
+
   resendCampaignToRecipient(recipient: any) {
+    if (this.isRecipientInCooldown(recipient)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Recipient in Cooldown',
+        text: this.getRecipientCooldownReason(recipient),
+        confirmButtonColor: '#7c3aed'
+      });
+      return;
+    }
+
     const currentMap = { ...this.isResendingMap(), [recipient.id]: true };
     this.isResendingMap.set(currentMap);
 

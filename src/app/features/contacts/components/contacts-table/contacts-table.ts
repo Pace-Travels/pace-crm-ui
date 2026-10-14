@@ -109,7 +109,7 @@ export class ContactsTable implements OnInit {
   isBroadcastActive = computed(() => this.selectedIds().length > 0);
   
   isAllSelected = computed(() => {
-    const list = this.paginatedContacts();
+    const list = this.paginatedContacts().filter(c => !this.isContactBlocked(c));
     return list.length > 0 && list.every(c => c.id !== undefined && this.selectedIds().includes(c.id));
   });
 
@@ -267,9 +267,84 @@ export class ContactsTable implements OnInit {
   toggleImportDropdown() { this.showImportDropdown.set(!this.showImportDropdown()); }
   closeDropdowns() { this.showImportDropdown.set(false); }
 
+  isContactBlocked(contact: any): boolean {
+    if (!contact) return false;
+    const now = new Date();
+
+    // 1. Explicit Cooldown Date
+    if (contact.marketingCooldownUntil && new Date(contact.marketingCooldownUntil) > now) {
+      return true;
+    }
+
+    // 2. Deliverability Advisory checks
+    if (contact.advisory) {
+      if (contact.advisory.level === 'HARD') return true;
+      if (contact.advisory.reasons && Array.isArray(contact.advisory.reasons)) {
+        for (const r of contact.advisory.reasons) {
+          if (r.level === 'HARD') return true;
+          if (r.type === 'COOLDOWN' && r.until && new Date(r.until) > now) return true;
+          if (r.type === 'FREQUENCY_CAP') return true;
+          if (r.type === 'UNREACHABLE' && (r.strikes || 0) >= 2) return true;
+        }
+      }
+    }
+
+    // 3. Fallback delivery status checks
+    if (['INVALID', 'MARKETING_OPT_OUT'].includes(contact.deliveryStatus)) return true;
+    if (contact.deliveryStatus === 'COOLDOWN') {
+      if (!contact.marketingCooldownUntil || new Date(contact.marketingCooldownUntil) > now) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  getContactBlockReason(contact: any): string {
+    if (!contact) return '';
+    const now = new Date();
+
+    if (contact.marketingCooldownUntil && new Date(contact.marketingCooldownUntil) > now) {
+      const formattedDate = new Date(contact.marketingCooldownUntil).toLocaleString('en-IN', {
+        dateStyle: 'medium',
+        timeStyle: 'short'
+      });
+      return `Disabled: In Marketing Cooldown until ${formattedDate}. Excluded to protect number quality rating and prevent spam penalties.`;
+    }
+
+    if (contact.advisory?.primary) {
+      const p = contact.advisory.primary;
+      if (p.type === 'COOLDOWN' && p.until && new Date(p.until) > now) {
+        const formattedDate = new Date(p.until).toLocaleString('en-IN', {
+          dateStyle: 'medium',
+          timeStyle: 'short'
+        });
+        return `Disabled: Marketing Cooldown active until ${formattedDate}. Excluded to protect phone reputation.`;
+      }
+      if (p.detail) {
+        return `Disabled: ${p.label || 'Deliverability block'} - ${p.detail}`;
+      }
+    }
+
+    if (contact.deliveryStatus === 'INVALID') {
+      return 'Disabled: Invalid phone number. Excluded to prevent delivery bounce.';
+    }
+    if (contact.deliveryStatus === 'MARKETING_OPT_OUT') {
+      return 'Disabled: Recipient opted out of marketing. Excluded for WhatsApp policy compliance.';
+    }
+    if (contact.deliveryStatus === 'COOLDOWN') {
+      return 'Disabled: In marketing cooldown. Excluded to protect WhatsApp quality rating.';
+    }
+
+    return 'Disabled: Excluded by deliverability advisory.';
+  }
+
   toggleSelectAll(event: any) {
     if (event.target.checked) {
-      const pageIds = this.paginatedContacts().map(c => c.id!).filter(id => id !== undefined);
+      const pageIds = this.paginatedContacts()
+        .filter(c => !this.isContactBlocked(c))
+        .map(c => c.id!)
+        .filter(id => id !== undefined);
       const combined = Array.from(new Set([...this.selectedIds(), ...pageIds]));
       this.selectedIds.set(combined);
     } else {
@@ -280,6 +355,8 @@ export class ContactsTable implements OnInit {
 
   toggleSelect(id: number | undefined) {
     if (id === undefined) return;
+    const contact = this.contactService.contacts().find(c => c.id === id);
+    if (contact && this.isContactBlocked(contact)) return;
     const current = this.selectedIds();
     if (current.includes(id)) {
       this.selectedIds.set(current.filter(i => i !== id));
@@ -922,6 +999,15 @@ openCreateGroup() {
 
   openSendMessage(contact: any, event: Event) {
     event.stopPropagation();
+    if (this.isContactBlocked(contact)) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Delivery Cooldown Active',
+        text: this.getContactBlockReason(contact),
+        confirmButtonColor: '#7c3aed'
+      });
+      return;
+    }
     this.isBulkSendMode.set(false);
     this.selectedContactForMessage.set(contact);
     this.messageText.set('');
