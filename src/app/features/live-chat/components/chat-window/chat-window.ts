@@ -230,6 +230,43 @@ export class ChatWindow implements AfterViewChecked {
     return false;
   }
 
+  hasDisplayableText(msg: any): boolean {
+    if (!msg) return false;
+    const raw = (msg.textContent || msg.content || '').trim();
+    if (!raw) return false;
+
+    // If message contains media, verify text isn't just an internal placeholder or raw link
+    const hasMedia = this.isImageMedia(msg) || 
+      msg.messageType === 'VIDEO' || 
+      msg.messageType === 'AUDIO' || 
+      msg.messageType === 'DOCUMENT' || 
+      msg.messageType === 'PDF' ||
+      Boolean(msg.mediaUrl);
+
+    if (hasMedia) {
+      if (/^\[(Media\s+Attachment|IMAGE\s+Attachment|VIDEO\s+Attachment|DOCUMENT\s+Attachment|AUDIO\s+Attachment)[^\]]*\]$/i.test(raw)) {
+        return false;
+      }
+      if (raw.startsWith('[Media Attachment:') || raw.startsWith('[Media Attachment]')) {
+        return false;
+      }
+      const mediaUrl = (msg.mediaUrl || '').trim();
+      if (mediaUrl && (raw === mediaUrl || raw === this.getMediaUrl(mediaUrl))) {
+        return false;
+      }
+      if (raw.startsWith('http://') || raw.startsWith('https://')) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  getDisplayableText(msg: any): string {
+    if (!msg) return '';
+    return (msg.textContent || msg.content || '').trim();
+  }
+
   getInteractiveLabel(text: string | undefined): string {
     if (!text) return 'Interactive Button Selection';
     if (text === '[Interactive Selection]') return '🔘 Quick Reply Selected';
