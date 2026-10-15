@@ -32,6 +32,13 @@ export class ContactsTable implements OnInit {
   showCreateGroupModal = signal(false);
   showSendMessageModal = signal(false);
   showFilterPanel = signal(false);
+  showBulkDeleteModal = signal(false);
+  selectedOwnerToDelete = signal<string>('');
+  deletePreviewData = signal<any>(null);
+  isLoadingDeletePreview = signal<boolean>(false);
+  isDeletingByOwner = signal<boolean>(false);
+  excludeMessagedContacts = signal<boolean>(true);
+  showMessagedContactsList = signal<boolean>(false);
 
   // Editing state
   editingContactId = signal<number | null>(null);
@@ -586,6 +593,115 @@ export class ContactsTable implements OnInit {
             Swal.fire('Deleted!', 'Contact removed successfully.', 'success');
           },
           error: (err: any) => Swal.fire('Error', err.error?.message || 'Failed to delete contact', 'error')
+        });
+      }
+    });
+  }
+
+  openBulkDeleteByOwnerModal(defaultOwner?: string) {
+    let owner = defaultOwner || this.selectedOwnerFilter();
+    if (!owner && this.filterOwnerMode() === 'MY_CONTACTS') {
+      owner = this.getLoggedInUserName();
+    }
+    if (!owner && this.availableAgentOptions().length > 0) {
+      owner = this.availableAgentOptions()[0];
+    }
+    this.selectedOwnerToDelete.set(owner || '');
+    this.excludeMessagedContacts.set(true);
+    this.showMessagedContactsList.set(false);
+    this.deletePreviewData.set(null);
+    this.showBulkDeleteModal.set(true);
+
+    if (owner) {
+      this.fetchDeletePreview(owner);
+    }
+  }
+
+  closeBulkDeleteByOwnerModal() {
+    this.showBulkDeleteModal.set(false);
+    this.deletePreviewData.set(null);
+    this.selectedOwnerToDelete.set('');
+    this.isDeletingByOwner.set(false);
+    this.isLoadingDeletePreview.set(false);
+  }
+
+  onOwnerToDeleteChange(newOwner: string) {
+    this.selectedOwnerToDelete.set(newOwner);
+    this.deletePreviewData.set(null);
+    this.showMessagedContactsList.set(false);
+    if (newOwner) {
+      this.fetchDeletePreview(newOwner);
+    }
+  }
+
+  fetchDeletePreview(owner: string) {
+    if (!owner) return;
+    this.isLoadingDeletePreview.set(true);
+    this.contactService.previewBulkDeleteByOwner(owner, this.contactService.activeType()).subscribe({
+      next: (res: any) => {
+        this.isLoadingDeletePreview.set(false);
+        if (res && res.data) {
+          this.deletePreviewData.set(res.data);
+        } else if (res) {
+          this.deletePreviewData.set(res);
+        }
+      },
+      error: (err: any) => {
+        this.isLoadingDeletePreview.set(false);
+        Swal.fire('Preview Error', err.error?.message || err.error || 'Failed to inspect contacts for this owner', 'error');
+      }
+    });
+  }
+
+  confirmBulkDeleteByOwner() {
+    const owner = this.selectedOwnerToDelete();
+    if (!owner) {
+      Swal.fire('Error', 'Please select an account owner first.', 'error');
+      return;
+    }
+
+    const preview = this.deletePreviewData();
+    if (!preview || preview.totalCount === 0) {
+      Swal.fire('Notice', 'No contacts found for this owner to delete.', 'info');
+      return;
+    }
+
+    const exclude = this.excludeMessagedContacts();
+    const countToDelete = exclude ? preview.withoutHistoryCount : preview.totalCount;
+
+    if (countToDelete === 0) {
+      Swal.fire('Notice', 'All contacts of this owner have message history and exclusion is active. No contacts will be deleted.', 'info');
+      return;
+    }
+
+    const confirmHtml = exclude
+      ? `You are about to delete <b>${countToDelete}</b> contacts belonging to <b>${owner}</b>.<br><br><span style="color:#059669; font-weight:600;">🛡️ ${preview.withHistoryCount} contacts with message history will be preserved.</span>`
+      : `<span style="color:#dc2626; font-weight:700;">⚠️ DANGER:</span> You are deleting <b>ALL ${countToDelete} contacts</b>, including <b>${preview.withHistoryCount} contacts with active conversation threads</b>!<br><br>Chat threads and message logs for these contacts will be removed.`;
+
+    Swal.fire({
+      title: 'Confirm Bulk Deletion',
+      html: confirmHtml,
+      icon: exclude ? 'warning' : 'error',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: `Yes, Delete ${countToDelete} Contacts`,
+      cancelButtonText: 'Cancel'
+    }).then((res) => {
+      if (res.isConfirmed) {
+        this.isDeletingByOwner.set(true);
+        this.contactService.bulkDeleteByOwner(owner, exclude, this.contactService.activeType()).subscribe({
+          next: (deleteRes: any) => {
+            this.isDeletingByOwner.set(false);
+            this.closeBulkDeleteByOwnerModal();
+            this.contactService.fetchContacts();
+            const msg = deleteRes?.data?.message || deleteRes?.message || `Successfully deleted ${countToDelete} contacts.`;
+            Swal.fire('Deleted Successfully', msg, 'success');
+          },
+          error: (err: any) => {
+            this.isDeletingByOwner.set(false);
+            Swal.fire('Delete Failed', err.error?.message || err.message || 'Failed to delete contacts', 'error');
+          }
         });
       }
     });

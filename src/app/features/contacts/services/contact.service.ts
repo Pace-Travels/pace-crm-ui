@@ -188,4 +188,13 @@ export class ContactService {
   addContactNote(id: number, content: string, author?: string): Observable<any> {
     return this.api.post(`/whatsappcontacts/list/${id}/notes`, { content, author });
   }
+
+  previewBulkDeleteByOwner(owner: string, type?: string): Observable<any> {
+    return this.api.post('/whatsappcontacts/bulk-delete-by-owner/preview', { owner, type });
+  }
+
+  bulkDeleteByOwner(owner: string, excludeWithHistory: boolean = true, type?: string): Observable<any> {
+    return this.api.post('/whatsappcontacts/bulk-delete-by-owner', { owner, excludeWithHistory, type });
+  }
 }
+
