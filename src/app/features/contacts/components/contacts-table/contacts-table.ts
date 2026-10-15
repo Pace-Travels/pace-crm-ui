@@ -658,6 +658,16 @@ export class ContactsTable implements OnInit {
     this.isLoadingDeletePreview.set(false);
   }
 
+  extractErrorMessage(err: any, fallback: string): string {
+    if (!err) return fallback;
+    if (typeof err === 'string') return err;
+    if (typeof err.error === 'string') return err.error;
+    if (err.error && typeof err.error.error === 'string') return err.error.error;
+    if (err.error && typeof err.error.message === 'string') return err.error.message;
+    if (typeof err.message === 'string') return err.message;
+    return fallback;
+  }
+
   onOwnerToDeleteChange(newOwner: string) {
     this.selectedOwnerToDelete.set(newOwner);
     this.deletePreviewData.set(null);
@@ -681,7 +691,8 @@ export class ContactsTable implements OnInit {
       },
       error: (err: any) => {
         this.isLoadingDeletePreview.set(false);
-        Swal.fire('Preview Error', err.error?.message || err.error || 'Failed to inspect contacts for this owner', 'error');
+        const msg = this.extractErrorMessage(err, 'Failed to inspect contacts for this owner');
+        Swal.fire('Preview Error', msg, 'error');
       }
     });
   }
@@ -733,7 +744,8 @@ export class ContactsTable implements OnInit {
           },
           error: (err: any) => {
             this.isDeletingByOwner.set(false);
-            Swal.fire('Delete Failed', err.error?.message || err.message || 'Failed to delete contacts', 'error');
+            const msg = this.extractErrorMessage(err, 'Failed to delete contacts');
+            Swal.fire('Delete Failed', msg, 'error');
           }
         });
       }
@@ -793,7 +805,8 @@ export class ContactsTable implements OnInit {
             this.contactService.fetchContacts();
           },
           error: (err: any) => {
-            Swal.fire('Delete Failed', err.error?.message || err.message || 'Failed to delete unused contacts', 'error');
+            const msg = this.extractErrorMessage(err, 'Failed to delete unused contacts');
+            Swal.fire('Delete Failed', msg, 'error');
           }
         });
       }
@@ -848,7 +861,8 @@ export class ContactsTable implements OnInit {
             this.contactService.fetchContacts();
           },
           error: (err: any) => {
-            Swal.fire('Delete Failed', err.error?.message || err.message || 'Failed to delete messaged contacts', 'error');
+            const msg = this.extractErrorMessage(err, 'Failed to delete messaged contacts');
+            Swal.fire('Delete Failed', msg, 'error');
           }
         });
       }
