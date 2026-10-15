@@ -52,7 +52,7 @@ export class Manage implements OnInit {
 
   // AI Chatbot Settings
   isAgentEnabled = signal(false);
-  modelName = signal('gemini-1.5-pro');
+  modelName = signal('gemini-3.8-flash');
   geminiApiKey = signal('');
   systemPrompt = signal('');
 
@@ -96,7 +96,9 @@ export class Manage implements OnInit {
       next: (res: any) => {
         if (res.success && res.data) {
           this.isAgentEnabled.set(res.data.isAgentEnabled);
-          this.modelName.set(res.data.modelName || 'gemini-1.5-pro');
+          const deprecated = ['gemini-1.5-pro', 'gemini-1.5-flash', 'gemini-2.0-flash', 'gemini-2.5-pro'];
+          const chosen = (res.data.modelName && !deprecated.includes(res.data.modelName)) ? res.data.modelName : 'gemini-3.8-flash';
+          this.modelName.set(chosen);
           this.geminiApiKey.set(res.data.geminiApiKey || '');
           this.systemPrompt.set(res.data.systemPrompt || '');
         }
