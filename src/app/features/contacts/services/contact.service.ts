@@ -38,6 +38,8 @@ export interface Contact {
   deliveryHealth?: number;
   marketingCooldownUntil?: string | null;
   advisory?: any;
+  hasMessageHistory?: boolean;
+  [key: string]: any;
   isActive?: boolean;
   isOptedIn?: boolean;
   createdAt?: string | Date;

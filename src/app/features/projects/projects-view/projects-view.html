@@ -286,13 +286,13 @@
                             </tr>
 
                             <!-- Development Test Number Line -->
-                            <tr *ngIf="project.testPhoneNumber || project.testPhoneNumberId" style="border-bottom: 1px solid #f1f5f9; background: #faf5ff;">
+                            <tr *ngIf="(getProjectPhoneDisplay(project).devCount > 0 || project.isSandbox) && (project.testPhoneNumber || project.testPhoneNumberId)" style="border-bottom: 1px solid #f1f5f9; background: #faf5ff;">
                                 <td style="padding: 12px 14px; font-weight: 700; color: #6d28d9; font-family: monospace;">
-                                    {{ formatPhoneClean(project.testPhoneNumber || '917619568383') }}
+                                    {{ formatPhoneClean(project.testPhoneNumber || project.phoneNumber) }}
                                     <span style="font-size: 10px; background: #f3e8ff; color: #7e22ce; padding: 2px 6px; border-radius: 4px; margin-left: 6px; font-weight: 700;">DEV TEST LINE</span>
                                 </td>
                                 <td style="padding: 12px 14px; color: #0f172a; font-weight: 600;">{{ project.name }} (Dev Sandbox)</td>
-                                <td style="padding: 12px 14px; font-family: monospace; color: #475569;">{{ project.testPhoneNumberId || '1354827947710777' }}</td>
+                                <td style="padding: 12px 14px; font-family: monospace; color: #475569;">{{ project.testPhoneNumberId || project.phoneNumberId || '—' }}</td>
                                 <td style="padding: 12px 14px;">
                                     <span style="background: #f3e8ff; color: #7e22ce; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 700;">🟣 FREE SANDBOX</span>
                                 </td>

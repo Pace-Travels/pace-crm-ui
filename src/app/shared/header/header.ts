@@ -141,8 +141,7 @@ export class Header implements OnInit {
   displayActivePhoneNumber = computed(() => {
     const raw = this.envModeService.activePhoneNumber() || 
                 this.projectService.currentProject()?.phoneNumber || 
-                this.projectService.currentProject()?.testPhoneNumber || 
-                '917619568383';
+                this.projectService.currentProject()?.testPhoneNumber;
     if (!raw) return 'No Phone Connected';
     let digits = String(raw).replace(/\D/g, '');
     if (digits.length === 12 && digits.startsWith('91')) {
