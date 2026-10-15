@@ -39,6 +39,65 @@
         </div>
     </div>
 
+    <!-- Message Activity & 1-Click Cleanup Toolbar -->
+    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 16px; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <span style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; margin-right: 4px;">
+                <i class="fa-solid fa-filter" style="color: #7c3aed; margin-right: 4px;"></i> Message Status:
+            </span>
+            
+            <!-- All Filter -->
+            <button type="button" (click)="setUsageFilter('ALL')"
+                [style.background]="filterUsageMode() === 'ALL' ? '#0f172a' : 'white'"
+                [style.color]="filterUsageMode() === 'ALL' ? 'white' : '#475569'"
+                [style.borderColor]="filterUsageMode() === 'ALL' ? '#0f172a' : '#cbd5e1'"
+                style="border: 1px solid; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer; transition: all 0.2s ease;">
+                All {{ contactService.activeType() }} ({{ contactService.filteredContacts().length }})
+            </button>
+
+            <!-- Messaged (Used) Filter -->
+            <button type="button" (click)="setUsageFilter('USED')"
+                [style.background]="filterUsageMode() === 'USED' ? '#0369a1' : 'white'"
+                [style.color]="filterUsageMode() === 'USED' ? 'white' : '#0369a1'"
+                [style.borderColor]="filterUsageMode() === 'USED' ? '#0369a1' : '#bae6fd'"
+                style="border: 1px solid; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                <i class="fa-solid fa-paper-plane"></i> Messaged / Used ({{ usedContactsCount() }})
+            </button>
+
+            <!-- Not Messaged (Unused) Filter -->
+            <button type="button" (click)="setUsageFilter('UNUSED')"
+                [style.background]="filterUsageMode() === 'UNUSED' ? '#15803d' : 'white'"
+                [style.color]="filterUsageMode() === 'UNUSED' ? 'white' : '#15803d'"
+                [style.borderColor]="filterUsageMode() === 'UNUSED' ? '#15803d' : '#bbf7d0'"
+                style="border: 1px solid; padding: 6px 14px; border-radius: 6px; font-weight: 700; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                <i class="fa-solid fa-sparkles" style="color: #eab308;"></i> Not Messaged / Fresh ({{ unusedContactsCount() }})
+            </button>
+        </div>
+
+        <!-- 1-Click Bulk Delete Action Buttons -->
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <!-- 1-Click Delete All Unused Contacts Button (100% Safe) -->
+            <button type="button" (click)="oneClickDeleteUnused()"
+                [disabled]="unusedContactsCount() === 0"
+                [style.opacity]="unusedContactsCount() === 0 ? '0.4' : '1'"
+                [style.cursor]="unusedContactsCount() === 0 ? 'not-allowed' : 'pointer'"
+                title="Delete all contacts that have never received any message (100% thread safe)"
+                style="background: #fee2e2; border: 1px solid #fca5a5; color: #b91c1c; padding: 7px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease; box-shadow: 0 1px 2px rgba(220, 38, 38, 0.08);">
+                <i class="fa-solid fa-trash-can"></i> Delete All Unused ({{ unusedContactsCount() }}) in 1 Click
+            </button>
+
+            <!-- 1-Click Delete All Messaged Contacts Button (Caution) -->
+            <button *ngIf="filterUsageMode() === 'USED'" type="button" (click)="oneClickDeleteUsed()"
+                [disabled]="usedContactsCount() === 0"
+                [style.opacity]="usedContactsCount() === 0 ? '0.4' : '1'"
+                [style.cursor]="usedContactsCount() === 0 ? 'not-allowed' : 'pointer'"
+                title="Delete all contacts to whom messages have already been sent"
+                style="background: #450a0a; border: 1px solid #7f1d1d; color: white; padding: 7px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 700; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                <i class="fa-solid fa-triangle-exclamation"></i> Delete All Messaged ({{ usedContactsCount() }})
+            </button>
+        </div>
+    </div>
+
     <!-- Top Header Bar -->
     <div class="top-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 16px; flex-wrap: wrap;">
         <ng-container *ngIf="isPreviewMode()">
@@ -331,6 +390,14 @@
 
                         <td style="padding: 14px 16px; font-family: monospace; font-size: 13px; font-weight: 600; color: #6d28d9;">
                             {{ contact.phone }}
+                            <div style="margin-top: 4px; display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
+                                <span *ngIf="contact.hasMessageHistory" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 10px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;" title="WhatsApp message already sent to this contact">
+                                    <i class="fa-solid fa-paper-plane" style="font-size: 8.5px;"></i> Messaged
+                                </span>
+                                <span *ngIf="!contact.hasMessageHistory" style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; font-size: 10px; font-weight: 700; padding: 1.5px 6px; border-radius: 4px; display: inline-flex; align-items: center; gap: 3px;" title="No message sent to this contact yet (Fresh contact)">
+                                    <i class="fa-regular fa-clock" style="font-size: 8.5px;"></i> Not Messaged
+                                </span>
+                            </div>
                             @if (contact.advisory?.level) {
                                 <div style="margin-top: 4px; font-family: inherit;"><app-advisory-badge [advisory]="contact.advisory"></app-advisory-badge></div>
                             }
@@ -965,3 +1032,110 @@
         </div>
     </div>
 </div>
+
+<!-- ==========================================
+     BULK IMPORT CONTACTS BY OWNER MODAL
+     ========================================== -->
+<div *ngIf="showImportModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1060; font-family: 'Inter', sans-serif; padding: 16px;">
+    <div style="background: white; width: 100%; max-width: 620px; border-radius: 14px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; border: 1px solid #e2e8f0; animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+        
+        <!-- Header -->
+        <div style="padding: 18px 24px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #faf5ff;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 38px; height: 38px; border-radius: 10px; background: #ede9fe; color: #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                    <i class="fa-solid fa-file-import"></i>
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">Bulk Import {{ contactService.activeType() }} Contacts</h3>
+                    <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Assign contact owner & auto-skip duplicates with phone normalization</p>
+                </div>
+            </div>
+            <button type="button" (click)="closeImportModal()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 4px; border-radius: 6px;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 22px 24px; max-height: 75vh; overflow-y: auto;">
+            
+            <!-- 1. Contact Owner Selection -->
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+                    Assign Contact Owner (Bulk)
+                </label>
+                <select [ngModel]="selectedImportOwner()" (ngModelChange)="selectedImportOwner.set($event)"
+                    style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; font-weight: 600; color: #0f172a; outline: none; background: white;">
+                    <option value="Keep from CSV">📁 Keep from CSV / Sheet (Default from file)</option>
+                    <option [value]="getLoggedInUserName()">👤 {{ getLoggedInUserName() }} (Assign to me)</option>
+                    <option *ngFor="let agent of availableAgentOptions()" [value]="agent">👤 {{ agent }}</option>
+                    <option value="Unassigned">👤 Unassigned</option>
+                </select>
+                <p style="margin: 4px 0 0; font-size: 11.5px; color: #64748b;">
+                    Contacts in this batch will be assigned to this owner, or retain the owner defined in each CSV row.
+                </p>
+            </div>
+
+            <!-- 2. Duplicate Detection Shield Callout -->
+            <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 10px;">
+                <i class="fa-solid fa-shield-halved" style="color: #d97706; font-size: 16px; margin-top: 2px;"></i>
+                <div style="font-size: 12px; color: #92400e; line-height: 1.5;">
+                    <strong style="display: block; font-size: 12.5px; color: #78350f; margin-bottom: 2px;">Strict Duplicate Protection Active</strong>
+                    If duplicate phone numbers are detected (either already in the database or repeated within the upload sheet), they will <b>NOT be added</b>. Existing records and live conversation threads will never be overwritten.
+                </div>
+            </div>
+
+            <!-- 3. Indian & International Phone Rules Callout -->
+            <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 12px 16px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 10px;">
+                <i class="fa-solid fa-phone" style="color: #16a34a; font-size: 15px; margin-top: 2px;"></i>
+                <div style="font-size: 12px; color: #166534; line-height: 1.5;">
+                    <strong style="display: block; font-size: 12.5px; color: #14532d; margin-bottom: 2px;">Automatic Phone Normalization</strong>
+                    <div>• <b>Indian Numbers (🇮🇳):</b> If <code>+91</code> is missing and only <code>91</code> or 10 digits are present, <code>+91</code> will be automatically prepended. Exactly 10 digits are enforced.</div>
+                    <div>• <b>International Numbers (🌐):</b> Country code <code>+</code> is automatically added. No need to manually type <code>+</code> in Excel.</div>
+                </div>
+            </div>
+
+            <!-- 4. File Drop / Browse Box -->
+            <div (click)="triggerFileInput()" 
+                 style="border: 2px dashed #cbd5e1; border-radius: 10px; padding: 24px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s ease;"
+                 onmouseover="this.style.borderColor='#7c3aed'; this.style.background='#faf5ff'"
+                 onmouseout="this.style.borderColor='#cbd5e1'; this.style.background='#f8fafc'">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: #e0e7ff; color: #4338ca; display: flex; align-items: center; justify-content: center; font-size: 18px; margin: 0 auto 10px;">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </div>
+                <div *ngIf="!selectedImportFileName()">
+                    <div style="font-weight: 700; color: #0f172a; font-size: 13.5px;">Click to browse CSV or Excel file</div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Supports standard CSV exported from Excel or Google Sheets</div>
+                </div>
+                <div *ngIf="selectedImportFileName()">
+                    <div style="font-weight: 700; color: #15803d; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        <i class="fa-solid fa-circle-check"></i> {{ selectedImportFileName() }}
+                    </div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Click to choose a different file</div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 14px;">
+                <button type="button" (click)="downloadSample()" style="background: none; border: none; color: #7c3aed; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 0;">
+                    <i class="fa-solid fa-download"></i> Download Sample {{ contactService.activeType() }} Template (with Owner)
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div style="padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc;">
+            <button type="button" (click)="closeImportModal()"
+                style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                Cancel
+            </button>
+            <button type="button" (click)="processImportVerification()"
+                [disabled]="!selectedImportFile() || isParsingImportFile()"
+                [style.opacity]="(!selectedImportFile() || isParsingImportFile()) ? '0.5' : '1'"
+                style="background: #7c3aed; color: white; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);">
+                <i *ngIf="isParsingImportFile()" class="fa-solid fa-circle-notch fa-spin"></i>
+                <i *ngIf="!isParsingImportFile()" class="fa-solid fa-shield-halved"></i>
+                <span>Verify & Preview Contacts</span>
+            </button>
+        </div>
+    </div>
+</div>
+

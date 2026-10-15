@@ -40,6 +40,12 @@ export class ContactsTable implements OnInit {
   excludeMessagedContacts = signal<boolean>(true);
   showMessagedContactsList = signal<boolean>(false);
 
+  // Bulk Import with Owner & Duplicate Detection State
+  selectedImportOwner = signal<string>('Keep from CSV');
+  selectedImportFileName = signal<string>('');
+  selectedImportFile = signal<File | null>(null);
+  isParsingImportFile = signal<boolean>(false);
+
   // Editing state
   editingContactId = signal<number | null>(null);
 
@@ -61,6 +67,25 @@ export class ContactsTable implements OnInit {
       if (cType !== type) return false;
       const owners = this.contactService.getContactOwners(c);
       return owners.some(o => o.toLowerCase().includes(user));
+    }).length;
+  });
+
+  // Message Usage Filter (All vs Messaged / Used vs Not Messaged / Fresh)
+  filterUsageMode = signal<'ALL' | 'USED' | 'UNUSED'>('ALL');
+
+  usedContactsCount = computed(() => {
+    const type = this.contactService.activeType();
+    return this.contactService.contacts().filter(c => {
+      const cType = (c.type || 'B2C').toUpperCase();
+      return cType === type && c.hasMessageHistory === true;
+    }).length;
+  });
+
+  unusedContactsCount = computed(() => {
+    const type = this.contactService.activeType();
+    return this.contactService.contacts().filter(c => {
+      const cType = (c.type || 'B2C').toUpperCase();
+      return cType === type && !c.hasMessageHistory;
     }).length;
   });
   
@@ -221,6 +246,14 @@ export class ContactsTable implements OnInit {
         const owners = this.contactService.getContactOwners(c);
         return owners.some(o => o.toLowerCase().includes(targetOwner));
       });
+    }
+
+    // 3.9. Message Usage Filter (Used / Messaged vs Not Messaged / Fresh)
+    const usageMode = this.filterUsageMode();
+    if (usageMode === 'USED') {
+      list = list.filter(c => c.hasMessageHistory === true);
+    } else if (usageMode === 'UNUSED') {
+      list = list.filter(c => !c.hasMessageHistory);
     }
 
     // 4. Sorting
@@ -707,26 +740,171 @@ export class ContactsTable implements OnInit {
     });
   }
 
+  setUsageFilter(mode: 'ALL' | 'USED' | 'UNUSED') {
+    this.filterUsageMode.set(mode);
+    this.currentPage.set(1);
+  }
+
+  oneClickDeleteUnused() {
+    const count = this.unusedContactsCount();
+    if (count === 0) {
+      Swal.fire('No Unused Contacts', `There are no unused contacts in ${this.contactService.activeType()} to delete.`, 'info');
+      return;
+    }
+
+    const activeType = this.contactService.activeType();
+    const ownerFilter = this.selectedOwnerFilter();
+
+    Swal.fire({
+      title: `Delete ${count} Unused Contacts in 1 Click?`,
+      html: `<div style="text-align: left; font-size: 13.5px; line-height: 1.6; color: #334155;">
+        <p style="margin: 0 0 10px;">You are about to delete <b>${count}</b> unused (not messaged) <b>${activeType}</b> contact(s) in bulk.</p>
+        <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 12px; color: #166534; font-size: 12.5px;">
+          <div style="font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+            <i class="fa-solid fa-shield-halved" style="color: #16a34a;"></i> 100% Safe Deletion
+          </div>
+          None of these contacts have ever been sent a WhatsApp message or have active chat threads. Live customer conversations will not be affected.
+        </div>
+      </div>`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: `<i class="fa-solid fa-trash-can"></i> Yes, Delete All ${count} Unused Contacts`,
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: 'Deleting...',
+          text: 'Deleting unused contacts in bulk...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        this.contactService.bulkDeleteByUsage('UNUSED', activeType, ownerFilter || undefined).subscribe({
+          next: (res: any) => {
+            const deleted = res?.deletedCount ?? count;
+            Swal.fire({
+              icon: 'success',
+              title: 'Deleted Successfully',
+              text: `${deleted} unused contact(s) were deleted in 1 click.`,
+              timer: 3000
+            });
+            this.contactService.fetchContacts();
+          },
+          error: (err: any) => {
+            Swal.fire('Delete Failed', err.error?.message || err.message || 'Failed to delete unused contacts', 'error');
+          }
+        });
+      }
+    });
+  }
+
+  oneClickDeleteUsed() {
+    const count = this.usedContactsCount();
+    if (count === 0) {
+      Swal.fire('No Messaged Contacts', `There are no messaged contacts in ${this.contactService.activeType()} to delete.`, 'info');
+      return;
+    }
+
+    const activeType = this.contactService.activeType();
+    const ownerFilter = this.selectedOwnerFilter();
+
+    Swal.fire({
+      title: `⚠️ Delete ${count} Messaged Contacts?`,
+      html: `<div style="text-align: left; font-size: 13.5px; line-height: 1.6; color: #334155;">
+        <p style="margin: 0 0 10px;">You are about to delete <b>${count}</b> contact(s) to whom WhatsApp messages have already been sent.</p>
+        <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; color: #991b1b; font-size: 12.5px;">
+          <div style="font-weight: 700; display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+            <i class="fa-solid fa-triangle-exclamation" style="color: #ef4444;"></i> Caution: Messaged Contacts
+          </div>
+          These contacts have received WhatsApp messages or have chat activity. Deleting them will remove them from your active contacts list.
+        </div>
+      </div>`,
+      icon: 'error',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: `<i class="fa-solid fa-trash-can"></i> Yes, Delete All ${count} Messaged Contacts`,
+      cancelButtonText: 'Cancel'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        Swal.fire({
+          title: 'Deleting...',
+          text: 'Deleting messaged contacts in bulk...',
+          allowOutsideClick: false,
+          didOpen: () => Swal.showLoading()
+        });
+
+        this.contactService.bulkDeleteByUsage('USED', activeType, ownerFilter || undefined).subscribe({
+          next: (res: any) => {
+            const deleted = res?.deletedCount ?? count;
+            Swal.fire({
+              icon: 'success',
+              title: 'Deleted Successfully',
+              text: `${deleted} messaged contact(s) were deleted.`,
+              timer: 3000
+            });
+            this.contactService.fetchContacts();
+          },
+          error: (err: any) => {
+            Swal.fire('Delete Failed', err.error?.message || err.message || 'Failed to delete messaged contacts', 'error');
+          }
+        });
+      }
+    });
+  }
+
   openImportModal() {
-   this.showImportDropdown.set(false);
-        this.fileInput.nativeElement.click(); // Trigger the hidden file input
+    this.showImportDropdown.set(false);
+    const defaultOwner = this.filterOwnerMode() === 'MY_CONTACTS' 
+      ? this.getLoggedInUserName() 
+      : (this.selectedOwnerFilter() || 'Keep from CSV');
+    this.selectedImportOwner.set(defaultOwner);
+    this.selectedImportFileName.set('');
+    this.selectedImportFile.set(null);
+    this.isParsingImportFile.set(false);
+    this.showImportModal.set(true);
   }
 
   closeImportModal() {
     this.showImportModal.set(false);
+    this.selectedImportFile.set(null);
+    this.selectedImportFileName.set('');
+    this.isParsingImportFile.set(false);
+    if (this.fileInput && this.fileInput.nativeElement) {
+      this.fileInput.nativeElement.value = '';
+    }
+  }
+
+  triggerFileInput() {
+    if (this.fileInput && this.fileInput.nativeElement) {
+      this.fileInput.nativeElement.click();
+    }
   }
 
   onFileSelected(event: any) {
     const file = event.target.files[0];
     if (!file) return;
+    this.selectedImportFile.set(file);
+    this.selectedImportFileName.set(file.name);
+  }
 
+  processImportVerification() {
+    const file = this.selectedImportFile();
+    if (!file) {
+      Swal.fire('File Required', 'Please select a CSV or Excel file to import.', 'warning');
+      return;
+    }
+
+    this.isParsingImportFile.set(true);
     const reader = new FileReader();
     reader.onload = (e: any) => {
       const csv = e.target.result;
       const lines = csv.split(/\r?\n/).filter((l: string) => l.trim().length > 0);
       if (lines.length <= 1) {
+        this.isParsingImportFile.set(false);
         Swal.fire('Error', 'Uploaded CSV file contains no data rows.', 'error');
-        this.fileInput.nativeElement.value = '';
         return;
       }
 
@@ -770,37 +948,42 @@ export class ContactsTable implements OnInit {
         rawRows.push(rowObj);
       }
 
-      // Call Verification & Validation Service
+      // Call Verification & Validation Service with chosen owner and contact type
       this.api.post<any>('/whatsappcontacts/verify-import', {
         contacts: rawRows,
-        type: this.contactService.activeType()
+        type: this.contactService.activeType(),
+        owner: this.selectedImportOwner()
       }).subscribe({
         next: (res) => {
+          this.isParsingImportFile.set(false);
           if (res.success) {
             this.previewContacts.set(res.rows || []);
             this.verificationSummary.set(res.summary || null);
             
-            // Default select VALID and WARNING rows
+            // Default select VALID and WARNING rows (Strictly exclude DUPLICATE and ERROR rows)
             const validSerials = (res.rows || [])
               .filter((r: any) => r.verificationStatus === 'VALID' || r.verificationStatus === 'WARNING')
               .map((r: any) => r.serialNumber);
             this.selectedPreviewSerials.set(validSerials);
 
+            this.closeImportModal();
             this.isPreviewMode.set(true);
+
+            const dupCount = res.summary?.duplicateCount || 0;
+            const validCount = res.summary?.validCount || 0;
             Swal.fire({
               toast: true,
               position: 'top-end',
-              icon: 'success',
-              title: `WhatsApp Verification Complete: ${res.summary?.validCount || 0} Valid Numbers`,
-              timer: 3000,
+              icon: dupCount > 0 ? 'warning' : 'success',
+              title: `WhatsApp Verification: ${validCount} Ready, ${dupCount} Duplicates Skipped`,
+              timer: 3500,
               showConfirmButton: false
             });
           }
-          this.fileInput.nativeElement.value = '';
         },
         error: (err) => {
+          this.isParsingImportFile.set(false);
           Swal.fire('Verification Failed', err.error?.error || err.message || 'Failed to verify upload data', 'error');
-          this.fileInput.nativeElement.value = '';
         }
       });
     };
@@ -823,11 +1006,30 @@ export class ContactsTable implements OnInit {
       return;
     }
 
-    const payload = { contacts: contactsToSave };
+    const payload = {
+      contacts: contactsToSave,
+      owner: this.selectedImportOwner(),
+      skipDuplicates: true
+    };
     
-    this.api.post('/whatsappcontacts/bulk-save', payload).subscribe({
-      next: () => {
-        Swal.fire('Imported!', `${contactsToSave.length} contacts imported successfully.`, 'success');
+    this.api.post<any>('/whatsappcontacts/bulk-save', payload).subscribe({
+      next: (res: any) => {
+        const imported = res.importedCount ?? contactsToSave.length;
+        const skipped = res.skippedDuplicatesCount || 0;
+        const invalid = res.invalidCount || 0;
+        const ownerName = this.selectedImportOwner() || 'Keep from CSV';
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Bulk Import Successful',
+          html: `<div style="text-align: left; font-size: 13.5px; line-height: 1.6; color: #1e293b;">
+            <p style="margin: 0 0 6px;"><b>✅ ${imported}</b> contact(s) added successfully.</p>
+            ${skipped > 0 ? `<p style="margin: 0 0 6px; color: #b45309;"><b>🛡️ ${skipped}</b> duplicate contact(s) detected and safely skipped (existing records kept intact).</p>` : ''}
+            ${invalid > 0 ? `<p style="margin: 0 0 6px; color: #dc2626;"><b>⚠️ ${invalid}</b> invalid contact(s) skipped.</p>` : ''}
+            <p style="margin: 8px 0 0; font-size: 12px; color: #64748b;">Assigned Owner: <b>${ownerName}</b></p>
+          </div>`
+        });
+
         this.isPreviewMode.set(false);
         this.previewContacts.set([]);
         this.selectedPreviewSerials.set([]);
@@ -881,14 +1083,14 @@ export class ContactsTable implements OnInit {
     let filename = "";
 
     if (activeType === 'B2B') {
-      csvContent = "#,NAME,CHAPTER,AGENCY NAME,CITY,CATEGORIES,NUMBER,MAIL ID,WEBSITE,REMARKS,REMARKS 1,CALL,MAIL,WHATSAPP/BROADCAST\n" +
-                   "1,Abhil Sharma,Mandovi,GAC Holidays,Panjim,Travel > Travel Agent,=\"'+918007274939\",contact@gacholidays.com,http://www.gacholidays.com,said to share details,said to share details 05,done,done,done\n" +
-                   "2,Badruddin Mustafa,BNI Alpha,B.M.Hospitality,Panaji,Travel > Travel Agent,=\"'+919890765859\",globaltravelsgoa.11@gmail.com,NA,busy,said to share details 05,,,";
+      csvContent = "#,NAME,CHAPTER,AGENCY NAME,CITY,CATEGORIES,NUMBER,MAIL ID,WEBSITE,REMARKS,REMARKS 1,CALL,MAIL,WHATSAPP/BROADCAST,ACCOUNT OWNER\n" +
+                   "1,Abhil Sharma,Mandovi,GAC Holidays,Panjim,Travel > Travel Agent,=\"'+918007274939\",contact@gacholidays.com,http://www.gacholidays.com,said to share details,said to share details 05,done,done,done,Support Team\n" +
+                   "2,Badruddin Mustafa,BNI Alpha,B.M.Hospitality,Panaji,Travel > Travel Agent,=\"'+919890765859\",globaltravelsgoa.11@gmail.com,NA,busy,said to share details 05,,,,Sales Team\n";
       filename = "b2b_contacts_sample.csv";
     } else {
-      csvContent = "Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2,Tags,Lead Source\n" +
-                   "1,Alice Smith,London,=\"'+919876543210\",=\"'+919876543211\",alice@gmail.com,alice2@gmail.com,\"Prospect\",IMPORT\n" +
-                   "2,Yusuf Ali,Dubai,=\"'+971501234567\",,yusuf@gmail.com,,\"VIP, Tourist\",IMPORT";
+      csvContent = "Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2,Tags,Lead Source,ACCOUNT OWNER\n" +
+                   "1,Alice Smith,London,=\"'+919876543210\",=\"'+919876543211\",alice@gmail.com,alice2@gmail.com,\"Prospect\",IMPORT,Support Team\n" +
+                   "2,Yusuf Ali,Dubai,=\"'+971501234567\",,yusuf@gmail.com,,\"VIP, Tourist\",IMPORT,Sales Team\n";
       filename = "b2c_contacts_sample.csv";
     }
 
@@ -913,13 +1115,15 @@ export class ContactsTable implements OnInit {
 
     const formatPhoneForExcel = (phone: string) => {
       if (!phone) return '""';
-      const clean = phone.replace(/^=\s*['"]?|['"]$/g, '').trim();
-      return clean ? `="'+${clean.replace(/^\+/, '')}"` : '""';
+      let clean = phone.replace(/^=\s*['"]?|['"]$/g, '').trim();
+      if (!clean) return '""';
+      const withPlus = clean.startsWith('+') ? clean : `+${clean}`;
+      return `="'+${withPlus.replace(/^\+/, '')}"`;
     };
 
     let csv = '';
     if (activeType === 'B2B') {
-      csv = '#,NAME,CHAPTER,AGENCY NAME,CITY,CATEGORIES,NUMBER,MAIL ID,WEBSITE,REMARKS,REMARKS 1,CALL,MAIL,WHATSAPP/BROADCAST\n';
+      csv = '#,NAME,CHAPTER,AGENCY NAME,CITY,CATEGORIES,NUMBER,MAIL ID,WEBSITE,REMARKS,REMARKS 1,CALL,MAIL,WHATSAPP/BROADCAST,ACCOUNT OWNER\n';
       contacts.forEach((c: any, idx: number) => {
         const name = (c.name || '').replace(/"/g, '""');
         const chapter = (c.chapter || '').replace(/"/g, '""');
@@ -934,10 +1138,12 @@ export class ContactsTable implements OnInit {
         const call = (c.callStatus || '').replace(/"/g, '""');
         const mail = (c.mailStatus || '').replace(/"/g, '""');
         const wa = (c.whatsappStatus || '').replace(/"/g, '""');
-        csv += `${idx + 1},"${name}","${chapter}","${agency}","${city}","${cat}",${p1},"${e1}","${web}","${rem}","${rem1}","${call}","${mail}","${wa}"\n`;
+        const owners = this.contactService.getContactOwners(c);
+        const ownerStr = (owners.length > 0 ? owners.join('; ') : 'Unassigned').replace(/"/g, '""');
+        csv += `${idx + 1},"${name}","${chapter}","${agency}","${city}","${cat}",${p1},"${e1}","${web}","${rem}","${rem1}","${call}","${mail}","${wa}","${ownerStr}"\n`;
       });
     } else {
-      csv = 'Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2,Tags,Lead Source\n';
+      csv = 'Serial number,Customer Name,Location,Number 1,Number 2,Mail 1,Mail 2,Tags,Lead Source,ACCOUNT OWNER\n';
       contacts.forEach((c: any, idx: number) => {
         const name = (c.name || '').replace(/"/g, '""');
         const loc = (c.location || '').replace(/"/g, '""');
@@ -948,7 +1154,9 @@ export class ContactsTable implements OnInit {
         const tagsList = Array.isArray(c.tags) ? c.tags.join(', ') : (c.tags || '');
         const tgs = tagsList.replace(/"/g, '""');
         const src = (c.source || 'ORGANIC').replace(/"/g, '""');
-        csv += `${idx + 1},"${name}","${loc}",${p1},${p2},"${e1}","${e2}","${tgs}","${src}"\n`;
+        const owners = this.contactService.getContactOwners(c);
+        const ownerStr = (owners.length > 0 ? owners.join('; ') : 'Unassigned').replace(/"/g, '""');
+        csv += `${idx + 1},"${name}","${loc}",${p1},${p2},"${e1}","${e2}","${tgs}","${src}","${ownerStr}"\n`;
       });
     }
 
@@ -962,7 +1170,7 @@ export class ContactsTable implements OnInit {
     link.click();
     document.body.removeChild(link);
 
-    Swal.fire('Export Complete', `${contacts.length} ${activeType} contacts exported successfully!`, 'success');
+    Swal.fire('Export Complete', `${contacts.length} ${activeType} contacts exported successfully with Account Owners!`, 'success');
   }
 
 openCreateGroup() {

@@ -196,5 +196,14 @@ export class ContactService {
   bulkDeleteByOwner(owner: string, excludeWithHistory: boolean = true, type?: string): Observable<any> {
     return this.api.post('/whatsappcontacts/bulk-delete-by-owner', { owner, excludeWithHistory, type });
   }
+
+  previewBulkDeleteByUsage(usage: 'USED' | 'UNUSED', type?: string, owner?: string): Observable<any> {
+    return this.api.post('/whatsappcontacts/bulk-delete-by-usage/preview', { usage, type, owner });
+  }
+
+  bulkDeleteByUsage(usage: 'USED' | 'UNUSED', type?: string, owner?: string, contactIds?: number[]): Observable<any> {
+    return this.api.post('/whatsappcontacts/bulk-delete-by-usage', { usage, type, owner, contactIds });
+  }
 }
+
 
