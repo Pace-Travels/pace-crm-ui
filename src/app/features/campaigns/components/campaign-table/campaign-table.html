@@ -78,6 +78,9 @@
                                 <span style="background: #fecaca; color: #dc2626; border: 1px solid #fca5a5; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Failed / Bounced messages">
                                     <i class="fa-solid fa-triangle-exclamation" style="font-size: 10px;"></i> {{ campaign.failedCount || 0 }} Bounced
                                 </span>
+                                <span *ngIf="campaign.skippedCount" style="background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; padding: 3px 8px; border-radius: 6px; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Stopped / Skipped messages">
+                                    <i class="fa-solid fa-ban" style="font-size: 10px;"></i> {{ campaign.skippedCount }} Skipped
+                                </span>
                             </div>
                         </td>
                         <td style="font-size: 13px; color: #334155;">{{ campaign.audience }}</td>
@@ -97,6 +100,14 @@
                                         class="btn-action-play" 
                                         [title]="campaign.status === 'PAUSED' ? 'Resume Campaign' : 'Start Campaign Now'">
                                     <i class="fa-solid fa-play"></i>
+                                </button>
+
+                                <!-- Restart Button (when STOPPED / CANCELLED) -->
+                                <button *ngIf="campaign.status === 'CANCELLED' || campaign.status === 'Cancelled'" 
+                                        (click)="restartCampaign(campaign)" 
+                                        class="btn-action-play" 
+                                        title="Restart Campaign">
+                                    <i class="fa-solid fa-rotate-right"></i>
                                 </button>
 
                                 <!-- Stop Button (when RUNNING, PAUSED, SCHEDULED, or DRAFT) -->
@@ -168,6 +179,15 @@
                         [title]="selectedCampaign()?.status === 'PAUSED' ? 'Resume this Campaign' : 'Start this Campaign Now'">
                     <i class="fa-solid fa-play"></i>
                     <span>{{ selectedCampaign()?.status === 'PAUSED' ? 'Resume' : 'Start' }}</span>
+                </button>
+
+                <!-- Restart in Modal (when STOPPED / CANCELLED) -->
+                <button *ngIf="selectedCampaign()?.status === 'CANCELLED' || selectedCampaign()?.status === 'Cancelled'" 
+                        (click)="restartCampaign(selectedCampaign()!)" 
+                        class="btn-hdr-action btn-modal-play" 
+                        title="Restart this Stopped Campaign">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Restart</span>
                 </button>
 
                 <!-- Stop in Modal -->

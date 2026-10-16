@@ -1,4 +1,4 @@
-import { Component, OnInit, signal, computed, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -15,11 +15,13 @@ import Swal from 'sweetalert2';
   templateUrl: './campaign-table.html',
   styleUrl: './campaign-table.scss',
 })
-export class CampaignTable implements OnInit {
+export class CampaignTable implements OnInit, OnDestroy {
   campaignService = inject(CampaignService);
   contactService = inject(ContactService);
   socketService = inject(SocketService);
   router = inject(Router);
+
+  private autoRefreshTimer: any = null;
   
   activeTab = signal<string>('All');
   searchQuery = signal<string>('');
@@ -69,8 +71,93 @@ export class CampaignTable implements OnInit {
     this.campaignService.fetchCampaigns();
     this.contactService.fetchContacts();
 
-    // Listen for real-time campaign response events via WebSocket
-    this.socketService.getSocket()?.on('campaign_response_received', (data: any) => {
+    const socket = this.socketService.getSocket();
+
+    // 1. Real-time recipient status updates (SENT, DELIVERED, READ, FAILED)
+    socket?.on('campaign_recipient_status', (data: any) => {
+      if (!data || !data.campaignId) return;
+
+      // Update Main Table row metrics immediately
+      const campaignsList = this.campaignService.campaigns();
+      const cIndex = campaignsList.findIndex(c => c.id === data.campaignId);
+      if (cIndex !== -1) {
+        const targetC = { ...campaignsList[cIndex] };
+        if (data.status === 'SENT') {
+          targetC.sentCount = (targetC.sentCount || 0) + 1;
+          targetC.pendingCount = Math.max(0, (targetC.pendingCount || 0) - 1);
+        } else if (data.status === 'FAILED') {
+          targetC.failedCount = (targetC.failedCount || 0) + 1;
+          targetC.pendingCount = Math.max(0, (targetC.pendingCount || 0) - 1);
+        }
+        const updated = [...campaignsList];
+        updated[cIndex] = targetC;
+        this.campaignService.campaigns.set(updated);
+      }
+
+      // Update Analytics & Receipts Modal if currently viewing this campaign
+      if (this.showResponsesModal() && this.selectedCampaign()?.id === data.campaignId) {
+        const responses = [...this.recipientResponses()];
+        const rIndex = responses.findIndex(r => 
+          (data.recipientId && r.id === data.recipientId) || 
+          (data.contactId && r.contactId === data.contactId) || 
+          (data.phone && (r.phone === data.phone || r.Contact?.phone === data.phone))
+        );
+
+        if (rIndex !== -1) {
+          const prev = responses[rIndex];
+          responses[rIndex] = {
+            ...prev,
+            status: data.status,
+            sentAt: data.sentAt || prev.sentAt,
+            deliveredAt: data.deliveredAt || prev.deliveredAt,
+            readAt: data.readAt || prev.readAt,
+            errorMessage: data.errorMessage !== undefined ? data.errorMessage : prev.errorMessage,
+            externalMessageId: data.externalMessageId || prev.externalMessageId
+          };
+          this.recipientResponses.set(responses);
+
+          // Update metric cards live
+          const stats = {
+            total: responses.length,
+            sent: responses.filter(r => r.status === 'SENT' || r.status === 'DELIVERED' || r.status === 'READ').length,
+            delivered: responses.filter(r => r.status === 'DELIVERED' || r.status === 'READ').length,
+            read: responses.filter(r => r.status === 'READ').length,
+            pending: responses.filter(r => !r.status || ['PENDING', 'QUEUED', 'SCHEDULED', 'PROCESSING'].includes(r.status)).length,
+            failed: responses.filter(r => r.status === 'FAILED' || r.status === 'BOUNCED' || r.status === 'ERROR').length,
+            skipped: responses.filter(r => r.status === 'SKIPPED').length,
+            newlyAdded: responses.filter(r => r.isNewlyAdded).length
+          };
+          this.campaignStats.set(stats);
+        }
+      }
+    });
+
+    // 2. Real-time campaign lifecycle progress updates (RUNNING, COMPLETED, PAUSED)
+    socket?.on('campaign_progress', (data: any) => {
+      if (!data || !data.campaignId) return;
+
+      const campaignsList = this.campaignService.campaigns();
+      const cIndex = campaignsList.findIndex(c => c.id === data.campaignId);
+      if (cIndex !== -1) {
+        const updated = [...campaignsList];
+        updated[cIndex] = {
+          ...updated[cIndex],
+          status: data.status || updated[cIndex].status
+        };
+        this.campaignService.campaigns.set(updated);
+      }
+
+      if (this.showResponsesModal() && this.selectedCampaign()?.id === data.campaignId) {
+        const sel = this.selectedCampaign();
+        if (sel && data.status) {
+          this.selectedCampaign.set({ ...sel, status: data.status });
+        }
+        this.refreshResponsesSilently(data.campaignId);
+      }
+    });
+
+    // 3. Real-time customer response received
+    socket?.on('campaign_response_received', (data: any) => {
       if (this.showResponsesModal() && this.selectedCampaign()?.id === data.campaignId) {
         const currentList = [...this.recipientResponses()];
         const target = currentList.find(r => r.id === data.recipientId || r.contactId === data.contactId);
@@ -79,10 +166,36 @@ export class CampaignTable implements OnInit {
           target.respondedAt = data.respondedAt;
           this.recipientResponses.set(currentList);
         } else {
-          this.openResponsesModal(this.selectedCampaign()!);
+          this.refreshResponsesSilently(this.selectedCampaign()!.id);
         }
       }
     });
+
+    // 4. Intelligent Auto-Sync Background Timer (Every 3 seconds while campaigns are running)
+    this.autoRefreshTimer = setInterval(() => {
+      const hasRunning = this.campaignService.campaigns().some(c => c.status === 'RUNNING');
+      if (hasRunning) {
+        this.campaignService.fetchCampaigns(true);
+      }
+
+      if (this.showResponsesModal() && this.selectedCampaign()) {
+        const sel = this.selectedCampaign()!;
+        if (sel.status === 'RUNNING') {
+          this.refreshResponsesSilently(sel.id);
+        }
+      }
+    }, 3000);
+  }
+
+  ngOnDestroy() {
+    if (this.autoRefreshTimer) {
+      clearInterval(this.autoRefreshTimer);
+      this.autoRefreshTimer = null;
+    }
+    const socket = this.socketService.getSocket();
+    socket?.off('campaign_recipient_status');
+    socket?.off('campaign_progress');
+    socket?.off('campaign_response_received');
   }
 
   get filteredCampaigns(): Campaign[] {
@@ -424,6 +537,30 @@ export class CampaignTable implements OnInit {
     });
   }
 
+  refreshResponsesSilently(campaignId: number) {
+    this.campaignService.getCampaignResponses(campaignId).subscribe({
+      next: (res: any) => {
+        if (res.data) {
+          this.recipientResponses.set(res.data);
+        }
+        if (res.stats) {
+          this.campaignStats.set(res.stats);
+        }
+        if (res.campaign) {
+          const sel = this.selectedCampaign();
+          if (sel) {
+            this.selectedCampaign.set({
+              ...sel,
+              status: res.campaign.status || sel.status,
+              autoRetryEnabled: res.campaign.autoRetryEnabled !== undefined ? res.campaign.autoRetryEnabled : sel.autoRetryEnabled
+            });
+          }
+        }
+      },
+      error: () => {}
+    });
+  }
+
   closeResponsesModal() {
     this.showResponsesModal.set(false);
     this.selectedCampaign.set(null);
@@ -746,25 +883,31 @@ export class CampaignTable implements OnInit {
 
   resumeCampaign(c: Campaign) {
     const isPaused = c.status === 'PAUSED';
-    const actionLabel = isPaused ? 'Resume' : 'Start';
+    const isCancelled = c.status === 'CANCELLED' || c.status === 'Cancelled';
+    const actionLabel = isCancelled ? 'Restart' : (isPaused ? 'Resume' : 'Start');
     Swal.fire({
       title: `${actionLabel} Campaign?`,
-      text: isPaused 
-        ? `Resume sending pending messages for "${c.campaignName}"?` 
-        : `Start dispatching messages for "${c.campaignName}" now?`,
+      text: isCancelled
+        ? `Restart sending remaining messages for "${c.campaignName}"? All unsent and stopped messages will be dispatched safely at a rate-limited pace. Any already delivered messages will NOT be duplicated.`
+        : (isPaused 
+            ? `Resume sending pending messages for "${c.campaignName}"?` 
+            : `Start dispatching messages for "${c.campaignName}" now?`),
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#10b981',
       confirmButtonText: `Yes, ${actionLabel}`
     }).then((res) => {
       if (res.isConfirmed) {
-        this.campaignService.resumeCampaign(c.id).subscribe({
+        const obs = isCancelled 
+          ? this.campaignService.restartCampaign(c.id) 
+          : this.campaignService.resumeCampaign(c.id);
+        obs.subscribe({
           next: (response: any) => {
             Swal.fire({
               toast: true,
               position: 'top-end',
               icon: 'success',
-              title: response.message || `Campaign ${actionLabel.toLowerCase()}d`,
+              title: response.message || `Campaign ${actionLabel.toLowerCase()}ed`,
               timer: 3000,
               showConfirmButton: false
             });
@@ -782,6 +925,10 @@ export class CampaignTable implements OnInit {
         });
       }
     });
+  }
+
+  restartCampaign(c: Campaign) {
+    this.resumeCampaign(c);
   }
 
   stopCampaign(c: Campaign) {

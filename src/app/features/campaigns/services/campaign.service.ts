@@ -15,6 +15,7 @@ export interface Campaign {
   sentCount?: number;
   pendingCount?: number;
   failedCount?: number;
+  skippedCount?: number;
   autoRetryEnabled?: boolean;
 }
 
@@ -28,8 +29,10 @@ export class CampaignService {
 
   constructor(private api: ApiService) { }
 
-  fetchCampaigns() {
-    this.isLoading.set(true);
+  fetchCampaigns(silent: boolean = false) {
+    if (!silent) {
+      this.isLoading.set(true);
+    }
     this.api.get<any>('campaigns/list').subscribe({
       next: (res) => {
         if (res.success && Array.isArray(res.data)) {
@@ -57,6 +60,7 @@ export class CampaignService {
               sentCount: item.sentCount !== undefined ? item.sentCount : (item.deliveredCount || 0),
               pendingCount: item.pendingCount || 0,
               failedCount: item.failedCount || 0,
+              skippedCount: item.skippedCount || 0,
               autoRetryEnabled: !!item.autoRetryEnabled
             };
           });
@@ -64,10 +68,14 @@ export class CampaignService {
         } else {
           this.campaigns.set([]);
         }
-        this.isLoading.set(false);
+        if (!silent) {
+          this.isLoading.set(false);
+        }
       },
       error: () => {
-        this.isLoading.set(false);
+        if (!silent) {
+          this.isLoading.set(false);
+        }
       }
     });
   }
@@ -78,6 +86,10 @@ export class CampaignService {
 
   resumeCampaign(id: number) {
     return this.api.put<any>(`campaigns/${id}/resume`, {});
+  }
+
+  restartCampaign(id: number) {
+    return this.api.put<any>(`campaigns/${id}/restart`, {});
   }
 
   stopCampaign(id: number) {
