@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { ContactService, Contact } from '../../contacts/services/contact.service';
 import { ApiService } from '../../../shared/services/api.service';
+import { SocketService } from '../../../shared/services/socket.service';
 import { ContactProfilePanel } from '../../../shared/components/contact-profile-panel/contact-profile-panel';
 import { AssetGalleryPicker } from '../components/asset-gallery-picker/asset-gallery-picker';
 import { AdvisoryBadge } from '../../../shared/components/advisory-badge/advisory-badge';
@@ -177,7 +178,8 @@ export class CreateCampaignView implements OnInit {
   constructor(
     private router: Router,
     private api: ApiService,
-    public contactService: ContactService
+    public contactService: ContactService,
+    private socketService: SocketService
   ) {}
 
   ngOnInit() {
@@ -185,6 +187,35 @@ export class CreateCampaignView implements OnInit {
     this.contactService.fetchGroups();
     this.fetchTemplates();
     this.fetchWabaStats();
+
+    // ⚡ Real-time Quota Sanitization: Automatically decrease remaining quota when messages are sent
+    const socket = this.socketService.getSocket();
+    socket?.on('campaign_recipient_status', (data: any) => {
+      if (data && data.status === 'SENT') {
+        this.wabaStats.update(prev => ({
+          ...prev,
+          remainingQuota: Math.max(0, prev.remainingQuota - 1)
+        }));
+      }
+    });
+
+    socket?.on('quota_updated', (data: any) => {
+      const dec = data?.decrement || 1;
+      this.wabaStats.update(prev => ({
+        ...prev,
+        remainingQuota: Math.max(0, prev.remainingQuota - dec)
+      }));
+    });
+
+    socket?.on('waba_stats_updated', (data: any) => {
+      if (data) {
+        this.wabaStats.set({
+          qualityRating: data.qualityRating || 'High',
+          tierDisplay: data.tierDisplay || 'Tier 1 (1k/day)',
+          remainingQuota: data.remainingQuota !== undefined ? data.remainingQuota : 1000
+        });
+      }
+    });
   }
 
   fetchWabaStats() {

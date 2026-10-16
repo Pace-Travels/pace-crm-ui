@@ -5,6 +5,7 @@ import { ActionCards } from './components/action-cards/action-cards';
 import { CampaignTable } from './components/campaign-table/campaign-table';
 import { ApiService } from '../../shared/services/api.service';
 import { ProjectService } from '../projects/services/project.service';
+import { SocketService } from '../../shared/services/socket.service';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -18,6 +19,7 @@ export class Campaigns implements OnInit {
   router = inject(Router);
   api = inject(ApiService);
   projectService = inject(ProjectService);
+  socketService = inject(SocketService);
 
   showCampaignTypeModal = false;
 
@@ -46,6 +48,38 @@ export class Campaigns implements OnInit {
     const proj = this.projectService.currentProject();
     const projId = proj ? proj.id : (localStorage.getItem('activeProjectId') || '1');
     this.fetchWabaStats(projId);
+
+    // ⚡ Real-time Quota Sanitization: Automatically decrease remaining quota when messages are sent
+    const socket = this.socketService.getSocket();
+    socket?.on('campaign_recipient_status', (data: any) => {
+      if (data && data.status === 'SENT') {
+        this.wabaStats.update(prev => ({
+          ...prev,
+          outbound24hCount: prev.outbound24hCount + 1,
+          remainingQuota: Math.max(0, prev.remainingQuota - 1)
+        }));
+      }
+    });
+
+    socket?.on('quota_updated', (data: any) => {
+      const dec = data?.decrement || 1;
+      this.wabaStats.update(prev => ({
+        ...prev,
+        outbound24hCount: prev.outbound24hCount + dec,
+        remainingQuota: Math.max(0, prev.remainingQuota - dec)
+      }));
+    });
+
+    socket?.on('waba_stats_updated', (data: any) => {
+      if (data) {
+        this.wabaStats.set({
+          qualityRating: data.qualityRating || 'High',
+          tierDisplay: data.tierDisplay || 'Tier 1 (1k/day)',
+          remainingQuota: data.remainingQuota !== undefined ? data.remainingQuota : 1000,
+          outbound24hCount: data.outbound24hCount || 0
+        });
+      }
+    });
   }
 
   fetchWabaStats(projectId: number | string) {
