@@ -47,11 +47,11 @@
                     </span>
 
                     <div class="meta-right" style="flex-shrink: 0; display: flex; align-items: center; gap: 6px; margin-left: 8px;">
-                        <span *ngIf="conv.lastActivityAt" 
+                        <span *ngIf="conv.Messages?.[0]?.createdAt || conv.lastActivityAt" 
                               [class.unread-time]="conv.unreadCount && conv.unreadCount > 0"
                               style="font-size: 10.5px; font-weight: 500;"
                               [style.color]="(conv.unreadCount && conv.unreadCount > 0) ? '#16a34a' : '#94a3b8'">
-                            {{ conv.lastActivityAt | date:'shortTime' }}
+                            {{ (conv.Messages?.[0]?.createdAt || conv.lastActivityAt) | date:'shortTime' }}
                         </span>
                         
                         <!-- Dropdown Chevron Button -->

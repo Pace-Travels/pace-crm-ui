@@ -363,14 +363,25 @@ export class LiveChatService {
    * ensuring pinned conversations stay firmly on top while active conversations jump to top of list.
    */
   public recordMessageActivity(data: any, shouldIncrementUnread: boolean = false) {
-    if (!data || !data.conversationId) return;
+    if (!data) return;
 
     const activityTime = data.createdAt || new Date().toISOString();
+    const dataConvId = Number(data.conversationId || data.Conversation?.id);
+    const dataContactId = Number(data.contactId || data.Conversation?.contactId || 0);
+    const cleanDataPhone = String(data.phone || data.recipientPhone || data.Conversation?.Contact?.phone || '').replace(/\D/g, '').slice(-10);
 
     const updateList = (list: Conversation[]) => {
       let found = false;
       const updated = list.map(conv => {
-        if (conv.id === data.conversationId || Number(conv.id) === Number(data.conversationId)) {
+        const convId = Number(conv.id);
+        const convContactId = Number(conv.contactId);
+        const cleanConvPhone = String(conv.Contact?.phone || '').replace(/\D/g, '').slice(-10);
+
+        const isMatch = (dataConvId && convId === dataConvId) ||
+                        (dataContactId && convContactId && convContactId === dataContactId) ||
+                        (cleanDataPhone && cleanConvPhone && cleanConvPhone === cleanDataPhone);
+
+        if (isMatch) {
           found = true;
           return {
             ...conv,
@@ -382,16 +393,31 @@ export class LiveChatService {
         return conv;
       });
 
-      // If this conversation wasn't found in current list, but is currently selected, add it
-      if (!found) {
+      // If this conversation wasn't found in current list, create and unshift it
+      if (!found && (dataConvId || dataContactId || cleanDataPhone)) {
         const active = this.selectedConversation();
-        if (active && (active.id === data.conversationId || Number(active.id) === Number(data.conversationId))) {
-          updated.push({
+        if (active && (Number(active.id) === dataConvId || (cleanDataPhone && String(active.Contact?.phone || '').includes(cleanDataPhone)))) {
+          updated.unshift({
             ...active,
             lastActivityAt: activityTime,
             unreadCount: 0,
             Messages: [data]
           });
+        } else {
+          const newConv: Conversation = {
+            id: dataConvId || Date.now(),
+            contactId: dataContactId || 0,
+            status: 'OPEN',
+            lastActivityAt: activityTime,
+            unreadCount: shouldIncrementUnread ? 1 : 0,
+            Contact: data.Conversation?.Contact || {
+              id: dataContactId || 0,
+              name: data.contactName || data.senderName || 'Customer',
+              phone: data.phone || data.recipientPhone || ''
+            },
+            Messages: [data]
+          };
+          updated.unshift(newConv);
         }
       }
 
@@ -403,12 +429,16 @@ export class LiveChatService {
     this.intervenedConversations.update(list => updateList(list));
 
     const currentSelected = this.selectedConversation();
-    if (currentSelected && (currentSelected.id === data.conversationId || Number(currentSelected.id) === Number(data.conversationId))) {
-      this.selectedConversation.set({
-        ...currentSelected,
-        lastActivityAt: activityTime,
-        Messages: [data]
-      });
+    if (currentSelected) {
+      const curId = Number(currentSelected.id);
+      const cleanCurPhone = String(currentSelected.Contact?.phone || '').replace(/\D/g, '').slice(-10);
+      if ((dataConvId && curId === dataConvId) || (cleanDataPhone && cleanCurPhone && cleanCurPhone === cleanDataPhone)) {
+        this.selectedConversation.set({
+          ...currentSelected,
+          lastActivityAt: activityTime,
+          Messages: [data]
+        });
+      }
     }
   }
 
@@ -428,15 +458,34 @@ export class LiveChatService {
         if (timeB !== timeA) return timeB - timeA;
       }
 
-      // 2. Unpinned conversations (or fallback for pinned ties) sorted by latest activity DESC
-      const getTimestamp = (c: Conversation) => {
-        const candidate = c.lastActivityAt || c['updatedAt'] || (c.Messages && c.Messages[0]?.createdAt);
-        return candidate ? new Date(candidate).getTime() : 0;
+      // 2. WhatsApp ordering: newest message/activity strictly at top
+      const getTimestamp = (c: Conversation): number => {
+        // Priority 1: Newest message in Messages array
+        const msgTime = (c.Messages && c.Messages[0]?.createdAt) ? new Date(c.Messages[0].createdAt).getTime() : 0;
+        // Priority 2: Conversation lastActivityAt
+        const actTime = c.lastActivityAt ? new Date(c.lastActivityAt).getTime() : 0;
+        return Math.max(msgTime, actTime);
       };
 
-      const dateA = getTimestamp(a);
-      const dateB = getTimestamp(b);
-      return dateB - dateA;
+      const timeA = getTimestamp(a);
+      const timeB = getTimestamp(b);
+
+      // Active chats with messages or unread count come above idle contacts without messages
+      const hasChatA = timeA > 0 || (a.unreadCount && a.unreadCount > 0);
+      const hasChatB = timeB > 0 || (b.unreadCount && b.unreadCount > 0);
+
+      if (hasChatA && !hasChatB) return -1;
+      if (!hasChatA && hasChatB) return 1;
+
+      // If both have messages: strictly order by latest message timestamp DESC
+      if (timeB !== timeA) {
+        return timeB - timeA;
+      }
+
+      // 3. Fallback for contacts with no messages: alphabetical by name
+      const nameA = (a.Contact?.name || `${a.Contact?.firstName || ''} ${a.Contact?.lastName || ''}` || a.Contact?.phone || '').toLowerCase();
+      const nameB = (b.Contact?.name || `${b.Contact?.firstName || ''} ${b.Contact?.lastName || ''}` || b.Contact?.phone || '').toLowerCase();
+      return nameA.localeCompare(nameB);
     });
   }
 
