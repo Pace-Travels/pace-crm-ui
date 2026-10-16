@@ -24,13 +24,122 @@
             </button>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
             <span style="font-size: 12px; font-weight: 700; color: #64748b;">Account Owner Filter:</span>
             <select [ngModel]="selectedOwnerFilter()" (ngModelChange)="selectedOwnerFilter.set($event); filterOwnerMode.set($event ? 'SPECIFIC' : 'ALL'); currentPage.set(1)"
                 style="padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12.5px; outline: none; background: white; font-weight: 600; color: #0f172a;">
                 <option value="">All Account Owners</option>
                 <option *ngFor="let agent of availableAgentOptions()" [value]="agent">👤 {{ agent }}</option>
             </select>
+
+            <!-- Select Contacts by Owner Dropdown -->
+            <div class="dropdown-container" style="position: relative;" (click)="$event.stopPropagation()">
+                <button type="button" (click)="toggleSelectOwnerDropdown()"
+                    title="Select contacts belonging to specific account owners"
+                    style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                    <i class="fa-solid fa-user-check"></i> Select by Owner
+                    <i class="fa-solid fa-chevron-down" style="font-size: 10px; margin-left: 2px;"></i>
+                </button>
+
+                <!-- Dropdown Menu -->
+                <div *ngIf="showSelectOwnerDropdown()" style="position: absolute; right: 0; top: 38px; background: white; border: 1px solid #cbd5e1; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.12); width: 310px; z-index: 200; overflow: hidden; animation: modalPop 0.15s ease-out;">
+                    <!-- Dropdown Header -->
+                    <div style="padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 12px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-user-tag" style="color: #2563eb;"></i> Select by Owner ({{ contactService.activeType() }})
+                        </span>
+                        <span *ngIf="selectedIds().length > 0" style="font-size: 11px; font-weight: 700; background: #dbeafe; color: #1e40af; padding: 2px 7px; border-radius: 12px;">
+                            {{ selectedIds().length }} selected
+                        </span>
+                    </div>
+
+                    <!-- Search within owners if > 4 -->
+                    <div *ngIf="ownerStats().length > 4" style="padding: 8px 12px; border-bottom: 1px solid #f1f5f9; background: white;">
+                        <input type="text" [ngModel]="ownerSelectSearchQuery()" (ngModelChange)="ownerSelectSearchQuery.set($event)"
+                            placeholder="Filter owners..."
+                            style="width: 100%; padding: 5px 8px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 11.5px; outline: none; box-sizing: border-box;">
+                    </div>
+
+                    <!-- Quick Predefined Selectors -->
+                    <div style="padding: 8px 10px; border-bottom: 1px solid #f1f5f9; display: flex; flex-direction: column; gap: 4px;">
+                        <button type="button" (click)="selectContactsByOwner('__MY_CONTACTS__', 'toggle')"
+                            style="display: flex; justify-content: space-between; align-items: center; width: 100%; border: none; background: #f8fafc; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #1e293b; cursor: pointer; text-align: left; transition: background 0.15s ease;"
+                            onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#f8fafc'">
+                            <span style="display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-user-check" style="color: #2563eb; font-size: 11px;"></i> My Contacts
+                            </span>
+                            <span style="font-size: 11px; font-weight: 700; color: #64748b;">{{ myContactsCount() }}</span>
+                        </button>
+
+                        <button type="button" (click)="selectContactsByOwner('Unassigned', 'toggle')"
+                            style="display: flex; justify-content: space-between; align-items: center; width: 100%; border: none; background: #f8fafc; padding: 6px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #1e293b; cursor: pointer; text-align: left; transition: background 0.15s ease;"
+                            onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='#f8fafc'">
+                            <span style="display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-user-slash" style="color: #94a3b8; font-size: 11px;"></i> Unassigned
+                            </span>
+                            <span style="font-size: 11px; font-weight: 700; color: #64748b;">{{ unassignedContactsCount() }}</span>
+                        </button>
+                    </div>
+
+                    <!-- Owners List -->
+                    <div style="max-height: 220px; overflow-y: auto; padding: 6px 8px;">
+                        <div *ngIf="filteredOwnerStats().length === 0" style="padding: 12px; text-align: center; color: #94a3b8; font-size: 12px;">
+                            No matching owners
+                        </div>
+                        <div *ngFor="let stat of filteredOwnerStats()"
+                            style="display: flex; align-items: center; justify-content: space-between; padding: 6px 8px; border-radius: 6px; margin-bottom: 2px; transition: background 0.15s ease;"
+                            [style.background]="stat.isAllSelected ? '#f0fdf4' : (stat.isPartiallySelected ? '#fffbeb' : 'transparent')"
+                            onmouseover="if (!this.style.background || this.style.background === 'transparent') this.style.background='#f8fafc'"
+                            onmouseout="if (this.style.background === 'rgb(248, 250, 252)') this.style.background='transparent'">
+                            
+                            <!-- Left: Checkbox + Owner Name -->
+                            <div (click)="selectContactsByOwner(stat.name, 'toggle')" style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; min-width: 0;">
+                                <input type="checkbox" [checked]="stat.isAllSelected" [indeterminate]="stat.isPartiallySelected"
+                                    (click)="$event.stopPropagation(); selectContactsByOwner(stat.name, 'toggle')"
+                                    style="cursor: pointer; width: 14px; height: 14px; accent-color: #2563eb;">
+                                <span style="font-size: 12px; font-weight: 600; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" [title]="stat.name">
+                                    👤 {{ stat.name }}
+                                </span>
+                            </div>
+
+                            <!-- Right: Count badge + Quick Group Button -->
+                            <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                                <span style="font-size: 11px; font-weight: 700; padding: 2px 6px; border-radius: 4px;"
+                                    [style.background]="stat.isAllSelected ? '#dcfce7' : (stat.isPartiallySelected ? '#fef3c7' : '#e2e8f0')"
+                                    [style.color]="stat.isAllSelected ? '#15803d' : (stat.isPartiallySelected ? '#b45309' : '#475569')">
+                                    {{ stat.selectedCount > 0 ? stat.selectedCount + '/' + stat.totalCount : stat.totalCount }}
+                                </span>
+                                <button type="button" (click)="$event.stopPropagation(); openCreateGroupByOwnerModal(stat.name)"
+                                    title="Create group directly for {{ stat.name }}"
+                                    style="background: #f1f5f9; border: none; padding: 4px 6px; border-radius: 4px; font-size: 11px; color: #047857; cursor: pointer; transition: background 0.15s ease;"
+                                    onmouseover="this.style.background='#d1fae5'" onmouseout="this.style.background='#f1f5f9'">
+                                    <i class="fa-solid fa-folder-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Dropdown Footer -->
+                    <div style="padding: 8px 12px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                        <button type="button" (click)="selectAllFilteredContacts()"
+                            style="border: none; background: transparent; font-size: 11px; font-weight: 700; color: #2563eb; cursor: pointer; padding: 0;">
+                            Select All Contacts
+                        </button>
+                        <button *ngIf="selectedIds().length > 0" type="button" (click)="clearSelection()"
+                            style="border: none; background: transparent; font-size: 11px; font-weight: 700; color: #dc2626; cursor: pointer; padding: 0;">
+                            Clear Selection
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Create Group by Owner Action Button -->
+            <button type="button" (click)="openCreateGroupByOwnerModal()"
+                title="Create a new contact group organized by contact owner"
+                style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease; box-shadow: 0 1px 2px rgba(16, 185, 129, 0.08);">
+                <i class="fa-solid fa-folder-plus"></i> Create Group by Owner
+            </button>
+
             <button type="button" (click)="openBulkDeleteByOwnerModal()"
                 title="Bulk delete contacts owned by a specific owner"
                 style="background: #fee2e2; border: 1px solid #fecaca; color: #b91c1c; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
@@ -186,8 +295,23 @@
         <!-- Action Group (ONLY visible in Normal Mode) -->
         <ng-container *ngIf="!isPreviewMode()">
             <div class="action-group" style="display: flex; gap: 10px; align-items: center;">
+                <button *ngIf="processedContacts().length > 0 && selectedIds().length === 0" 
+                    type="button" 
+                    class="btn btn-outline" 
+                    (click)="selectAllTableContacts()" 
+                    style="background: white; border: 1px solid #cbd5e1; color: #1e40af; padding: 9px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;"
+                    onmouseover="this.style.background='#eff6ff'; this.style.borderColor='#93c5fd'"
+                    onmouseout="this.style.background='white'; this.style.borderColor='#cbd5e1'"
+                    title="Select all contacts across all pages in this table">
+                    <i class="fa-solid fa-check-double" style="color: #2563eb;"></i> Select All ({{ totalSelectableContactsCount() }})
+                </button>
+
                 <button *ngIf="selectedIds().length > 0" class="btn btn-dark" (click)="openCreateGroup()" style="background: #0f172a; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer;">
                     <i class="fa-solid fa-layer-group"></i> Create Group ({{ selectedIds().length }})
+                </button>
+
+                <button class="btn btn-outline" (click)="openCreateGroupByOwnerModal()" style="background: #f0fdf4; border: 1px solid #86efac; color: #15803d; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s ease;">
+                    <i class="fa-solid fa-users-rectangle"></i> Group by Owner
                 </button>
                 
                 <button *ngIf="selectedIds().length > 0" class="btn btn-primary" (click)="openBulkSend()" style="background: #7c3aed; color: white; border: none; padding: 9px 16px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;">
@@ -267,13 +391,134 @@
         </button>
     </div>
 
+    <!-- Selection & Bulk Action Info Banner -->
+    <div *ngIf="selectedIds().length > 0"
+        style="display: flex; justify-content: space-between; align-items: center; width: 100%; background: #eff6ff; padding: 12px 18px; border-radius: 10px; border: 1px solid #bfdbfe; margin-bottom: 14px; animation: fadeIn 0.2s ease; flex-wrap: wrap; gap: 12px; box-shadow: 0 2px 6px rgba(37,99,235,0.06);">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            
+            <!-- ALL PAGES SELECTED STATE -->
+            <ng-container *ngIf="isAllTableContactsSelected()">
+                <span style="background: #1d4ed8; color: white; padding: 4px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 800; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 3px rgba(29, 78, 216, 0.25);">
+                    <i class="fa-solid fa-check-double"></i> ALL {{ totalPages() }} PAGES SELECTED
+                </span>
+                <span style="font-weight: 700; color: #1e40af; font-size: 13.5px;">
+                    All <strong>{{ totalSelectableContactsCount() }}</strong> contacts across all {{ totalPages() }} pages are selected.
+                </span>
+            </ng-container>
+
+            <!-- PARTIAL OR CURRENT PAGE SELECTED STATE -->
+            <ng-container *ngIf="!isAllTableContactsSelected()">
+                <span style="font-weight: 700; color: #1e40af; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-circle-check" style="color: #2563eb;"></i>
+                    <span *ngIf="isCurrentPageFullySelected() && totalPages() > 1">
+                        All <strong>{{ paginatedContacts().length }}</strong> contacts on page {{ currentPage() }} are selected.
+                    </span>
+                    <span *ngIf="!isCurrentPageFullySelected() || totalPages() <= 1">
+                        <strong>{{ selectedIds().length }}</strong> contacts currently selected.
+                    </span>
+                </span>
+
+                <!-- Prominent Gmail-style 1-click button to select all pages -->
+                <button *ngIf="totalSelectableContactsCount() > selectedIds().length"
+                    type="button" (click)="selectAllTableContacts()"
+                    style="background: #2563eb; color: white; border: none; padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(37,99,235,0.25); transition: all 0.2s;"
+                    onmouseover="this.style.background='#1d4ed8'; this.style.transform='translateY(-1px)'"
+                    onmouseout="this.style.background='#2563eb'; this.style.transform='none'">
+                    <i class="fa-solid fa-arrow-pointer"></i>
+                    <span>Select all <strong>{{ totalSelectableContactsCount() }}</strong> contacts across all {{ totalPages() }} pages</span>
+                </button>
+            </ng-container>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button type="button" (click)="openCreateGroup()"
+                style="background: #0f172a; border: none; color: white; padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-layer-group"></i> Create Group ({{ selectedIds().length }})
+            </button>
+
+            <button type="button" (click)="openCreateGroupByOwnerModal()"
+                style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #047857; padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-folder-plus"></i> Group by Owner
+            </button>
+
+            <button type="button" (click)="clearSelection()"
+                style="background: white; border: 1px solid #cbd5e1; color: #64748b; padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;"
+                onmouseover="this.style.background='#f8fafc'; this.style.color='#0f172a'"
+                onmouseout="this.style.background='white'; this.style.color='#64748b'">
+                Clear Selection
+            </button>
+        </div>
+    </div>
+
     <!-- Data Table -->
     <div class="table-container" style="background: white; border: 1px solid #cbd5e1; border-radius: 12px; overflow-x: auto; max-width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
         <table class="data-table" style="width: 100%; min-width: 1200px; border-collapse: collapse;">
             <thead>
                 <tr *ngIf="!isPreviewMode()" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 12px; font-weight: 700; color: #475569;">
-                    <th style="padding: 14px 16px; width: 40px;">
-                        <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($event)">
+                    <th style="padding: 14px 12px; width: 68px; position: relative;">
+                        <div style="display: inline-flex; align-items: center; gap: 4px;">
+                            <input type="checkbox" 
+                                [checked]="isAllTableContactsSelected() || (isCurrentPageFullySelected() && paginatedContacts().length > 0)"
+                                [indeterminate]="isPartiallySelected() && !isAllTableContactsSelected() && !isCurrentPageFullySelected()"
+                                (change)="toggleSelectAll($event)"
+                                title="{{ isAllTableContactsSelected() ? 'All contacts across all pages selected' : (isCurrentPageFullySelected() ? 'All contacts on this page selected' : 'Select page contacts') }}"
+                                style="cursor: pointer; width: 16px; height: 16px; accent-color: #2563eb; margin: 0;">
+                            
+                            <button type="button" 
+                                (click)="toggleTableHeaderSelectDropdown($event)"
+                                title="Selection menu: Select all pages or current page"
+                                style="background: transparent; border: 1px solid transparent; border-radius: 4px; padding: 2px 4px; cursor: pointer; color: #64748b; font-size: 11px; display: inline-flex; align-items: center; line-height: 1;"
+                                onmouseover="this.style.background='#e2e8f0'; this.style.color='#1e293b'"
+                                onmouseout="this.style.background='transparent'; this.style.color='#64748b'">
+                                <i class="fa-solid fa-caret-down"></i>
+                            </button>
+                        </div>
+
+                        <!-- Dropdown menu for table selection -->
+                        <div *ngIf="showTableHeaderSelectDropdown()" 
+                            (click)="$event.stopPropagation()"
+                            style="position: absolute; top: calc(100% + 4px); left: 8px; background: white; border: 1px solid #cbd5e1; border-radius: 8px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15), 0 8px 10px -6px rgba(0,0,0,0.1); z-index: 200; min-width: 270px; padding: 6px 0; text-align: left; font-weight: normal; font-size: 13px;">
+                            
+                            <div style="padding: 6px 14px; font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">
+                                Selection Options
+                            </div>
+
+                            <button type="button" (click)="selectAllTableContacts()"
+                                style="width: 100%; text-align: left; background: none; border: none; padding: 9px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #1e293b; transition: background 0.15s ease;"
+                                onmouseover="this.style.background='#eff6ff'"
+                                onmouseout="this.style.background='none'">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="fa-solid fa-check-double" style="color: #2563eb; width: 14px; font-size: 13px;"></i>
+                                    <div>
+                                        <div style="font-weight: 700; color: #1e293b;">Select All in Table</div>
+                                        <div style="font-size: 11px; color: #64748b;">All {{ totalPages() }} pages ({{ totalSelectableContactsCount() }} contacts)</div>
+                                    </div>
+                                </div>
+                                <span *ngIf="isAllTableContactsSelected()" style="color: #2563eb; font-size: 12px; font-weight: 700;"><i class="fa-solid fa-check"></i></span>
+                            </button>
+
+                            <button type="button" (click)="selectCurrentPageOnly()"
+                                style="width: 100%; text-align: left; background: none; border: none; padding: 9px 14px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; color: #1e293b; border-top: 1px solid #f1f5f9; transition: background 0.15s ease;"
+                                onmouseover="this.style.background='#f8fafc'"
+                                onmouseout="this.style.background='none'">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="fa-regular fa-file-lines" style="color: #64748b; width: 14px; font-size: 13px;"></i>
+                                    <div>
+                                        <div style="font-weight: 600; color: #334155;">Select Current Page Only</div>
+                                        <div style="font-size: 11px; color: #64748b;">Page {{ currentPage() }} ({{ paginatedContacts().length }} contacts)</div>
+                                    </div>
+                                </div>
+                                <span *ngIf="isCurrentPageFullySelected() && !isAllTableContactsSelected()" style="color: #059669; font-size: 12px; font-weight: 700;"><i class="fa-solid fa-check"></i></span>
+                            </button>
+
+                            <button *ngIf="selectedIds().length > 0" type="button" (click)="clearSelection()"
+                                style="width: 100%; text-align: left; background: none; border: none; padding: 9px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; color: #dc2626; border-top: 1px solid #f1f5f9; transition: background 0.15s ease;"
+                                onmouseover="this.style.background='#fef2f2'"
+                                onmouseout="this.style.background='none'">
+                                <i class="fa-solid fa-xmark" style="color: #dc2626; width: 14px; font-size: 13px;"></i>
+                                <span style="font-weight: 600;">Deselect All ({{ selectedIds().length }})</span>
+                            </button>
+                        </div>
                     </th>
                     <th (click)="changeSort('id')" style="padding: 14px 16px; cursor: pointer;">
                         S.No <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
@@ -320,7 +565,7 @@
 
                 <tr *ngIf="isPreviewMode()" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 12px; font-weight: 700; color: #475569;">
                     <th style="padding: 14px 16px; width: 40px;">
-                        <input type="checkbox" [checked]="isAllPreviewSelected()" (change)="togglePreviewSelectAll($event)">
+                        <input type="checkbox" [checked]="isAllTablePreviewSelected() || isCurrentPagePreviewSelected()" (change)="togglePreviewSelectAll($event)">
                     </th>
                     <th style="padding: 14px 16px;">S.No</th>
                     <th *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px;">Agency Name</th>
@@ -566,13 +811,25 @@
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 13px; color: #64748b;">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <span>Rows per page:</span>
-                <select [ngModel]="pageSize()" (ngModelChange)="pageSize.set($event); currentPage.set(1)" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; outline: none; background: white;">
+                <select [ngModel]="pageSize()" (ngModelChange)="pageSize.set(+$event); currentPage.set(1)" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; outline: none; background: white; cursor: pointer; font-weight: 600; color: #1e293b;">
                     <option [value]="10">10</option>
                     <option [value]="25">25</option>
                     <option [value]="50">50</option>
                     <option [value]="100">100</option>
+                    <option [value]="500">500</option>
+                    <option [value]="1000">1,000</option>
+                    <option [value]="2000">2,000</option>
+                    <option [value]="5000">5,000</option>
                 </select>
                 <span>Showing {{ (currentPage() - 1) * pageSize() + (paginatedContacts().length > 0 ? 1 : 0) }} - {{ (currentPage() - 1) * pageSize() + paginatedContacts().length }} of {{ processedContacts().length }} contacts</span>
+                <button *ngIf="processedContacts().length > 0 && !isAllTableContactsSelected()"
+                    type="button" (click)="selectAllTableContacts()"
+                    style="background: #eff6ff; border: 1px solid #bfdbfe; color: #1d4ed8; padding: 3px 8px; border-radius: 4px; font-size: 11.5px; font-weight: 700; cursor: pointer; margin-left: 6px; display: inline-flex; align-items: center; gap: 4px; transition: all 0.15s ease;"
+                    onmouseover="this.style.background='#dbeafe'"
+                    onmouseout="this.style.background='#eff6ff'"
+                    title="Select all contacts across all pages">
+                    <i class="fa-solid fa-check-double"></i> Select All ({{ totalSelectableContactsCount() }})
+                </button>
             </div>
 
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -1134,6 +1391,208 @@
                 <i *ngIf="isParsingImportFile()" class="fa-solid fa-circle-notch fa-spin"></i>
                 <i *ngIf="!isParsingImportFile()" class="fa-solid fa-shield-halved"></i>
                 <span>Verify & Preview Contacts</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ==========================================
+     CREATE GROUP BY CONTACT OWNER MODAL
+     ========================================== -->
+<div *ngIf="showCreateGroupByOwnerModal()" style="position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1060; font-family: 'Inter', sans-serif; padding: 16px;">
+    <div style="background: white; width: 100%; max-width: 620px; border-radius: 14px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); overflow: hidden; border: 1px solid #e2e8f0; animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);">
+        
+        <!-- Header -->
+        <div style="padding: 18px 24px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f0fdf4;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: #dcfce7; color: #15803d; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                    <i class="fa-solid fa-users-rectangle"></i>
+                </div>
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">Create Group by Contact Owner</h3>
+                        <span style="font-size: 11px; font-weight: 700; background: #e0f2fe; color: #0369a1; padding: 2px 7px; border-radius: 4px;">
+                            {{ contactService.activeType() }} Contacts
+                        </span>
+                    </div>
+                    <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">Automatically group contacts organized by their account/contact owner</p>
+                </div>
+            </div>
+            <button type="button" (click)="closeCreateGroupByOwnerModal()" style="background: none; border: none; color: #94a3b8; font-size: 18px; cursor: pointer; padding: 4px; border-radius: 6px;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Mode Toggle (Single Owner vs Batch All Owners) -->
+        <div style="display: flex; border-bottom: 1px solid #e2e8f0; background: #f8fafc; padding: 8px 24px; gap: 10px;">
+            <button type="button" (click)="groupByOwnerMode.set('SINGLE')"
+                [style.background]="groupByOwnerMode() === 'SINGLE' ? '#10b981' : 'transparent'"
+                [style.color]="groupByOwnerMode() === 'SINGLE' ? 'white' : '#64748b'"
+                style="border: none; padding: 7px 16px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                <i class="fa-solid fa-user-tag"></i> Single Owner Group
+            </button>
+            <button type="button" (click)="groupByOwnerMode.set('BATCH')"
+                [style.background]="groupByOwnerMode() === 'BATCH' ? '#10b981' : 'transparent'"
+                [style.color]="groupByOwnerMode() === 'BATCH' ? 'white' : '#64748b'"
+                style="border: none; padding: 7px 16px; border-radius: 6px; font-size: 12.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;">
+                <i class="fa-solid fa-bolt"></i> Auto-Create for All Owners (Batch)
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 22px 24px; max-height: 72vh; overflow-y: auto;">
+            
+            <!-- MODE 1: SINGLE OWNER GROUP -->
+            <div *ngIf="groupByOwnerMode() === 'SINGLE'">
+                <!-- Owner Selection Dropdown -->
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+                        Choose Contact Owner *
+                    </label>
+                    <select [ngModel]="selectedOwnerForGroup()" (ngModelChange)="onOwnerForGroupChange($event)"
+                        style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; font-weight: 600; color: #0f172a; outline: none; background: white;">
+                        <option *ngFor="let stat of ownerStats()" [value]="stat.name">
+                            👤 {{ stat.name }} ({{ stat.totalCount }} contacts available)
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Group Name Input -->
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+                        Group Name *
+                    </label>
+                    <input type="text" [ngModel]="groupByOwnerName()" (ngModelChange)="groupByOwnerName.set($event)"
+                        placeholder="e.g. Rahul Sharma - B2C Group"
+                        style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; font-weight: 600; color: #0f172a; outline: none; box-sizing: border-box;">
+                </div>
+
+                <!-- Group Description Input -->
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+                        Group Description (Optional)
+                    </label>
+                    <textarea [ngModel]="groupByOwnerDesc()" (ngModelChange)="groupByOwnerDesc.set($event)" rows="2"
+                        placeholder="e.g. Contacts managed by this owner"
+                        style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 500; color: #334155; outline: none; box-sizing: border-box; resize: vertical;"></textarea>
+                </div>
+
+                <!-- Group Icon Picker -->
+                <div style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+                        Group Icon
+                    </label>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; background: #f8fafc; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <button type="button" *ngFor="let ic of [
+                            { class: 'fa-users', label: 'People' },
+                            { class: 'fa-user-tie', label: 'Agent' },
+                            { class: 'fa-building', label: 'Company' },
+                            { class: 'fa-layer-group', label: 'Folder' },
+                            { class: 'fa-award', label: 'VIP' },
+                            { class: 'fa-star', label: 'Star' },
+                            { class: 'fa-crown', label: 'Crown' },
+                            { class: 'fa-briefcase', label: 'Work' }
+                        ]"
+                            (click)="groupByOwnerIcon.set(ic.class)"
+                            [style.background]="groupByOwnerIcon() === ic.class ? '#10b981' : 'white'"
+                            [style.color]="groupByOwnerIcon() === ic.class ? 'white' : '#475569'"
+                            [style.borderColor]="groupByOwnerIcon() === ic.class ? '#10b981' : '#cbd5e1'"
+                            style="width: 36px; height: 36px; border-radius: 8px; border: 1px solid; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease;"
+                            [title]="ic.label">
+                            <i class="fa-solid" [ngClass]="ic.class"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Preview of Contacts to be Added -->
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span style="font-size: 12px; font-weight: 700; color: #334155; text-transform: uppercase;">
+                            <i class="fa-solid fa-list-check" style="color: #10b981; margin-right: 4px;"></i> Contacts Preview
+                        </span>
+                        <span style="font-size: 12px; font-weight: 800; color: #15803d; background: #dcfce7; padding: 2px 8px; border-radius: 12px;">
+                            {{ contactsForSelectedOwner().totalCount }} contacts will be grouped
+                        </span>
+                    </div>
+
+                    <div *ngIf="contactsForSelectedOwner().totalCount === 0" style="padding: 14px; text-align: center; color: #94a3b8; font-size: 12.5px;">
+                        No contacts found for this owner in {{ contactService.activeType() }}.
+                    </div>
+
+                    <div *ngIf="contactsForSelectedOwner().totalCount > 0" style="display: flex; flex-direction: column; gap: 6px;">
+                        <div *ngFor="let c of contactsForSelectedOwner().preview"
+                            style="display: flex; justify-content: space-between; align-items: center; background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 6px 12px; font-size: 12px;">
+                            <span style="font-weight: 600; color: #0f172a;">{{ c.name }}</span>
+                            <span style="font-family: monospace; color: #64748b;">{{ c.phone }}</span>
+                            <span *ngIf="c.location || c.chapter" style="color: #94a3b8; font-size: 11px;">{{ c.location || c.chapter }}</span>
+                        </div>
+                        <div *ngIf="contactsForSelectedOwner().totalCount > 5" style="text-align: center; font-size: 11.5px; font-weight: 600; color: #64748b; margin-top: 4px;">
+                            + {{ contactsForSelectedOwner().totalCount - 5 }} more contacts will also be added to this group
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODE 2: BATCH ALL OWNERS GROUPS -->
+            <div *ngIf="groupByOwnerMode() === 'BATCH'">
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                    <div style="font-size: 13.5px; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> 1-Click Batch Group Generator
+                    </div>
+                    <p style="margin: 0; font-size: 12.5px; color: #15803d; line-height: 1.5;">
+                        This will automatically generate a dedicated contact group for each contact owner who has contacts in <b>{{ contactService.activeType() }}</b>.
+                    </p>
+                </div>
+
+                <div style="font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 8px; text-transform: uppercase;">
+                    Groups to be Generated ({{ ownerStats().length }})
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto;">
+                    <div *ngFor="let stat of ownerStats()"
+                        style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px;">
+                        <div>
+                            <div style="font-size: 13px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+                                <i class="fa-solid fa-folder" style="color: #10b981;"></i> {{ stat.name }} - {{ contactService.activeType() }} Group
+                            </div>
+                            <div style="font-size: 11.5px; color: #64748b; margin-top: 2px;">
+                                Assigned Owner: <strong>{{ stat.name }}</strong>
+                            </div>
+                        </div>
+                        <span style="font-size: 12px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 4px 10px; border-radius: 20px;">
+                            {{ stat.totalCount }} contacts
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div style="padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; background: #f8fafc;">
+            <button type="button" (click)="closeCreateGroupByOwnerModal()"
+                style="background: white; border: 1px solid #cbd5e1; color: #475569; padding: 9px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;">
+                Cancel
+            </button>
+
+            <!-- Submit Button Single Mode -->
+            <button *ngIf="groupByOwnerMode() === 'SINGLE'" type="button" (click)="confirmCreateGroupByOwner()"
+                [disabled]="isCreatingGroupByOwner() || contactsForSelectedOwner().totalCount === 0"
+                [style.opacity]="(isCreatingGroupByOwner() || contactsForSelectedOwner().totalCount === 0) ? '0.5' : '1'"
+                style="background: #10b981; color: white; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);">
+                <i *ngIf="isCreatingGroupByOwner()" class="fa-solid fa-circle-notch fa-spin"></i>
+                <i *ngIf="!isCreatingGroupByOwner()" class="fa-solid fa-check"></i>
+                <span>Create Group ({{ contactsForSelectedOwner().totalCount }} Contacts)</span>
+            </button>
+
+            <!-- Submit Button Batch Mode -->
+            <button *ngIf="groupByOwnerMode() === 'BATCH'" type="button" (click)="confirmBatchCreateGroupsByOwner()"
+                [disabled]="isCreatingGroupByOwner() || ownerStats().length === 0"
+                [style.opacity]="(isCreatingGroupByOwner() || ownerStats().length === 0) ? '0.5' : '1'"
+                style="background: #10b981; color: white; border: none; padding: 9px 20px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);">
+                <i *ngIf="isCreatingGroupByOwner()" class="fa-solid fa-circle-notch fa-spin"></i>
+                <i *ngIf="!isCreatingGroupByOwner()" class="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Auto-Create {{ ownerStats().length }} Groups</span>
             </button>
         </div>
     </div>

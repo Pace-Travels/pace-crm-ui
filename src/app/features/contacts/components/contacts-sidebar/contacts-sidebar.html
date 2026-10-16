@@ -55,6 +55,16 @@
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">Populate by Contact Owner (Optional)</label>
+                <select formControlName="populateByOwner" (change)="onSidebarOwnerChange($event)" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; background: white;">
+                    <option value="">-- None (Empty Group) --</option>
+                    <option *ngFor="let opt of availableSidebarOwners()" [value]="opt.name">
+                        👤 {{ opt.name }} ({{ opt.count }} contacts)
+                    </option>
+                </select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
                 <label style="font-size: 12px; font-weight: 700; color: #334155;">Group Name *</label>
                 <input type="text" formControlName="name" placeholder="e.g. Dubai High Spenders 2026" style="padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
             </div>

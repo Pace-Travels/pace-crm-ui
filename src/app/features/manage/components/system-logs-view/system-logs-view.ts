@@ -32,6 +32,7 @@ export class SystemLogsView implements OnInit {
   isLoading = signal<boolean>(false);
   totalLogs = signal<number>(0);
   page = signal<number>(1);
+  pageSize = signal<number>(25);
   totalPages = signal<number>(1);
 
   // Filters & Modals
@@ -51,7 +52,7 @@ export class SystemLogsView implements OnInit {
 
   loadLogs() {
     this.isLoading.set(true);
-    let url = `systemlogs/list?page=${this.page()}&limit=25&level=${this.selectedLevel}`;
+    let url = `systemlogs/list?page=${this.page()}&limit=${this.pageSize()}&level=${this.selectedLevel}`;
     if (this.searchQuery.trim()) {
       url += `&query=${encodeURIComponent(this.searchQuery.trim())}`;
     }
@@ -80,6 +81,12 @@ export class SystemLogsView implements OnInit {
   }
 
   onFilterChange() {
+    this.page.set(1);
+    this.loadLogs();
+  }
+
+  setPageSize(size: number) {
+    this.pageSize.set(Number(size));
     this.page.set(1);
     this.loadLogs();
   }

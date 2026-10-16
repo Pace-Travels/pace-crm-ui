@@ -39,7 +39,8 @@ export class ContactsSidebar implements OnInit {
       name: ['', Validators.required],
       description: [''],
       contactType: ['B2C', Validators.required],
-      icon: ['fa-layer-group', Validators.required]
+      icon: ['fa-layer-group', Validators.required],
+      populateByOwner: ['']
     });
   }
 
@@ -47,15 +48,52 @@ export class ContactsSidebar implements OnInit {
     this.contactService.fetchGroups();
   }
 
+  availableSidebarOwners() {
+    const type = this.groupForm.value.contactType || this.contactService.activeType();
+    const contacts = this.contactService.contacts().filter(c => ((c.type || 'B2C').toUpperCase() === type));
+    const set = new Set<string>();
+
+    contacts.forEach(c => {
+      const owners = this.contactService.getContactOwners(c);
+      owners.forEach(o => {
+        if (o) set.add(o);
+      });
+    });
+
+    const ownersList = Array.from(set);
+    return ownersList.map(name => {
+      const isUnassigned = name === 'Unassigned';
+      const count = contacts.filter(c => {
+        const owners = this.contactService.getContactOwners(c);
+        if (isUnassigned) {
+          return owners.length === 0 || owners.includes('Unassigned Account Owner') || owners.includes('Default Agent') || owners.includes('Unassigned');
+        }
+        return owners.some(o => o.toLowerCase() === name.toLowerCase());
+      }).length;
+      return { name, count };
+    }).filter(o => o.count > 0).sort((a, b) => b.count - a.count);
+  }
+
+  onSidebarOwnerChange(event: any) {
+    const owner = event.target.value;
+    if (owner) {
+      const type = this.groupForm.value.contactType || this.contactService.activeType();
+      this.groupForm.patchValue({
+        name: `${owner} - ${type} Group`,
+        description: `Contacts managed by ${owner}`
+      });
+    }
+  }
+
   selectType(type: 'B2B' | 'B2C') {
     this.contactService.selectedGroup.set(null);
     this.contactService.selectedGroupContactIds.set([]);
     this.contactService.activeType.set(type);
-    this.groupForm.patchValue({ contactType: type });
+    this.groupForm.patchValue({ contactType: type, populateByOwner: '' });
   }
 
   openCreateGroupModal() {
-    this.groupForm.patchValue({ contactType: this.contactService.activeType(), icon: 'fa-layer-group' });
+    this.groupForm.patchValue({ contactType: this.contactService.activeType(), icon: 'fa-layer-group', populateByOwner: '' });
     this.showGroupModal.set(true);
   }
 
@@ -69,18 +107,39 @@ export class ContactsSidebar implements OnInit {
       return;
     }
 
-    const { name, description, contactType, icon } = this.groupForm.value;
-    this.contactService.createGroup(name, description || '', contactType, [], icon).subscribe({
-      next: () => {
-        this.groupForm.reset({ contactType: this.contactService.activeType(), icon: 'fa-layer-group' });
-        this.closeCreateGroupModal();
-        this.contactService.fetchGroups();
-        Swal.fire('Group Created!', `Contact Group "${name}" created for ${contactType} contacts.`, 'success');
-      },
-      error: (err) => {
-        Swal.fire('Error', err.error?.error || 'Failed to create group', 'error');
-      }
-    });
+    const { name, description, contactType, icon, populateByOwner } = this.groupForm.value;
+
+    if (populateByOwner) {
+      this.contactService.createGroupByOwner({
+        owner: populateByOwner,
+        name,
+        description: description || '',
+        contactType,
+        icon
+      }).subscribe({
+        next: (res: any) => {
+          this.groupForm.reset({ contactType: this.contactService.activeType(), icon: 'fa-layer-group', populateByOwner: '' });
+          this.closeCreateGroupModal();
+          this.contactService.fetchGroups();
+          Swal.fire('Group Created!', `Contact Group "${name}" created for ${contactType} contacts with ${res.count || 'all'} contacts of ${populateByOwner}.`, 'success');
+        },
+        error: (err) => {
+          Swal.fire('Error', err.error?.error || 'Failed to create group', 'error');
+        }
+      });
+    } else {
+      this.contactService.createGroup(name, description || '', contactType, [], icon).subscribe({
+        next: () => {
+          this.groupForm.reset({ contactType: this.contactService.activeType(), icon: 'fa-layer-group', populateByOwner: '' });
+          this.closeCreateGroupModal();
+          this.contactService.fetchGroups();
+          Swal.fire('Group Created!', `Contact Group "${name}" created for ${contactType} contacts.`, 'success');
+        },
+        error: (err) => {
+          Swal.fire('Error', err.error?.error || 'Failed to create group', 'error');
+        }
+      });
+    }
   }
 
   deleteGroup(id: number | undefined, event: Event) {

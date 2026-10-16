@@ -156,9 +156,22 @@
     </table>
 
     <!-- Pagination Controls -->
-    <div class="pagination-footer" *ngIf="totalPages() > 1">
-      <span class="page-info">Showing page <strong>{{ page() }}</strong> of <strong>{{ totalPages() }}</strong> ({{ totalLogs() }} entries)</span>
-      <div class="pager-btns">
+    <div class="pagination-footer" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b;">
+        <span>Rows per page:</span>
+        <select [ngModel]="pageSize()" (ngModelChange)="setPageSize(+$event)" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; background: white; outline: none; cursor: pointer; color: #1e293b; font-weight: 600;">
+          <option [value]="10">10</option>
+          <option [value]="25">25</option>
+          <option [value]="50">50</option>
+          <option [value]="100">100</option>
+          <option [value]="500">500</option>
+          <option [value]="1000">1,000</option>
+          <option [value]="2000">2,000</option>
+          <option [value]="5000">5,000</option>
+        </select>
+        <span class="page-info">Showing page <strong>{{ page() }}</strong> of <strong>{{ totalPages() }}</strong> ({{ totalLogs() }} entries)</span>
+      </div>
+      <div class="pager-btns" *ngIf="totalPages() > 1">
         <button type="button" class="pager-btn" (click)="changePage(-1)" [disabled]="page() <= 1">Previous</button>
         <button type="button" class="pager-btn" (click)="changePage(1)" [disabled]="page() >= totalPages()">Next</button>
       </div>

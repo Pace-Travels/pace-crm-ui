@@ -206,6 +206,41 @@ export class ContactService {
   bulkDeleteByUsage(usage: 'USED' | 'UNUSED', type?: string, owner?: string, contactIds?: number[]): Observable<any> {
     return this.api.post('/whatsappcontacts/bulk-delete-by-usage', { usage, type, owner, contactIds });
   }
+
+  createGroupByOwner(payload: {
+    owner: string;
+    name?: string;
+    description?: string;
+    contactType: 'B2B' | 'B2C';
+    icon?: string;
+    contactIds?: number[];
+  }): Observable<any> {
+    return this.api.post('/whatsappcontacts/groups/by-owner', payload);
+  }
+
+  batchCreateGroupsByOwners(contactType: 'B2B' | 'B2C', icon?: string): Observable<any> {
+    return this.api.post('/whatsappcontacts/groups/batch-by-owners', { contactType, icon });
+  }
+
+  getContactsForOwner(ownerName: string, type?: 'B2B' | 'B2C'): Contact[] {
+    const targetType = type || this.activeType();
+    const all = this.contacts().filter(c => ((c.type || 'B2C').toUpperCase() === targetType));
+    const targetLower = (ownerName || '').trim().toLowerCase();
+
+    if (!targetLower) return all;
+
+    if (targetLower === 'unassigned') {
+      return all.filter(c => {
+        const owners = this.getContactOwners(c);
+        return owners.length === 0 || owners.includes('Unassigned Account Owner') || owners.includes('Default Agent') || owners.includes('Unassigned');
+      });
+    }
+
+    return all.filter(c => {
+      const owners = this.getContactOwners(c);
+      return owners.some(o => o.toLowerCase().includes(targetLower));
+    });
+  }
 }
 
 

@@ -201,6 +201,12 @@ export class CronManagerView implements OnInit {
     this.fetchLogs();
   }
 
+  setPageSize(size: number): void {
+    this.pageSize.set(Number(size));
+    this.currentPage.set(1);
+    this.fetchLogs();
+  }
+
   prevPage(): void {
     if (this.currentPage() > 1) {
       this.currentPage.set(this.currentPage() - 1);

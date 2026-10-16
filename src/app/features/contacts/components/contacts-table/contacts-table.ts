@@ -40,6 +40,18 @@ export class ContactsTable implements OnInit {
   excludeMessagedContacts = signal<boolean>(true);
   showMessagedContactsList = signal<boolean>(false);
 
+  // Select by Owner & Create Group by Owner State
+  showSelectOwnerDropdown = signal(false);
+  showCreateGroupByOwnerModal = signal(false);
+  selectedOwnerForGroup = signal<string>('');
+  groupByOwnerMode = signal<'SINGLE' | 'BATCH'>('SINGLE');
+  groupByOwnerName = signal<string>('');
+  groupByOwnerDesc = signal<string>('');
+  groupByOwnerIcon = signal<string>('fa-layer-group');
+  isCreatingGroupByOwner = signal<boolean>(false);
+  ownerSelectSearchQuery = signal<string>('');
+  showTableHeaderSelectDropdown = signal<boolean>(false);
+
   // Bulk Import with Owner & Duplicate Detection State
   selectedImportOwner = signal<string>('Keep from CSV');
   selectedImportFileName = signal<string>('');
@@ -68,6 +80,91 @@ export class ContactsTable implements OnInit {
       const owners = this.contactService.getContactOwners(c);
       return owners.some(o => o.toLowerCase().includes(user));
     }).length;
+  });
+
+  unassignedContactsCount = computed(() => {
+    const type = this.contactService.activeType();
+    return this.contactService.contacts().filter(c => {
+      const cType = (c.type || 'B2C').toUpperCase();
+      if (cType !== type) return false;
+      const owners = this.contactService.getContactOwners(c);
+      return owners.length === 0 || owners.includes('Unassigned Account Owner') || owners.includes('Default Agent') || owners.includes('Unassigned');
+    }).length;
+  });
+
+  ownerStats = computed(() => {
+    const type = this.contactService.activeType();
+    const contacts = this.contactService.contacts().filter(c => ((c.type || 'B2C').toUpperCase() === type));
+    const selected = new Set(this.selectedIds());
+
+    const result: Array<{
+      name: string;
+      totalCount: number;
+      selectedCount: number;
+      isAllSelected: boolean;
+      isPartiallySelected: boolean;
+    }> = [];
+
+    const agentOptions = this.availableAgentOptions();
+    const allOwners = [...agentOptions];
+    if (!allOwners.includes('Unassigned')) {
+      allOwners.push('Unassigned');
+    }
+
+    allOwners.forEach(ownerName => {
+      const isUnassigned = ownerName === 'Unassigned';
+      const ownerContacts = contacts.filter(c => {
+        const owners = this.contactService.getContactOwners(c);
+        if (isUnassigned) {
+          return owners.length === 0 || owners.includes('Unassigned Account Owner') || owners.includes('Default Agent') || owners.includes('Unassigned');
+        }
+        return owners.some(o => o.toLowerCase() === ownerName.toLowerCase());
+      });
+
+      const totalCount = ownerContacts.length;
+      if (totalCount === 0) return;
+
+      const selectedCount = ownerContacts.filter(c => c.id !== undefined && selected.has(c.id)).length;
+
+      result.push({
+        name: ownerName,
+        totalCount,
+        selectedCount,
+        isAllSelected: totalCount > 0 && selectedCount === totalCount,
+        isPartiallySelected: selectedCount > 0 && selectedCount < totalCount
+      });
+    });
+
+    return result.sort((a, b) => b.totalCount - a.totalCount);
+  });
+
+  filteredOwnerStats = computed(() => {
+    const query = this.ownerSelectSearchQuery().trim().toLowerCase();
+    const list = this.ownerStats();
+    if (!query) return list;
+    return list.filter(o => o.name.toLowerCase().includes(query));
+  });
+
+  contactsForSelectedOwner = computed(() => {
+    const owner = this.selectedOwnerForGroup();
+    if (!owner) return { totalCount: 0, preview: [] as any[] };
+    const type = this.contactService.activeType();
+    const isUnassigned = owner === 'Unassigned';
+
+    const matched = this.contactService.contacts().filter(c => {
+      const cType = (c.type || 'B2C').toUpperCase();
+      if (cType !== type) return false;
+      const owners = this.contactService.getContactOwners(c);
+      if (isUnassigned) {
+        return owners.length === 0 || owners.includes('Unassigned Account Owner') || owners.includes('Default Agent') || owners.includes('Unassigned');
+      }
+      return owners.some(o => o.toLowerCase() === owner.toLowerCase());
+    });
+
+    return {
+      totalCount: matched.length,
+      preview: matched.slice(0, 5)
+    };
   });
 
   // Message Usage Filter (All vs Messaged / Used vs Not Messaged / Fresh)
@@ -145,7 +242,37 @@ export class ContactsTable implements OnInit {
     return list.length > 0 && list.every(c => c.id !== undefined && this.selectedIds().includes(c.id));
   });
 
+  totalSelectableContactsCount = computed(() => {
+    return this.processedContacts().filter((c: any) => !this.isContactBlocked(c)).length;
+  });
+
+  isCurrentPageFullySelected = computed(() => {
+    const list = this.paginatedContacts().filter((c: any) => !this.isContactBlocked(c));
+    return list.length > 0 && list.every((c: any) => c.id !== undefined && this.selectedIds().includes(c.id));
+  });
+
+  isAllTableContactsSelected = computed(() => {
+    const all = this.processedContacts().filter((c: any) => !this.isContactBlocked(c));
+    const selected = new Set(this.selectedIds());
+    return all.length > 0 && all.every((c: any) => c.id !== undefined && selected.has(c.id));
+  });
+
+  isPartiallySelected = computed(() => {
+    const selectedCount = this.selectedIds().length;
+    return selectedCount > 0 && !this.isAllTableContactsSelected();
+  });
+
   isAllPreviewSelected = computed(() => {
+    const list = this.paginatedContacts();
+    return list.length > 0 && list.every(c => c.serialNumber !== undefined && this.selectedPreviewSerials().includes(c.serialNumber));
+  });
+
+  isAllTablePreviewSelected = computed(() => {
+    const list = this.previewContacts();
+    return list.length > 0 && list.every(c => c.serialNumber !== undefined && this.selectedPreviewSerials().includes(c.serialNumber));
+  });
+
+  isCurrentPagePreviewSelected = computed(() => {
     const list = this.paginatedContacts();
     return list.length > 0 && list.every(c => c.serialNumber !== undefined && this.selectedPreviewSerials().includes(c.serialNumber));
   });
@@ -305,7 +432,12 @@ export class ContactsTable implements OnInit {
   }
 
   toggleImportDropdown() { this.showImportDropdown.set(!this.showImportDropdown()); }
-  closeDropdowns() { this.showImportDropdown.set(false); }
+  toggleSelectOwnerDropdown() { this.showSelectOwnerDropdown.set(!this.showSelectOwnerDropdown()); }
+  closeDropdowns() {
+    this.showImportDropdown.set(false);
+    this.showSelectOwnerDropdown.set(false);
+    this.showTableHeaderSelectDropdown.set(false);
+  }
 
   isContactBlocked(contact: any): boolean {
     if (!contact) return false;
@@ -379,18 +511,70 @@ export class ContactsTable implements OnInit {
     return 'Disabled: Excluded by deliverability advisory.';
   }
 
-  toggleSelectAll(event: any) {
-    if (event.target.checked) {
-      const pageIds = this.paginatedContacts()
-        .filter(c => !this.isContactBlocked(c))
-        .map(c => c.id!)
-        .filter(id => id !== undefined);
-      const combined = Array.from(new Set([...this.selectedIds(), ...pageIds]));
-      this.selectedIds.set(combined);
+  toggleSelectAll(event?: any) {
+    const isChecked = event?.target?.checked;
+    if (isChecked !== undefined) {
+      if (isChecked) {
+        if (this.totalPages() <= 1) {
+          this.selectAllTableContacts();
+        } else {
+          this.selectCurrentPageOnly();
+        }
+      } else {
+        if (this.isAllTableContactsSelected()) {
+          this.clearSelection();
+        } else {
+          const pageIds = this.paginatedContacts().map(c => c.id!);
+          this.selectedIds.set(this.selectedIds().filter(id => !pageIds.includes(id)));
+        }
+      }
     } else {
-      const pageIds = this.paginatedContacts().map(c => c.id!);
-      this.selectedIds.set(this.selectedIds().filter(id => !pageIds.includes(id)));
+      if (this.isAllTableContactsSelected()) {
+        this.clearSelection();
+      } else {
+        this.selectAllTableContacts();
+      }
     }
+  }
+
+  selectAllTableContacts() {
+    const all = this.processedContacts()
+      .filter((c: any) => !this.isContactBlocked(c))
+      .map((c: any) => c.id as number)
+      .filter((id: number): id is number => id !== undefined && !isNaN(id));
+    this.selectedIds.set(all);
+    this.showTableHeaderSelectDropdown.set(false);
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: `Selected all ${all.length} contacts across all ${this.totalPages()} pages`,
+      showConfirmButton: false,
+      timer: 2500
+    });
+  }
+
+  selectCurrentPageOnly() {
+    const pageIds = this.paginatedContacts()
+      .filter((c: any) => !this.isContactBlocked(c))
+      .map((c: any) => c.id as number)
+      .filter((id: number): id is number => id !== undefined && !isNaN(id));
+    const combined = Array.from(new Set([...this.selectedIds(), ...pageIds]));
+    this.selectedIds.set(combined);
+    this.showTableHeaderSelectDropdown.set(false);
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'info',
+      title: `Selected ${pageIds.length} contacts on page ${this.currentPage()}`,
+      showConfirmButton: false,
+      timer: 2000
+    });
+  }
+
+  toggleTableHeaderSelectDropdown(event?: Event) {
+    if (event) event.stopPropagation();
+    this.showTableHeaderSelectDropdown.set(!this.showTableHeaderSelectDropdown());
   }
 
   toggleSelect(id: number | undefined) {
@@ -752,6 +936,214 @@ export class ContactsTable implements OnInit {
     });
   }
 
+  // --- Contact Owner Selection Methods ---
+
+  selectContactsByOwner(ownerName: string, action: 'toggle' | 'select' | 'deselect' = 'toggle') {
+    const type = this.contactService.activeType();
+    const isUnassigned = ownerName === 'Unassigned';
+    const isMyContacts = ownerName === '__MY_CONTACTS__';
+    const myUserName = this.getLoggedInUserName().toLowerCase();
+
+    const targetContacts = this.contactService.contacts().filter(c => {
+      const cType = (c.type || 'B2C').toUpperCase();
+      if (cType !== type) return false;
+      if (this.isContactBlocked(c)) return false;
+
+      const owners = this.contactService.getContactOwners(c);
+      if (isMyContacts) {
+        return owners.some(o => o.toLowerCase().includes(myUserName));
+      }
+      if (isUnassigned) {
+        return owners.length === 0 || owners.includes('Unassigned Account Owner') || owners.includes('Default Agent') || owners.includes('Unassigned');
+      }
+      return owners.some(o => o.toLowerCase() === ownerName.toLowerCase());
+    });
+
+    const targetIds = targetContacts.map(c => c.id!).filter(id => id !== undefined);
+    if (targetIds.length === 0) {
+      const displayName = isMyContacts ? 'My Contacts' : ownerName;
+      Swal.fire('No Contacts', `No contacts found for ${displayName} in ${type}.`, 'info');
+      return;
+    }
+
+    const currentSelected = new Set(this.selectedIds());
+    const allCurrentlySelected = targetIds.every(id => currentSelected.has(id));
+
+    let shouldSelect = true;
+    if (action === 'toggle') {
+      shouldSelect = !allCurrentlySelected;
+    } else if (action === 'deselect') {
+      shouldSelect = false;
+    }
+
+    const displayName = isMyContacts ? 'My Contacts' : ownerName;
+
+    if (shouldSelect) {
+      targetIds.forEach(id => currentSelected.add(id));
+      this.selectedIds.set(Array.from(currentSelected));
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'success',
+        title: `Selected ${targetIds.length} contacts for ${displayName}`,
+        showConfirmButton: false,
+        timer: 2500
+      });
+    } else {
+      const targetSet = new Set(targetIds);
+      const remaining = this.selectedIds().filter(id => !targetSet.has(id));
+      this.selectedIds.set(remaining);
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: `Deselected ${targetIds.length} contacts for ${displayName}`,
+        showConfirmButton: false,
+        timer: 2000
+      });
+    }
+  }
+
+  isOwnerFullySelected(ownerName: string): boolean {
+    const stat = this.ownerStats().find(s => s.name.toLowerCase() === ownerName.toLowerCase());
+    return Boolean(stat && stat.isAllSelected);
+  }
+
+  selectAllFilteredContacts() {
+    this.selectAllTableContacts();
+  }
+
+  clearSelection() {
+    this.selectedIds.set([]);
+    this.showTableHeaderSelectDropdown.set(false);
+  }
+
+  // --- Create Group by Contact Owner Methods ---
+
+  openCreateGroupByOwnerModal(defaultOwner?: string) {
+    this.showSelectOwnerDropdown.set(false);
+    this.groupByOwnerMode.set('SINGLE');
+    this.groupByOwnerIcon.set('fa-layer-group');
+
+    let initialOwner = defaultOwner;
+    if (!initialOwner) {
+      if (this.selectedOwnerFilter()) {
+        initialOwner = this.selectedOwnerFilter();
+      } else if (this.filterOwnerMode() === 'MY_CONTACTS') {
+        initialOwner = this.getLoggedInUserName();
+      } else if (this.filterOwnerMode() === 'UNASSIGNED') {
+        initialOwner = 'Unassigned';
+      } else if (this.ownerStats().length > 0) {
+        initialOwner = this.ownerStats()[0].name;
+      } else {
+        initialOwner = 'Unassigned';
+      }
+    }
+
+    this.onOwnerForGroupChange(initialOwner);
+    this.showCreateGroupByOwnerModal.set(true);
+  }
+
+  closeCreateGroupByOwnerModal() {
+    this.showCreateGroupByOwnerModal.set(false);
+    this.isCreatingGroupByOwner.set(false);
+  }
+
+  onOwnerForGroupChange(owner: string) {
+    this.selectedOwnerForGroup.set(owner);
+    const activeType = this.contactService.activeType();
+    const cleanOwner = (owner || 'Unassigned').trim();
+    this.groupByOwnerName.set(`${cleanOwner} - ${activeType} Group`);
+    this.groupByOwnerDesc.set(`All ${activeType} contacts managed by ${cleanOwner}`);
+  }
+
+  confirmCreateGroupByOwner() {
+    const owner = this.selectedOwnerForGroup();
+    const name = this.groupByOwnerName().trim();
+    const activeType = this.contactService.activeType();
+
+    if (!owner) {
+      Swal.fire('Owner Required', 'Please select a contact owner.', 'warning');
+      return;
+    }
+    if (!name) {
+      Swal.fire('Group Name Required', 'Please provide a name for this group.', 'warning');
+      return;
+    }
+
+    const { totalCount } = this.contactsForSelectedOwner();
+    if (totalCount === 0) {
+      Swal.fire('No Contacts', `No contacts found for owner "${owner}" in ${activeType} category.`, 'info');
+      return;
+    }
+
+    this.isCreatingGroupByOwner.set(true);
+
+    this.contactService.createGroupByOwner({
+      owner,
+      name,
+      description: this.groupByOwnerDesc().trim(),
+      contactType: activeType,
+      icon: this.groupByOwnerIcon() || 'fa-layer-group'
+    }).subscribe({
+      next: (res: any) => {
+        this.isCreatingGroupByOwner.set(false);
+        this.closeCreateGroupByOwnerModal();
+        this.contactService.fetchGroups();
+        Swal.fire({
+          icon: 'success',
+          title: 'Group Created!',
+          text: `Contact Group "${name}" has been created with ${res.count || totalCount} contacts.`,
+          confirmButtonColor: '#10b981'
+        });
+      },
+      error: (err: any) => {
+        this.isCreatingGroupByOwner.set(false);
+        Swal.fire('Error', err.error?.error || err.message || 'Failed to create group', 'error');
+      }
+    });
+  }
+
+  confirmBatchCreateGroupsByOwner() {
+    const activeType = this.contactService.activeType();
+    const stats = this.ownerStats().filter(s => s.totalCount > 0);
+
+    if (stats.length === 0) {
+      Swal.fire('No Owners', `No contact owners with contacts found in ${activeType} category.`, 'info');
+      return;
+    }
+
+    Swal.fire({
+      title: 'Auto-Create Groups for All Owners?',
+      text: `This will create ${stats.length} separate groups (one for each contact owner) in ${activeType}.`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonText: `Yes, Create ${stats.length} Groups`,
+      confirmButtonColor: '#10b981'
+    }).then(result => {
+      if (result.isConfirmed) {
+        this.isCreatingGroupByOwner.set(true);
+        this.contactService.batchCreateGroupsByOwners(activeType, this.groupByOwnerIcon()).subscribe({
+          next: (res: any) => {
+            this.isCreatingGroupByOwner.set(false);
+            this.closeCreateGroupByOwnerModal();
+            this.contactService.fetchGroups();
+            Swal.fire({
+              icon: 'success',
+              title: 'Batch Groups Created!',
+              text: `Successfully created ${res.count || stats.length} contact groups!`,
+              confirmButtonColor: '#10b981'
+            });
+          },
+          error: (err: any) => {
+            this.isCreatingGroupByOwner.set(false);
+            Swal.fire('Error', err.error?.error || err.message || 'Failed to create batch groups', 'error');
+          }
+        });
+      }
+    });
+  }
+
   setUsageFilter(mode: 'ALL' | 'USED' | 'UNUSED') {
     this.filterUsageMode.set(mode);
     this.currentPage.set(1);
@@ -1072,13 +1464,34 @@ export class ContactsTable implements OnInit {
 
   togglePreviewSelectAll(event: any) {
     if (event.target.checked) {
-      const pageSerials = this.paginatedContacts().map(c => c.serialNumber).filter((s): s is number => s !== undefined);
-      const combined = Array.from(new Set([...this.selectedPreviewSerials(), ...pageSerials]));
-      this.selectedPreviewSerials.set(combined);
+      if (this.totalPages() <= 1) {
+        this.selectAllPreviewContacts();
+      } else {
+        const pageSerials = this.paginatedContacts().map(c => c.serialNumber).filter((s): s is number => s !== undefined);
+        const combined = Array.from(new Set([...this.selectedPreviewSerials(), ...pageSerials]));
+        this.selectedPreviewSerials.set(combined);
+      }
     } else {
-      const pageSerials = this.paginatedContacts().map(c => c.serialNumber);
-      this.selectedPreviewSerials.set(this.selectedPreviewSerials().filter(s => !pageSerials.includes(s)));
+      if (this.isAllTablePreviewSelected()) {
+        this.selectedPreviewSerials.set([]);
+      } else {
+        const pageSerials = this.paginatedContacts().map(c => c.serialNumber);
+        this.selectedPreviewSerials.set(this.selectedPreviewSerials().filter(s => !pageSerials.includes(s)));
+      }
     }
+  }
+
+  selectAllPreviewContacts() {
+    const all = this.previewContacts().map(c => c.serialNumber).filter((s): s is number => s !== undefined);
+    this.selectedPreviewSerials.set(all);
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: `Selected all ${all.length} preview rows across all pages`,
+      showConfirmButton: false,
+      timer: 2000
+    });
   }
 
   isPreviewSelected(serialNumber: number | undefined) {
@@ -1189,7 +1602,10 @@ export class ContactsTable implements OnInit {
 
 openCreateGroup() {
     const ids = this.selectedIds();
-    if (ids.length === 0) return;
+    if (ids.length === 0) {
+      this.openCreateGroupByOwnerModal();
+      return;
+    }
 
     const activeType = this.contactService.activeType();
     const existingGroups = this.contactService.groups().filter(g => g.contactType === activeType);
