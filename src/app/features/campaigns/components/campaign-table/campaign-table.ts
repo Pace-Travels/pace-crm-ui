@@ -57,6 +57,7 @@ export class CampaignTable implements OnInit, OnDestroy {
   selectedRecipientIds = signal<number[]>([]);
   customBatchQuantity = signal<number | null>(null);
   isSendingSelected = signal<boolean>(false);
+  isReleasingMemory = signal<boolean>(false);
 
   // Add Recipient Modal State
   showAddRecipientModal = signal<boolean>(false);
@@ -1007,6 +1008,27 @@ export class CampaignTable implements OnInit, OnDestroy {
             Swal.fire('Dispatch Failed', err.error?.message || err.message || 'Could not send to selected recipients', 'error');
           }
         });
+      }
+    });
+  }
+
+  triggerManualMemoryRelease() {
+    this.isReleasingMemory.set(true);
+    const cId = this.selectedCampaign()?.id;
+    this.campaignService.releaseMemory(cId).subscribe({
+      next: (res: any) => {
+        this.isReleasingMemory.set(false);
+        Swal.fire({
+          icon: 'success',
+          title: 'Memory Released',
+          text: res.message || 'Server heap, Redis queue cache, and Linux system buffers have been released cleanly.',
+          timer: 3000,
+          showConfirmButton: false
+        });
+      },
+      error: (err: any) => {
+        this.isReleasingMemory.set(false);
+        Swal.fire('Memory Release Notice', err.error?.message || err.message, 'info');
       }
     });
   }

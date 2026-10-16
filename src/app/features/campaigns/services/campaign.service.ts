@@ -135,4 +135,9 @@ export class CampaignService {
   resendNewlyAdded(campaignId: number) {
     return this.api.post<any>(`campaigns/${campaignId}/resend-newly-added`, {});
   }
+
+  releaseMemory(campaignId?: number) {
+    const url = campaignId ? `campaigns/${campaignId}/release-memory` : 'campaigns/release-memory';
+    return this.api.post<any>(url, {});
+  }
 }

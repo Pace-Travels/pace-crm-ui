@@ -433,6 +433,21 @@
             }
         }
 
+        .btn-free-memory {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            font-weight: 600;
+
+            &:hover {
+                background: #10b981;
+                color: #ffffff;
+                border-color: #10b981;
+                box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+                transform: translateY(-1px);
+            }
+        }
+
         .btn-close-circle {
             background: #f1f5f9;
             border: none;

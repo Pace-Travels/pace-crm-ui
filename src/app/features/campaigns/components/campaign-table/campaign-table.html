@@ -240,6 +240,12 @@
                     <span>Sync All to CRM</span>
                 </button>
 
+                <!-- Free Memory Button -->
+                <button (click)="triggerManualMemoryRelease()" [disabled]="isReleasingMemory()" class="btn-hdr-action btn-free-memory" title="Reclaim server RAM, purge Redis queue keys, and clear system buffers from code level">
+                    <i class="fa-solid" [class.fa-broom]="!isReleasingMemory()" [class.fa-spinner]="isReleasingMemory()" [class.fa-spin]="isReleasingMemory()"></i>
+                    <span>{{ isReleasingMemory() ? 'Cleaning...' : 'Free Memory' }}</span>
+                </button>
+
                 <!-- Close X -->
                 <button (click)="closeResponsesModal()" class="btn-close-circle" title="Close Modal">✕</button>
             </div>
