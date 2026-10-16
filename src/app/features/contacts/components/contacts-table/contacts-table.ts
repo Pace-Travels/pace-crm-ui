@@ -57,6 +57,9 @@ export class ContactsTable implements OnInit {
   selectedImportFileName = signal<string>('');
   selectedImportFile = signal<File | null>(null);
   isParsingImportFile = signal<boolean>(false);
+  availableImportSheets = signal<string[]>([]);
+  selectedImportSheet = signal<string>('all');
+  detectedImportType = signal<'B2B' | 'B2C' | null>(null);
 
   // Editing state
   editingContactId = signal<number | null>(null);
@@ -1270,6 +1273,9 @@ export class ContactsTable implements OnInit {
     this.selectedImportFileName.set('');
     this.selectedImportFile.set(null);
     this.isParsingImportFile.set(false);
+    this.availableImportSheets.set([]);
+    this.selectedImportSheet.set('all');
+    this.detectedImportType.set(null);
     this.showImportModal.set(true);
   }
 
@@ -1278,6 +1284,8 @@ export class ContactsTable implements OnInit {
     this.selectedImportFile.set(null);
     this.selectedImportFileName.set('');
     this.isParsingImportFile.set(false);
+    this.availableImportSheets.set([]);
+    this.selectedImportSheet.set('all');
     if (this.fileInput && this.fileInput.nativeElement) {
       this.fileInput.nativeElement.value = '';
     }
@@ -1294,106 +1302,77 @@ export class ContactsTable implements OnInit {
     if (!file) return;
     this.selectedImportFile.set(file);
     this.selectedImportFileName.set(file.name);
+    this.availableImportSheets.set([]);
+    this.selectedImportSheet.set('all');
+    this.detectedImportType.set(null);
   }
 
   processImportVerification() {
     const file = this.selectedImportFile();
     if (!file) {
-      Swal.fire('File Required', 'Please select a CSV or Excel file to import.', 'warning');
+      Swal.fire('File Required', 'Please select a CSV or Excel (.xlsx, .xls) file to import.', 'warning');
       return;
     }
 
     this.isParsingImportFile.set(true);
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      const csv = e.target.result;
-      const lines = csv.split(/\r?\n/).filter((l: string) => l.trim().length > 0);
-      if (lines.length <= 1) {
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('type', this.contactService.activeType());
+    if (this.selectedImportOwner()) {
+      formData.append('owner', this.selectedImportOwner());
+    }
+    const currentSheet = this.selectedImportSheet();
+    if (currentSheet && currentSheet !== 'all') {
+      formData.append('sheetName', currentSheet);
+    } else {
+      formData.append('allSheets', 'true');
+    }
+
+    // Call Verification & Validation Service with chosen owner and contact type
+    this.api.post<any>('/whatsappcontacts/verify-import', formData).subscribe({
+      next: (res) => {
         this.isParsingImportFile.set(false);
-        Swal.fire('Error', 'Uploaded CSV file contains no data rows.', 'error');
-        return;
-      }
-
-      // Robust CSV line parser handling quotes, commas, and Excel formula formulas like ="'+91987..."
-      const parseCsvLine = (line: string): string[] => {
-        const result: string[] = [];
-        let cur = '';
-        let inQuotes = false;
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i];
-          if (char === '"') {
-            if (inQuotes && line[i + 1] === '"') {
-              cur += '"';
-              i++;
-            } else {
-              inQuotes = !inQuotes;
-            }
-          } else if (char === ',' && !inQuotes) {
-            result.push(cur.trim());
-            cur = '';
-          } else {
-            cur += char;
+        if (res.success) {
+          if (res.sheets && Array.isArray(res.sheets) && res.sheets.length > 0) {
+            this.availableImportSheets.set(res.sheets);
           }
-        }
-        result.push(cur.trim());
-        return result;
-      };
-
-      const headers = parseCsvLine(lines[0]).map((h: string) => h.trim().toLowerCase());
-      const rawRows = [];
-
-      for (let i = 1; i < lines.length; i++) {
-        const values = parseCsvLine(lines[i]);
-        const rowObj: any = {};
-        headers.forEach((h: string, idx: number) => {
-          let val = values[idx] || '';
-          // Strip outer quotes and Excel formula wrapper (e.g., ="'+91987..." -> +91987...)
-          val = val.replace(/^=\s*['"]?|['"]$/g, '').trim();
-          rowObj[h] = val;
-        });
-        rawRows.push(rowObj);
-      }
-
-      // Call Verification & Validation Service with chosen owner and contact type
-      this.api.post<any>('/whatsappcontacts/verify-import', {
-        contacts: rawRows,
-        type: this.contactService.activeType(),
-        owner: this.selectedImportOwner()
-      }).subscribe({
-        next: (res) => {
-          this.isParsingImportFile.set(false);
-          if (res.success) {
-            this.previewContacts.set(res.rows || []);
-            this.verificationSummary.set(res.summary || null);
-            
-            // Default select VALID and WARNING rows (Strictly exclude DUPLICATE and ERROR rows)
-            const validSerials = (res.rows || [])
-              .filter((r: any) => r.verificationStatus === 'VALID' || r.verificationStatus === 'WARNING')
-              .map((r: any) => r.serialNumber);
-            this.selectedPreviewSerials.set(validSerials);
-
-            this.closeImportModal();
-            this.isPreviewMode.set(true);
-
-            const dupCount = res.summary?.duplicateCount || 0;
-            const validCount = res.summary?.validCount || 0;
-            Swal.fire({
-              toast: true,
-              position: 'top-end',
-              icon: dupCount > 0 ? 'warning' : 'success',
-              title: `WhatsApp Verification: ${validCount} Ready, ${dupCount} Duplicates Skipped`,
-              timer: 3500,
-              showConfirmButton: false
-            });
+          if (res.detectedType) {
+            this.detectedImportType.set(res.detectedType);
           }
-        },
-        error: (err) => {
-          this.isParsingImportFile.set(false);
-          Swal.fire('Verification Failed', err.error?.error || err.message || 'Failed to verify upload data', 'error');
+
+          this.previewContacts.set(res.rows || []);
+          this.verificationSummary.set(res.summary || null);
+          
+          // Default select VALID and WARNING rows (Strictly exclude DUPLICATE and ERROR rows)
+          const validSerials = (res.rows || [])
+            .filter((r: any) => r.verificationStatus === 'VALID' || r.verificationStatus === 'WARNING')
+            .map((r: any) => r.serialNumber);
+          this.selectedPreviewSerials.set(validSerials);
+
+          this.closeImportModal();
+          this.isPreviewMode.set(true);
+
+          const dupCount = res.summary?.duplicateCount || 0;
+          const validCount = res.summary?.validCount || 0;
+          const warnCount = res.summary?.warningCount || 0;
+          const detectedNote = res.detectedType ? ` [Auto-Detected: ${res.detectedType}]` : '';
+
+          Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: dupCount > 0 ? 'warning' : 'success',
+            title: `Verification: ${validCount} Ready, ${warnCount} Warnings, ${dupCount} Duplicates Skipped${detectedNote}`,
+            timer: 4000,
+            showConfirmButton: false
+          });
         }
-      });
-    };
-    reader.readAsText(file);
+      },
+      error: (err) => {
+        this.isParsingImportFile.set(false);
+        Swal.fire('Verification Failed', err.error?.error || err.error?.message || err.message || 'Failed to verify upload data', 'error');
+      }
+    });
   }
 
   cancelImport() {

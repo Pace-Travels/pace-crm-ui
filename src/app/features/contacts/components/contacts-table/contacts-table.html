@@ -212,9 +212,12 @@
         <ng-container *ngIf="isPreviewMode()">
             <div class="preview-header-bar" style="display: flex; justify-content: space-between; align-items: center; width: 100%; background: #f8fafc; padding: 16px 22px; border-radius: 10px; border: 1px solid #cbd5e1; flex-wrap: wrap; gap: 14px;">
                 <div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <span class="preview-title" style="font-weight: 800; color: #0f172a; font-size: 15px;"><i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> Pre-Submit WhatsApp Verification Audit ({{ contactService.activeType() }})</span>
                         <span style="font-size: 12px; font-weight: 700; background: #e0f2fe; color: #0369a1; padding: 3px 8px; border-radius: 4px;">{{ previewContacts().length }} Total Rows</span>
+                        <span *ngIf="detectedImportType()" style="font-size: 11px; font-weight: 800; background: #ede9fe; color: #6d28d9; padding: 3px 8px; border-radius: 4px; border: 1px solid #ddd6fe; display: inline-flex; align-items: center; gap: 4px;">
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Auto-Detected: {{ detectedImportType() }}
+                        </span>
                     </div>
                     
                     <div *ngIf="verificationSummary()" style="display: flex; gap: 8px; margin-top: 10px; font-size: 12px; font-weight: 600; flex-wrap: wrap; align-items: center;">
@@ -742,7 +745,12 @@
                         </td>
 
                         <td style="padding: 14px 16px; font-weight: 700; color: #0f172a;">
-                            {{ contact.name || 'UNKNOWN' }}
+                            <div>{{ contact.name || 'UNKNOWN' }}</div>
+                            <div *ngIf="contact.chapter || contact.location" style="font-size: 11px; font-weight: 500; color: #64748b; margin-top: 2px;">
+                                <span *ngIf="contact.chapter">📍 {{ contact.chapter }}</span>
+                                <span *ngIf="contact.chapter && contact.location"> • </span>
+                                <span *ngIf="contact.location">{{ contact.location }}</span>
+                            </div>
                         </td>
 
                         <td style="padding: 8px 12px; font-family: monospace; font-size: 13px; font-weight: 600; color: #6d28d9;">
@@ -750,6 +758,9 @@
                                    style="font-family: inherit; font-size: inherit; font-weight: inherit; color: inherit; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; width: 145px; outline: none; background: #fafafa; transition: border 0.15s ease;"
                                    onfocus="this.style.border='#7c3aed'; this.style.background='white';"
                                    onblur="this.style.border='#cbd5e1'; this.style.background='#fafafa';">
+                            <div *ngIf="contact.phone2" style="font-size: 11px; color: #64748b; font-weight: 600; margin-top: 3px;">
+                                <span style="background: #f1f5f9; padding: 1px 6px; border-radius: 4px; border: 1px solid #e2e8f0;">Alt: {{ contact.phone2 }}</span>
+                            </div>
                         </td>
 
                         <td style="padding: 14px 16px;">
@@ -792,7 +803,10 @@
 
                         <td style="padding: 14px 16px; font-size: 12.5px; font-weight: 500;"
                             [style.color]="contact.verificationStatus === 'ERROR' ? '#dc2626' : (contact.verificationStatus === 'WARNING' || contact.verificationStatus === 'DUPLICATE' ? '#b45309' : '#15803d')">
-                            {{ contact.verificationNote || 'WhatsApp number verified' }}
+                            <div>{{ contact.verificationNote || 'WhatsApp number verified' }}</div>
+                            <div *ngIf="contact.remarks" style="font-size: 11px; color: #475569; background: #f8fafc; padding: 3px 6px; border-radius: 4px; margin-top: 4px; border: 1px solid #e2e8f0; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" [title]="contact.remarks">
+                                📝 {{ contact.remarks }}
+                            </div>
                         </td>
 
                         <td style="padding: 14px 16px; text-align: right;">
@@ -1351,6 +1365,27 @@
                 </div>
             </div>
 
+            <!-- Zero Configuration Intelligence Callout -->
+            <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 12px 16px; margin-bottom: 14px; display: flex; align-items: flex-start; gap: 10px;">
+                <i class="fa-solid fa-wand-magic-sparkles" style="color: #2563eb; font-size: 15px; margin-top: 2px;"></i>
+                <div style="font-size: 12px; color: #1e40af; line-height: 1.5;">
+                    <strong style="display: block; font-size: 12.5px; color: #1e3a8a; margin-bottom: 2px;">Zero-Configuration Intelligent Alignment</strong>
+                    Auto-detects columns regardless of header order or extra columns. Real-world messy data, secondary phone numbers, review notes, and websites are automatically harvested.
+                </div>
+            </div>
+
+            <!-- Multi-Sheet Selector (if multiple sheets found) -->
+            <div *ngIf="availableImportSheets().length > 1" style="margin-bottom: 18px;">
+                <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+                    Select Sheet to Import
+                </label>
+                <select [ngModel]="selectedImportSheet()" (ngModelChange)="selectedImportSheet.set($event)"
+                    style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; font-weight: 600; color: #0f172a; outline: none; background: white;">
+                    <option value="all">📑 All Sheets (Combine {{ availableImportSheets().length }} Sheets)</option>
+                    <option *ngFor="let s of availableImportSheets()" [value]="s">📄 {{ s }}</option>
+                </select>
+            </div>
+
             <!-- 4. File Drop / Browse Box -->
             <div (click)="triggerFileInput()" 
                  style="border: 2px dashed #cbd5e1; border-radius: 10px; padding: 24px; text-align: center; background: #f8fafc; cursor: pointer; transition: all 0.2s ease;"
@@ -1360,8 +1395,8 @@
                     <i class="fa-solid fa-cloud-arrow-up"></i>
                 </div>
                 <div *ngIf="!selectedImportFileName()">
-                    <div style="font-weight: 700; color: #0f172a; font-size: 13.5px;">Click to browse CSV or Excel file</div>
-                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Supports standard CSV exported from Excel or Google Sheets</div>
+                    <div style="font-weight: 700; color: #0f172a; font-size: 13.5px;">Click to browse Excel (.xlsx, .xls) or CSV file</div>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 4px;">Supports single or multi-sheet Excel workbooks and standard CSVs</div>
                 </div>
                 <div *ngIf="selectedImportFileName()">
                     <div style="font-weight: 700; color: #15803d; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 6px;">

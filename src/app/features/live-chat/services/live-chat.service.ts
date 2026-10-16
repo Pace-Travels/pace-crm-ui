@@ -118,9 +118,93 @@ export class LiveChatService {
   messages$ = this.messagesSubject.asObservable();
 
   private socket!: Socket;
+  private syncChannel: BroadcastChannel | null = null;
+  private lastAutoSyncTime = 0;
 
   constructor(private api: ApiService) {
+    this.initSyncChannel();
     this.initSocket();
+    this.initWindowWatchers();
+  }
+
+  private initSyncChannel() {
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        this.syncChannel = new BroadcastChannel('quotedesks_live_sync');
+        this.syncChannel.onmessage = (event) => {
+          const { type, payload } = event.data || {};
+          if (!type) return;
+          this.handleMultiWindowSyncEvent(type, payload);
+        };
+      } catch (e) {
+        console.warn('BroadcastChannel initialization error', e);
+      }
+    }
+  }
+
+  private postSyncEvent(type: string, payload: any) {
+    if (this.syncChannel) {
+      try {
+        this.syncChannel.postMessage({ type, payload });
+      } catch (e) {}
+    }
+  }
+
+  private handleMultiWindowSyncEvent(type: string, payload: any) {
+    switch (type) {
+      case 'CONVERSATION_UPDATED':
+        if (payload?.conversationId) this.applyConversationUpdate(payload.conversationId, payload);
+        break;
+      case 'CONVERSATION_DELETED':
+        if (payload?.conversationId) this.applyConversationDeleted(payload.conversationId);
+        break;
+      case 'CONVERSATION_READ':
+        this.applyConversationRead(payload);
+        break;
+      case 'CHAT_CLEARED':
+        if (payload?.conversationId) this.applyChatCleared(payload.conversationId);
+        break;
+      case 'CONTROL_OWNER_CHANGED':
+        if (payload?.conversationId) this.applyControlOwnerChange(payload.conversationId, payload.controlOwner);
+        break;
+      case 'REFRESH_REQUIRED':
+        this.fetchConversations(false);
+        break;
+    }
+  }
+
+  private initWindowWatchers() {
+    if (typeof window === 'undefined') return;
+
+    const autoSync = () => {
+      const now = Date.now();
+      // Throttle window focus sync to at most once every 2 seconds
+      if (now - this.lastAutoSyncTime < 2000) return;
+      this.lastAutoSyncTime = now;
+
+      // Silently sync conversation list without disturbing user selection
+      this.fetchConversations(false);
+
+      // Re-fetch latest messages for active conversation if open
+      const active = this.selectedConversation();
+      if (active && active.id) {
+        this.api.get<any>(`messages/list?conversationId=${active.id}`).subscribe({
+          next: (res: any) => {
+            const all = res.data || [];
+            all.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+            this.messagesSubject.next(all);
+          },
+          error: () => {}
+        });
+      }
+    };
+
+    window.addEventListener('focus', autoSync);
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') {
+        autoSync();
+      }
+    });
   }
 
   private initSocket() {
@@ -287,26 +371,38 @@ export class LiveChatService {
     });
 
     // Conversation read broadcast event from server / other clients
+    // Conversation read broadcast event from server / other clients
     this.socket.on('conversation_read', (data: any) => {
       if (!data) return;
+      this.applyConversationRead(data);
+    });
 
-      if (data.all) {
-        const clearUnread = (list: Conversation[]) => list.map(c => ({ ...c, unreadCount: 0 }));
-        this.activeConversations.update(list => clearUnread(list));
-        this.requestingConversations.update(list => clearUnread(list));
-        this.intervenedConversations.update(list => clearUnread(list));
-        this.conversationRead$.next(data);
-      } else if (data.conversationId) {
-        const convId = Number(data.conversationId);
-        const newCount = Number(data.unreadCount || 0);
-        const updateItem = (list: Conversation[]) => list.map(c => 
-          (c.id === convId || Number(c.id) === convId) ? { ...c, unreadCount: newCount } : c
-        );
-        this.activeConversations.update(list => updateItem(list));
-        this.requestingConversations.update(list => updateItem(list));
-        this.intervenedConversations.update(list => updateItem(list));
-        this.conversationRead$.next(data);
-      }
+    // Real-time conversation updates across multiple open windows / tabs
+    this.socket.on('conversation_updated', (data: any) => {
+      if (!data || !data.conversationId) return;
+      this.applyConversationUpdate(data.conversationId, data);
+    });
+
+    this.socket.on('conversation_deleted', (data: any) => {
+      if (!data || !data.conversationId) return;
+      this.applyConversationDeleted(data.conversationId);
+    });
+
+    this.socket.on('control_owner_changed', (data: any) => {
+      if (!data || !data.conversationId) return;
+      this.applyControlOwnerChange(data.conversationId, data.controlOwner);
+    });
+
+    this.socket.on('chat_cleared', (data: any) => {
+      if (!data || !data.conversationId) return;
+      this.applyChatCleared(data.conversationId);
+    });
+
+    this.socket.on('message_deleted', (data: any) => {
+      if (!data) return;
+      const targetMsgId = Number(data.messageId);
+      const current = this.messagesSubject.value.filter((m: any) => Number(m.id) !== targetMsgId);
+      this.messagesSubject.next(current);
     });
   }
 
@@ -370,75 +466,79 @@ export class LiveChatService {
     const dataContactId = Number(data.contactId || data.Conversation?.contactId || 0);
     const cleanDataPhone = String(data.phone || data.recipientPhone || data.Conversation?.Contact?.phone || '').replace(/\D/g, '').slice(-10);
 
-    const updateList = (list: Conversation[]) => {
-      let found = false;
-      const updated = list.map(conv => {
-        const convId = Number(conv.id);
-        const convContactId = Number(conv.contactId);
-        const cleanConvPhone = String(conv.Contact?.phone || '').replace(/\D/g, '').slice(-10);
-
-        const isMatch = (dataConvId && convId === dataConvId) ||
-                        (dataContactId && convContactId && convContactId === dataContactId) ||
-                        (cleanDataPhone && cleanConvPhone && cleanConvPhone === cleanDataPhone);
-
-        if (isMatch) {
-          found = true;
-          return {
-            ...conv,
-            lastActivityAt: activityTime,
-            unreadCount: shouldIncrementUnread ? (conv.unreadCount || 0) + 1 : (conv.unreadCount || 0),
-            Messages: [data]
-          };
-        }
-        return conv;
-      });
-
-      // If this conversation wasn't found in current list, create and unshift it
-      if (!found && (dataConvId || dataContactId || cleanDataPhone)) {
-        const active = this.selectedConversation();
-        if (active && (Number(active.id) === dataConvId || (cleanDataPhone && String(active.Contact?.phone || '').includes(cleanDataPhone)))) {
-          updated.unshift({
-            ...active,
-            lastActivityAt: activityTime,
-            unreadCount: 0,
-            Messages: [data]
-          });
-        } else {
-          const newConv: Conversation = {
-            id: dataConvId || Date.now(),
-            contactId: dataContactId || 0,
-            status: 'OPEN',
-            lastActivityAt: activityTime,
-            unreadCount: shouldIncrementUnread ? 1 : 0,
-            Contact: data.Conversation?.Contact || {
-              id: dataContactId || 0,
-              name: data.contactName || data.senderName || 'Customer',
-              phone: data.phone || data.recipientPhone || ''
-            },
-            Messages: [data]
-          };
-          updated.unshift(newConv);
-        }
-      }
-
-      return this.sortConversations(updated);
+    const isMatch = (conv: Conversation) => {
+      const convId = Number(conv.id);
+      const convContactId = Number(conv.contactId);
+      const cleanConvPhone = String(conv.Contact?.phone || '').replace(/\D/g, '').slice(-10);
+      return (dataConvId && convId === dataConvId) ||
+             (dataContactId && convContactId && convContactId === dataContactId) ||
+             (cleanDataPhone && cleanConvPhone && cleanConvPhone === cleanDataPhone);
     };
 
-    this.activeConversations.update(list => updateList(list));
-    this.requestingConversations.update(list => updateList(list));
-    this.intervenedConversations.update(list => updateList(list));
+    let targetQueue: 'active' | 'requesting' | 'intervened' | null = null;
+    if (this.activeConversations().some(isMatch)) targetQueue = 'active';
+    else if (this.requestingConversations().some(isMatch)) targetQueue = 'requesting';
+    else if (this.intervenedConversations().some(isMatch)) targetQueue = 'intervened';
+
+    const updateItem = (conv: Conversation): Conversation => ({
+      ...conv,
+      lastActivityAt: activityTime,
+      unreadCount: shouldIncrementUnread ? (conv.unreadCount || 0) + 1 : (conv.unreadCount || 0),
+      Messages: [data]
+    });
+
+    if (targetQueue === 'active') {
+      this.activeConversations.update(list => this.sortConversations(list.map(c => isMatch(c) ? updateItem(c) : c)));
+    } else if (targetQueue === 'requesting') {
+      this.requestingConversations.update(list => this.sortConversations(list.map(c => isMatch(c) ? updateItem(c) : c)));
+    } else if (targetQueue === 'intervened') {
+      this.intervenedConversations.update(list => this.sortConversations(list.map(c => isMatch(c) ? updateItem(c) : c)));
+    } else if (dataConvId || dataContactId || cleanDataPhone) {
+      // New conversation not yet in any queue: determine appropriate queue based on data
+      const status = data.Conversation?.status || data.status;
+      const assignedToType = data.Conversation?.assignedToType || data.assignedToType;
+
+      const active = this.selectedConversation();
+      let newConv: Conversation;
+      if (active && (Number(active.id) === dataConvId || (cleanDataPhone && String(active.Contact?.phone || '').includes(cleanDataPhone)))) {
+        newConv = {
+          ...active,
+          lastActivityAt: activityTime,
+          unreadCount: 0,
+          Messages: [data]
+        };
+      } else {
+        newConv = {
+          id: dataConvId || Date.now(),
+          contactId: dataContactId || 0,
+          status: status || 'OPEN',
+          lastActivityAt: activityTime,
+          unreadCount: shouldIncrementUnread ? 1 : 0,
+          Contact: data.Conversation?.Contact || {
+            id: dataContactId || 0,
+            name: data.contactName || data.senderName || 'Customer',
+            phone: data.phone || data.recipientPhone || ''
+          },
+          Messages: [data]
+        };
+      }
+
+      if (status === 'PENDING' || status === 'REQUESTING') {
+        this.requestingConversations.update(list => this.sortConversations([newConv, ...list]));
+      } else if (status === 'CLOSED' || assignedToType === 'HUMAN') {
+        this.intervenedConversations.update(list => this.sortConversations([newConv, ...list]));
+      } else {
+        this.activeConversations.update(list => this.sortConversations([newConv, ...list]));
+      }
+    }
 
     const currentSelected = this.selectedConversation();
-    if (currentSelected) {
-      const curId = Number(currentSelected.id);
-      const cleanCurPhone = String(currentSelected.Contact?.phone || '').replace(/\D/g, '').slice(-10);
-      if ((dataConvId && curId === dataConvId) || (cleanDataPhone && cleanCurPhone && cleanCurPhone === cleanDataPhone)) {
-        this.selectedConversation.set({
-          ...currentSelected,
-          lastActivityAt: activityTime,
-          Messages: [data]
-        });
-      }
+    if (currentSelected && isMatch(currentSelected)) {
+      this.selectedConversation.set({
+        ...currentSelected,
+        lastActivityAt: activityTime,
+        Messages: [data]
+      });
     }
   }
 
@@ -678,6 +778,98 @@ export class LiveChatService {
   // -------------------------------------------------------------
   // CONTEXTUAL MENU API METHODS
   // -------------------------------------------------------------
+  // MULTI-WINDOW AUTO-SYNC & CONTEXTUAL MENU API METHODS
+  // -------------------------------------------------------------
+
+  public applyConversationUpdate(conversationId: number, data: any) {
+    const convId = Number(conversationId);
+    const updateItem = (list: Conversation[]) => {
+      let matched = false;
+      const updated = list.map(c => {
+        if (Number(c.id) === convId) {
+          matched = true;
+          return {
+            ...c,
+            ...(data.isPinned !== undefined ? { isPinned: data.isPinned, pinnedAt: data.pinnedAt || (data.isPinned ? new Date().toISOString() : null) } : {}),
+            ...(data.isArchived !== undefined ? { isArchived: data.isArchived } : {}),
+            ...(data.isMuted !== undefined ? { isMuted: data.isMuted, muteUntil: data.muteUntil } : {}),
+            ...(data.isFavourite !== undefined ? { isFavourite: data.isFavourite } : {}),
+            ...(data.unreadCount !== undefined ? { unreadCount: data.unreadCount } : {}),
+            ...(data.controlOwner !== undefined ? { controlOwner: data.controlOwner } : {}),
+            ...(data.assignedToType !== undefined ? { assignedToType: data.assignedToType } : {})
+          };
+        }
+        return c;
+      });
+      return matched ? this.sortConversations(updated.filter(c => !c.isArchived)) : list;
+    };
+
+    this.activeConversations.update(list => updateItem(list));
+    this.requestingConversations.update(list => updateItem(list));
+    this.intervenedConversations.update(list => updateItem(list));
+
+    const selected = this.selectedConversation();
+    if (selected && Number(selected.id) === convId) {
+      this.selectedConversation.update(c => c ? {
+        ...c,
+        ...(data.isPinned !== undefined ? { isPinned: data.isPinned, pinnedAt: data.pinnedAt } : {}),
+        ...(data.isArchived !== undefined ? { isArchived: data.isArchived } : {}),
+        ...(data.isMuted !== undefined ? { isMuted: data.isMuted, muteUntil: data.muteUntil } : {}),
+        ...(data.isFavourite !== undefined ? { isFavourite: data.isFavourite } : {}),
+        ...(data.controlOwner !== undefined ? { controlOwner: data.controlOwner } : {})
+      } : null);
+    }
+  }
+
+  public applyConversationDeleted(conversationId: number) {
+    const convId = Number(conversationId);
+    const filterOut = (list: Conversation[]) => list.filter(c => Number(c.id) !== convId);
+    this.activeConversations.update(list => filterOut(list));
+    this.requestingConversations.update(list => filterOut(list));
+    this.intervenedConversations.update(list => filterOut(list));
+
+    if (this.selectedConversation()?.id === convId) {
+      this.selectedConversation.set(null);
+      this.messagesSubject.next([]);
+    }
+  }
+
+  public applyChatCleared(conversationId: number) {
+    const convId = Number(conversationId);
+    if (this.selectedConversation()?.id === convId) {
+      this.messagesSubject.next([]);
+    }
+    const updateItem = (list: Conversation[]) => list.map(c => Number(c.id) === convId ? { ...c, Messages: [], unreadCount: 0 } : c);
+    this.activeConversations.update(list => updateItem(list));
+    this.requestingConversations.update(list => updateItem(list));
+    this.intervenedConversations.update(list => updateItem(list));
+  }
+
+  public applyControlOwnerChange(conversationId: number, controlOwner: string) {
+    const convId = Number(conversationId);
+    this.applyConversationUpdate(convId, { controlOwner });
+    this.fetchConversations(false);
+  }
+
+  public applyConversationRead(data: any) {
+    if (data.all) {
+      const clearUnread = (list: Conversation[]) => list.map(c => ({ ...c, unreadCount: 0 }));
+      this.activeConversations.update(list => clearUnread(list));
+      this.requestingConversations.update(list => clearUnread(list));
+      this.intervenedConversations.update(list => clearUnread(list));
+      this.conversationRead$.next(data);
+    } else if (data.conversationId) {
+      const convId = Number(data.conversationId);
+      const newCount = Number(data.unreadCount || 0);
+      const updateItem = (list: Conversation[]) => list.map(c => 
+        (c.id === convId || Number(c.id) === convId) ? { ...c, unreadCount: newCount } : c
+      );
+      this.activeConversations.update(list => updateItem(list));
+      this.requestingConversations.update(list => updateItem(list));
+      this.intervenedConversations.update(list => updateItem(list));
+      this.conversationRead$.next(data);
+    }
+  }
 
   togglePin(conv: Conversation, forceState?: boolean) {
     const targetState = forceState !== undefined ? forceState : !conv.isPinned;
@@ -685,16 +877,8 @@ export class LiveChatService {
     this.api.put<any>(`conversations/${conv.id}/pin`, { isPinned: targetState }).subscribe({
       next: (res: any) => {
         const pinnedAt = targetState ? (res?.pinnedAt || nowIso) : null;
-        const updateItem = (list: Conversation[]) => {
-          const updated = list.map(c => c.id === conv.id ? { ...c, isPinned: targetState, pinnedAt } : c);
-          return this.sortConversations(updated);
-        };
-        this.activeConversations.update(list => updateItem(list));
-        this.requestingConversations.update(list => updateItem(list));
-        this.intervenedConversations.update(list => updateItem(list));
-        if (this.selectedConversation()?.id === conv.id) {
-          this.selectedConversation.update(c => c ? { ...c, isPinned: targetState, pinnedAt } : null);
-        }
+        this.applyConversationUpdate(conv.id, { isPinned: targetState, pinnedAt });
+        this.postSyncEvent('CONVERSATION_UPDATED', { conversationId: conv.id, isPinned: targetState, pinnedAt });
       }
     });
   }
@@ -703,6 +887,8 @@ export class LiveChatService {
     const targetState = forceState !== undefined ? forceState : !conv.isArchived;
     this.api.put<any>(`conversations/${conv.id}/archive`, { isArchived: targetState }).subscribe({
       next: () => {
+        this.applyConversationUpdate(conv.id, { isArchived: targetState });
+        this.postSyncEvent('CONVERSATION_UPDATED', { conversationId: conv.id, isArchived: targetState });
         this.fetchConversations();
       }
     });
@@ -712,10 +898,8 @@ export class LiveChatService {
     const targetState = forceState !== undefined ? forceState : !conv.isMuted;
     this.api.put<any>(`conversations/${conv.id}/mute`, { isMuted: targetState, muteUntil }).subscribe({
       next: () => {
-        const updateItem = (list: Conversation[]) => list.map(c => c.id === conv.id ? { ...c, isMuted: targetState, muteUntil } : c);
-        this.activeConversations.update(list => updateItem(list));
-        this.requestingConversations.update(list => updateItem(list));
-        this.intervenedConversations.update(list => updateItem(list));
+        this.applyConversationUpdate(conv.id, { isMuted: targetState, muteUntil });
+        this.postSyncEvent('CONVERSATION_UPDATED', { conversationId: conv.id, isMuted: targetState, muteUntil });
       }
     });
   }
@@ -724,18 +908,8 @@ export class LiveChatService {
     const targetCount = forceCount !== undefined ? forceCount : (conv.unreadCount && conv.unreadCount > 0 ? 0 : 1);
     
     // Immediate local update for zero-latency UI response
-    const updateItem = (list: Conversation[]) => list.map(c => c.id === conv.id ? { ...c, unreadCount: targetCount } : c);
-    this.activeConversations.update(list => updateItem(list));
-    this.requestingConversations.update(list => updateItem(list));
-    this.intervenedConversations.update(list => updateItem(list));
-
-    if (targetCount === 0) {
-      this.conversationRead$.next({
-        conversationId: conv.id,
-        phone: conv.Contact?.phone,
-        unreadCount: 0
-      });
-    }
+    this.applyConversationRead({ conversationId: conv.id, phone: conv.Contact?.phone, unreadCount: targetCount });
+    this.postSyncEvent('CONVERSATION_READ', { conversationId: conv.id, phone: conv.Contact?.phone, unreadCount: targetCount });
 
     this.api.put<any>(`conversations/${conv.id}/unread`, { unreadCount: targetCount }).subscribe({
       next: () => {},
@@ -747,10 +921,8 @@ export class LiveChatService {
     const targetState = forceState !== undefined ? forceState : !conv.isFavourite;
     this.api.put<any>(`conversations/${conv.id}/favourite`, { isFavourite: targetState }).subscribe({
       next: () => {
-        const updateItem = (list: Conversation[]) => list.map(c => c.id === conv.id ? { ...c, isFavourite: targetState } : c);
-        this.activeConversations.update(list => updateItem(list));
-        this.requestingConversations.update(list => updateItem(list));
-        this.intervenedConversations.update(list => updateItem(list));
+        this.applyConversationUpdate(conv.id, { isFavourite: targetState });
+        this.postSyncEvent('CONVERSATION_UPDATED', { conversationId: conv.id, isFavourite: targetState });
       }
     });
   }
@@ -758,9 +930,8 @@ export class LiveChatService {
   clearChat(conv: Conversation) {
     this.api.delete<any>(`conversations/${conv.id}/clear`).subscribe({
       next: () => {
-        if (this.selectedConversation()?.id === conv.id) {
-          this.messagesSubject.next([]);
-        }
+        this.applyChatCleared(conv.id);
+        this.postSyncEvent('CHAT_CLEARED', { conversationId: conv.id });
         this.fetchConversations();
       }
     });
