@@ -116,6 +116,10 @@ export class CampaignService {
     return this.api.post<any>(`campaigns/resend-failed/${campaignId}`, {});
   }
 
+  sendSelectedRecipients(campaignId: number, recipientIds?: number[], limit?: number) {
+    return this.api.post<any>(`campaigns/${campaignId}/send-selected`, { recipientIds, limit });
+  }
+
   toggleAutoRetry(campaignId: number, enabled?: boolean) {
     return this.api.patch<any>(`campaigns/${campaignId}/auto-retry`, { enabled });
   }

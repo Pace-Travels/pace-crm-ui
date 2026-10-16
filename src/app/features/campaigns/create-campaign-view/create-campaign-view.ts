@@ -569,6 +569,32 @@ export class CreateCampaignView implements OnInit {
     this.showOnlySelected.set(false);
   }
 
+  customAudienceBatchQty = signal<number | null>(null);
+
+  selectBatchContacts(count: number) {
+    if (!count || count <= 0) return;
+    const eligible = this.filteredAudienceContacts().filter(c => !this.isContactBlocked(c));
+    const targetIds = eligible.slice(0, count).map(c => c.id!).filter(Boolean);
+    this.selectedContactIds.set(targetIds);
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: `Selected ${targetIds.length} contact${targetIds.length === 1 ? '' : 's'}`,
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+
+  applyCustomBatchContacts() {
+    const qty = this.customAudienceBatchQty();
+    if (!qty || qty <= 0) {
+      Swal.fire('Invalid Quantity', 'Please enter a valid number of contacts to select (e.g. 50, 100, 500).', 'warning');
+      return;
+    }
+    this.selectBatchContacts(qty);
+  }
+
   toggleShowOnlySelected() {
     this.showOnlySelected.set(!this.showOnlySelected());
     this.currentPage.set(1);

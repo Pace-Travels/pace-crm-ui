@@ -218,6 +218,16 @@
                     <span>Auto-Retry: {{ selectedCampaign()?.autoRetryEnabled ? 'ENABLED' : 'DISABLED' }}</span>
                 </button>
 
+                <!-- Send to Selected (Top Action) -->
+                <button *ngIf="selectedRecipientIds().length > 0" 
+                        (click)="sendToSelectedRecipients()" 
+                        [disabled]="isSendingSelected()" 
+                        class="btn-hdr-action btn-send-selected-hdr" 
+                        [title]="'Dispatch campaign to ' + selectedRecipientIds().length + ' selected recipients'">
+                    <i class="fa-solid" [class.fa-paper-plane]="!isSendingSelected()" [class.fa-spinner]="isSendingSelected()" [class.fa-spin]="isSendingSelected()"></i>
+                    <span>Send to Selected ({{ selectedRecipientIds().length }})</span>
+                </button>
+
                 <!-- Resend Failed / Pending -->
                 <button (click)="resendAllFailedOrPending()" [disabled]="isResendingAll()" class="btn-hdr-action btn-resend-failed" [style.opacity]="isResendingAll() ? 0.6 : 1">
                     <i class="fa-solid" [class.fa-rotate-right]="!isResendingAll()" [class.fa-spinner]="isResendingAll()" [class.fa-spin]="isResendingAll()"></i>
@@ -402,13 +412,80 @@
         </div>
 
         <!-- ============================================================= -->
+        <!-- BATCH SELECTION & TARGETED DISPATCH TOOLBAR                   -->
+        <!-- ============================================================= -->
+        <div class="batch-selection-toolbar">
+            <div class="batch-toolbar-left">
+                <span class="batch-title">
+                    <i class="fa-solid fa-list-check" style="color: #7c3aed;"></i>
+                    <span>Quick Select:</span>
+                </span>
+                <div class="batch-preset-group">
+                    <button type="button" class="btn-preset" (click)="selectBatch(1)" title="Select 1 recipient for testing">
+                        1
+                    </button>
+                    <button type="button" class="btn-preset" (click)="selectBatch(100)" title="Select first 100 pending recipients">
+                        100
+                    </button>
+                    <button type="button" class="btn-preset" (click)="selectBatch(500)" title="Select first 500 pending recipients">
+                        500
+                    </button>
+                </div>
+                
+                <div class="batch-custom-input">
+                    <input type="number" 
+                           min="1" 
+                           [ngModel]="customBatchQuantity()" 
+                           (ngModelChange)="customBatchQuantity.set($event)" 
+                           (keyup.enter)="applyCustomBatch()" 
+                           placeholder="Custom qty" 
+                           class="custom-qty-box" />
+                    <button type="button" class="btn-apply-qty" (click)="applyCustomBatch()">
+                        Select
+                    </button>
+                </div>
+
+                <button type="button" class="btn-select-pending" (click)="selectAllPending()" title="Select all remaining unsent/pending recipients">
+                    <i class="fa-solid fa-check-double"></i>
+                    <span>All Pending ({{ campaignStats().pending }})</span>
+                </button>
+
+                <button *ngIf="selectedRecipientIds().length > 0" type="button" class="btn-clear-sel" (click)="clearSelection()" title="Clear all selections">
+                    <i class="fa-solid fa-xmark"></i>
+                    <span>Clear</span>
+                </button>
+            </div>
+
+            <div class="batch-toolbar-right">
+                <div class="selection-counter" *ngIf="selectedRecipientIds().length > 0">
+                    <span class="count-pill">{{ selectedRecipientIds().length }}</span>
+                    <span class="count-label">recipient{{ selectedRecipientIds().length > 1 ? 's' : '' }} selected</span>
+                </div>
+                <button type="button" 
+                        class="btn-send-batch" 
+                        [disabled]="selectedRecipientIds().length === 0 || isSendingSelected()" 
+                        (click)="sendToSelectedRecipients()">
+                    <i class="fa-solid" [class.fa-paper-plane]="!isSendingSelected()" [class.fa-spinner]="isSendingSelected()" [class.fa-spin]="isSendingSelected()"></i>
+                    <span>{{ isSendingSelected() ? 'Dispatching...' : 'Send to Selected (' + selectedRecipientIds().length + ')' }}</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================================= -->
         <!-- DATA TABLE CONTAINER                                          -->
         <!-- ============================================================= -->
         <div class="table-scroll-wrapper">
             <table class="dt-table">
                 <thead>
                     <tr>
-                        <th style="width: 50px; text-align: center;">#</th>
+                        <th style="width: 44px; text-align: center;">
+                            <input type="checkbox" 
+                                   [checked]="isAllPageSelected()" 
+                                   (change)="toggleSelectAllPage()" 
+                                   style="cursor: pointer; width: 16px; height: 16px; accent-color: #7c3aed;" 
+                                   title="Select / Deselect all eligible recipients on this page" />
+                        </th>
+                        <th style="width: 45px; text-align: center;">#</th>
                         <th (click)="setSort('name')" class="sortable-th">
                             RECIPIENT
                             <span class="sort-icon">
@@ -451,23 +528,38 @@
                 </thead>
                 <tbody>
                     <tr *ngIf="isLoadingResponses()">
-                        <td colspan="9" class="td-loading">
+                        <td colspan="10" class="td-loading">
                             <i class="fa-solid fa-spinner fa-spin" style="font-size: 20px; color: #7c3aed; margin-bottom: 8px;"></i>
                             <div>Loading recipient delivery logs & read receipts...</div>
                         </td>
                     </tr>
                     <tr *ngIf="!isLoadingResponses() && sortedRecipients().length === 0">
-                        <td colspan="9" class="td-empty">
+                        <td colspan="10" class="td-empty">
                             <p style="font-weight: 700; color: #1e293b; margin-bottom: 4px;">No recipient records found</p>
                             <p style="color: #64748b; font-size: 13px; margin: 0;">Try adjusting your search query or status filter.</p>
                         </td>
                     </tr>
                     <ng-container *ngIf="!isLoadingResponses()">
                         <tr *ngFor="let item of paginatedRecipients(); let idx = index" 
+                            [class.row-selected]="isRecipientSelected(item.id)"
                             [class.row-newly-added]="item.isNewlyAdded"
                             [class.row-even]="idx % 2 === 0" 
                             [class.row-odd]="idx % 2 !== 0">
                             
+                            <!-- 0. Checkbox Selection -->
+                            <td style="width: 44px; text-align: center;">
+                                <input *ngIf="isRecipientEligible(item)" 
+                                       type="checkbox" 
+                                       [checked]="isRecipientSelected(item.id)" 
+                                       (change)="toggleSelectRecipient(item)" 
+                                       style="cursor: pointer; width: 16px; height: 16px; accent-color: #7c3aed;" 
+                                       title="Select recipient for targeted send" />
+                                <i *ngIf="!isRecipientEligible(item)" 
+                                   class="fa-solid fa-circle-check" 
+                                   style="color: #10b981; font-size: 15px;" 
+                                   title="Message already sent / delivered"></i>
+                            </td>
+
                             <!-- 1. Serial Number (Sl No) -->
                             <td class="td-sl-no">
                                 {{ (currentPage() - 1) * pageSize() + idx + 1 }}

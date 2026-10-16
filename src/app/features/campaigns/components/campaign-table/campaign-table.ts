@@ -53,6 +53,11 @@ export class CampaignTable implements OnInit, OnDestroy {
   isResendingAll = signal<boolean>(false);
   isResendingNewlyAdded = signal<boolean>(false);
 
+  // Modal Recipient Selection & Batch Dispatch State
+  selectedRecipientIds = signal<number[]>([]);
+  customBatchQuantity = signal<number | null>(null);
+  isSendingSelected = signal<boolean>(false);
+
   // Add Recipient Modal State
   showAddRecipientModal = signal<boolean>(false);
   newRecipientPhone = signal<string>('');
@@ -310,6 +315,19 @@ export class CampaignTable implements OnInit, OnDestroy {
     return sorted.slice(start, start + size);
   });
 
+  // Modal Recipient Selection Computeds
+  selectedRecipientIdsSet = computed(() => new Set(this.selectedRecipientIds()));
+
+  eligiblePageRecipients = computed(() => {
+    return this.paginatedRecipients().filter(r => this.isRecipientEligible(r));
+  });
+
+  isAllPageSelected = computed(() => {
+    const list = this.eligiblePageRecipients();
+    const set = this.selectedRecipientIdsSet();
+    return list.length > 0 && list.every(r => set.has(r.id));
+  });
+
   // Computed: Total pages
   totalPages = computed(() => {
     const total = this.sortedRecipients().length;
@@ -504,6 +522,8 @@ export class CampaignTable implements OnInit, OnDestroy {
     this.currentPage.set(1);
     this.tableSearchQuery.set('');
     this.statusFilter.set('ALL');
+    this.selectedRecipientIds.set([]);
+    this.customBatchQuantity.set(null);
 
     this.campaignService.getCampaignResponses(campaign.id).subscribe({
       next: (res: any) => {
@@ -568,6 +588,8 @@ export class CampaignTable implements OnInit, OnDestroy {
     this.recipientResponses.set([]);
     this.showAddRecipientModal.set(false);
     this.showEditRecipientModal.set(false);
+    this.selectedRecipientIds.set([]);
+    this.customBatchQuantity.set(null);
   }
 
   // Add Recipient Actions
@@ -841,6 +863,150 @@ export class CampaignTable implements OnInit, OnDestroy {
       error: (err: any) => {
         this.isResendingAll.set(false);
         Swal.fire('Error', 'Failed to resend campaign messages: ' + (err.error?.message || err.message), 'error');
+      }
+    });
+  }
+
+  // =========================================================================
+  // GRANULAR SELECTION & BATCH DISPATCH ACTIONS (1, 100, 500, CUSTOM)
+  // =========================================================================
+
+  isRecipientEligible(recipient: any): boolean {
+    if (!recipient) return false;
+    // Sent, delivered, or read recipients or ones with external message ID cannot be re-targeted in a fresh send
+    if (['SENT', 'DELIVERED', 'READ'].includes(recipient.status) || recipient.externalMessageId) {
+      return false;
+    }
+    return true;
+  }
+
+  isRecipientSelected(id: number): boolean {
+    return this.selectedRecipientIdsSet().has(id);
+  }
+
+  toggleSelectRecipient(recipient: any) {
+    if (!this.isRecipientEligible(recipient)) return;
+    const current = this.selectedRecipientIds();
+    const id = recipient.id;
+    if (current.includes(id)) {
+      this.selectedRecipientIds.set(current.filter(i => i !== id));
+    } else {
+      this.selectedRecipientIds.set([...current, id]);
+    }
+  }
+
+  toggleSelectAllPage() {
+    const current = this.selectedRecipientIds();
+    const pageList = this.eligiblePageRecipients();
+    if (this.isAllPageSelected()) {
+      const pageIds = pageList.map(r => r.id);
+      this.selectedRecipientIds.set(current.filter(id => !pageIds.includes(id)));
+    } else {
+      const pageIds = pageList.map(r => r.id);
+      this.selectedRecipientIds.set(Array.from(new Set([...current, ...pageIds])));
+    }
+  }
+
+  selectBatch(count: number) {
+    if (!count || count <= 0) return;
+    // Prefer selecting from filtered sorted recipients first, or from all recipient responses
+    const filteredEligible = this.sortedRecipients().filter(r => this.isRecipientEligible(r));
+    let targets: any[] = [];
+    if (filteredEligible.length >= count) {
+      targets = filteredEligible.slice(0, count);
+    } else {
+      const allEligible = this.recipientResponses().filter(r => this.isRecipientEligible(r));
+      targets = allEligible.slice(0, count);
+    }
+
+    if (targets.length === 0) {
+      Swal.fire('No Pending Recipients', 'There are no pending or unsent recipients available to select.', 'info');
+      return;
+    }
+
+    const ids = targets.map(r => r.id);
+    this.selectedRecipientIds.set(ids);
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: `Selected ${ids.length} recipient${ids.length === 1 ? '' : 's'}`,
+      timer: 2000,
+      showConfirmButton: false
+    });
+  }
+
+  selectAllPending() {
+    const allEligible = this.recipientResponses().filter(r => this.isRecipientEligible(r));
+    if (allEligible.length === 0) {
+      Swal.fire('No Pending Recipients', 'All recipients in this campaign have already been sent.', 'info');
+      return;
+    }
+    const ids = allEligible.map(r => r.id);
+    this.selectedRecipientIds.set(ids);
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: `Selected all ${ids.length} pending recipient${ids.length === 1 ? '' : 's'}`,
+      timer: 2500,
+      showConfirmButton: false
+    });
+  }
+
+  clearSelection() {
+    this.selectedRecipientIds.set([]);
+  }
+
+  applyCustomBatch() {
+    const qty = this.customBatchQuantity();
+    if (!qty || qty <= 0) {
+      Swal.fire('Invalid Quantity', 'Please enter a valid number of recipients to select (e.g. 50, 100, 250).', 'warning');
+      return;
+    }
+    this.selectBatch(qty);
+  }
+
+  sendToSelectedRecipients() {
+    const campaign = this.selectedCampaign();
+    if (!campaign) return;
+
+    const ids = this.selectedRecipientIds();
+    if (ids.length === 0) {
+      Swal.fire('No Recipients Selected', 'Please select at least 1 recipient to dispatch.', 'warning');
+      return;
+    }
+
+    const count = ids.length;
+    Swal.fire({
+      title: `Send to ${count} Recipient${count > 1 ? 's' : ''}?`,
+      html: `You have chosen to dispatch this campaign to <b>${count}</b> specific recipient${count > 1 ? 's' : ''}.<br><br><small style="color: #64748b;">Messages will be throttled via the campaign queue at ~10 msgs/sec with real-time delivery receipts.</small>`,
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#7c3aed',
+      cancelButtonColor: '#94a3b8',
+      confirmButtonText: `<i class="fa-solid fa-paper-plane"></i> Yes, Dispatch to ${count}`
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.isSendingSelected.set(true);
+        this.campaignService.sendSelectedRecipients(campaign.id, ids).subscribe({
+          next: (res: any) => {
+            this.isSendingSelected.set(false);
+            Swal.fire({
+              icon: 'success',
+              title: 'Dispatched Successfully',
+              text: res.message || `Dispatched to ${res.count || count} recipients. Watch delivery receipts update in real time below.`,
+              timer: 3500,
+              showConfirmButton: false
+            });
+            this.selectedRecipientIds.set([]);
+            this.refreshResponsesSilently(campaign.id);
+          },
+          error: (err: any) => {
+            this.isSendingSelected.set(false);
+            Swal.fire('Dispatch Failed', err.error?.message || err.message || 'Could not send to selected recipients', 'error');
+          }
+        });
       }
     });
   }

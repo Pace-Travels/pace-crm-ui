@@ -186,6 +186,22 @@
                 </div>
 
                 <div class="toolbar-right">
+                    <!-- Quick Batch Presets (1, 100, 500, Custom) -->
+                    <div style="display: inline-flex; align-items: center; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden; height: 31px;">
+                        <span style="font-size: 11px; font-weight: 700; color: #64748b; padding: 0 8px; background: #f8fafc; border-right: 1px solid #e2e8f0; line-height: 29px;">Select:</span>
+                        <button type="button" (click)="selectBatchContacts(1)" style="border: none; background: transparent; padding: 0 9px; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; border-right: 1px solid #e2e8f0; height: 100%;" title="Select 1 contact for test">1</button>
+                        <button type="button" (click)="selectBatchContacts(100)" style="border: none; background: transparent; padding: 0 9px; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; border-right: 1px solid #e2e8f0; height: 100%;" title="Select first 100 contacts">100</button>
+                        <button type="button" (click)="selectBatchContacts(500)" style="border: none; background: transparent; padding: 0 9px; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; border-right: 1px solid #e2e8f0; height: 100%;" title="Select first 500 contacts">500</button>
+                        <input type="number" 
+                               min="1" 
+                               [ngModel]="customAudienceBatchQty()" 
+                               (ngModelChange)="customAudienceBatchQty.set($event)" 
+                               (keyup.enter)="applyCustomBatchContacts()" 
+                               placeholder="Qty" 
+                               style="width: 50px; border: none; padding: 0 6px; font-size: 11.5px; outline: none; height: 100%; text-align: center;" />
+                        <button type="button" (click)="applyCustomBatchContacts()" style="border: none; background: #f1f5f9; padding: 0 8px; font-size: 11px; font-weight: 700; color: #475569; cursor: pointer; border-left: 1px solid #cbd5e1; height: 100%;">Set</button>
+                    </div>
+
                     <button type="button" class="btn btn-outline btn-sm" (click)="selectAllFiltered()"
                         title="Select all contacts currently filtered">
                         <i class="fa-solid fa-square-check"></i> Select All ({{ filteredAudienceContacts().length }})

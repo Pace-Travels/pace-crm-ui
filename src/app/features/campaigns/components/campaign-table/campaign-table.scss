@@ -421,6 +421,18 @@
             &:hover { background: #6d28d9; }
         }
 
+        .btn-send-selected-hdr {
+            background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+            font-weight: 700;
+
+            &:hover {
+                background: linear-gradient(135deg, #6d28d9 0%, #7e22ce 100%);
+                transform: translateY(-1px);
+            }
+        }
+
         .btn-close-circle {
             background: #f1f5f9;
             border: none;
@@ -889,6 +901,209 @@
 }
 
 /* ========================================================= */
+/* BATCH SELECTION & TARGETED DISPATCH BAR                   */
+/* ========================================================= */
+.batch-selection-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, rgba(245, 243, 255, 0.95), rgba(238, 242, 255, 0.95));
+    border: 1px solid rgba(196, 181, 253, 0.5);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+
+    .batch-toolbar-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+
+        .batch-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #4338ca;
+            margin-right: 4px;
+        }
+
+        .batch-preset-group {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            overflow: hidden;
+
+            .btn-preset {
+                border: none;
+                background: transparent;
+                padding: 5px 12px;
+                font-size: 12.5px;
+                font-weight: 700;
+                color: #334155;
+                cursor: pointer;
+                border-right: 1px solid #e2e8f0;
+                transition: all 0.15s ease;
+
+                &:last-child {
+                    border-right: none;
+                }
+
+                &:hover {
+                    background: #7c3aed;
+                    color: #ffffff;
+                }
+            }
+        }
+
+        .batch-custom-input {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            overflow: hidden;
+
+            .custom-qty-box {
+                width: 90px;
+                padding: 5px 8px;
+                border: none;
+                outline: none;
+                font-size: 12px;
+                font-weight: 600;
+                color: #0f172a;
+
+                &::-webkit-inner-spin-button,
+                &::-webkit-outer-spin-button {
+                    opacity: 1;
+                }
+            }
+
+            .btn-apply-qty {
+                border: none;
+                background: #f1f5f9;
+                padding: 5px 10px;
+                font-size: 11.5px;
+                font-weight: 700;
+                color: #475569;
+                cursor: pointer;
+                border-left: 1px solid #cbd5e1;
+                transition: all 0.15s ease;
+
+                &:hover {
+                    background: #7c3aed;
+                    color: #ffffff;
+                }
+            }
+        }
+
+        .btn-select-pending {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 11px;
+            border-radius: 6px;
+            border: 1px solid #c4b5fd;
+            background: #ffffff;
+            color: #6d28d9;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: #7c3aed;
+                color: #ffffff;
+                border-color: #7c3aed;
+            }
+        }
+
+        .btn-clear-sel {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 5px 10px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #64748b;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+
+            &:hover {
+                background: #ef4444;
+                color: #ffffff;
+                border-color: #ef4444;
+            }
+        }
+    }
+
+    .batch-toolbar-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-left: auto;
+
+        .selection-counter {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+
+            .count-pill {
+                background: #7c3aed;
+                color: #ffffff;
+                padding: 2px 8px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 800;
+            }
+
+            .count-label {
+                font-size: 12.5px;
+                font-weight: 600;
+                color: #475569;
+            }
+        }
+
+        .btn-send-batch {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 16px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, #7c3aed 0%, #9333ea 100%);
+            color: #ffffff;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(124, 58, 237, 0.35);
+            transition: all 0.2s ease;
+
+            &:hover:not(:disabled) {
+                background: linear-gradient(135deg, #6d28d9 0%, #7e22ce 100%);
+                box-shadow: 0 6px 18px rgba(124, 58, 237, 0.45);
+                transform: translateY(-1px);
+            }
+
+            &:disabled {
+                opacity: 0.5;
+                cursor: not-allowed;
+                box-shadow: none;
+                transform: none;
+            }
+        }
+    }
+}
+
+/* ========================================================= */
 /* DATA TABLE SCROLL WRAPPER & CELLS                         */
 /* ========================================================= */
 .table-scroll-wrapper {
@@ -951,6 +1166,15 @@
 
             &:hover {
                 background: #f8fafc;
+            }
+
+            &.row-selected {
+                background: rgba(124, 58, 237, 0.08) !important;
+                border-left: 4px solid #7c3aed;
+
+                &:hover {
+                    background: rgba(124, 58, 237, 0.12) !important;
+                }
             }
 
             &.row-newly-added {
