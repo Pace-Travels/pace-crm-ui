@@ -455,7 +455,7 @@
 
     <!-- Data Table -->
     <div class="table-container" style="background: white; border: 1px solid #cbd5e1; border-radius: 12px; overflow-x: auto; max-width: 100%; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-        <table class="data-table" style="width: 100%; min-width: 1200px; border-collapse: collapse;">
+        <table class="data-table" [style.minWidth]="isPreviewMode() ? '1680px' : '1200px'" style="width: 100%; border-collapse: collapse;">
             <thead>
                 <tr *ngIf="!isPreviewMode()" style="background: #f8fafc; border-bottom: 1px solid #e2e8f0; text-align: left; font-size: 12px; font-weight: 700; color: #475569;">
                     <th style="padding: 14px 12px; width: 68px; position: relative;">
@@ -570,25 +570,52 @@
                     <th style="padding: 14px 16px; width: 40px;">
                         <input type="checkbox" [checked]="isAllTablePreviewSelected() || isCurrentPagePreviewSelected()" (change)="togglePreviewSelectAll($event)">
                     </th>
-                    <th style="padding: 14px 16px;">S.No</th>
-                    <th *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px;">Agency Name</th>
-                    <th style="padding: 14px 16px;">{{ contactService.activeType() === 'B2B' ? 'Agent Name' : 'Customer Name' }}</th>
-                    <th style="padding: 14px 16px;">Phone Number</th>
-                    <th style="padding: 14px 16px;">Country</th>
+                    <th (click)="changeSort('serialNumber')" style="padding: 14px 16px; cursor: pointer; white-space: nowrap;">
+                        S.No <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th *ngIf="contactService.activeType() === 'B2B'" (click)="changeSort('agencyName')" style="padding: 14px 16px; cursor: pointer;">
+                        Agency Name <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th (click)="changeSort('name')" style="padding: 14px 16px; cursor: pointer;">
+                        {{ contactService.activeType() === 'B2B' ? 'Agent Name' : 'Customer Name' }} <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th *ngIf="contactService.activeType() === 'B2B'" (click)="changeSort('chapter')" style="padding: 14px 16px; cursor: pointer; white-space: nowrap;">
+                        BNI Chapter <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th (click)="changeSort('location')" style="padding: 14px 16px; cursor: pointer;">
+                        City / Location <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th *ngIf="contactService.activeType() === 'B2B'" (click)="changeSort('categories')" style="padding: 14px 16px; cursor: pointer;">
+                        Categories <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th (click)="changeSort('phone')" style="padding: 14px 16px; cursor: pointer;">
+                        Phone Number <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th (click)="changeSort('email')" style="padding: 14px 16px; cursor: pointer;">
+                        Email / Mail ID <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th *ngIf="contactService.activeType() === 'B2B'" (click)="changeSort('website')" style="padding: 14px 16px; cursor: pointer;">
+                        Website <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
+                    <th (click)="changeSort('country')" style="padding: 14px 16px; cursor: pointer;">
+                        Country <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
                     <th style="padding: 14px 16px;">Meta Rate</th>
                     <th style="padding: 14px 16px;">Readiness</th>
-                    <th style="padding: 14px 16px;">Imported At</th>
+                    <th (click)="changeSort('createdAt')" style="padding: 14px 16px; cursor: pointer; white-space: nowrap;">
+                        Imported At <i class="fa-solid fa-sort" style="font-size: 11px; color: #94a3b8;"></i>
+                    </th>
                     <th style="padding: 14px 16px;">Verification Audit Note</th>
                     <th style="padding: 14px 16px; text-align: right;">Status</th>
                 </tr>
             </thead>
             <tbody>
                 <tr *ngIf="contactService.isLoading()">
-                    <td colspan="12" style="padding: 40px; text-align: center; color: #64748b;">Loading contact database...</td>
+                    <td [attr.colspan]="isPreviewMode() ? 16 : 15" style="padding: 40px; text-align: center; color: #64748b;">Loading contact database...</td>
                 </tr>
                 
                 <tr *ngIf="!contactService.isLoading() && paginatedContacts().length === 0">
-                    <td colspan="12" style="padding: 48px; text-align: center; color: #64748b;">
+                    <td [attr.colspan]="isPreviewMode() ? 16 : 15" style="padding: 48px; text-align: center; color: #64748b;">
                         <p style="font-weight: 700; color: #0f172a; margin: 0 0 4px 0; font-size: 15px;">No contacts found</p>
                         <p style="font-size: 13px; margin: 0;">{{ isPreviewMode() ? (previewStatusFilter() !== 'ALL' ? 'No contacts match the ' + previewStatusFilter() + ' status filter.' : 'Uploaded sheet contains no contacts.') : 'Click "+ Add Contact" or "Import Sheet" to add contacts into your database.' }}</p>
                     </td>
@@ -730,30 +757,57 @@
                 <ng-container *ngIf="isPreviewMode() && !contactService.isLoading()">
                     <tr *ngFor="let contact of paginatedContacts(); let idx = index" 
                         [style.background]="isPreviewSelected(contact.serialNumber) ? '#f0fdf4' : (idx % 2 === 0 ? 'white' : '#fafafa')"
-                        style="border-bottom: 1px solid #f1f5f9; font-size: 13.5px; color: #1e293b;">
+                        style="border-bottom: 1px solid #f1f5f9; font-size: 13px; color: #1e293b;">
                         
+                        <!-- Checkbox -->
                         <td style="padding: 14px 16px;">
                             <input type="checkbox" [checked]="isPreviewSelected(contact.serialNumber)" (change)="togglePreviewSelect(contact.serialNumber)">
                         </td>
                         
-                        <td style="padding: 14px 16px; color: #64748b; font-size: 12.5px;">
+                        <!-- S.No -->
+                        <td style="padding: 14px 16px; color: #64748b; font-size: 12.5px; font-weight: 600;">
                             {{ contact.serialNumber }}
                         </td>
 
-                        <td *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px;">
-                            {{ contact.agencyName || '—' }}
-                        </td>
-
-                        <td style="padding: 14px 16px; font-weight: 700; color: #0f172a;">
-                            <div>{{ contact.name || 'UNKNOWN' }}</div>
-                            <div *ngIf="contact.chapter || contact.location" style="font-size: 11px; font-weight: 500; color: #64748b; margin-top: 2px;">
-                                <span *ngIf="contact.chapter">📍 {{ contact.chapter }}</span>
-                                <span *ngIf="contact.chapter && contact.location"> • </span>
-                                <span *ngIf="contact.location">{{ contact.location }}</span>
+                        <!-- Agency Name (B2B) -->
+                        <td *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px; font-weight: 600; color: #0f172a; max-width: 170px;">
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" [title]="contact.agencyName">
+                                {{ contact.agencyName || '—' }}
                             </div>
                         </td>
 
-                        <td style="padding: 8px 12px; font-family: monospace; font-size: 13px; font-weight: 600; color: #6d28d9;">
+                        <!-- Agent / Customer Name -->
+                        <td style="padding: 14px 16px; font-weight: 700; color: #0f172a; max-width: 160px;">
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" [title]="contact.name">
+                                {{ contact.name || 'UNKNOWN' }}
+                            </div>
+                        </td>
+
+                        <!-- BNI Chapter (B2B) -->
+                        <td *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px; white-space: nowrap;">
+                            <span *ngIf="contact.chapter" style="background: #f1f5f9; padding: 4px 9px; border-radius: 6px; border: 1px solid #e2e8f0; font-size: 12px; font-weight: 700; color: #334155; display: inline-flex; align-items: center; gap: 5px;">
+                                <i class="fa-solid fa-location-dot" style="color: #6366f1; font-size: 11px;"></i> {{ contact.chapter }}
+                            </span>
+                            <span *ngIf="!contact.chapter" style="color: #94a3b8;">—</span>
+                        </td>
+
+                        <!-- City / Location -->
+                        <td style="padding: 14px 16px; font-size: 12.5px; color: #334155; max-width: 140px;">
+                            <span *ngIf="contact.location" style="display: inline-flex; align-items: center; gap: 5px; font-weight: 600;" [title]="contact.location">
+                                <i class="fa-solid fa-city" style="color: #94a3b8; font-size: 11px;"></i> {{ contact.location }}
+                            </span>
+                            <span *ngIf="!contact.location" style="color: #94a3b8;">—</span>
+                        </td>
+
+                        <!-- Categories (B2B) -->
+                        <td *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px; max-width: 140px; font-size: 12px; color: #64748b;">
+                            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" [title]="contact.categories">
+                                {{ contact.categories || '—' }}
+                            </div>
+                        </td>
+
+                        <!-- Phone Number -->
+                        <td style="padding: 8px 12px; font-family: monospace; font-size: 13px; font-weight: 600; color: #6d28d9; white-space: nowrap;">
                             <input type="text" [value]="contact.phone" (change)="onPreviewPhoneChange(contact, $event)" 
                                    style="font-family: inherit; font-size: inherit; font-weight: inherit; color: inherit; border: 1px solid #cbd5e1; border-radius: 6px; padding: 6px 10px; width: 145px; outline: none; background: #fafafa; transition: border 0.15s ease;"
                                    onfocus="this.style.border='#7c3aed'; this.style.background='white';"
@@ -763,18 +817,42 @@
                             </div>
                         </td>
 
-                        <td style="padding: 14px 16px;">
+                        <!-- Email / Mail ID -->
+                        <td style="padding: 14px 16px; font-size: 12.5px; color: #475569; max-width: 180px;">
+                            <div *ngIf="contact.email" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" [title]="contact.email">
+                                <a [href]="'mailto:' + contact.email" style="color: #2563eb; text-decoration: none; font-weight: 500; display: inline-flex; align-items: center; gap: 4px;">
+                                    <i class="fa-regular fa-envelope" style="font-size: 11px;"></i> {{ contact.email }}
+                                </a>
+                            </div>
+                            <div *ngIf="contact.email2" style="font-size: 11px; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" [title]="contact.email2">
+                                Alt: {{ contact.email2 }}
+                            </div>
+                            <span *ngIf="!contact.email && !contact.email2" style="color: #94a3b8;">—</span>
+                        </td>
+
+                        <!-- Website (B2B) -->
+                        <td *ngIf="contactService.activeType() === 'B2B'" style="padding: 14px 16px; font-size: 12.5px; white-space: nowrap;">
+                            <a *ngIf="contact.website" [href]="contact.website" target="_blank" rel="noopener noreferrer" style="color: #7c3aed; text-decoration: underline; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" [title]="contact.website">
+                                <i class="fa-solid fa-globe"></i> Visit
+                            </a>
+                            <span *ngIf="!contact.website" style="color: #94a3b8;">—</span>
+                        </td>
+
+                        <!-- Country -->
+                        <td style="padding: 14px 16px; white-space: nowrap;">
                             <div style="display: inline-flex; align-items: center; gap: 6px; background: #f1f5f9; border: 1px solid #cbd5e1; padding: 4px 8px; border-radius: 6px;">
                                 <span style="font-size: 16px; line-height: 1;">{{ getCountryFlag(contact.country) }}</span>
-                                <span style="font-weight: 600; color: #334155; font-size: 12.5px;">{{ contact.country || 'Rest of World' }}</span>
+                                <span style="font-weight: 600; color: #334155; font-size: 12px;">{{ contact.country || 'Rest of World' }}</span>
                             </div>
                         </td>
 
-                        <td style="padding: 14px 16px; font-weight: 700; color: #7c3aed;">
+                        <!-- Meta Rate -->
+                        <td style="padding: 14px 16px; font-weight: 700; color: #7c3aed; white-space: nowrap;">
                             {{ contact.metaRate ? '₹' + contact.metaRate : '₹4.50' }}
                         </td>
 
-                        <td style="padding: 14px 16px; min-width: 155px;">
+                        <!-- Readiness -->
+                        <td style="padding: 14px 16px; min-width: 140px; white-space: nowrap;">
                             <div style="display: flex; align-items: center; gap: 8px;">
                                 <span [style.background]="contact.readinessStatus === 'READY' ? '#dcfce7' : (contact.readinessStatus === 'EXISTS' ? '#f3e8ff' : '#fecaca')" 
                                       [style.color]="contact.readinessStatus === 'READY' ? '#15803d' : (contact.readinessStatus === 'EXISTS' ? '#6b21a8' : '#991b1b')"
@@ -794,6 +872,7 @@
                             </div>
                         </td>
 
+                        <!-- Imported At -->
                         <td style="padding: 14px 16px; font-size: 12px; color: #64748b; white-space: nowrap;">
                             <span style="display: inline-flex; align-items: center; gap: 5px;">
                                 <i class="fa-regular fa-clock" style="font-size: 11px; color: #94a3b8;"></i>
@@ -801,15 +880,17 @@
                             </span>
                         </td>
 
-                        <td style="padding: 14px 16px; font-size: 12.5px; font-weight: 500;"
+                        <!-- Verification Audit Note -->
+                        <td style="padding: 14px 16px; font-size: 12px; font-weight: 500; min-width: 200px;"
                             [style.color]="contact.verificationStatus === 'ERROR' ? '#dc2626' : (contact.verificationStatus === 'WARNING' || contact.verificationStatus === 'DUPLICATE' ? '#b45309' : '#15803d')">
                             <div>{{ contact.verificationNote || 'WhatsApp number verified' }}</div>
-                            <div *ngIf="contact.remarks" style="font-size: 11px; color: #475569; background: #f8fafc; padding: 3px 6px; border-radius: 4px; margin-top: 4px; border: 1px solid #e2e8f0; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" [title]="contact.remarks">
-                                📝 {{ contact.remarks }}
+                            <div *ngIf="contact.remarks || contact.remarks1" style="font-size: 11px; color: #475569; background: #f8fafc; padding: 3px 6px; border-radius: 4px; margin-top: 4px; border: 1px solid #e2e8f0; max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" [title]="(contact.remarks || '') + (contact.remarks1 ? ' | ' + contact.remarks1 : '')">
+                                📝 {{ contact.remarks || contact.remarks1 }}
                             </div>
                         </td>
 
-                        <td style="padding: 14px 16px; text-align: right;">
+                        <!-- Status -->
+                        <td style="padding: 14px 16px; text-align: right; white-space: nowrap;">
                             <span [style.background]="contact.verificationStatus === 'ERROR' ? '#fecaca' : (contact.verificationStatus === 'WARNING' ? '#fef3c7' : (contact.verificationStatus === 'DUPLICATE' ? '#f3e8ff' : '#dcfce7'))"
                                   [style.color]="contact.verificationStatus === 'ERROR' ? '#991b1b' : (contact.verificationStatus === 'WARNING' ? '#92400e' : (contact.verificationStatus === 'DUPLICATE' ? '#6b21a8' : '#6d28d9'))"
                                   style="font-size: 11px; font-weight: 800; padding: 4px 8px; border-radius: 12px; text-transform: uppercase;">
