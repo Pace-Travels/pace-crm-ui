@@ -670,14 +670,72 @@
                                 </div>
                             </td>
 
-                            <!-- 7. Inbound Response Content & Live Chat Jump -->
+                            <!-- 7. Inbound Response Content, Message Preview Tooltip & 24h Window -->
                             <td class="td-response">
                                 <div class="response-cell-content">
-                                    <span class="response-text" [class.has-response]="item.responseReceived">
-                                        {{ item.responseReceived || 'No Response Yet' }}
-                                    </span>
-                                    <div *ngIf="item.responseReceived" class="response-actions">
-                                        <button (click)="openLiveChatForRecipient(item)" class="btn-live-chat-jump" title="Open Conversation in Live Chat">
+                                    <!-- Hover Message Tooltip Trigger & Preview -->
+                                    <div class="msg-tooltip-container">
+                                        <div class="msg-preview-chip">
+                                            <i class="fa-solid fa-message-captions preview-icon" [class.has-reply-icon]="item.responseReceived"></i>
+                                            <span class="response-text" [class.has-response]="item.responseReceived">
+                                                {{ item.responseReceived || 'No Response Yet' }}
+                                            </span>
+                                        </div>
+
+                                        <!-- Interactive Floating Tooltip on Hover -->
+                                        <div class="msg-floating-tooltip">
+                                            <div class="tooltip-header">
+                                                <i class="fa-brands fa-whatsapp" style="color: #25d366;"></i>
+                                                <span>WhatsApp Message Exchange Preview</span>
+                                                <span class="tooltip-recipient-name">{{ item.Contact?.name || item.phone }}</span>
+                                            </div>
+
+                                            <div class="tooltip-body">
+                                                <!-- Sent Message Pitch -->
+                                                <div class="tt-section tt-outbound">
+                                                    <div class="tt-section-lbl">
+                                                        <i class="fa-solid fa-paper-plane" style="color: #2563eb;"></i>
+                                                        <span>Campaign Pitch Sent:</span>
+                                                        <span class="tt-ts">{{ item.sentAt ? (item.sentAt | date:'MMM d, h:mm a') : '-' }}</span>
+                                                    </div>
+                                                    <div class="tt-text-bubble bubble-sent">
+                                                        {{ getOutboundPitchText(item) }}
+                                                    </div>
+                                                </div>
+
+                                                <!-- Received Customer Reply -->
+                                                <div class="tt-section tt-inbound">
+                                                    <div class="tt-section-lbl">
+                                                        <i class="fa-solid fa-reply" style="color: #7c3aed;"></i>
+                                                        <span>Customer Response:</span>
+                                                        <span class="tt-ts" *ngIf="item.respondedAt">{{ item.respondedAt | date:'MMM d, h:mm a' }}</span>
+                                                    </div>
+                                                    <div class="tt-text-bubble bubble-received" [class.no-reply]="!item.responseReceived">
+                                                        {{ item.responseReceived || 'No reply received from customer yet.' }}
+                                                    </div>
+                                                </div>
+
+                                                <!-- 24h Window Indicator inside Tooltip -->
+                                                <div class="tt-window-footer" [ngClass]="get24hWindow(item).badgeClass">
+                                                    <i class="fa-solid" [class.fa-stopwatch]="get24hWindow(item).isOpen && !get24hWindow(item).isUrgent" [class.fa-triangle-exclamation]="get24hWindow(item).isUrgent" [class.fa-clock-rotate-left]="!get24hWindow(item).isOpen"></i>
+                                                    <span>{{ get24hWindow(item).fullText }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 24-Hour Meta Customer Service Window Countdown Badge -->
+                                    <div *ngIf="item.respondedAt" class="window-countdown-badge" [ngClass]="get24hWindow(item).badgeClass" [title]="get24hWindow(item).fullText">
+                                        <i class="fa-solid" [class.fa-stopwatch]="get24hWindow(item).isOpen && !get24hWindow(item).isUrgent" [class.fa-triangle-exclamation]="get24hWindow(item).isUrgent" [class.fa-clock-rotate-left]="!get24hWindow(item).isOpen"></i>
+                                        <span class="countdown-val">{{ get24hWindow(item).text }}</span>
+                                    </div>
+
+                                    <!-- Quick Context Actions (AI Reply + Live Chat) -->
+                                    <div class="response-actions">
+                                        <button (click)="openAiReplyModal(item)" class="btn-quick-ai-reply" title="Generate context-driven AI response">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Reply
+                                        </button>
+                                        <button *ngIf="item.responseReceived" (click)="openLiveChatForRecipient(item)" class="btn-live-chat-jump" title="Open Conversation in Live Chat">
                                             <i class="fa-solid fa-up-right-from-square"></i> Live Chat
                                         </button>
                                     </div>
@@ -694,6 +752,14 @@
                             <!-- 9. Row Action Buttons -->
                             <td class="td-actions">
                                 <div class="row-actions-group">
+                                    <!-- Context-Driven Automated AI Response Button -->
+                                    <button (click)="openAiReplyModal(item)" 
+                                            class="btn-tbl-action btn-ai" 
+                                            title="Autogenerate and dispatch context-driven AI response">
+                                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                        <span>AI Reply</span>
+                                    </button>
+
                                     <!-- Edit Recipient Details -->
                                     <button (click)="openEditRecipientModal(item)" class="btn-tbl-action btn-edit" title="Edit recipient phone number or name">
                                         <i class="fa-solid fa-pen"></i>
@@ -858,6 +924,140 @@
                 <i class="fa-solid" [class.fa-check]="!isUpdatingRecipient()" [class.fa-spinner]="isUpdatingRecipient()" [class.fa-spin]="isUpdatingRecipient()"></i>
                 <span>{{ isUpdatingRecipient() ? 'Updating...' : 'Save Changes' }}</span>
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- ================================================================= -->
+<!-- CONTEXT-DRIVEN AI RESPONSE & LIVE CHAT RETRIEVAL MODAL            -->
+<!-- ================================================================= -->
+<div *ngIf="showAiReplyModal()" class="sub-modal-backdrop" (click)="closeAiReplyModal()">
+    <div class="sub-modal-card ai-reply-modal-card" (click)="$event.stopPropagation()">
+        <!-- Header -->
+        <div class="sub-modal-header ai-modal-header">
+            <div class="header-left">
+                <div class="ai-icon-circle">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <div>
+                    <h4 style="margin: 0; font-size: 16px; font-weight: 800; color: #0f172a;">
+                        Context-Driven AI Customer Response
+                    </h4>
+                    <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">
+                        Contact: <strong>{{ selectedAiRecipient()?.Contact?.name || 'Customer' }}</strong> 
+                        ({{ selectedAiRecipient()?.Contact?.phone || selectedAiRecipient()?.phone }})
+                    </p>
+                </div>
+            </div>
+            <button (click)="closeAiReplyModal()" class="sub-modal-close-btn" title="Close Modal">✕</button>
+        </div>
+
+        <!-- Meta 24-Hour Customer Window Notification Banner -->
+        <div class="ai-window-banner" [ngClass]="get24hWindow(selectedAiRecipient()).badgeClass">
+            <div class="banner-left">
+                <i class="fa-solid" 
+                   [class.fa-stopwatch]="get24hWindow(selectedAiRecipient()).isOpen && !get24hWindow(selectedAiRecipient()).isUrgent" 
+                   [class.fa-triangle-exclamation]="get24hWindow(selectedAiRecipient()).isUrgent" 
+                   [class.fa-clock-rotate-left]="!get24hWindow(selectedAiRecipient()).isOpen"></i>
+                <div class="banner-text">
+                    <span class="banner-title">Meta 24-Hour Customer Service Window:</span>
+                    <strong class="banner-timer">{{ get24hWindow(selectedAiRecipient()).fullText }}</strong>
+                </div>
+            </div>
+            <span *ngIf="get24hWindow(selectedAiRecipient()).isOpen" class="banner-policy-pill pill-allowed">
+                <i class="fa-solid fa-circle-check"></i> Freeform Text Allowed
+            </span>
+            <span *ngIf="!get24hWindow(selectedAiRecipient()).isOpen" class="banner-policy-pill pill-restricted">
+                <i class="fa-solid fa-shield-halved"></i> Template Message Only
+            </span>
+        </div>
+
+        <!-- Body: Outbound Pitch Context + Inbound Reply Context + AI Editor -->
+        <div class="sub-modal-body ai-modal-body">
+            <!-- 2 Context Cards Grid -->
+            <div class="ai-context-grid">
+                <!-- Outbound Pitch Sent -->
+                <div class="context-card outbound-card">
+                    <div class="context-card-title">
+                        <i class="fa-solid fa-paper-plane" style="color: #2563eb;"></i>
+                        <span>Outbound Campaign Pitch (Sent)</span>
+                        <span class="context-ts">{{ selectedAiRecipient()?.sentAt ? (selectedAiRecipient()?.sentAt | date:'MMM d, h:mm a') : '-' }}</span>
+                    </div>
+                    <div class="context-card-content">
+                        {{ getOutboundPitchText(selectedAiRecipient()) }}
+                    </div>
+                </div>
+
+                <!-- Inbound Message Received -->
+                <div class="context-card inbound-card">
+                    <div class="context-card-title">
+                        <i class="fa-solid fa-reply" style="color: #7c3aed;"></i>
+                        <span>Customer Reply (Received)</span>
+                        <span class="context-ts" *ngIf="selectedAiRecipient()?.respondedAt">{{ selectedAiRecipient()?.respondedAt | date:'MMM d, h:mm a' }}</span>
+                    </div>
+                    <div class="context-card-content" [class.no-reply]="!selectedAiRecipient()?.responseReceived">
+                        {{ selectedAiRecipient()?.responseReceived || 'No explicit reply text logged yet. Context response will follow up gracefully on the campaign pitch.' }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auto-Generated Context Response Area -->
+            <div class="ai-response-area">
+                <div class="area-header">
+                    <div class="area-label">
+                        <i class="fa-solid fa-brain" style="color: #8b5cf6;"></i>
+                        <span>Context-Aware AI Generated Response</span>
+                        <span *ngIf="isLoadingAiSuggestion()" class="ai-thinking-pill">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Generating intelligent response...
+                        </span>
+                    </div>
+                    <button type="button" 
+                            (click)="regenerateAiReply()" 
+                            [disabled]="isLoadingAiSuggestion()" 
+                            class="btn-regenerate-ai" 
+                            title="Regenerate alternative AI response">
+                        <i class="fa-solid fa-arrows-rotate" [class.fa-spin]="isLoadingAiSuggestion()"></i>
+                        <span>Regenerate Suggestion</span>
+                    </button>
+                </div>
+
+                <div class="textarea-wrapper">
+                    <textarea [ngModel]="aiGeneratedText()" 
+                              (ngModelChange)="aiGeneratedText.set($event)" 
+                              rows="4" 
+                              class="ai-response-textarea" 
+                              placeholder="AI context suggestion will appear here..."></textarea>
+                </div>
+
+                <div class="response-hint">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>Review or personalize this response before sending. When sent, it is delivered to WhatsApp and synced to Live Chat.</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="sub-modal-footer ai-modal-footer">
+            <button type="button" 
+                    (click)="openLiveChatFromAiModal()" 
+                    class="btn-open-livechat-modal" 
+                    title="Retrieve lead and switch directly to Live Chat screen">
+                <i class="fa-solid fa-comments"></i>
+                <span>Retrieve Lead & Open Live Chat</span>
+            </button>
+
+            <div class="footer-right-actions">
+                <button type="button" (click)="closeAiReplyModal()" class="btn-sub-cancel">
+                    Cancel
+                </button>
+                <button type="button" 
+                        (click)="submitSendAiReply()" 
+                        [disabled]="isSendingAiReply() || !aiGeneratedText().trim()" 
+                        class="btn-send-ai-dispatch">
+                    <i class="fa-solid" [class.fa-paper-plane]="!isSendingAiReply()" [class.fa-spinner]="isSendingAiReply()" [class.fa-spin]="isSendingAiReply()"></i>
+                    <span>{{ isSendingAiReply() ? 'Dispatching...' : 'Send WhatsApp Response Now' }}</span>
+                </button>
+            </div>
         </div>
     </div>
 </div>

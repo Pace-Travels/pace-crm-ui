@@ -140,4 +140,12 @@ export class CampaignService {
     const url = campaignId ? `campaigns/${campaignId}/release-memory` : 'campaigns/release-memory';
     return this.api.post<any>(url, {});
   }
+
+  generateAiReply(recipientId: number) {
+    return this.api.post<any>(`campaigns/recipient/${recipientId}/generate-ai-reply`, {});
+  }
+
+  sendAiReply(recipientId: number, messageText: string) {
+    return this.api.post<any>(`campaigns/recipient/${recipientId}/send-ai-reply`, { messageText });
+  }
 }

@@ -73,6 +73,26 @@ export class CampaignTable implements OnInit, OnDestroy {
   editRecipientName = signal<string>('');
   isUpdatingRecipient = signal<boolean>(false);
 
+  // Context-Driven AI Response Modal State
+  showAiReplyModal = signal<boolean>(false);
+  selectedAiRecipient = signal<any>(null);
+  isLoadingAiSuggestion = signal<boolean>(false);
+  aiGeneratedText = signal<string>('');
+  isSendingAiReply = signal<boolean>(false);
+  aiReplyContext = signal<{
+    suggestedReply?: string;
+    isWindowOpen?: boolean;
+    hoursLeft?: number;
+    minsLeft?: number;
+    contactName?: string;
+    contactPhone?: string;
+    responseReceived?: string;
+    templateContent?: string;
+  } | null>(null);
+
+  // Active Hover Message Preview Tooltip State
+  hoveredRecipientId = signal<number | null>(null);
+
   ngOnInit() {
     this.campaignService.fetchCampaigns();
     this.contactService.fetchContacts();
@@ -1198,5 +1218,184 @@ export class CampaignTable implements OnInit, OnDestroy {
         Swal.fire('Error', 'Failed to toggle auto-retry: ' + (err.error?.message || err.message), 'error');
       }
     });
+  }
+
+  // =========================================================================
+  // 24-HOUR CUSTOMER CARE WINDOW & CONTEXT-DRIVEN AI RESPONSE ACTIONS
+  // =========================================================================
+
+  get24hWindow(item: any): {
+    hasReplied: boolean;
+    isOpen: boolean;
+    hoursLeft: number;
+    minsLeft: number;
+    text: string;
+    fullText: string;
+    isUrgent: boolean;
+    badgeClass: string;
+  } {
+    if (!item || !item.respondedAt) {
+      return {
+        hasReplied: false,
+        isOpen: false,
+        hoursLeft: 0,
+        minsLeft: 0,
+        text: 'Awaiting Customer Response',
+        fullText: 'Awaiting customer response to initiate 24h window',
+        isUrgent: false,
+        badgeClass: 'badge-waiting'
+      };
+    }
+
+    const respondedAtTime = new Date(item.respondedAt).getTime();
+    if (isNaN(respondedAtTime)) {
+      return {
+        hasReplied: false,
+        isOpen: false,
+        hoursLeft: 0,
+        minsLeft: 0,
+        text: 'No Reply Timestamp',
+        fullText: 'No reply timestamp available',
+        isUrgent: false,
+        badgeClass: 'badge-waiting'
+      };
+    }
+
+    const expiryTime = respondedAtTime + (24 * 60 * 60 * 1000);
+    const diffMs = expiryTime - Date.now();
+
+    if (diffMs <= 0) {
+      return {
+        hasReplied: true,
+        isOpen: false,
+        hoursLeft: 0,
+        minsLeft: 0,
+        text: '24h Expired (Template Only)',
+        fullText: '24h Customer window expired. WhatsApp policy requires template message to re-initiate.',
+        isUrgent: false,
+        badgeClass: 'badge-expired'
+      };
+    }
+
+    const totalMins = Math.floor(diffMs / (60 * 1000));
+    const hoursLeft = Math.floor(totalMins / 60);
+    const minsLeft = totalMins % 60;
+    const isUrgent = hoursLeft < 3;
+
+    return {
+      hasReplied: true,
+      isOpen: true,
+      hoursLeft,
+      minsLeft,
+      text: `${hoursLeft}h ${minsLeft}m left`,
+      fullText: `${hoursLeft}h ${minsLeft}m remaining in 24h customer response window`,
+      isUrgent,
+      badgeClass: isUrgent ? 'badge-urgent' : 'badge-active'
+    };
+  }
+
+  getOutboundPitchText(item?: any): string {
+    const tpl = this.campaignTemplate();
+    if (tpl?.templateBody) {
+      let body = tpl.templateBody;
+      const params = this.selectedCampaign()?.parameters;
+      if (params) {
+        body = body.replace(/\{\{(\d+)\}\}/g, (match: string, p1: string) => {
+          return params[`var${p1}`] || match;
+        });
+      }
+      return body;
+    }
+    return this.selectedCampaign()?.description || 'Exclusive Travel Broadcast Promotion';
+  }
+
+  openAiReplyModal(item: any) {
+    this.selectedAiRecipient.set(item);
+    this.showAiReplyModal.set(true);
+    this.isLoadingAiSuggestion.set(true);
+    this.aiGeneratedText.set('');
+    this.aiReplyContext.set(null);
+
+    this.campaignService.generateAiReply(item.id).subscribe({
+      next: (res: any) => {
+        this.isLoadingAiSuggestion.set(false);
+        this.aiGeneratedText.set(res.suggestedReply || '');
+        this.aiReplyContext.set(res);
+      },
+      error: (err: any) => {
+        this.isLoadingAiSuggestion.set(false);
+        const contactName = item.Contact?.name || item.Contact?.firstName || 'there';
+        const campaignName = this.selectedCampaign()?.campaignName || 'our special offers';
+        const fallbackText = `Hi ${contactName}! Thank you for reaching out to us regarding ${campaignName}. How can I best assist you with your booking and inquiries today?`;
+        this.aiGeneratedText.set(fallbackText);
+      }
+    });
+  }
+
+  closeAiReplyModal() {
+    this.showAiReplyModal.set(false);
+    this.selectedAiRecipient.set(null);
+    this.aiGeneratedText.set('');
+    this.isLoadingAiSuggestion.set(false);
+    this.isSendingAiReply.set(false);
+    this.aiReplyContext.set(null);
+  }
+
+  regenerateAiReply() {
+    const item = this.selectedAiRecipient();
+    if (!item) return;
+    this.isLoadingAiSuggestion.set(true);
+    this.campaignService.generateAiReply(item.id).subscribe({
+      next: (res: any) => {
+        this.isLoadingAiSuggestion.set(false);
+        this.aiGeneratedText.set(res.suggestedReply || '');
+        this.aiReplyContext.set(res);
+      },
+      error: (err: any) => {
+        this.isLoadingAiSuggestion.set(false);
+        Swal.fire('Notice', 'Could not refresh AI response: ' + (err.error?.message || err.message), 'warning');
+      }
+    });
+  }
+
+  submitSendAiReply() {
+    const item = this.selectedAiRecipient();
+    if (!item) return;
+    const text = this.aiGeneratedText().trim();
+    if (!text) {
+      Swal.fire('Empty Message', 'Please enter a response message before sending.', 'warning');
+      return;
+    }
+
+    this.isSendingAiReply.set(true);
+    this.campaignService.sendAiReply(item.id, text).subscribe({
+      next: (res: any) => {
+        this.isSendingAiReply.set(false);
+        this.closeAiReplyModal();
+        Swal.fire({
+          icon: 'success',
+          title: 'Response Dispatched!',
+          text: res.message || 'Context-driven response successfully sent to contact via WhatsApp and synced to Live Chat.',
+          timer: 3000,
+          showConfirmButton: false
+        });
+        if (this.selectedCampaign()) {
+          this.refreshResponsesSilently(this.selectedCampaign()!.id);
+        }
+      },
+      error: (err: any) => {
+        this.isSendingAiReply.set(false);
+        Swal.fire('Send Failed', err.error?.message || err.message || 'Could not send AI reply to contact.', 'error');
+      }
+    });
+  }
+
+  openLiveChatFromAiModal() {
+    const item = this.selectedAiRecipient();
+    if (!item) return;
+    const phone = item.Contact?.phone || item.phone;
+    this.closeAiReplyModal();
+    this.closeResponsesModal();
+    this.router.navigate(['/live-chat'], { queryParams: { phone } });
   }
 }
